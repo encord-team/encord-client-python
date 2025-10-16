@@ -34,8 +34,8 @@ from encord.orm.analytics import (
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.collection import ProjectCollectionType
 from encord.orm.dataset import Image, Video
-from encord.orm.filter_preset import ActiveFilterPresetDefinition
 from encord.orm.editor_log import EditorLogParams, EditorLogsResponse, EditorLog
+from encord.orm.filter_preset import ActiveFilterPresetDefinition
 from encord.orm.group import ProjectGroup
 from encord.orm.label_log import LabelLog
 from encord.orm.label_row import (
@@ -66,11 +66,11 @@ class Project:
     """Access project related data and manipulate the project."""
 
     def __init__(
-        self,
-        client: EncordClientProject,
-        project_instance: ProjectDTO,
-        ontology: Optional[Ontology],
-        api_client: ApiClient,
+            self,
+            client: EncordClientProject,
+            project_instance: ProjectDTO,
+            ontology: Optional[Ontology],
+            api_client: ApiClient,
     ):
         self._client = client
         self._project_instance = project_instance
@@ -211,23 +211,23 @@ class Project:
         return self._ontology_internal
 
     def list_label_rows_v2(
-        self,
-        data_hashes: Optional[Union[List[str], List[UUID]]] = None,
-        label_hashes: Optional[Union[List[str], List[UUID]]] = None,
-        edited_before: Optional[Union[str, datetime.datetime]] = None,
-        edited_after: Optional[Union[str, datetime.datetime]] = None,
-        label_statuses: Optional[List[AnnotationTaskStatus]] = None,
-        shadow_data_state: Optional[ShadowDataState] = None,
-        data_title_eq: Optional[str] = None,
-        data_title_like: Optional[str] = None,
-        workflow_graph_node_title_eq: Optional[str] = None,
-        workflow_graph_node_title_like: Optional[str] = None,
-        include_workflow_graph_node: bool = True,
-        include_client_metadata: bool = False,
-        include_images_data: bool = False,
-        include_children: bool = False,
-        include_all_label_branches: bool = False,
-        branch_name: Optional[str] = None,
+            self,
+            data_hashes: Optional[Union[List[str], List[UUID]]] = None,
+            label_hashes: Optional[Union[List[str], List[UUID]]] = None,
+            edited_before: Optional[Union[str, datetime.datetime]] = None,
+            edited_after: Optional[Union[str, datetime.datetime]] = None,
+            label_statuses: Optional[List[AnnotationTaskStatus]] = None,
+            shadow_data_state: Optional[ShadowDataState] = None,
+            data_title_eq: Optional[str] = None,
+            data_title_like: Optional[str] = None,
+            workflow_graph_node_title_eq: Optional[str] = None,
+            workflow_graph_node_title_like: Optional[str] = None,
+            include_workflow_graph_node: bool = True,
+            include_client_metadata: bool = False,
+            include_images_data: bool = False,
+            include_children: bool = False,
+            include_all_label_branches: bool = False,
+            branch_name: Optional[str] = None,
     ) -> List[LabelRowV2]:
         """List label rows with various filtering options.
 
@@ -343,14 +343,14 @@ class Project:
         self._client.remove_groups(group_hash)
 
     def copy_project(
-        self,
-        copy_datasets: Union[bool, CopyDatasetOptions] = False,
-        copy_collaborators=False,
-        copy_models=False,
-        *,
-        copy_labels: Optional[CopyLabelsOptions] = None,
-        new_title: Optional[str] = None,
-        new_description: Optional[str] = None,
+            self,
+            copy_datasets: Union[bool, CopyDatasetOptions] = False,
+            copy_collaborators=False,
+            copy_models=False,
+            *,
+            copy_labels: Optional[CopyLabelsOptions] = None,
+            new_title: Optional[str] = None,
+            new_description: Optional[str] = None,
     ) -> str:
         """Copy the current project into a new one with copied contents including settings, datasets, and users.
         Labels and models are optional.
@@ -458,11 +458,11 @@ class Project:
 
     @deprecated("0.1.102", alternative="encord.ontology.Ontology class")
     def add_classification(
-        self,
-        name: str,
-        classification_type: ClassificationType,
-        required: bool,
-        options: Optional[Iterable[str]] = None,
+            self,
+            name: str,
+            classification_type: ClassificationType,
+            required: bool,
+            options: Optional[Iterable[str]] = None,
     ):
         """DEPRECATED: Prefer using :class:`Ontology encord.ontology.Ontology` to manipulate ontology.
 
@@ -488,9 +488,9 @@ class Project:
         return res
 
     def object_interpolation(
-        self,
-        key_frames,
-        objects_to_interpolate,
+            self,
+            key_frames,
+            objects_to_interpolate,
     ):
         """Run object interpolation algorithm on project labels (requires an editor ontology and feature uids).
 
@@ -549,14 +549,14 @@ class Project:
         return self._client.get_data(data_hash, get_signed_url)
 
     def get_label_logs(
-        self,
-        user_hash: Optional[str] = None,
-        data_hash: Optional[str] = None,
-        from_unix_seconds: Optional[int] = None,
-        to_unix_seconds: Optional[int] = None,
-        after: Optional[datetime.datetime] = None,
-        before: Optional[datetime.datetime] = None,
-        user_email: Optional[str] = None,
+            self,
+            user_hash: Optional[str] = None,
+            data_hash: Optional[str] = None,
+            from_unix_seconds: Optional[int] = None,
+            to_unix_seconds: Optional[int] = None,
+            after: Optional[datetime.datetime] = None,
+            before: Optional[datetime.datetime] = None,
+            user_email: Optional[str] = None,
     ) -> List[LabelLog]:
         """Get label logs, which represent the actions taken in the UI to create labels.
 
@@ -585,15 +585,15 @@ class Project:
         )
 
     def get_editor_logs(
-        self,
-        start_time: datetime.datetime,
-        end_time: datetime.datetime,
-        limit: int = 500,
-        page_token: Optional[str] = None,
-        action: Optional[str] = None,
-        actor_user_email: Optional[str] = None,
-        workflow_stage_id: Optional[UUID] = None,
-        data_unit_id: Optional[UUID] = None,
+            self,
+            start_time: datetime.datetime,
+            end_time: datetime.datetime,
+            limit: int = 500,
+            page_token: Optional[str] = None,
+            action: Optional[str] = None,
+            actor_user_email: Optional[str] = None,
+            workflow_stage_id: Optional[UUID] = None,
+            data_unit_id: Optional[UUID] = None,
     ) -> Page[EditorLog]:
         params = EditorLogParams(
             start_time=start_time,
@@ -603,20 +603,15 @@ class Project:
             action=action,
             actor_user_email=actor_user_email,
             workflow_stage_id=workflow_stage_id,
-            data_unit_id=data_unit_id
+            data_unit_id=data_unit_id,
         )
 
-        editor_logs_response = self._api_client.get(
-            f"projects/{self.project_hash}/editor-logs",
-            params=params,
-            result_type=EditorLogsResponse
-        )
+        editor_logs_response = self._api_client.get(f"projects/{self.project_hash}/editor-logs", params=params, result_type=EditorLogsResponse)
 
         return Page(
             results=editor_logs_response.logs,
             next_page_token=editor_logs_response.next_page_token,
         )
-
 
     @deprecated(version="0.1.154", alternative="EncordUserClient.get_cloud_integrations")
     def get_cloud_integrations(self) -> List[CloudIntegration]:
@@ -629,15 +624,15 @@ class Project:
 
     @deprecated(version="0.1.104", alternative=".list_label_rows_v2")
     def list_label_rows(
-        self,
-        edited_before: Optional[Union[str, datetime.datetime]] = None,
-        edited_after: Optional[Union[str, datetime.datetime]] = None,
-        label_statuses: Optional[List[AnnotationTaskStatus]] = None,
-        shadow_data_state: Optional[ShadowDataState] = None,
-        *,
-        include_uninitialised_labels=False,
-        label_hashes: Optional[List[str]] = None,
-        data_hashes: Optional[List[str]] = None,
+            self,
+            edited_before: Optional[Union[str, datetime.datetime]] = None,
+            edited_after: Optional[Union[str, datetime.datetime]] = None,
+            label_statuses: Optional[List[AnnotationTaskStatus]] = None,
+            shadow_data_state: Optional[ShadowDataState] = None,
+            *,
+            include_uninitialised_labels=False,
+            label_hashes: Optional[List[str]] = None,
+            data_hashes: Optional[List[str]] = None,
     ) -> List[LabelRowMetadata]:
         """DEPRECATED - use `list_label_rows_v2` to manage label rows instead.
 
@@ -669,13 +664,13 @@ class Project:
 
     @deprecated(version="0.1.123", alternative=".list_label_rows_v2")
     def get_label_row(
-        self,
-        uid: str,
-        get_signed_url: bool = True,
-        *,
-        include_object_feature_hashes: Optional[Set[str]] = None,
-        include_classification_feature_hashes: Optional[Set[str]] = None,
-        include_reviews: bool = False,
+            self,
+            uid: str,
+            get_signed_url: bool = True,
+            *,
+            include_object_feature_hashes: Optional[Set[str]] = None,
+            include_classification_feature_hashes: Optional[Set[str]] = None,
+            include_reviews: bool = False,
     ) -> LabelRow:
         """DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
 
@@ -708,13 +703,13 @@ class Project:
 
     @deprecated(version="0.1.123", alternative=".list_label_rows_v2")
     def get_label_rows(
-        self,
-        uids: List[str],
-        get_signed_url: bool = True,
-        *,
-        include_object_feature_hashes: Optional[Set[str]] = None,
-        include_classification_feature_hashes: Optional[Set[str]] = None,
-        include_reviews: bool = False,
+            self,
+            uids: List[str],
+            get_signed_url: bool = True,
+            *,
+            include_object_feature_hashes: Optional[Set[str]] = None,
+            include_classification_feature_hashes: Optional[Set[str]] = None,
+            include_reviews: bool = False,
     ) -> List[LabelRow]:
         """DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
 
@@ -816,10 +811,10 @@ class Project:
 
     @deprecated(version="0.1.157", alternative=".list_time_spent")
     def list_collaborator_timers(
-        self,
-        after: datetime.datetime,
-        before: Optional[datetime.datetime] = None,
-        group_by_data_unit: bool = True,
+            self,
+            after: datetime.datetime,
+            before: Optional[datetime.datetime] = None,
+            group_by_data_unit: bool = True,
     ) -> Iterable[CollaboratorTimer]:
         """**DEPRECATED** - Use `list_time_spent`. `list_time_spent` provides more comprehensive and accurate information.
 
@@ -847,11 +842,11 @@ class Project:
         yield from self._client.get_collaborator_timers(params)
 
     def list_time_spent(
-        self,
-        start: datetime.datetime,
-        end: Optional[datetime.datetime] = None,
-        workflow_stage_uuid: Union[List[UUID], List[str], UUID, str, None] = None,
-        user_email: Union[List[str], str, None] = None,
+            self,
+            start: datetime.datetime,
+            end: Optional[datetime.datetime] = None,
+            workflow_stage_uuid: Union[List[UUID], List[str], UUID, str, None] = None,
+            user_email: Union[List[str], str, None] = None,
     ) -> Iterable[TimeSpent]:
         """
         Get time spent by collaborators on a task per day. If a task spans multiple days, the time spent on each day will be returned separately.
@@ -884,12 +879,12 @@ class Project:
         return self._client.list_project_datasets(self._project_instance.project_hash)
 
     def import_coco_labels(
-        self,
-        labels_dict: Dict[str, Any],
-        category_id_to_feature_hash: Dict[CategoryID, str],
-        image_id_to_frame_index: Dict[ImageID, FrameIndex],
-        branch_name: Optional[str] = None,
-        confidence_field_name: Optional[str] = None,
+            self,
+            labels_dict: Dict[str, Any],
+            category_id_to_feature_hash: Dict[CategoryID, str],
+            image_id_to_frame_index: Dict[ImageID, FrameIndex],
+            branch_name: Optional[str] = None,
+            confidence_field_name: Optional[str] = None,
     ) -> None:
         """Import labels in COCO format to an Encord Project.
 
@@ -914,11 +909,11 @@ class Project:
         )
 
     def export_coco_labels(
-        self,
-        label_hashes: Optional[List[str]] = None,
-        include_object_feature_hashes: Optional[Set[str]] = None,
-        include_classification_feature_hashes: Optional[Set[str]] = None,
-        branch_name: Optional[str] = None,
+            self,
+            label_hashes: Optional[List[str]] = None,
+            include_object_feature_hashes: Optional[Set[str]] = None,
+            include_classification_feature_hashes: Optional[Set[str]] = None,
+            branch_name: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Export labels from the project to the COCO format.
         This method requires the 'coco' extra to be installed. Install it using:
@@ -964,9 +959,9 @@ class Project:
         )
 
     def list_collections(
-        self,
-        collection_uuids: Optional[List[Union[str, UUID]]] = None,
-        page_size: Optional[int] = None,
+            self,
+            collection_uuids: Optional[List[Union[str, UUID]]] = None,
+            page_size: Optional[int] = None,
     ) -> Iterator[ProjectCollection]:
         """List all collections associated to the project.
 
@@ -1013,7 +1008,7 @@ class Project:
         )
 
     def create_collection(
-        self, name: str, description: str = "", collection_type: ProjectCollectionType = ProjectCollectionType.FRAME
+            self, name: str, description: str = "", collection_type: ProjectCollectionType = ProjectCollectionType.FRAME
     ) -> ProjectCollection:
         """Create a project collection.
 
@@ -1048,9 +1043,9 @@ class Project:
         self._client.active_import(project_mode, video_sampling_rate)
 
     def list_filter_presets(
-        self,
-        filter_preset_uuids: Optional[List[Union[str, UUID]]] = None,
-        page_size: Optional[int] = None,
+            self,
+            filter_preset_uuids: Optional[List[Union[str, UUID]]] = None,
+            page_size: Optional[int] = None,
     ) -> Iterator[ProjectFilterPreset]:
         """List all filter presets associated to the project.
 

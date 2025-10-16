@@ -21,6 +21,7 @@ from encord.orm.editor_log import (
 )
 from encord.project import Project
 
+
 def test_project_get_editor_logs_basic():
     """Test Project.get_editor_logs with basic parameters."""
     # Mock the API response
@@ -89,16 +90,17 @@ def test_project_get_editor_logs_basic():
     mock_api_client.get.assert_called_once()
     call_args = mock_api_client.get.call_args
 
-    assert  (call_args[0][0], f"projects/{test_project.project_hash}/editor-logs")
+    assert (call_args[0][0], f"projects/{test_project.project_hash}/editor-logs")
     assert isinstance(call_args[1]["params"], EditorLogParams)
-    assert  (call_args[1]["result_type"], EditorLogsResponse)
+    assert (call_args[1]["result_type"], EditorLogsResponse)
 
     # Verify the result
     assert isinstance(result, Page)
-    assert  (len(result.results), 1)
-    assert  (result.results[0].id, log_id)
-    assert  (result.results[0].action, "label_created")
+    assert (len(result.results), 1)
+    assert (result.results[0].id, log_id)
+    assert (result.results[0].action, "label_created")
     assert result.next_page_token is None
+
 
 def test_project_get_editor_logs_with_filters():
     """Test Project.get_editor_logs with filtering parameters."""

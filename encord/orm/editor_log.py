@@ -7,6 +7,7 @@ from uuid import UUID
 
 from encord.orm.base_dto import BaseDTO
 
+
 # The below code should be a duplication of the Editor Log models in file : /fastapi_server/routers/models/model_editor_logs.py
 # We are duplicating the models here to avoid exposing any internal enums or models in the public API
 
@@ -21,12 +22,14 @@ class WorkflowNodeType(StrEnum):
     DONE = "DONE"
     AGENT = "AGENT"
 
+
 class EditorLogsActionCategory(StrEnum):
     OBJECT = "object"
     CLASSIFICATION = "classification"
     TASK = "task"
     AGENT = "agent"
     EDITOR = "editor"
+
 
 class EditorLogCommon(BaseDTO):
     id: UUID
@@ -54,6 +57,7 @@ class EditorLogCommon(BaseDTO):
     workflow_stage_type: WorkflowNodeType | Literal[""]
     workflow_stage_title: str
     event_information: dict[str, Any]
+
 
 class LabelAttributes(BaseDTO):
     label_name: str
@@ -89,6 +93,7 @@ class EditorLogObject(EditorLogCommon, ObjectAttributes):
 
 
 EditorLog = EditorLogGeneralAction | EditorLogObject | EditorLogClassification
+
 
 class EditorLogsResponse(BaseDTO):
     logs: list[EditorLog]

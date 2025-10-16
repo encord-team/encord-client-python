@@ -11,7 +11,7 @@ from encord import EncordUserClient
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
 PROJECT_ID = "00000000-0000-0000-0000-000000000000"
 DATA_UNIT_ID = "00000000-0000-0000-0000-000000000000"  # The unique identifier (data_hash) for the data unit
-WORKFLOW_STAGE_ID = "00000000-0000-0000-0000-000000000000" # The unique identifier for the workflow stage
+WORKFLOW_STAGE_ID = "00000000-0000-0000-0000-000000000000"  # The unique identifier for the workflow stage
 ACTION = "create_object"  # Example action
 ACTOR_USER_EMAIL = "some-email@gmail.com"
 
