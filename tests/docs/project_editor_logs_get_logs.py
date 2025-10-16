@@ -31,8 +31,8 @@ end_time = datetime.now()
 logs_response = project.get_editor_logs(start_time=start_time, end_time=end_time)
 
 # Check if logs were returned
-if logs_response and logs_response.logs:
-    for log in logs_response.logs:
+if logs_response and logs_response.results:
+    for log in logs_response.results:
         print(log)
         break  # print the first log only
 
@@ -43,8 +43,8 @@ if logs_response.next_page_token:
         end_time=end_time,
         page_token=logs_response.next_page_token
     )
-    if next_page_logs_response and next_page_logs_response.logs:
-        for log in next_page_logs_response.logs:
+    if next_page_logs_response and next_page_logs_response.results:
+        for log in next_page_logs_response.results:
             print(log)
             break  # print the first log of the next page only
 
@@ -58,3 +58,8 @@ filtered_logs_response = project.get_editor_logs(
     workflow_stage_id=UUID(WORKFLOW_STAGE_ID),
     data_unit_id=UUID(DATA_UNIT_ID)
 )
+
+if filtered_logs_response and filtered_logs_response.results:
+    for log in filtered_logs_response.results:
+        print(log)
+        break  # print the first log only
