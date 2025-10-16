@@ -565,5 +565,4 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] 
     Shape.CUBOID: [CuboidCoordinates],
     Shape.AUDIO: [AudioCoordinates],
     Shape.TEXT: [TextCoordinates, HtmlCoordinates],
-    Shape.SEGMENTATION: [], # why is this not covered ?
 }

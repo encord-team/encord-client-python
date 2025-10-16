@@ -9,6 +9,7 @@ from encord.orm.base_dto import BaseDTO
 
 # types coming from cord/apiserver/public_api_v2/routers/models/model_editor_logs.py
 
+
 class WorkflowNodeType(StrEnum):
     START = "START"
     ANNOTATION = "ANNOTATION"
