@@ -2,10 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Any, Literal
+from typing import Any, Literal
 from uuid import UUID
-
-from pydantic import EmailStr, Field, RootModel
 
 from encord.orm.base_dto import BaseDTO
 
@@ -103,6 +101,6 @@ class EditorLogParams(BaseDTO):
     limit: int
     page_token: str | None = None
     action: str | None = None
-    actor_user_email: EmailStr | None = None
+    actor_user_email: str | None = None
     workflow_stage_id: UUID | None = None
     data_unit_id: UUID | None = None
