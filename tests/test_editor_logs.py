@@ -21,7 +21,7 @@ from encord.orm.editor_log import (
 )
 from encord.project import Project
 
-def test_project_get_editor_logs_basic(self):
+def test_project_get_editor_logs_basic():
     """Test Project.get_editor_logs with basic parameters."""
     # Mock the API response
     log_id = uuid4()
@@ -89,18 +89,18 @@ def test_project_get_editor_logs_basic(self):
     mock_api_client.get.assert_called_once()
     call_args = mock_api_client.get.call_args
 
-    self.assertEqual(call_args[0][0], f"projects/{test_project.project_hash}/editor-logs")
-    self.assertIsInstance(call_args[1]["params"], EditorLogParams)
-    self.assertEqual(call_args[1]["result_type"], EditorLogsResponse)
+    assertEqual(call_args[0][0], f"projects/{test_project.project_hash}/editor-logs")
+    assertIsInstance(call_args[1]["params"], EditorLogParams)
+    assertEqual(call_args[1]["result_type"], EditorLogsResponse)
 
     # Verify the result
-    self.assertIsInstance(result, Page)
-    self.assertEqual(len(result.results), 1)
-    self.assertEqual(result.results[0].id, log_id)
-    self.assertEqual(result.results[0].action, "label_created")
-    self.assertIsNone(result.next_page_token)
+    assertIsInstance(result, Page)
+    assertEqual(len(result.results), 1)
+    assertEqual(result.results[0].id, log_id)
+    assertEqual(result.results[0].action, "label_created")
+    assertIsNone(result.next_page_token)
 
-def test_project_get_editor_logs_with_filters(self):
+def test_project_get_editor_logs_with_filters():
     """Test Project.get_editor_logs with filtering parameters."""
     # Mock the API response
     mock_response = EditorLogsResponse(
@@ -139,25 +139,25 @@ def test_project_get_editor_logs_with_filters(self):
     mock_api_client.get.assert_called_once()
     call_args = mock_api_client.get.call_args
 
-    self.assertEqual(call_args[0][0], f"projects/{test_project.project_hash}/editor-logs")
+    assertEqual(call_args[0][0], f"projects/{test_project.project_hash}/editor-logs")
     params = call_args[1]["params"]
-    self.assertIsInstance(params, EditorLogParams)
-    self.assertEqual(params.start_time, start_time)
-    self.assertEqual(params.end_time, end_time)
-    self.assertEqual(params.limit, 50)
-    self.assertEqual(params.page_token, "test_token")
-    self.assertEqual(params.action, "label_updated")
-    self.assertEqual(params.actor_user_email, "admin@example.com")
-    self.assertEqual(params.workflow_stage_id, workflow_id)
-    self.assertEqual(params.data_unit_id, data_unit_id)
+    assertIsInstance(params, EditorLogParams)
+    assertEqual(params.start_time, start_time)
+    assertEqual(params.end_time, end_time)
+    assertEqual(params.limit, 50)
+    assertEqual(params.page_token, "test_token")
+    assertEqual(params.action, "label_updated")
+    assertEqual(params.actor_user_email, "admin@example.com")
+    assertEqual(params.workflow_stage_id, workflow_id)
+    assertEqual(params.data_unit_id, data_unit_id)
 
     # Verify the result
-    self.assertIsInstance(result, Page)
-    self.assertEqual(len(result.results), 0)
-    self.assertEqual(result.next_page_token, "next_token_123")
+    assertIsInstance(result, Page)
+    assertEqual(len(result.results), 0)
+    assertEqual(result.next_page_token, "next_token_123")
 
 
-def test_project_get_editor_logs_multiple_types(self):
+def test_project_get_editor_logs_multiple_types():
     """Test that EditorLog union type works correctly."""
     log_id = uuid4()
     project_id = uuid4()
@@ -266,9 +266,9 @@ def test_project_get_editor_logs_multiple_types(self):
     )
 
     # All should be valid EditorLog types
-    self.assertIsInstance(general_log, EditorLog)
-    self.assertIsInstance(object_log, EditorLog)
-    self.assertIsInstance(classification_log, EditorLog)
+    assertIsInstance(general_log, EditorLog)
+    assertIsInstance(object_log, EditorLog)
+    assertIsInstance(classification_log, EditorLog)
 
     # Mock the API response
     mock_response = EditorLogsResponse(
@@ -292,5 +292,5 @@ def test_project_get_editor_logs_multiple_types(self):
         end_time=datetime.now(),
         limit=100
     )
-    self.assertEqual(len(result.results), 3)
-    self.assertTrue(all(isinstance(log, EditorLog) for log in result.results))
+    assertEqual(len(result.results), 3)
+    assertTrue(all(isinstance(log, EditorLog) for log in result.results))
