@@ -7,9 +7,7 @@ from uuid import UUID
 
 from encord.orm.base_dto import BaseDTO
 
-
-# The below code should be a duplication of the Editor Log models in file : /fastapi_server/routers/models/model_editor_logs.py
-# We are duplicating the models here to avoid exposing any internal enums or models in the public API
+# types coming from cord/apiserver/public_api_v2/routers/models/model_editor_logs.py
 
 class WorkflowNodeType(StrEnum):
     START = "START"
