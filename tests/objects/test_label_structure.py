@@ -49,7 +49,7 @@ from tests.objects.test_label_structure_converter import ontology_from_dict
 box_ontology_item = all_types_structure.get_child_by_hash("MjI2NzEy", Object)
 polygon_ontology_item = all_types_structure.get_child_by_hash("ODkxMzAx", Object)
 polyline_ontology_item = all_types_structure.get_child_by_hash("OTcxMzIy", Object)
-
+segmentation_ontology_item = all_types_structure.get_child_by_hash("pointCloud", Object)
 audio_obj_ontology_item = all_types_structure.get_child_by_hash("KVfzNkFy", Object)
 
 text_obj_ontology_item = all_types_structure.get_child_by_hash("textFeatureNodeHash", Object)
@@ -707,7 +707,7 @@ def test_add_and_get_classification_instances_to_audio_label_row(ontology):
     overlapping_classification_instance.set_for_frames(0)
 
 
-def test_add_and_remove_object_instances_from_data_group_label_row(ontology):
+def test_spaces(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(EMPTY_DATA_GROUP_LABELS)
 
@@ -761,6 +761,20 @@ def test_add_and_remove_object_instances_from_data_group_label_row(ontology):
     # UPDATE SPACE
     video_space_2 = label_row.get_space_by_title(title="Video 2", type_=VisionSpace)
     video_space_1.move_object_instance_to_space(object_hash=bb_instance.object_hash, target_space_id=video_space_2.id)
+
+    # List object instances in space
+    objects_on_video_space = video_space_1.get_object_instances(
+        filter_ontology_object=box_ontology_item, filter_frames=[0, 1, 2]
+    )
+    objects_on_audio_space = audio_space.get_object_instances(
+        filter_ontology_object=audio_obj_ontology_item, filter_ranges=Range(start=5, end=200)
+    )
+    objects_to_point_cloud_space = point_cloud_space.get_object_instances(
+        filter_ontology_object=segmentation_ontology_item
+    )
+
+    # Object Instances also know which space they are on
+    print(f"BB Object is on space: {bb_instance._space}")
 
 
 def test_object_instance_answer_for_static_attributes():

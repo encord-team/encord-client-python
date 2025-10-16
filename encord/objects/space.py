@@ -1,12 +1,10 @@
-from abc import ABC, abstractmethod
-from enum import Enum, StrEnum
-from typing import Any, Iterable, List, Literal, Optional, Sequence, Type, TypeVar, cast
+from abc import ABC
+from enum import StrEnum
+from typing import Iterable, Optional, TypeVar
 
-from encord.exceptions import LabelRowError
 from encord.objects import LabelRowV2, Object, ObjectInstance, Shape
 from encord.objects.coordinates import AudioCoordinates, Coordinates, TextCoordinates
 from encord.objects.frames import Frames, Range
-from encord.objects.utils import does_type_match
 
 
 class SpaceType(StrEnum):
@@ -40,6 +38,9 @@ class Space(ABC):
     def remove_object_instance(self, object_hash: str) -> ObjectInstance:
         raise NotImplementedError()
 
+    def move_object_instance_to_space(self, object_hash: str, target_space_id: str):
+        raise NotImplementedError()
+
 
 class VisionSpace(Space):
     def __init__(self, id: str, title: str, layout_key: Optional[str], parent: LabelRowV2):
@@ -62,7 +63,9 @@ class VisionSpace(Space):
         self.parent.add_object_instance(object_instance=object_instance)
         return object_instance
 
-    def move_object_instance_to_space(self, object_hash: str, target_space_id: str):
+    def get_object_instances(
+        self, filter_ontology_object: Optional[Object] = None, filter_frames: Optional[Frames] = None
+    ) -> Iterable[ObjectInstance]:
         raise NotImplementedError()
 
 
@@ -70,17 +73,15 @@ class PointCloudSpace(Space):
     def __init__(self, id: str, title: str, layout_key: Optional[str], parent: LabelRowV2):
         super().__init__(id, title, SpaceType.POINT_CLOUD, parent, layout_key)
 
+    def get_object_instances(
+        self,
+        filter_ontology_object: Optional[Object] = None,
+    ) -> Iterable[ObjectInstance]:
+        raise NotImplementedError()
+
     def add_object_instance(self, obj: Object, coordinates: Coordinates) -> ObjectInstance:
-        if obj.shape not in [
-            Shape.BOUNDING_BOX,
-            Shape.ROTATABLE_BOUNDING_BOX,
-            Shape.BITMASK,
-            Shape.POLYGON,
-            Shape.POLYLINE,
-            Shape.POINT,
-            Shape.SKELETON,
-        ]:
-            raise ValueError(f"Shapes of type: {obj.shape} are not allowed on Vision Space.")
+        if obj.shape != Shape.SEGMENTATION:
+            raise ValueError(f"Only segmentation spaces are allowed on PointCloudSpace.")
 
         object_instance = obj.create_instance()
         # For Point Cloud, no frames, it applies to whole file
@@ -88,13 +89,17 @@ class PointCloudSpace(Space):
         self.parent.add_object_instance(object_instance=object_instance)
         return object_instance
 
-    def move_object_instance_to_space(self, object_hash: str, target_space_id: str):
-        raise NotImplementedError()
-
 
 class AudioSpace(Space):
     def __init__(self, id: str, title: str, layout_key: Optional[str], parent: LabelRowV2):
         super().__init__(id, title, SpaceType.AUDIO, parent, layout_key)
+
+    def get_object_instances(
+        self,
+        filter_ontology_object: Optional[Object] = None,
+        filter_ranges: Optional[Range | list[Range]] = None,
+    ) -> Iterable[ObjectInstance]:
+        raise NotImplementedError()
 
     def add_object_instance(self, obj: Object, ranges: list[Range] | Range):
         if obj.shape != Shape.AUDIO:
@@ -111,11 +116,18 @@ class TextSpace(Space):
     def __init__(self, id: str, title: str, layout_key: Optional[str], parent: LabelRowV2):
         super().__init__(id, title, SpaceType.TEXT, parent, layout_key)
 
-    def add_object_instance(self, obj: Object, text_ranges: list[Range] | Range):
+    def get_object_instances(
+        self,
+        filter_ontology_object: Optional[Object] = None,
+        filter_ranges: Optional[Range | list[Range]] = None,
+    ) -> Iterable[ObjectInstance]:
+        raise NotImplementedError()
+
+    def add_object_instance(self, obj: Object, ranges: list[Range] | Range):
         if obj.shape != Shape.TEXT:
             raise ValueError(f"AudioSpace requires objects with Shape.AUDIO, got {obj.shape}")
 
-        text_ranges = text_ranges if isinstance(text_ranges, list) else [text_ranges]
+        text_ranges = ranges if isinstance(ranges, list) else [ranges]
 
         object_instance = obj.create_instance()
         object_instance.set_for_frames(coordinates=TextCoordinates(range=text_ranges))
