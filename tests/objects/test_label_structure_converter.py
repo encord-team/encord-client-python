@@ -26,6 +26,7 @@ from tests.objects.data import (
 from tests.objects.data.all_ontology_types import all_ontology_types
 from tests.objects.data.audio_labels import AUDIO_LABELS
 from tests.objects.data.audio_objects import AUDIO_OBJECTS
+from tests.objects.data.data_group import DATA_GROUP_METADATA, INPUT_DATA_GROUP_LABELS, OUTPUT_DATA_GROUP_LABELS
 from tests.objects.data.dicom_labels import dicom_labels
 from tests.objects.data.dynamic_classifications_ontology import (
     dynamic_classifications_ontology,
@@ -40,7 +41,6 @@ from tests.objects.data.ontology_with_many_dynamic_classifications import (
     ontology as ontology_with_many_dynamic_classifications,
 )
 from tests.objects.data.plain_text import PLAIN_TEXT_LABELS
-from tests.objects.data.data_group import INPUT_DATA_GROUP_LABELS, OUTPUT_DATA_GROUP_LABELS, DATA_GROUP_METADATA
 
 
 def ontology_from_dict(ontology_structure_dict: Dict):
@@ -216,7 +216,6 @@ def test_serialise_data_group():
     label_row.from_labels_dict(INPUT_DATA_GROUP_LABELS)
 
     actual = label_row.to_encord_dict()
-    print(json.dumps(actual, indent=2))
     deep_diff_enhanced(
         actual,
         OUTPUT_DATA_GROUP_LABELS,

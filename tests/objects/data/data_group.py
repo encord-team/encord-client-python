@@ -1,7 +1,7 @@
 import datetime
 
 from encord.constants.enums import DataType
-from encord.orm.label_row import LabelRowMetadata, LabelStatus, AnnotationTaskStatus
+from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
 from encord.orm.label_space import SpaceInfo
 
 DATA_GROUP_DATA_HASH = "28f0e9d2-51e0-459d-8ffa-2e214da653a9"
@@ -32,8 +32,8 @@ DATA_GROUP_METADATA = LabelRowMetadata(
     audio_sample_rate=None,
     spaces={
         "child-1-uuid": SpaceInfo(space_type="data-group-child", data_type=DataType.VIDEO),
-        "child-2-uuid": SpaceInfo(space_type="data-group-child", data_type=DataType.VIDEO)
-    }
+        "child-2-uuid": SpaceInfo(space_type="data-group-child", data_type=DataType.VIDEO),
+    },
 )
 
 INPUT_DATA_GROUP_LABELS = {
@@ -53,7 +53,13 @@ INPUT_DATA_GROUP_LABELS = {
             "objectHash": "0gCzNuLS",
             "featureHash": "MjI2NzEy",
             "classifications": [],
-            "range": [{"space": "child-1-uuid", "frames": [[0, 1]]}, {"space": "child-2-uuid", "frames": [[0, 0], [2, 2]]}],
+            "spaces": {
+                "child-1-uuid": {"range": [[0, 1]]},
+            },
+            "range": [
+                {"space": "child-1-uuid", "frames": [[0, 1]]},
+                {"space": "child-2-uuid", "frames": [[0, 0], [2, 2]]},
+            ],
             "createdAt": "Tue, 22 Oct 2024 09:43:47 GMT",
             "createdBy": "denis@cord.tech",
             "lastEditedAt": "Tue, 22 Oct 2024 09:43:47 GMT",
@@ -67,7 +73,11 @@ INPUT_DATA_GROUP_LABELS = {
         "child-1-uuid": {
             "space_type": "data-group-child",
             "data_type": "video",
-        }
+        },
+        "child-2-uuid": {
+            "space_type": "data-group-child",
+            "data_type": "video",
+        },
     },
     "data_units": {
         DATA_GROUP_DATA_HASH: {
@@ -93,7 +103,7 @@ INPUT_DATA_GROUP_LABELS = {
                             "boundingBox": {"h": 0.1291, "w": 0.1296, "x": 0.4287, "y": 0.2615},
                         },
                     ],
-                    "classifications": []
+                    "classifications": [],
                 },
                 "child-1-uuid#1": {
                     "objects": [
@@ -112,7 +122,7 @@ INPUT_DATA_GROUP_LABELS = {
                             "boundingBox": {"h": 0.1291, "w": 0.1296, "x": 0.4287, "y": 0.2615},
                         },
                     ],
-                    "classifications": []
+                    "classifications": [],
                 },
                 "child-2-uuid#0": {
                     "objects": [
@@ -131,7 +141,7 @@ INPUT_DATA_GROUP_LABELS = {
                             "boundingBox": {"h": 0.1291, "w": 0.1296, "x": 0.4287, "y": 0.2615},
                         },
                     ],
-                    "classifications": []
+                    "classifications": [],
                 },
                 "child-2-uuid#2": {
                     "objects": [
@@ -150,8 +160,8 @@ INPUT_DATA_GROUP_LABELS = {
                             "boundingBox": {"h": 0.1291, "w": 0.1296, "x": 0.4287, "y": 0.2615},
                         },
                     ],
-                    "classifications": []
-                }
+                    "classifications": [],
+                },
             },
         }
     },
@@ -178,6 +188,13 @@ OUTPUT_DATA_GROUP_LABELS = {
     "classification_answers": {},
     "object_actions": {},
     "label_status": "LABEL_IN_PROGRESS",
+    ## TODO:
+    # "spaces": {
+    #     "child-1-uuid": {
+    #         "space_type": "data-group-child",
+    #         "data_type": "video",
+    #     }
+    # },
     "data_units": {
         DATA_GROUP_DATA_HASH: {
             "data_hash": DATA_GROUP_DATA_HASH,
@@ -199,7 +216,7 @@ OUTPUT_DATA_GROUP_LABELS = {
                             "boundingBox": {"h": 0.1291, "w": 0.1296, "x": 0.4287, "y": 0.2615},
                         },
                     ],
-                    "classifications": []
+                    "classifications": [],
                 },
                 "child-1-uuid#1": {
                     "objects": [
@@ -218,7 +235,7 @@ OUTPUT_DATA_GROUP_LABELS = {
                             "boundingBox": {"h": 0.1291, "w": 0.1296, "x": 0.4287, "y": 0.2615},
                         },
                     ],
-                    "classifications": []
+                    "classifications": [],
                 },
                 "child-2-uuid#0": {
                     "objects": [
@@ -237,7 +254,7 @@ OUTPUT_DATA_GROUP_LABELS = {
                             "boundingBox": {"h": 0.1291, "w": 0.1296, "x": 0.4287, "y": 0.2615},
                         },
                     ],
-                    "classifications": []
+                    "classifications": [],
                 },
                 "child-2-uuid#2": {
                     "objects": [
@@ -256,8 +273,8 @@ OUTPUT_DATA_GROUP_LABELS = {
                             "boundingBox": {"h": 0.1291, "w": 0.1296, "x": 0.4287, "y": 0.2615},
                         },
                     ],
-                    "classifications": []
-                }
+                    "classifications": [],
+                },
             },
         }
     },

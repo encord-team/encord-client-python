@@ -97,6 +97,7 @@ class ObjectInstance:
 
     def _object_key(self):
         return self._object_hash if self._space is None else f"{self._space}#{self._object_hash}"
+
     @property
     def object_hash(self) -> str:
         """A unique identifier for the object instance.
@@ -436,7 +437,6 @@ class ObjectInstance:
         self,
         coordinates: Coordinates,
         frames: Frames = 0,
-        space: str | None = None,
         *,
         overwrite: bool = False,
         created_at: Optional[datetime] = None,
@@ -531,7 +531,7 @@ class ObjectInstance:
         else:
             return self.get_annotation(0)
 
-    def get_annotation(self, frame: int = 0, space: str | None = None) -> Annotation:
+    def get_annotation(self, frame: int = 0) -> Annotation:
         """Get the annotation for the object instance on the specified frame.
 
         Args:
@@ -563,7 +563,7 @@ class ObjectInstance:
         # else:
         #     frame_num = frame
 
-        return self.Annotation(self, frame, space=space)
+        return self.Annotation(self, frame)
 
     def copy(self) -> ObjectInstance:
         """Create an exact copy of this ObjectInstance.
@@ -586,7 +586,7 @@ class ObjectInstance:
         Returns:
             List[Annotation]: A list of `ObjectInstance.Annotation` in order of available frames.
         """
-        return [self.get_annotation(frame_num, self._space) for frame_num in sorted(self._frames_to_instance_data.keys())]
+        return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_instance_data.keys())]
 
     def get_annotation_frames(self) -> set[int]:
         """Get all annotations for the object instance on all frames it has been placed on.
@@ -649,23 +649,13 @@ class ObjectInstance:
         Allows setting or getting data for the ObjectInstance on the given frame number.
         """
 
-        def __init__(self, object_instance: ObjectInstance, frame: int, space: str | None = None):
+        def __init__(self, object_instance: ObjectInstance, frame: int):
             self._object_instance = object_instance
             self._frame = frame
-            self._space = space
-            self._annotation_path = str(frame) if space is None else f"{space}#{frame}"
 
         @property
         def frame(self) -> int:
             return self._frame
-
-        @property
-        def space(self) -> str | None:
-            return self._space
-
-        @property
-        def path(self) -> str:
-            return str(self._frame) if self._space is None else f"{self._space}#{self._frame}"
 
         @property
         def coordinates(self) -> Coordinates:

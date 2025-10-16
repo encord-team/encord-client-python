@@ -5,6 +5,8 @@ from unittest.mock import Mock, PropertyMock
 
 import pytest
 
+from encord import EncordUserClient
+from encord.configs import UserConfig
 from encord.exceptions import LabelRowError, OntologyError
 from encord.objects import (
     AnswerForFrames,
@@ -30,13 +32,15 @@ from encord.objects.coordinates import (
 from encord.objects.frames import Range
 from encord.objects.html_node import HtmlNode, HtmlRange
 from encord.objects.options import Option
+from encord.objects.space import AudioSpace, PointCloudSpace, SpaceType, VisionSpace
 from encord.orm.label_row import LabelRowMetadata, LabelStatus
+from encord.storage import StorageItem
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
 from tests.objects.data import empty_video
 from tests.objects.data.all_ontology_types import all_ontology_types
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.audio_labels import EMPTY_AUDIO_LABELS
-from tests.objects.data.data_group import DATA_GROUP_METADATA, INPUT_DATA_GROUP_LABELS, EMPTY_DATA_GROUP_LABELS
+from tests.objects.data.data_group import DATA_GROUP_METADATA, EMPTY_DATA_GROUP_LABELS, INPUT_DATA_GROUP_LABELS
 from tests.objects.data.empty_image_group import empty_image_group_labels
 from tests.objects.data.html_text_labels import EMPTY_HTML_TEXT_LABELS
 from tests.objects.data.plain_text import EMPTY_PLAIN_TEXT_LABELS
@@ -703,51 +707,61 @@ def test_add_and_get_classification_instances_to_audio_label_row(ontology):
     overlapping_classification_instance.set_for_frames(0)
 
 
-def test_add_object_instances_to_data_group_label_row(ontology):
+def test_add_and_remove_object_instances_from_data_group_label_row(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(EMPTY_DATA_GROUP_LABELS)
 
-    coordinates = BoundingBoxCoordinates(
+    frame_0_box_coordinates = BoundingBoxCoordinates(
         height=0.1,
         width=0.2,
         top_left_x=0.3,
         top_left_y=0.4,
     )
 
-    # Add object to child-1
-    object_instance_1 = ObjectInstance(box_ontology_item)
-    object_instance_1.set_for_frames(coordinates=coordinates, frames=5)
-    label_row.add_object_instance(object_instance_1, space="child-uuid-1")
-    assert label_row.get_object_instances(filter_spaces=["child-uuid-1"])[0].object_hash == object_instance_1.object_hash
-
-    # Add object (with same object hash) to child-2
-    # TODO: Should we allow adding the same object instance to label row multiple times, but on different spaces?
-    object_instance_2 = ObjectInstance(box_ontology_item, object_hash=object_instance_1.object_hash)
-    object_instance_2.set_for_frames(coordinates=coordinates, frames=6)
-    label_row.add_object_instance(object_instance_2, space="child-uuid-2")
-    assert label_row.get_object_instances(filter_spaces=["child-uuid-2"])[0].object_hash == object_instance_2.object_hash
-
-
-def test_remove_object_instances_from_data_group_label_row(ontology):
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(EMPTY_DATA_GROUP_LABELS)
-
-    coordinates = BoundingBoxCoordinates(
-        height=0.1,
-        width=0.2,
-        top_left_x=0.3,
-        top_left_y=0.4,
+    frames_5_to_10_box_coordinates = BoundingBoxCoordinates(
+        height=0.3,
+        width=0.4,
+        top_left_x=0.5,
+        top_left_y=0.6,
     )
 
-    # Add object to child-1
-    object_instance_1 = ObjectInstance(box_ontology_item)
-    object_instance_1.set_for_frames(coordinates=coordinates, frames=5)
-    label_row.add_object_instance(object_instance_1, space="child-uuid-1")
-    assert label_row.get_object_instances(filter_spaces=["child-uuid-1"])[0].object_hash == object_instance_1.object_hash
+    # LIST ALL SPACES
+    spaces = label_row.list_spaces()
+    for space in spaces:
+        print(f"ID: {space.id}")
+        print(f"title: {space.title}")
+        print(f"space type: {space.space_type}")
+        print(f"layout key: {space.layout_key}")  # Returns None if space is not a data group child
 
-    # Remove the object
-    label_row.remove_object(object_instance_1)
-    assert len(label_row.get_object_instances()) == 0
+    # ADD OBJECTS FROM SPACE
+    video_space_1 = label_row.get_space_by_title(title="Video 1", type_=VisionSpace)
+    # OR could get the space by its layout key
+    video_space_1 = label_row.get_space_by_layout_key(layout_key="video-left", type_=VisionSpace)
+
+    bb_instance = video_space_1.add_object_instance(
+        obj=box_ontology_item,
+        coordinates=frame_0_box_coordinates,
+        frames=0,
+        # Also could add the other args for set_for_frames (e.g. last_edited_at etc..)
+    )
+
+    # Can continue to use old API for object_instances
+    bb_instance.set_for_frames(coordinates=frames_5_to_10_box_coordinates, frames=Range(start=5, end=10))
+
+    audio_space = label_row.get_space_by_title(title="Audio 1", type_=AudioSpace)
+    audio_instance = audio_space.add_object_instance(obj=audio_obj_ontology_item, ranges=Range(start=500, end=2000))
+
+    # NOTE: Point clouds have no frames, so any object instance is applied to the entire thing
+    point_cloud_space = label_row.get_space_by_title(title="url-to-point-cloud.pcd", type_=PointCloudSpace)
+    point_cloud_space.add_object_instance(obj=box_ontology_item, coordinates=frame_0_box_coordinates)
+
+    # REMOVE OBJECTS FROM SPACE
+    video_space_1.remove_object_instance(object_hash=bb_instance.object_hash)
+
+    # UPDATE SPACE
+    video_space_2 = label_row.get_space_by_title(title="Video 2", type_=VisionSpace)
+    video_space_1.move_object_instance_to_space(object_hash=bb_instance.object_hash, target_space_id=video_space_2.id)
+
 
 def test_object_instance_answer_for_static_attributes():
     object_instance = ObjectInstance(deeply_nested_polygon_item)
