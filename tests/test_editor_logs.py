@@ -17,7 +17,7 @@ from encord.orm.editor_log import (
     EditorLogParams,
     EditorLogsActionCategory,
     EditorLogsResponse,
-    WorkflowNodeType,
+    ActionableWorkflowNodeType,
 )
 from encord.project import Project
 
@@ -56,7 +56,7 @@ def test_project_get_editor_logs_basic():
         data_unit_dataset_title="Test Dataset",
         ontology_id=ontology_id,
         label_id="label123",
-        workflow_stage_type=WorkflowNodeType.ANNOTATION,
+        workflow_stage_type=ActionableWorkflowNodeType.ANNOTATION,
         workflow_stage_title="Annotation Stage",
         event_information={"key": "value"},
     )
@@ -183,7 +183,7 @@ def test_project_get_editor_logs_multiple_types():
         data_unit_dataset_title="Test Dataset",
         ontology_id=ontology_id,
         label_id="label123",
-        workflow_stage_type=WorkflowNodeType.ANNOTATION,
+        workflow_stage_type=ActionableWorkflowNodeType.ANNOTATION,
         workflow_stage_title="Annotation Stage",
         event_information={"key": "value"},
     )
@@ -212,7 +212,7 @@ def test_project_get_editor_logs_multiple_types():
         data_unit_dataset_title="Test Dataset",
         ontology_id=ontology_id,
         label_id="label123",
-        workflow_stage_type=WorkflowNodeType.ANNOTATION,
+        workflow_stage_type=ActionableWorkflowNodeType.ANNOTATION,
         workflow_stage_title="Annotation Stage",
         event_information={"key": "value"},
         label_name="Test Label",
@@ -248,7 +248,7 @@ def test_project_get_editor_logs_multiple_types():
         data_unit_dataset_title="Test Dataset",
         ontology_id=ontology_id,
         label_id="label123",
-        workflow_stage_type=WorkflowNodeType.ANNOTATION,
+        workflow_stage_type=ActionableWorkflowNodeType.ANNOTATION,
         workflow_stage_title="Annotation Stage",
         event_information={"key": "value"},
         label_name="Test Classification",

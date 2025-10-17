@@ -12,16 +12,12 @@ from encord.orm.base_dto import BaseDTO
 class StrEnum(str, Enum):  # Backport for compatibility
     pass
 
-class WorkflowNodeType(StrEnum):
-    START = "START"
+class ActionableWorkflowNodeType(StrEnum):
     ANNOTATION = "ANNOTATION"
     REVIEW = "REVIEW"
-    USER_ROUTER = "USER_ROUTER"
-    PERCENTAGE_ROUTER = "PERCENTAGE_ROUTER"
     CONSENSUS_ANNOTATION = "CONSENSUS_ANNOTATION"
     CONSENSUS_REVIEW = "CONSENSUS_REVIEW"
     DONE = "DONE"
-    AGENT = "AGENT"
 
 
 class EditorLogsActionCategory(StrEnum):
@@ -55,7 +51,7 @@ class EditorLogCommon(BaseDTO):
     data_unit_dataset_title: str
     ontology_id: UUID
     label_id: str
-    workflow_stage_type: WorkflowNodeType | Literal[""]
+    workflow_stage_type: ActionableWorkflowNodeType | Literal[""]
     workflow_stage_title: str
     event_information: dict[str, Any]
 
