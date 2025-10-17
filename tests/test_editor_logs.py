@@ -5,10 +5,10 @@ Tests the get_editor_logs method in Project class with minimal mocking.
 """
 
 from datetime import datetime, timedelta
+from typing import Iterator
 from unittest.mock import MagicMock
 from uuid import uuid4
 
-from encord.http.v2.payloads import Page
 from encord.orm.editor_log import (
     ActionableWorkflowNodeType,
     EditorLog,
@@ -88,11 +88,13 @@ def test_project_get_editor_logs_basic():
     assert (call_args[1]["result_type"], EditorLogsResponse)
 
     # Verify the result
-    assert isinstance(result, Page)
-    assert (len(result.results), 1)
-    assert (result.results[0].id, log_id)
-    assert (result.results[0].action, "label_created")
-    assert result.next_page_token is None
+    assert isinstance(result, Iterator)
+    results = []
+    for item in result:
+        results.append(item)
+    assert (len(results), 1)
+    assert (results[0].id, log_id)
+    assert (results[0].action, "label_created")
 
 
 def test_project_get_editor_logs_with_filters():
@@ -144,9 +146,11 @@ def test_project_get_editor_logs_with_filters():
     assert params.data_unit_id == data_unit_id
 
     # Verify the result
-    assert isinstance(result, Page)
-    assert len(result.results) == 0
-    assert result.next_page_token == "next_token_123"
+    assert isinstance(result, Iterator)
+    results = []
+    for item in result:
+        results.append(item)
+    assert len(results) == 0
 
 
 def test_project_get_editor_logs_multiple_types():
@@ -279,5 +283,8 @@ def test_project_get_editor_logs_multiple_types():
     result = test_project.get_editor_logs(
         start_time=datetime.now() - timedelta(days=7), end_time=datetime.now(), limit=100
     )
-    assert len(result.results) == 3
-    assert (all(isinstance(log, EditorLog) for log in result.results)) == True
+    results = []
+    for item in result:
+        results.append(item)
+    assert len(results) == 3
+    assert (all(isinstance(log, EditorLog) for log in results)) == True
