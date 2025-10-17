@@ -57,8 +57,7 @@ assert sign_well_positioned_option is not None, "Option 'Well positioned' not fo
 sign_good_visibility_option = sign_checklist_attribute.get_child_by_title(type_=Option, title="Good visibility")
 assert sign_good_visibility_option is not None, "Option 'Good visibility' not found under 'Sign Qualities?'"
 
-sign_good_condition_option = sign_checklist_attribute.get_child_by_title(
-    type_=Option, title="Good condition")
+sign_good_condition_option = sign_checklist_attribute.get_child_by_title(type_=Option, title="Good condition")
 assert sign_good_condition_option is not None, "Option 'Good condition' not found under 'Sign Qualities?'"
 
 # Get checklist attributes and options for Traffic light
@@ -70,15 +69,23 @@ assert traffic_light_checklist_attribute is not None, "Checklist attribute 'Traf
 traffic_light_well_positioned_option = traffic_light_checklist_attribute.get_child_by_title(
     type_=Option, title="Well positioned"
 )
-assert traffic_light_well_positioned_option is not None, "Option 'Well positioned' not found under 'Traffic light Qualities?'"
+assert traffic_light_well_positioned_option is not None, (
+    "Option 'Well positioned' not found under 'Traffic light Qualities?'"
+)
 
 traffic_light_good_visibility_option = traffic_light_checklist_attribute.get_child_by_title(
     type_=Option, title="Good visibility"
 )
-assert traffic_light_good_visibility_option is not None, "Option 'Good visibility' not found under 'Traffic light Qualities?'"
+assert traffic_light_good_visibility_option is not None, (
+    "Option 'Good visibility' not found under 'Traffic light Qualities?'"
+)
 
-traffic_light_good_condition_option = traffic_light_checklist_attribute.get_child_by_title(type_=Option, title="Good condition")
-assert traffic_light_good_condition_option is not None, "Option 'Good condition' not found under 'Traffic light Qualities?'"
+traffic_light_good_condition_option = traffic_light_checklist_attribute.get_child_by_title(
+    type_=Option, title="Good condition"
+)
+assert traffic_light_good_condition_option is not None, (
+    "Option 'Good condition' not found under 'Traffic light Qualities?'"
+)
 
 # Get text attribute for specifying other Point of Interest types
 other_poi_option_text_attribute = ontology_structure.get_child_by_title(
@@ -342,7 +349,9 @@ for data_unit, frame_coordinates in pcd_labels.items():
                     if option:
                         checklist_answers.append(option)
                     else:
-                        assert poi_type == "Other Point of Interest type", f"Invalid quality '{quality}' for type '{poi_type}'"
+                        assert poi_type == "Other Point of Interest type", (
+                            f"Invalid quality '{quality}' for type '{poi_type}'"
+                        )
 
                 if checklist_attribute and checklist_answers:
                     keypoint_object_instance.set_answer(
