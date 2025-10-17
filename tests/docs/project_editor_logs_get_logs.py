@@ -44,7 +44,7 @@ filtered_logs_response = project.get_editor_logs(
     action=ACTION,
     actor_user_email=ACTOR_USER_EMAIL,
     workflow_stage_id=UUID(WORKFLOW_STAGE_ID),
-    data_unit_id=UUID(DATA_UNIT_ID)
+    data_unit_id=UUID(DATA_UNIT_ID),
 )
 
 if filtered_logs_response:
