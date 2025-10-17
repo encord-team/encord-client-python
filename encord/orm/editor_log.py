@@ -96,11 +96,6 @@ class EditorLogObject(EditorLogCommon, ObjectAttributes):
 EditorLog: TypeAlias = Union[EditorLogGeneralAction, EditorLogObject, EditorLogClassification]
 
 
-class EditorLogsResponse(BaseDTO):
-    results: list[EditorLog]
-    next_page_token: str | None = None
-
-
 class EditorLogParams(BaseDTO):
     start_time: datetime
     end_time: datetime
