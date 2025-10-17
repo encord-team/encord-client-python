@@ -20,7 +20,6 @@ from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.filter_preset import ProjectFilterPreset
 from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
-from encord.http.v2.payloads import Page
 from encord.objects import LabelRowV2, OntologyStructure
 from encord.ontology import Ontology
 from encord.orm.active import ActiveProjectMode

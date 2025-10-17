@@ -75,7 +75,7 @@ class ApiClient:
         self,
         path: str,
         params: BaseDTO,
-        result_type: Type[T],
+        result_type: Union[Type[T], Callable[[dict], T]],
         allow_none: bool = False,
     ) -> Iterator[T]:
         if not hasattr(params, "page_token"):
