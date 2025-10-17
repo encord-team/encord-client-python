@@ -65,7 +65,7 @@ def test_project_get_editor_logs_basic():
 
     # Create a mock API client
     mock_api_client = MagicMock()
-    mock_api_client.get.return_value = mock_response
+    mock_api_client.get_paged_iterator.return_value = mock_response
 
     # Create a mock project instance
     test_project = MagicMock(spec=Project)
@@ -80,8 +80,8 @@ def test_project_get_editor_logs_basic():
     result = test_project.get_editor_logs(start_time=start_time, end_time=end_time, limit=100)
 
     # Verify the API client was called correctly
-    mock_api_client.get.assert_called_once()
-    call_args = mock_api_client.get.call_args
+    mock_api_client.get_paged_iterator.assert_called_once()
+    call_args = mock_api_client.get_paged_iterator.call_args
 
     assert (call_args[0][0], f"projects/{test_project.project_hash}/editor-logs")
     assert isinstance(call_args[1]["params"], EditorLogParams)
@@ -104,7 +104,7 @@ def test_project_get_editor_logs_with_filters():
 
     # Create a mock API client
     mock_api_client = MagicMock()
-    mock_api_client.get.return_value = mock_response
+    mock_api_client.get_paged_iterator.return_value = mock_response
 
     # Create a mock project instance
     test_project = MagicMock(spec=Project)
@@ -130,8 +130,8 @@ def test_project_get_editor_logs_with_filters():
     )
 
     # Verify the API client was called correctly
-    mock_api_client.get.assert_called_once()
-    call_args = mock_api_client.get.call_args
+    mock_api_client.get_paged_iterator.assert_called_once()
+    call_args = mock_api_client.get_paged_iterator.call_args
 
     assert call_args[0][0] == f"projects/{test_project.project_hash}/editor-logs"
     params = call_args[1]["params"]
@@ -271,7 +271,7 @@ def test_project_get_editor_logs_multiple_types():
 
     # Create a mock API client
     mock_api_client = MagicMock()
-    mock_api_client.get.return_value = mock_response
+    mock_api_client.get_paged_iterator.return_value = mock_response
 
     # Create a mock project instance
     test_project = MagicMock(spec=Project)
