@@ -2,15 +2,18 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Literal, TypeAlias
+from typing import Any, Literal
 from uuid import UUID
+from typing_extensions import TypeAlias
 
 from encord.orm.base_dto import BaseDTO
 
 # types coming from cord/apiserver/public_api_v2/routers/models/model_editor_logs.py
 
+
 class StrEnum(str, Enum):  # Backport for compatibility
     pass
+
 
 class ActionableWorkflowNodeType(StrEnum):
     ANNOTATION = "ANNOTATION"
@@ -89,11 +92,7 @@ class EditorLogObject(EditorLogCommon, ObjectAttributes):
     action_category: Literal[EditorLogsActionCategory.OBJECT]
 
 
-EditorLog: TypeAlias = (
-    EditorLogGeneralAction
-    | EditorLogObject
-    | EditorLogClassification
-)
+EditorLog: TypeAlias = EditorLogGeneralAction | EditorLogObject | EditorLogClassification
 
 class EditorLogsResponse(BaseDTO):
     logs: list[EditorLog]

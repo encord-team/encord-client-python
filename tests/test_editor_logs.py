@@ -10,6 +10,7 @@ from uuid import uuid4
 
 from encord.http.v2.payloads import Page
 from encord.orm.editor_log import (
+    ActionableWorkflowNodeType,
     EditorLog,
     EditorLogClassification,
     EditorLogGeneralAction,
@@ -17,7 +18,6 @@ from encord.orm.editor_log import (
     EditorLogParams,
     EditorLogsActionCategory,
     EditorLogsResponse,
-    ActionableWorkflowNodeType,
 )
 from encord.project import Project
 
