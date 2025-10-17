@@ -594,7 +594,7 @@ class Project:
         actor_user_email: Optional[str] = None,
         workflow_stage_id: Optional[UUID] = None,
         data_unit_id: Optional[UUID] = None,
-    ) -> Iterator[EditorLogsResponse]:
+    ) -> Iterator[EditorLog]:
         params = EditorLogParams(
             start_time=start_time,
             end_time=end_time,
