@@ -65,7 +65,8 @@ def test_project_get_editor_logs_basic():
 
     # Create a mock API client
     mock_api_client = MagicMock()
-    mock_api_client.get_paged_iterator.return_value = mock_response
+    # Mock the iterator behavior - get_paged_iterator should return an iterator
+    mock_api_client.get_paged_iterator.return_value = iter([mock_editor_log])
 
     # Create a mock project instance
     test_project = MagicMock(spec=Project)
@@ -83,18 +84,18 @@ def test_project_get_editor_logs_basic():
     mock_api_client.get_paged_iterator.assert_called_once()
     call_args = mock_api_client.get_paged_iterator.call_args
 
-    assert (call_args[0][0], f"projects/{test_project.project_hash}/editor-logs")
+    assert call_args[0][0] == f"projects/{test_project.project_hash}/editor-logs"
     assert isinstance(call_args[1]["params"], EditorLogParams)
-    assert (call_args[1]["result_type"], EditorLogsResponse)
+    assert call_args[1]["result_type"] == EditorLog
 
     # Verify the result
     assert isinstance(result, Iterator)
     results = []
     for item in result:
         results.append(item)
-    assert (len(results), 1)
-    assert (results[0].id, log_id)
-    assert (results[0].action, "label_created")
+    assert len(results) == 1
+    assert results[0].id == log_id
+    assert results[0].action == "label_created"
 
 
 def test_project_get_editor_logs_with_filters():
@@ -104,7 +105,8 @@ def test_project_get_editor_logs_with_filters():
 
     # Create a mock API client
     mock_api_client = MagicMock()
-    mock_api_client.get_paged_iterator.return_value = mock_response
+    # Mock the iterator behavior - get_paged_iterator should return an iterator
+    mock_api_client.get_paged_iterator.return_value = iter([])
 
     # Create a mock project instance
     test_project = MagicMock(spec=Project)
@@ -271,7 +273,8 @@ def test_project_get_editor_logs_multiple_types():
 
     # Create a mock API client
     mock_api_client = MagicMock()
-    mock_api_client.get_paged_iterator.return_value = mock_response
+    # Mock the iterator behavior - get_paged_iterator should return an iterator
+    mock_api_client.get_paged_iterator.return_value = iter([general_log, object_log, classification_log])
 
     # Create a mock project instance
     test_project = MagicMock(spec=Project)
@@ -287,4 +290,4 @@ def test_project_get_editor_logs_multiple_types():
     for item in result:
         results.append(item)
     assert len(results) == 3
-    assert (all(isinstance(log, EditorLog) for log in results)) == True
+    assert all(isinstance(log, EditorLog) for log in results)
