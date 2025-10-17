@@ -27,25 +27,14 @@ user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
 project = user_client.get_project(PROJECT_ID)
 
 # Fetch the logs of the project with mandatory start_time and end_time parameters and a maximum of 30 days range
-start_time = datetime.now() - timedelta(days=29)
-end_time = datetime.now()
+start_time = datetime.datetime.now() - datetime.timedelta(days=29)
+end_time = datetime.datetime.now()
 logs_response = project.get_editor_logs(start_time=start_time, end_time=end_time)
-
-# Check if logs were returned
-if logs_response and logs_response.results:
-    for log in logs_response.results:
-        print(log)
+if logs_response:
+    for editor_log in logs_response:
+        print("---- Editor Log ----")
+        print(editor_log)
         break  # print the first log only
-
-# Get the next page of logs if available
-if logs_response.next_page_token:
-    next_page_logs_response = project.get_editor_logs(
-        start_time=start_time, end_time=end_time, page_token=logs_response.next_page_token
-    )
-    if next_page_logs_response and next_page_logs_response.results:
-        for log in next_page_logs_response.results:
-            print(log)
-            break  # print the first log of the next page only
 
 # Do some queries with optional parameters
 filtered_logs_response = project.get_editor_logs(
@@ -55,10 +44,11 @@ filtered_logs_response = project.get_editor_logs(
     action=ACTION,
     actor_user_email=ACTOR_USER_EMAIL,
     workflow_stage_id=UUID(WORKFLOW_STAGE_ID),
-    data_unit_id=UUID(DATA_UNIT_ID),
+    data_unit_id=UUID(DATA_UNIT_ID)
 )
 
-if filtered_logs_response and filtered_logs_response.results:
-    for log in filtered_logs_response.results:
+if filtered_logs_response:
+    for log in filtered_logs_response:
+        print("---- Filtered Log ----")
         print(log)
         break  # print the first log only

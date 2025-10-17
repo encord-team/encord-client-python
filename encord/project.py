@@ -594,7 +594,7 @@ class Project:
         actor_user_email: Optional[str] = None,
         workflow_stage_id: Optional[UUID] = None,
         data_unit_id: Optional[UUID] = None,
-    ) -> Page[EditorLog]:
+    ) -> Iterator[EditorLogsResponse]:
         params = EditorLogParams(
             start_time=start_time,
             end_time=end_time,
@@ -606,13 +606,10 @@ class Project:
             data_unit_id=data_unit_id,
         )
 
-        editor_logs_response = self._api_client.get(
-            f"projects/{self.project_hash}/editor-logs", params=params, result_type=EditorLogsResponse
+        editor_logs_response = self._api_client.get_paged_iterator(
+            f"projects/{self.project_hash}/editor-logs", params=params, result_type=EditorLog
         )
-        return Page(
-            results=editor_logs_response.logs,
-            next_page_token=editor_logs_response.next_page_token,
-        )
+        return editor_logs_response
 
     @deprecated(version="0.1.154", alternative="EncordUserClient.get_cloud_integrations")
     def get_cloud_integrations(self) -> List[CloudIntegration]:

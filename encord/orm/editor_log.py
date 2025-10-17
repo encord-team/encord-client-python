@@ -97,7 +97,7 @@ EditorLog: TypeAlias = Union[EditorLogGeneralAction, EditorLogObject, EditorLogC
 
 
 class EditorLogsResponse(BaseDTO):
-    logs: list[EditorLog]
+    results: list[EditorLog]
     next_page_token: str | None = None
 
 
