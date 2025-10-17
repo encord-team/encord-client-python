@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Any, Literal
 from uuid import UUID
 
-from typing_extensions import TypeAlias, Union
+from typing_extensions import Union
 
 from encord.orm.base_dto import BaseDTO
 
@@ -93,7 +93,7 @@ class EditorLogObject(EditorLogCommon, ObjectAttributes):
     action_category: Literal[EditorLogsActionCategory.OBJECT]
 
 
-EditorLog: TypeAlias = Union[EditorLogGeneralAction, EditorLogObject, EditorLogClassification]
+EditorLog = Union[EditorLogGeneralAction, EditorLogObject, EditorLogClassification]
 
 
 class EditorLogParams(BaseDTO):

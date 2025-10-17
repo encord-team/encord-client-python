@@ -605,7 +605,7 @@ class Project:
             data_unit_id=data_unit_id,
         )
 
-        editor_logs_response = self._api_client.get_paged_iterator(
+        editor_logs_response: Iterator[EditorLog] = self._api_client.get_paged_iterator(
             f"projects/{self.project_hash}/editor-logs", params=params, result_type=EditorLog
         )
         return editor_logs_response
