@@ -17,7 +17,6 @@ from encord.orm.editor_log import (
     EditorLogObject,
     EditorLogParams,
     EditorLogsActionCategory,
-    EditorLogsResponse,
 )
 from encord.project import Project
 
@@ -61,8 +60,6 @@ def test_project_get_editor_logs_basic():
         event_information={"key": "value"},
     )
 
-    mock_response = EditorLogsResponse(results=[mock_editor_log], next_page_token=None)
-
     # Create a mock API client
     mock_api_client = MagicMock()
     # Mock the iterator behavior - get_paged_iterator should return an iterator
@@ -100,8 +97,6 @@ def test_project_get_editor_logs_basic():
 
 def test_project_get_editor_logs_with_filters():
     """Test Project.get_editor_logs with filtering parameters."""
-    # Mock the API response
-    mock_response = EditorLogsResponse(results=[], next_page_token="next_token_123")
 
     # Create a mock API client
     mock_api_client = MagicMock()
@@ -267,9 +262,6 @@ def test_project_get_editor_logs_multiple_types():
     assert isinstance(general_log, EditorLog)
     assert isinstance(object_log, EditorLog)
     assert isinstance(classification_log, EditorLog)
-
-    # Mock the API response
-    mock_response = EditorLogsResponse(results=[general_log, object_log, classification_log], next_page_token=None)
 
     # Create a mock API client
     mock_api_client = MagicMock()

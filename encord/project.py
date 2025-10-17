@@ -34,7 +34,7 @@ from encord.orm.analytics import (
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.collection import ProjectCollectionType
 from encord.orm.dataset import Image, Video
-from encord.orm.editor_log import EditorLog, EditorLogParams, EditorLogsResponse
+from encord.orm.editor_log import EditorLog, EditorLogParams
 from encord.orm.filter_preset import ActiveFilterPresetDefinition
 from encord.orm.group import ProjectGroup
 from encord.orm.label_log import LabelLog
