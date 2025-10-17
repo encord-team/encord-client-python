@@ -26,6 +26,7 @@ from tests.objects.data import (
 from tests.objects.data.all_ontology_types import all_ontology_types
 from tests.objects.data.audio_labels import AUDIO_LABELS
 from tests.objects.data.audio_objects import AUDIO_OBJECTS
+from tests.objects.data.data_group import DATA_GROUP_METADATA, INPUT_DATA_GROUP_LABELS, OUTPUT_DATA_GROUP_LABELS
 from tests.objects.data.dicom_labels import dicom_labels
 from tests.objects.data.dynamic_classifications_ontology import (
     dynamic_classifications_ontology,
@@ -205,6 +206,19 @@ def test_serialise_plain_text():
     deep_diff_enhanced(
         actual,
         PLAIN_TEXT_LABELS,
+        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
+    )
+    assert_json_serializable(actual)
+
+
+def test_serialise_data_group():
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(INPUT_DATA_GROUP_LABELS)
+
+    actual = label_row.to_encord_dict()
+    deep_diff_enhanced(
+        actual,
+        OUTPUT_DATA_GROUP_LABELS,
         exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
     assert_json_serializable(actual)

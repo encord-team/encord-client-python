@@ -13,6 +13,7 @@ from encord.common.time_parser import parse_datetime
 from encord.orm import base_orm
 from encord.orm.base_dto import BaseDTO
 from encord.orm.formatter import Formatter
+from encord.orm.label_space import SpaceInfo
 
 
 class LabelRow(base_orm.BaseORM):
@@ -288,6 +289,9 @@ class LabelRowMetadata(Formatter):
     file_type: Optional[str] = None
     """Only available for certain read requests"""
     is_valid: bool = True
+
+    """Only available for data groups"""
+    spaces: Optional[dict[str, SpaceInfo]] = None
 
     backing_item_uuid: Optional[UUID] = None
     assigned_user_email: Optional[str] = None
