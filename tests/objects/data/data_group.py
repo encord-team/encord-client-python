@@ -1,6 +1,6 @@
 import datetime
 
-from encord.constants.enums import DataType
+from encord.constants.enums import DataType, SpaceType
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
 from encord.orm.label_space import SpaceInfo
 
@@ -30,10 +30,6 @@ DATA_GROUP_METADATA = LabelRowMetadata(
     audio_bit_depth=None,
     audio_num_channels=None,
     audio_sample_rate=None,
-    spaces={
-        "child-1-uuid": SpaceInfo(space_type="data-group-child", data_type=DataType.VIDEO),
-        "child-2-uuid": SpaceInfo(space_type="data-group-child", data_type=DataType.VIDEO),
-    },
 )
 
 INPUT_DATA_GROUP_LABELS = {
@@ -297,15 +293,103 @@ EMPTY_DATA_GROUP_LABELS = {
     "object_actions": {},
     "label_status": "LABEL_IN_PROGRESS",
     "spaces": {
-        "child-1-uuid": {
-            "space_type": "data-group-child",
+        "video-1-uuid": {
+            "space_type": SpaceType.VISION,
             "data_type": "video",
-        }
+            "labels": {},
+        },
+        "video-2-uuid": {
+            "space_type": SpaceType.VISION,
+            "data_type": "video",
+            "labels": {},
+        },
     },
     "data_units": {
         DATA_GROUP_DATA_HASH: {
             "data_hash": DATA_GROUP_DATA_HASH,
             "data_sequence": 0,
+            "data_title": "",
+            "data_type": DataType.GROUP,
+            "labels": {},
+        }
+    },
+}
+
+EXPECTED_DATA_GROUP_WITH_LABELS = {
+    "label_hash": "28f0e9d2-51e0-459d-8ffa-2e214da653a9",
+    "branch_name": "main",
+    "created_at": "Thu, 09 Feb 2023 14:12:03 UTC",
+    "last_edited_at": "Thu, 09 Feb 2023 14:12:03 UTC",
+    "data_hash": DATA_GROUP_DATA_HASH,
+    "dataset_hash": "b0d93919-a5e8-4418-8dd5-2c51e3977de8",
+    "dataset_title": "Dataset with 2 frame video",
+    "data_title": "two-frame-video.mp4",
+    "data_type": "group",
+    "annotation_task_status": "QUEUED",
+    "is_shadow_data": False,
+    "object_answers": {
+        "object1": {
+            "objectHash": "object1",
+            "classifications": [],
+        },
+    },
+    "classification_answers": {},
+    "object_actions": {},
+    "label_status": "LABEL_IN_PROGRESS",
+    "spaces": {
+        "video-1-uuid": {
+            "space_type": SpaceType.VISION,
+            "data_type": DataType.VIDEO,
+            "labels": {
+                "0": {
+                    "objects": [
+                        {
+                            "name": "Box",
+                            "color": "#D33115",
+                            "shape": "bounding_box",
+                            "value": "box",
+                            "createdAt": "Tue, 17 Jan 2023 17:23:10 UTC",
+                            "createdBy": "denis@cord.tech",
+                            "confidence": 1,
+                            "objectHash": "object1",
+                            "lastEditedAt": "Wed, 18 Jan 2023 17:23:24 UTC",
+                            "featureHash": "MjI2NzEy",
+                            "manualAnnotation": True,
+                            "boundingBox": {"h": 0.1, "w": 0.1, "x": 0.1, "y": 0.1},
+                        },
+                    ],
+                    "classifications": [],
+                },
+                "1": {
+                    "objects": [
+                        {
+                            "name": "Box",
+                            "color": "#D33115",
+                            "shape": "bounding_box",
+                            "value": "box",
+                            "createdAt": "Tue, 17 Jan 2023 17:23:10 UTC",
+                            "createdBy": "denis@cord.tech",
+                            "confidence": 1,
+                            "objectHash": "object1",
+                            "lastEditedAt": "Wed, 18 Jan 2023 17:23:24 UTC",
+                            "featureHash": "MjI2NzEy",
+                            "manualAnnotation": True,
+                            "boundingBox": {"h": 0.2, "w": 0.2, "x": 0.2, "y": 0.2},
+                        },
+                    ],
+                    "classifications": [],
+                }
+            }
+        },
+        "video-2-uuid": {
+            "space_type": SpaceType.VISION,
+            "data_type": DataType.VIDEO,
+            "labels": {},
+        },
+    },
+    "data_units": {
+        DATA_GROUP_DATA_HASH: {
+            "data_hash": DATA_GROUP_DATA_HASH,
             "data_title": "",
             "data_type": DataType.GROUP,
             "labels": {},

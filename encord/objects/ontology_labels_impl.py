@@ -11,16 +11,14 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
-import json
 import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Literal, Optional, Sequence, Set, Type, Union, cast
-from unittest import case
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Type, Union, cast
 from uuid import UUID
 
-from pydantic import BaseModel, TypeAdapter
+from pydantic import TypeAdapter
 
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
@@ -47,7 +45,6 @@ from encord.objects.bundled_operations import (
 from encord.objects.classification import Classification
 from encord.objects.classification_instance import ClassificationInstance, _verify_non_geometric_classifications_range
 from encord.objects.constants import (  # pylint: disable=unused-import # for backward compatibility
-    DATETIME_LONG_STRING_FORMAT,
     DEFAULT_CONFIDENCE,
     DEFAULT_MANUAL_ANNOTATION,
 )
@@ -71,13 +68,12 @@ from encord.objects.coordinates import (
 from encord.objects.frames import Frames, Range, Ranges, frames_class_to_frames_list, frames_to_ranges
 from encord.objects.html_node import HtmlRange
 from encord.objects.metadata import DataGroupMetadata, DICOMSeriesMetadata, DICOMSliceMetadata
-from encord.objects.ontology_element import _assert_singular_result_list, _get_elements_by_title
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.space import (
     AudioSpace,
-    PointCloudSpace,
+    SceneStreamSpace,
     Space,
     SpaceT,
     SpaceType,
@@ -698,9 +694,9 @@ class LabelRowV2:
 
         return res
 
-    def get_space_by_title(
+    def get_space_by_id(
         self,
-        title: str,
+        id: str,
         type_: Optional[Type[SpaceT]] = None,
     ) -> SpaceT:
         """Retrieves a single space which matches the specified title and type.
@@ -717,34 +713,10 @@ class LabelRowV2:
             OntologyError: If more than one or no matching child is found.
         """
         for element in self._space_map.values():
-            if element.title == title:
+            if element.id == id:
                 return cast(SpaceT, element)
 
-        raise LabelRowError(f"Could not find space with given title: {title}")
-
-    def get_space_by_layout_key(
-        self,
-        layout_key: str,
-        type_: Optional[Type[SpaceT]] = None,
-    ) -> SpaceT:
-        """Retrieves a single space which matches the specified title and type.
-        Throws an exception if more than one or no space with the specified title and type is found.
-
-        Args:
-            layout_key: The exact layout_key of the space to find.
-            type_: Optional type to check the type of the space.
-
-        Returns:
-            The child node with the specified title and type.
-
-        Raises:
-            LabelRowError: If more than one or no matching child is found.
-        """
-        for element in self._space_map.values():
-            if element.layout_key == layout_key:
-                return cast(SpaceT, element)
-
-        raise LabelRowError(f"Could not find space with layout key: {layout_key}")
+        raise LabelRowError(f"Could not find space with given id {id}")
 
     def get_image_hash(self, frame_number: int) -> Optional[str]:
         """Get the corresponding image hash for the frame number.
@@ -1221,7 +1193,6 @@ class LabelRowV2:
             object_instance: The object instance to remove.
         """
         self._check_labelling_is_initalised()
-        print(self._objects_map)
         self._objects_map.pop(object_instance._object_key())
         if not object_instance.is_range_only():
             self._remove_from_frame_to_hashes_map(
@@ -1260,6 +1231,7 @@ class LabelRowV2:
         ret["object_actions"] = self._to_object_actions()
         ret["label_status"] = read_only_data.label_status.value
         ret["data_units"] = self._to_encord_data_units()
+        ret["spaces"] = self._to_encord_spaces()
 
         return ret
 
@@ -1792,7 +1764,7 @@ class LabelRowV2:
             all_static_answers = self._get_all_static_answers(obj)
             ret[obj.object_hash] = {
                 "classifications": list(reversed(all_static_answers)),
-                "objectHash": obj.object_hash,
+                "objectHash": obj.object_hash
             }
 
             # # At some point, we also want to add these to the other modalities
@@ -1826,6 +1798,15 @@ class LabelRowV2:
                     if obj.range_list is None:
                         raise LabelRowError("Non-geometric annotations should have range set within the Coordinates")
                     object_answer_dict["range"] = [[range.start, range.end] for range in obj.range_list]
+
+        for space in self._space_map.values():
+            if isinstance(space, VisionSpace):
+                for obj in space.get_object_instances():
+                    all_static_answers = self._get_all_static_answers(obj)
+                    ret[obj.object_hash] = {
+                        "classifications": list(reversed(all_static_answers)),
+                        "objectHash": obj.object_hash
+                    }
 
         return ret
 
@@ -1888,6 +1869,14 @@ class LabelRowV2:
                 ret.append(d_opt)
         return ret
 
+    def _to_encord_spaces(self) -> Dict[str, SpaceInfo]:
+        ret = {}
+        for space_id, space in self._space_map.items():
+            if isinstance(space, VisionSpace):
+                ret[space_id] = space._to_encord_space()
+
+        return ret
+
     def _to_encord_data_units(self) -> Dict[str, Any]:
         frame_level_data = self._label_row_read_only_data.frame_level_data
         return {value.image_hash: self._to_encord_data_unit(value) for value in frame_level_data.values()}
@@ -1942,6 +1931,8 @@ class LabelRowV2:
         elif self.data_type == DataType.PLAIN_TEXT:
             pass
         elif self.data_type == DataType.GROUP:
+            ret["data_title"] = frame_level_data.image_title
+            ret["data_type"] = DataType.GROUP
             pass
         elif self.data_type == DataType.SCENE:
             ret["width"] = 0
@@ -2042,12 +2033,9 @@ class LabelRowV2:
 
         annotation_path_parts = annotation_path.split("#")
 
-        frame = None
-        space = None
         if len(annotation_path_parts) == 1:
             frame = int(annotation_path_parts[0])
         elif len(annotation_path_parts) == 2:
-            space = annotation_path_parts[0]
             frame = int(annotation_path_parts[1])
         else:
             raise LabelRowError(f"Invalid annotation path: {annotation_path}")
@@ -2207,27 +2195,54 @@ class LabelRowV2:
             if annotation_object_hashes is not None:
                 annotation_object_hashes.remove(item_hash)
 
-    def _parse_label_spaces(self, spaces: Optional[dict[str, SpaceInfo]]) -> dict[str, Space]:
+    def _parse_label_spaces(self, spaces_info: Optional[dict[str, SpaceInfo]]) -> dict[str, Space]:
         # TODO: Maybe we should automatically add global space here
         res: dict[str, Space] = dict()
-        if spaces is not None:
-            for space_id, space in spaces.items():
-                if space.space_type == SpaceType.AUDIO:
+        if spaces_info is not None:
+            for space_id, space_info in spaces_info.items():
+                space_type = space_info["space_type"]
+                if space_type == SpaceType.AUDIO:
                     res[space_id] = AudioSpace(
-                        id=space_id, layout_key="random_layout_key", title="Random title", parent=self
+                        id=space_id, title="Random title", parent=self
                     )
-                elif space.space_type == SpaceType.TEXT:
+                elif space_type == SpaceType.TEXT:
                     res[space_id] = TextSpace(
-                        id=space_id, layout_key="random_layout_key", title="Random title", parent=self
+                        id=space_id, title="Random title", parent=self
                     )
-                elif space.space_type == SpaceType.VISION:
-                    res[space_id] = VisionSpace(
-                        id=space_id, layout_key="random_layout_key", title="Random title", parent=self
+                elif space_type == SpaceType.VISION:
+                    vision_space = VisionSpace(
+                        id=space_id, title="Random title", parent=self
                     )
-                elif space.space_type == SpaceType.POINT_CLOUD:
-                    res[space_id] = PointCloudSpace(id=space_id, layout_key=None, title=space_id, parent=self)
+                    for frame, frame_label in space_info["labels"].items():
+                        for obj in frame_label["objects"]:
+                            object_hash = obj["objectHash"]
+                            if object_hash not in vision_space._objects_map:
+                                new_object_instance = self._create_new_object_instance(obj, int(frame))
+                                vision_space._add_object_instance(new_object_instance)
+                            else:
+                                object_instance = vision_space._objects_map[object_hash]
+
+                                coordinates = self._get_coordinates(obj)
+                                object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(obj)
+
+                                object_instance.set_for_frames(
+                                    coordinates=coordinates,
+                                    frames=int(frame),
+                                    created_at=object_frame_instance_info.created_at,
+                                    created_by=object_frame_instance_info.created_by,
+                                    last_edited_at=object_frame_instance_info.last_edited_at,
+                                    last_edited_by=object_frame_instance_info.last_edited_by,
+                                    confidence=object_frame_instance_info.confidence,
+                                    manual_annotation=object_frame_instance_info.manual_annotation,
+                                    reviews=object_frame_instance_info.reviews,
+                                    is_deleted=object_frame_instance_info.is_deleted,
+                                )
+                    res[space_id] = vision_space
+
+                elif space_type == SpaceType.SCENE_STREAM:
+                    res[space_id] = SceneStreamSpace(id=space_id, title=space_id, parent=self)
                 else:
-                    exhaustive_guard(space.space_type, message="Missing condition for space types.")
+                    exhaustive_guard(space_type, message="Missing condition for space types.")
 
         return res
 
@@ -2731,7 +2746,8 @@ class LabelRowV2:
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = {}
         for payload in label_row_data_units.values():
-            frame_number = int(payload["data_sequence"])
+            # TODO: Is it okay to give a default of 0 here?
+            frame_number = int(payload.get("data_sequence", 0))
             frame_level_image_group_data = self.FrameLevelImageGroupData(
                 image_hash=payload["data_hash"],
                 image_title=payload["data_title"],

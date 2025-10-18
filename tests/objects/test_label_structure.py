@@ -5,8 +5,6 @@ from unittest.mock import Mock, PropertyMock
 
 import pytest
 
-from encord import EncordUserClient
-from encord.configs import UserConfig
 from encord.exceptions import LabelRowError, OntologyError
 from encord.objects import (
     AnswerForFrames,
@@ -32,7 +30,8 @@ from encord.objects.coordinates import (
 from encord.objects.frames import Range
 from encord.objects.html_node import HtmlNode, HtmlRange
 from encord.objects.options import Option
-from encord.objects.space import AudioSpace, PointCloudSpace, SpaceType, VisionSpace
+from encord.objects.space import AudioSpace, SceneStreamSpace, VisionSpace
+from encord.constants.enums import SpaceType
 from encord.orm.label_row import LabelRowMetadata, LabelStatus
 from encord.storage import StorageItem
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
@@ -752,7 +751,7 @@ def test_spaces(ontology):
     audio_instance = audio_space.add_object_instance(obj=audio_obj_ontology_item, ranges=Range(start=500, end=2000))
 
     # NOTE: Point clouds have no frames, so any object instance is applied to the entire thing
-    point_cloud_space = label_row.get_space_by_title(title="url-to-point-cloud.pcd", type_=PointCloudSpace)
+    point_cloud_space = label_row.get_space_by_title(title="url-to-point-cloud.pcd", type_=SceneStreamSpace)
     point_cloud_space.add_object_instance(obj=box_ontology_item, coordinates=frame_0_box_coordinates)
 
     # REMOVE OBJECTS FROM SPACE

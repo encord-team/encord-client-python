@@ -1,11 +1,13 @@
-from typing import Literal
+from typing import TypedDict
 
-from pydantic import BaseModel
-
-from encord.constants.enums import DataType
-from encord.objects.space import SpaceType
+from encord.constants.enums import DataType, SpaceType
 
 
-class SpaceInfo(BaseModel):
+class LabelBlob(TypedDict):
+    objects: list[dict]
+    classifications: list[dict]
+
+class SpaceInfo(TypedDict):
     space_type: SpaceType
     data_type: DataType
+    labels: dict[str, LabelBlob]

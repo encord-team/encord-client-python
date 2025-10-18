@@ -63,3 +63,12 @@ GEOMETRIC_TYPES = {
 
 def is_geometric(data_type: DataType) -> bool:
     return data_type in GEOMETRIC_TYPES
+
+
+class SpaceType(StringEnum):
+    """Fixed set of available space types"""
+
+    AUDIO = "AUDIO"
+    TEXT = "TEXT"
+    VISION = "VISION"
+    SCENE_STREAM = "SCENE_STREAM"

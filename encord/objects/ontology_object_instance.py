@@ -28,7 +28,6 @@ from typing import (
     Union,
 )
 
-from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
@@ -59,6 +58,7 @@ from encord.objects.internal_helpers import (
 )
 from encord.objects.ontology_object import Object
 from encord.objects.options import Option
+from encord.objects.space import Space, VisionSpace
 from encord.objects.utils import check_email, short_uuid_str
 
 if TYPE_CHECKING:
@@ -71,7 +71,7 @@ class ObjectInstance:
     def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
         self._ontology_object = ontology_object
         self._object_hash = object_hash or short_uuid_str()
-        self._parent: Optional[LabelRowV2] = None
+        self._parent: Optional[LabelRowV2 | VisionSpace] = None
 
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_object.attributes)
         # feature_node_hash of attribute to the answer.
@@ -80,7 +80,7 @@ class ObjectInstance:
 
         # Only used for non-frame entities
         self._non_geometric = ontology_object.shape in (Shape.AUDIO, Shape.TEXT)
-        self._space: Optional[str] = None
+        self._space: Optional[Space] = None
 
         self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = {}
 
@@ -92,7 +92,7 @@ class ObjectInstance:
         """
         return self._parent
 
-    def _set_space(self, space: str):
+    def _set_space(self, space: Optional[Space]) -> None:
         self._space = space
 
     def _object_key(self):
@@ -485,7 +485,6 @@ class ObjectInstance:
                 )
 
         frames_list = frames_class_to_frames_list(frames)
-        print(f"SETTNG FOR FRAMES {frames_list}")
 
         for frame in frames_list:
             existing_frame_data = self._frames_to_instance_data.get(frame)
@@ -502,7 +501,7 @@ class ObjectInstance:
                     self.check_within_range(non_geometric_range.end)
             else:
                 self.check_within_range(frame)
-            print(f"EXISTING FRAME DATA: {existing_frame_data}")
+
             if existing_frame_data is None:
                 existing_frame_data = ObjectInstance.FrameData(
                     coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
@@ -521,8 +520,11 @@ class ObjectInstance:
             )
             existing_frame_data.coordinates = coordinates
 
-            if self._parent:
-                self._parent.add_to_single_frame_to_hashes_map(self, frame=frame, space=self._space)
+            if self._parent is not None:
+                self._parent.add_to_single_frame_to_hashes_map(self, frame=frame)
+            elif self._space is not None:
+                if isinstance(self._space, VisionSpace):
+                    self._space._add_to_single_frame_to_hashes_map(self, frame=frame)
 
     def _get_non_geometric_annotation(self) -> Optional[Annotation]:
         # Non-geometric annotations (e.g. Audio and Text) only have one frame.
