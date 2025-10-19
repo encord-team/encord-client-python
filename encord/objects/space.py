@@ -5,10 +5,12 @@ from abc import ABC
 from collections import defaultdict
 from typing import TYPE_CHECKING, Dict, Iterable, Optional, Set, TypeVar, Union
 
+from typing_extensions import Unpack
+
 from encord.constants.enums import DataType, SpaceType
 from encord.objects import ClassificationInstance
 from encord.objects.common import Shape
-from encord.objects.coordinates import AudioCoordinates, Coordinates, TextCoordinates
+from encord.objects.coordinates import AudioCoordinates, Coordinates, TextCoordinates, TwoDimensionalCoordinates
 from encord.objects.frames import Frames, Range, frames_class_to_frames_list
 from encord.orm.label_space import LabelBlob, SpaceInfo
 
@@ -17,8 +19,7 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
     from encord.objects.ontology_object import Object
-    from encord.objects.ontology_object_instance import ObjectInstance
-
+    from encord.objects.ontology_object_instance import ObjectInstance, SetFramesKwargs
 
 SpaceT = TypeVar("SpaceT", bound="Space")
 
@@ -28,9 +29,6 @@ class Space(ABC):
         self, id: str, title: str, space_type: SpaceType, parent: LabelRowV2
     ):
         self.id = id
-        # Title would probably be:
-        # name of storage_item, OR
-        # key in data group
         self.title = title
         self.space_type = space_type
         self.parent = parent
@@ -38,7 +36,6 @@ class Space(ABC):
     def move_object_instance_to_space(self, object_hash: str, target_space_id: str):
         raise NotImplementedError()
 
-    
 class VisionSpace(Space):
     def __init__(self, id: str, title: str, parent: LabelRowV2):
         super().__init__(id, title, SpaceType.VISION, parent)
@@ -58,20 +55,11 @@ class VisionSpace(Space):
 
         return object_instance
 
-    def add_object_instance(self, obj: Object, coordinates: Coordinates, frames: Frames = 0) -> ObjectInstance:
-        if obj.shape not in [
-            Shape.BOUNDING_BOX,
-            Shape.ROTATABLE_BOUNDING_BOX,
-            Shape.BITMASK,
-            Shape.POLYGON,
-            Shape.POLYLINE,
-            Shape.POINT,
-            Shape.SKELETON,
-        ]:
-            raise ValueError(f"Shapes of type: {obj.shape} are not allowed on Vision Space.")
-
+    def add_object_instance(
+        self, obj: Object, coordinates: TwoDimensionalCoordinates, frames: Frames = 0, **kwargs: Unpack[SetFramesKwargs]
+    ) -> ObjectInstance:
         object_instance = obj.create_instance()
-        object_instance.set_for_frames(coordinates=coordinates, frames=frames)
+        object_instance.set_for_frames(coordinates=coordinates, frames=frames, overwrite=False, **kwargs)
 
         return self._add_object_instance(object_instance)
 

@@ -295,12 +295,12 @@ EMPTY_DATA_GROUP_LABELS = {
     "spaces": {
         "video-1-uuid": {
             "space_type": SpaceType.VISION,
-            "data_type": "video",
+            "data_type": DataType.VIDEO,
             "labels": {},
         },
         "video-2-uuid": {
             "space_type": SpaceType.VISION,
-            "data_type": "video",
+            "data_type": DataType.VIDEO,
             "labels": {},
         },
     },

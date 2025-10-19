@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 from unittest.mock import Mock
 
 import pytest
@@ -38,7 +39,16 @@ def test_vision_space_can_add_object_instances(ontology):
     assert(len(objects_on_vision_space) == 0)
 
     # After adding, check that object exists, and has correct properties
-    added_object_instance = vision_space.add_object_instance(obj=box_ontology_item, frames=[0, 1], coordinates=frame_0_box_coordinates)
+    created_by = "new_user"
+    created_at = datetime(2020, 1, 1, tzinfo=timezone.utc)
+    added_object_instance = vision_space.add_object_instance(
+        obj=box_ontology_item,
+        frames=[0, 1],
+        coordinates=frame_0_box_coordinates,
+        created_by=created_by,
+        created_at=created_at,
+        manual_annotation=False,
+    )
     objects_on_vision_space = vision_space.get_object_instances()
     assert(len(objects_on_vision_space) == 1)
 
@@ -51,6 +61,9 @@ def test_vision_space_can_add_object_instances(ontology):
     assert frames_on_annotations == [0, 1]
     for annotation in annotations_on_first_object_instance:
         assert annotation.coordinates == frame_0_box_coordinates
+        assert annotation.created_by == created_by
+        assert annotation.created_at == created_at
+        assert annotation.manual_annotation is False
 
     # Check that spaces has correct properties
     assert len(vision_space._frames_to_hashes[0]) == 1
@@ -144,74 +157,5 @@ def test_read_and_export_labels(ontology):
     assert(object1.object_hash == "object1")
     assert(object1.get_annotation_frames() == {0, 1})
 
-    final_res = label_row.to_encord_dict()
-    print(json.dumps(final_res, indent=2))
-
-    assert not DeepDiff(EXPECTED_DATA_GROUP_WITH_LABELS, label_row.to_encord_dict())
-# def test_spaces(ontology):
-# #     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-# #     label_row.from_labels_dict(EMPTY_DATA_GROUP_LABELS)
-# #
-# #     frame_0_box_coordinates = BoundingBoxCoordinates(
-# #         height=0.1,
-# #         width=0.2,
-# #         top_left_x=0.3,
-# #         top_left_y=0.4,
-# #     )
-# #
-# #     frames_5_to_10_box_coordinates = BoundingBoxCoordinates(
-# #         height=0.3,
-# #         width=0.4,
-# #         top_left_x=0.5,
-# #         top_left_y=0.6,
-# #     )
-# #
-# #     # LIST ALL SPACES
-# #     spaces = label_row.list_spaces()
-# #     for space in spaces:
-# #         print(f"ID: {space.id}")
-# #         print(f"title: {space.title}")
-# #         print(f"space type: {space.space_type}")
-# #
-# #     # ADD OBJECTS FROM SPACE
-# #     video_space_1 = label_row.get_space_by_title(title="Video 1", type_=VisionSpace)
-# #     # OR could get the space by its layout key
-# #     video_space_1 = label_row.get_space_by_layout_key(layout_key="video-left", type_=VisionSpace)
-# #
-# #     bb_instance = video_space_1.add_object_instance(
-# #         obj=box_ontology_item,
-# #         coordinates=frame_0_box_coordinates,
-# #         frames=0,
-# #         # Also could add the other args for set_for_frames (e.g. last_edited_at etc..)
-# #     )
-# #
-# #     # Can continue to use old API for object_instances
-# #     bb_instance.set_for_frames(coordinates=frames_5_to_10_box_coordinates, frames=Range(start=5, end=10))
-# #
-# #     audio_space = label_row.get_space_by_title(title="Audio 1", type_=AudioSpace)
-# #     audio_instance = audio_space.add_object_instance(obj=audio_obj_ontology_item, ranges=Range(start=500, end=2000))
-# #
-# #     # NOTE: Point clouds have no frames, so any object instance is applied to the entire thing
-# #     point_cloud_space = label_row.get_space_by_title(title="url-to-point-cloud.pcd", type_=SceneStreamSpace)
-#     point_cloud_space.add_object_instance(obj=box_ontology_item, coordinates=frame_0_box_coordinates)
-#
-#     # REMOVE OBJECTS FROM SPACE
-#     video_space_1.remove_object_instance(object_hash=bb_instance.object_hash)
-#
-#     # UPDATE SPACE
-#     video_space_2 = label_row.get_space_by_title(title="Video 2", type_=VisionSpace)
-#     video_space_1.move_object_instance_to_space(object_hash=bb_instance.object_hash, target_space_id=video_space_2.id)
-#
-#     # List object instances in space
-#     objects_on_video_space = video_space_1.get_object_instances(
-#         filter_ontology_object=box_ontology_item, filter_frames=[0, 1, 2]
-#     )
-#     objects_on_audio_space = audio_space.get_object_instances(
-#         filter_ontology_object=audio_obj_ontology_item, filter_ranges=Range(start=5, end=200)
-#     )
-#     objects_to_point_cloud_space = point_cloud_space.get_object_instances(
-#         filter_ontology_object=segmentation_ontology_item
-#     )
-#
-#     # Object Instances also know which space they are on
-#     print(f"BB Object is on space: {bb_instance._space}")
+    output_dict = label_row.to_encord_dict()
+    assert not DeepDiff(EXPECTED_DATA_GROUP_WITH_LABELS, output_dict)

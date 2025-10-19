@@ -25,6 +25,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    TypedDict,
     Union,
 )
 
@@ -64,6 +65,16 @@ from encord.objects.utils import check_email, short_uuid_str
 if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
 
+
+class SetFramesKwargs(TypedDict, total=False):
+    created_at: Optional[datetime]
+    created_by: Optional[str]
+    last_edited_at: Optional[datetime]
+    last_edited_by: Optional[str]
+    confidence: Optional[float]
+    manual_annotation: Optional[bool]
+    reviews: Optional[List[Dict]]
+    is_deleted: Optional[bool]
 
 class ObjectInstance:
     """An object instance is an object that has coordinates and can be placed on one or multiple frames in a label row."""

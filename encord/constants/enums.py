@@ -66,8 +66,6 @@ def is_geometric(data_type: DataType) -> bool:
 
 
 class SpaceType(StringEnum):
-    """Fixed set of available space types"""
-
     AUDIO = "AUDIO"
     TEXT = "TEXT"
     VISION = "VISION"
