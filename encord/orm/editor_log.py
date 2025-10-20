@@ -7,16 +7,13 @@ from uuid import UUID
 
 from typing_extensions import Union
 
+from encord.common.enum import StringEnum
 from encord.orm.base_dto import BaseDTO
 
 # types coming from cord/apiserver/public_api_v2/routers/models/model_editor_logs.py
 
 
-class StrEnum(str, Enum):  # Backport for compatibility
-    pass
-
-
-class ActionableWorkflowNodeType(StrEnum):
+class ActionableWorkflowNodeType(StringEnum):
     ANNOTATION = "ANNOTATION"
     REVIEW = "REVIEW"
     CONSENSUS_ANNOTATION = "CONSENSUS_ANNOTATION"
@@ -24,7 +21,7 @@ class ActionableWorkflowNodeType(StrEnum):
     DONE = "DONE"
 
 
-class EditorLogsActionCategory(StrEnum):
+class EditorLogsActionCategory(StringEnum):
     OBJECT = "object"
     CLASSIFICATION = "classification"
     TASK = "task"

@@ -608,7 +608,7 @@ class Project:
         editor_logs_response: Iterator[EditorLog] = self._api_client.get_paged_iterator(
             f"projects/{self.project_hash}/editor-logs",
             params=params,
-            result_type=EditorLog,  # type: ignore[arg-type]
+            result_type=EditorLog,  # type: ignore[arg-type] # EditorLog is a union of BaseDTO classes
         )
         return editor_logs_response
 
