@@ -609,12 +609,11 @@ class Project:
            An iterator on the editor logs.
         """
 
-        # limit acts as a batch size for the iterator
-        batch_size = 500
+        # we don't put the limit in the parameters anymore because it works as a batch size in the iterator.
+        # it is ok to have it set as the default limit value in the backend.
         params = EditorLogParams(
             start_time=start_time,
             end_time=end_time,
-            limit=batch_size,
             action=action,
             actor_user_email=actor_user_email,
             workflow_stage_id=workflow_stage_id,
