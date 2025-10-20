@@ -33,6 +33,7 @@ from encord.orm.analytics import (
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.collection import ProjectCollectionType
 from encord.orm.dataset import Image, Video
+from encord.orm.editor_log import EditorLog, EditorLogParams
 from encord.orm.filter_preset import ActiveFilterPresetDefinition
 from encord.orm.group import ProjectGroup
 from encord.orm.label_log import LabelLog
@@ -40,7 +41,6 @@ from encord.orm.label_row import (
     AnnotationTaskStatus,
     LabelRow,
     LabelRowMetadata,
-    LabelStatus,
     ShadowDataState,
 )
 from encord.orm.project import (
@@ -582,6 +582,35 @@ class Project:
             before,
             user_email,
         )
+
+    def get_editor_logs(
+        self,
+        start_time: datetime.datetime,
+        end_time: datetime.datetime,
+        limit: int = 500,
+        page_token: Optional[str] = None,
+        action: Optional[str] = None,
+        actor_user_email: Optional[str] = None,
+        workflow_stage_id: Optional[UUID] = None,
+        data_unit_id: Optional[UUID] = None,
+    ) -> Iterator[EditorLog]:
+        params = EditorLogParams(
+            start_time=start_time,
+            end_time=end_time,
+            limit=limit,
+            page_token=page_token,
+            action=action,
+            actor_user_email=actor_user_email,
+            workflow_stage_id=workflow_stage_id,
+            data_unit_id=data_unit_id,
+        )
+
+        editor_logs_response: Iterator[EditorLog] = self._api_client.get_paged_iterator(
+            f"projects/{self.project_hash}/editor-logs",
+            params=params,
+            result_type=EditorLog,  # type: ignore[arg-type] # EditorLog is a union of BaseDTO classes
+        )
+        return editor_logs_response
 
     @deprecated(version="0.1.154", alternative="EncordUserClient.get_cloud_integrations")
     def get_cloud_integrations(self) -> List[CloudIntegration]:
