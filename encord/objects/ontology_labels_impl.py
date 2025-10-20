@@ -682,7 +682,7 @@ class LabelRowV2:
 
         self._objects_map = dict()
         self._classifications_map = dict()
-        self._space_map = self._parse_label_spaces(label_row_dict.get("spaces"))
+        self._space_map = self._parse_label_spaces(label_row_dict.get("spaces"), label_row_dict["classification_answers"])
 
         self._parse_labels_from_dict(label_row_dict)
 
@@ -1860,6 +1860,17 @@ class LabelRowV2:
                 )
                 ret[classification.classification_hash]["manualAnnotation"] = annotation.manual_annotation
 
+        for space in self._space_map.values():
+            if isinstance(space, VisionSpace):
+                for classification in space.get_classification_instances():
+                    all_static_answers = classification.get_all_static_answers()
+                    classifications = [answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()]
+                    ret[classification.classification_hash] = {
+                        "classifications": classifications,
+                        "classificationHash": classification.classification_hash,
+                        "featureHash": classification.feature_hash,
+                    }
+
         return ret
 
     @staticmethod
@@ -2011,10 +2022,7 @@ class LabelRowV2:
                 frames = self._annotation_path_2_to_hashes[space]
                 for frame in frames.keys():
                     annotation_path = f"{space}#{frame}"
-                    print(f"ANNOTATION PATH: {annotation_path}")
                     ret[annotation_path] = self._to_encord_label(annotation_path)
-            # for annotation_path in self._annotation_path_to_hashes.keys():
-            #     ret[annotation_path] = self._to_encord_label(annotation_path)
 
         elif data_type == DataType.AUDIO or data_type == DataType.PLAIN_TEXT:
             return {}
@@ -2206,7 +2214,7 @@ class LabelRowV2:
             if annotation_object_hashes is not None:
                 annotation_object_hashes.remove(item_hash)
 
-    def _parse_label_spaces(self, spaces_info: Optional[dict[str, SpaceInfo]]) -> dict[str, Space]:
+    def _parse_label_spaces(self, spaces_info: Optional[dict[str, SpaceInfo]], classification_answers: dict) -> dict[str, Space]:
         # TODO: Maybe we should automatically add global space here
         res: dict[str, Space] = dict()
         if spaces_info is not None:
@@ -2218,7 +2226,7 @@ class LabelRowV2:
                     res[space_id] = TextSpace(space_id=space_id, title="Random title", parent=self)
                 elif space_type == SpaceType.VISION:
                     vision_space = VisionSpace(space_id=space_id, title="Random title", parent=self)
-                    vision_space._parse_space_dict(space_info)
+                    vision_space._parse_space_dict(space_info, classification_answers)
                     res[space_id] = vision_space
 
                 elif space_type == SpaceType.SCENE_STREAM:

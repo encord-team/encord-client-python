@@ -67,7 +67,7 @@ class Space(ABC):
         pass
 
     @abstractmethod
-    def _parse_space_dict(self, space_info: SpaceInfo) -> None:
+    def _parse_space_dict(self, space_info: SpaceInfo, classification_answers: dict) -> None:
         pass
 
     @abstractmethod
@@ -193,7 +193,7 @@ class VisionSpace(Space):
             )
             return None
 
-    def _parse_space_dict(self, space_info: SpaceInfo) -> None:
+    def _parse_space_dict(self, space_info: SpaceInfo, classification_answers: dict) -> None:
         for frame, frame_label in space_info["labels"].items():
             for obj in frame_label["objects"]:
                 object_hash = obj["objectHash"]
@@ -219,19 +219,46 @@ class VisionSpace(Space):
                         is_deleted=object_frame_instance_info.is_deleted,
                     )
 
+            for classification in frame_label["classifications"]:
+                classification_hash = classification["classificationHash"]
+                if classification_hash not in self._classifications_map:
+                    new_classification_instance = self.parent._create_new_classification_instance(classification, int(frame), classification_answers)
+                    self._add_classification_instance(new_classification_instance)
+                else:
+                    classification_instance = self._classifications_map[classification_hash]
+                    classification_frame_instance_info = ClassificationInstance.FrameData.from_dict(classification)
+
+                    classification_instance.set_for_frames(
+                        frames=int(frame),
+                        created_at=classification_frame_instance_info.created_at,
+                        created_by=classification_frame_instance_info.created_by,
+                        last_edited_at=classification_frame_instance_info.last_edited_at,
+                        last_edited_by=classification_frame_instance_info.last_edited_by,
+                        confidence=classification_frame_instance_info.confidence,
+                        manual_annotation=classification_frame_instance_info.manual_annotation,
+                        reviews=classification_frame_instance_info.reviews,
+                    )
+
     def _to_space_dict(self) -> SpaceInfo:
         labels: dict[str, LabelBlob] = {}
 
-        for frame, object_hashes in self._frames_to_hashes.items():
+        for frame, label_hashes in self._frames_to_hashes.items():
             object_list = []
-            for object_hash in object_hashes:
-                frame_object_instance = self._objects_map.get(object_hash)
-                if frame_object_instance is None:
+            classification_list = []
+
+            for label_hash in label_hashes:
+                frame_object_instance = self._objects_map.get(label_hash)
+                frame_classification_instance = self._classifications_map.get(label_hash)
+
+                if frame_object_instance is None and frame_classification_instance is None:
                     continue
+                elif frame_object_instance is not None:
+                    object_list.append(self.parent._to_encord_object(frame_object_instance, frame))
+                else:
+                    classification_list.append(self.parent._to_encord_classification(frame_classification_instance, frame))
 
-                object_list.append(self.parent._to_encord_object(frame_object_instance, frame))
 
-            labels[str(frame)] = LabelBlob(objects=object_list, classifications=[])
+            labels[str(frame)] = LabelBlob(objects=object_list, classifications=classification_list)
 
         res = SpaceInfo(
             space_type=self.space_type,

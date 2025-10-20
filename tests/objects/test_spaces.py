@@ -1,11 +1,10 @@
-import json
 from datetime import datetime, timezone
 from unittest.mock import Mock
 
 import pytest
 from deepdiff import DeepDiff
 
-from encord.objects import LabelRowV2, Object, Classification
+from encord.objects import Classification, LabelRowV2, Object
 from encord.objects.coordinates import BoundingBoxCoordinates
 from encord.objects.space import VisionSpace
 from tests.objects.data.all_types_ontology_structure import all_types_structure
@@ -221,13 +220,6 @@ def test_vision_space_move_classification_instances(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(EMPTY_DATA_GROUP_LABELS)
 
-    frame_0_box_coordinates = BoundingBoxCoordinates(
-        height=0.1,
-        width=0.2,
-        top_left_x=0.3,
-        top_left_y=0.4,
-    )
-
     vision_space_1 = label_row.get_space_by_id("video-1-uuid", type_=VisionSpace)
     classification_on_vision_space_1 = vision_space_1.add_classification_instance(
         classification=text_classification, frames=[0, 1]
@@ -278,7 +270,13 @@ def test_read_and_export_labels(ontology):
     assert dynamic_point_instance.object_hash == "dynamicPoint1"
     assert dynamic_point_instance.get_annotation_frames() == {0, 1}
 
+    classifications_on_vision_space_1 = vision_space_1.get_classification_instances()
+    classification_instance = classifications_on_vision_space_1[0]
+    assert classification_instance.classification_hash == "classification1"
+    assert classification_instance.get_annotation_frames() == {0}
+
     output_dict = label_row.to_encord_dict()
+
     assert not DeepDiff(
         EXPECTED_DATA_GROUP_WITH_LABELS,
         output_dict,

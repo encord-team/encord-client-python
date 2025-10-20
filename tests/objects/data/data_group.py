@@ -334,7 +334,21 @@ EXPECTED_DATA_GROUP_WITH_LABELS = {
         },
         "dynamicPoint1": {"classifications": [], "objectHash": "dynamicPoint1"},
     },
-    "classification_answers": {},
+    "classification_answers": {
+        "classification1": {
+            "classificationHash": "classification1",
+            "featureHash": "jPOcEsbw",
+            "classifications": [
+                {
+                    "name": "Text classification",
+                    "value": "text_classification",
+                    "answers": "Rousseau",
+                    "featureHash": "OxrtEM+v",
+                    "manualAnnotation": True,
+                }
+            ],
+        },
+    },
     "object_actions": {
         "dynamicPoint1": {
             "objectHash": "dynamicPoint1",
@@ -400,7 +414,18 @@ EXPECTED_DATA_GROUP_WITH_LABELS = {
                         },
                     ],
                     "classifications": [
-
+                        {
+                            "name": "Text classification",
+                            "value": "text_classification",
+                            "createdAt": "Tue, 17 Jan 2023 11:45:01 UTC",
+                            "createdBy": "denis@cord.tech",
+                            "confidence": 1,
+                            "featureHash": "jPOcEsbw",
+                            "lastEditedAt": "Tue, 17 Jan 2023 11:45:01 UTC",
+                            "lastEditedBy": "denis@cord.tech",
+                            "classificationHash": "classification1",
+                            "manualAnnotation": True,
+                        },
                     ],
                 },
                 "1": {
