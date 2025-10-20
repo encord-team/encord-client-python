@@ -15,6 +15,7 @@ box_ontology_item = all_types_structure.get_child_by_hash("MjI2NzEy", Object)
 audio_obj_ontology_item = all_types_structure.get_child_by_hash("KVfzNkFy", Object)
 text_classification = all_types_structure.get_child_by_hash("jPOcEsbw", Classification)
 
+
 @pytest.fixture
 def ontology():
     ontology_structure = Mock()
@@ -150,6 +151,7 @@ def test_vision_space_move_object_instances(ontology):
     assert len(vision_space_2._frames_to_hashes[0]) == 1
     assert len(vision_space_2._frames_to_hashes[1]) == 1
 
+
 def test_vision_space_can_add_classification_instances(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(EMPTY_DATA_GROUP_LABELS)
@@ -253,6 +255,7 @@ def test_vision_space_move_classification_instances(ontology):
     assert len(classifications_on_vision_space_2) == 1
     assert len(vision_space_2._frames_to_hashes[0]) == 1
     assert len(vision_space_2._frames_to_hashes[1]) == 1
+
 
 def test_read_and_export_labels(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)

@@ -7,13 +7,13 @@ from typing import TYPE_CHECKING, Dict, Iterable, Optional, Set, TypeVar, Union
 
 from typing_extensions import Unpack
 
-from encord.constants.enums import DataType, SpaceType
+from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects import Classification, ClassificationInstance
 from encord.objects.common import Shape
 from encord.objects.coordinates import AudioCoordinates, Coordinates, TextCoordinates, TwoDimensionalCoordinates
 from encord.objects.frames import Frames, Range
-from encord.orm.label_space import LabelBlob, SpaceInfo
+from encord.orm.label_space import BaseSpaceInfo, LabelBlob, VideoSpaceInfo
 
 logger = logging.getLogger(__name__)
 from encord.objects.ontology_object_instance import ObjectInstance, SetFramesKwargs
@@ -63,24 +63,27 @@ class Space(ABC):
         pass
 
     @abstractmethod
-    def move_classification_instance_from_space(self, object_to_move: ClassificationInstance) -> Optional[ClassificationInstance]:
+    def move_classification_instance_from_space(
+        self, object_to_move: ClassificationInstance
+    ) -> Optional[ClassificationInstance]:
         pass
 
     @abstractmethod
-    def _parse_space_dict(self, space_info: SpaceInfo, classification_answers: dict) -> None:
+    def _parse_space_dict(self, space_info: BaseSpaceInfo, classification_answers: dict) -> None:
         pass
 
     @abstractmethod
-    def _to_space_dict(self) -> SpaceInfo:
+    def _to_space_dict(self) -> BaseSpaceInfo:
         pass
 
 
 class VisionSpace(Space):
-    def __init__(self, space_id: str, title: str, parent: LabelRowV2):
+    def __init__(self, space_id: str, title: str, parent: LabelRowV2, number_of_frames: int):
         super().__init__(space_id, title, SpaceType.VISION, parent)
         self._frames_to_hashes: defaultdict[int, Set[str]] = defaultdict(set)
         self._objects_map: Dict[str, ObjectInstance] = dict()
         self._classifications_map: Dict[str, ClassificationInstance] = dict()
+        self._number_of_frames: int = number_of_frames
 
     def _add_to_single_frame_to_hashes_map(self, label: Union[ObjectInstance], frame: int) -> None:
         if isinstance(label, ObjectInstance):
@@ -177,7 +180,9 @@ class VisionSpace(Space):
 
         return classification_instance
 
-    def move_classification_instance_from_space(self, classification_to_move: ClassificationInstance) -> Optional[ClassificationInstance]:
+    def move_classification_instance_from_space(
+        self, classification_to_move: ClassificationInstance
+    ) -> Optional[ClassificationInstance]:
         original_space = classification_to_move._space
 
         if original_space is None:
@@ -193,7 +198,7 @@ class VisionSpace(Space):
             )
             return None
 
-    def _parse_space_dict(self, space_info: SpaceInfo, classification_answers: dict) -> None:
+    def _parse_space_dict(self, space_info: BaseSpaceInfo, classification_answers: dict) -> None:
         for frame, frame_label in space_info["labels"].items():
             for obj in frame_label["objects"]:
                 object_hash = obj["objectHash"]
@@ -222,7 +227,9 @@ class VisionSpace(Space):
             for classification in frame_label["classifications"]:
                 classification_hash = classification["classificationHash"]
                 if classification_hash not in self._classifications_map:
-                    new_classification_instance = self.parent._create_new_classification_instance(classification, int(frame), classification_answers)
+                    new_classification_instance = self.parent._create_new_classification_instance(
+                        classification, int(frame), classification_answers
+                    )
                     self._add_classification_instance(new_classification_instance)
                 else:
                     classification_instance = self._classifications_map[classification_hash]
@@ -239,7 +246,7 @@ class VisionSpace(Space):
                         reviews=classification_frame_instance_info.reviews,
                     )
 
-    def _to_space_dict(self) -> SpaceInfo:
+    def _to_space_dict(self) -> BaseSpaceInfo:
         labels: dict[str, LabelBlob] = {}
 
         for frame, label_hashes in self._frames_to_hashes.items():
@@ -255,15 +262,16 @@ class VisionSpace(Space):
                 elif frame_object_instance is not None:
                     object_list.append(self.parent._to_encord_object(frame_object_instance, frame))
                 else:
-                    classification_list.append(self.parent._to_encord_classification(frame_classification_instance, frame))
-
+                    classification_list.append(
+                        self.parent._to_encord_classification(frame_classification_instance, frame)
+                    )
 
             labels[str(frame)] = LabelBlob(objects=object_list, classifications=classification_list)
 
-        res = SpaceInfo(
+        res = VideoSpaceInfo(
             space_type=self.space_type,
-            data_type=DataType.VIDEO,
             labels=labels,
+            number_of_frames=10,
         )
 
         return res

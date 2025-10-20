@@ -49,12 +49,11 @@ from encord.objects.internal_helpers import (
     _search_child_attributes,
 )
 from encord.objects.options import Option, _get_option_by_hash
-
 from encord.objects.utils import check_email, short_uuid_str
 
 if TYPE_CHECKING:
-    from encord.objects.space import Space
     from encord.objects import LabelRowV2
+    from encord.objects.space import Space
 
 
 # For Audio and Text files, classifications can only be applied to Range(start=0, end=0)

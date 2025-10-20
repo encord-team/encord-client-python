@@ -2,7 +2,6 @@ import datetime
 
 from encord.constants.enums import DataType, SpaceType
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
-from encord.orm.label_space import SpaceInfo
 
 DATA_GROUP_DATA_HASH = "28f0e9d2-51e0-459d-8ffa-2e214da653a9"
 
@@ -295,12 +294,12 @@ EMPTY_DATA_GROUP_LABELS = {
     "spaces": {
         "video-1-uuid": {
             "space_type": SpaceType.VISION,
-            "data_type": DataType.VIDEO,
+            "number_of_frames": 10,
             "labels": {},
         },
         "video-2-uuid": {
             "space_type": SpaceType.VISION,
-            "data_type": DataType.VIDEO,
+            "number_of_frames": 10,
             "labels": {},
         },
     },
@@ -380,7 +379,7 @@ EXPECTED_DATA_GROUP_WITH_LABELS = {
     "spaces": {
         "video-1-uuid": {
             "space_type": SpaceType.VISION,
-            "data_type": DataType.VIDEO,
+            "number_of_frames": 10,
             "labels": {
                 "0": {
                     "objects": [
@@ -465,7 +464,7 @@ EXPECTED_DATA_GROUP_WITH_LABELS = {
         },
         "video-2-uuid": {
             "space_type": SpaceType.VISION,
-            "data_type": DataType.VIDEO,
+            "number_of_frames": 10,
             "labels": {},
         },
     },
