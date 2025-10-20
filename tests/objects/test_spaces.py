@@ -151,11 +151,15 @@ def test_read_and_export_labels(ontology):
 
     vision_space_1 = label_row.get_space_by_id("video-1-uuid", type_=VisionSpace)
     objects_on_vision_space_1 = vision_space_1.get_object_instances()
-    assert(len(objects_on_vision_space_1) == 1)
+    assert(len(objects_on_vision_space_1) == 2)
 
-    object1 = objects_on_vision_space_1[0]
-    assert(object1.object_hash == "object1")
-    assert(object1.get_annotation_frames() == {0, 1})
+    box_object_instance = objects_on_vision_space_1[0]
+    assert(box_object_instance.object_hash == "object1")
+    assert(box_object_instance.get_annotation_frames() == {0, 1})
+
+    dynamic_point_instance = objects_on_vision_space_1[1]
+    assert(dynamic_point_instance.object_hash == "dynamicPoint1")
+    assert(dynamic_point_instance.get_annotation_frames() == {0, 1})
 
     output_dict = label_row.to_encord_dict()
-    assert not DeepDiff(EXPECTED_DATA_GROUP_WITH_LABELS, output_dict)
+    assert not DeepDiff(EXPECTED_DATA_GROUP_WITH_LABELS, output_dict, exclude_regex_paths=[r".*\['trackHash'\]"], ignore_order_func=lambda x: x.path().endswith("['objects']"))

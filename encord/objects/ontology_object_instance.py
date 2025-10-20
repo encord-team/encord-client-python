@@ -103,6 +103,14 @@ class ObjectInstance:
         """
         return self._parent
 
+    def is_assigned_to_space(self) -> Optional[Space]:
+        """Checks if the object instance is assigned to a space.
+
+        Returns:
+            The Space instance if assigned, otherwise None.
+        """
+        return self._space
+
     def _set_space(self, space: Optional[Space]) -> None:
         self._space = space
 
@@ -636,8 +644,7 @@ class ObjectInstance:
         if len(self._frames_to_instance_data) == 0:
             raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
 
-        # TODO: Make this work
-        # self.are_dynamic_answers_valid()
+        self.are_dynamic_answers_valid()
 
     def are_dynamic_answers_valid(self) -> None:
         """Validate if there are any dynamic answers on frames that have no coordinates.

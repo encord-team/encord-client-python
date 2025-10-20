@@ -26,6 +26,11 @@ SpaceT = TypeVar("SpaceT", bound="Space")
 
 
 class Space(ABC):
+    """Manages the objects on a space within LabelRowV2.
+
+    Users should not instantiate this class directly, but must obtain these instances via LabelRow.list_spaces().
+    """
+
     def __init__(
         self, space_id: str, title: str, space_type: SpaceType, parent: LabelRowV2
     ):

@@ -1526,13 +1526,20 @@ class LabelRowV2:
                 manual_annotation: Optional flag indicating manual annotation.
 
             Raises:
-                LabelRowError: If the object instance is already assigned to a different label row.
+                LabelRowError: If the object instance is already assigned to a different label row or space.
             """
             label_row = object_instance.is_assigned_to_label_row()
+            space = object_instance.is_assigned_to_space()
+
             if label_row and self._label_row != label_row:
                 raise LabelRowError(
                     "This object instance is already assigned to a different label row. It cannot be "
                     "added to multiple label rows at once."
+                )
+
+            if space is not None:
+                raise LabelRowError(
+                    "This object instance is already assigned to a space. It cannot also be assigned to a label row."
                 )
 
             object_instance.set_for_frames(
@@ -1768,12 +1775,6 @@ class LabelRowV2:
             }
 
             # # At some point, we also want to add these to the other modalities
-            # is_geometric_data_group_child = (
-            #     self.data_type == DataType.GROUP
-            #     and self._space_map.get(obj._space) is not None
-            #     and is_geometric(self._space_map.get(obj._space).data_type)
-            # )
-
             if not is_geometric(self.data_type):
                 # For non-frame entities, all annotations exist only on one frame
                 annotation = obj.get_annotation(0)
@@ -1820,6 +1821,19 @@ class LabelRowV2:
                 "actions": list(reversed(all_static_answers)),
                 "objectHash": obj.object_hash,
             }
+
+        for space in self._space_map.values():
+            if isinstance(space, VisionSpace):
+                for obj in space.get_object_instances():
+                    all_static_answers = self._dynamic_answers_to_encord_dict(obj)
+
+                    if len(all_static_answers) == 0:
+                        continue
+
+                    ret[obj.object_hash] = {
+                        "actions": list(all_static_answers),
+                        "objectHash": obj.object_hash
+                    }
         return ret
 
     def _to_classification_answers(self) -> Dict[str, Any]:
@@ -2525,7 +2539,17 @@ class LabelRowV2:
     def _add_action_answers(self, label_row_dict: dict):
         for answer in label_row_dict["object_actions"].values():
             object_hash = answer["objectHash"]
-            object_instance = self._objects_map[object_hash]
+            object_instance = self._objects_map.get(object_hash)
+
+            if object_instance is None:
+                for space in self._space_map.values():
+                    if isinstance(space, VisionSpace):
+                        object_instance = space._objects_map.get(object_hash)
+                        if object_instance is not None:
+                            break
+
+            if object_instance is None:
+                continue
 
             answer_list = answer["actions"]
             object_instance.set_answer_from_list(answer_list)
