@@ -41,110 +41,45 @@ assert keypoint_ontology_object is not None, "Keypoint object 'Point of Interest
 
 # Dictionary of labels per data unit and per frame with Point of Interest type specified, including quality options
 pcd_labels = {
-    "scene-1094": {
-        1: {
-            "label_ref": "poi_001",
-            "coordinates": PointCoordinate3D(x=0.01, y=0.02, z=0.03)
-        }
-    },
+    "scene-1094": {1: {"label_ref": "poi_001", "coordinates": PointCoordinate3D(x=0.01, y=0.02, z=0.03)}},
     "scene-0916": {
         1: [
-            {
-                "label_ref": "poi_002",
-                "coordinates": PointCoordinate3D(x=0.03, y=0.03, z=0.03)
-            },
-            {
-                "label_ref": "poi_003",
-                "coordinates": PointCoordinate3D(x=0.5, y=0.4, z=0.3)
-            },
-            {
-                "label_ref": "poi_004",
-                "coordinates": PointCoordinate3D(x=0.9, y=0.3, z=0.3)
-            },
+            {"label_ref": "poi_002", "coordinates": PointCoordinate3D(x=0.03, y=0.03, z=0.03)},
+            {"label_ref": "poi_003", "coordinates": PointCoordinate3D(x=0.5, y=0.4, z=0.3)},
+            {"label_ref": "poi_004", "coordinates": PointCoordinate3D(x=0.9, y=0.3, z=0.3)},
         ],
     },
     "scene-0796": {
-        0: {
-            "label_ref": "poi_005",
-            "coordinates": PointCoordinate3D(x=0.05, y=0.02, z=0.03)
-        },
+        0: {"label_ref": "poi_005", "coordinates": PointCoordinate3D(x=0.05, y=0.02, z=0.03)},
         2: [
-            {
-                "label_ref": "poi_006",
-                "coordinates": PointCoordinate3D(x=0.3, y=0.3, z=0.3)
-            },
-            {
-                "label_ref": "poi_007",
-                "coordinates": PointCoordinate3D(x=0.4, y=0.5, z=0.3)
-            },
-            {
-                "label_ref": "poi_008",
-                "coordinates": PointCoordinate3D(x=0.11, y=0.2, z=0.3)
-            },
+            {"label_ref": "poi_006", "coordinates": PointCoordinate3D(x=0.3, y=0.3, z=0.3)},
+            {"label_ref": "poi_007", "coordinates": PointCoordinate3D(x=0.4, y=0.5, z=0.3)},
+            {"label_ref": "poi_008", "coordinates": PointCoordinate3D(x=0.11, y=0.2, z=0.3)},
         ],
     },
     "scene-1100": {
-        0: {
-            "label_ref": "poi_009",
-            "coordinates": PointCoordinate3D(x=0.1, y=0.2, z=0.3)
-        },
+        0: {"label_ref": "poi_009", "coordinates": PointCoordinate3D(x=0.1, y=0.2, z=0.3)},
         3: [
-            {
-                "label_ref": "poi_010",
-                "coordinates": PointCoordinate3D(x=0.3, y=0.3, z=0.3)
-            },
-            {
-                "label_ref": "poi_011",
-                "coordinates": PointCoordinate3D(x=0.8, y=0.5, z=0.3)
-            },
-            {
-                "label_ref": "poi_012",
-                "coordinates": PointCoordinate3D(x=0.11, y=0.2, z=0.3)
-            },
+            {"label_ref": "poi_010", "coordinates": PointCoordinate3D(x=0.3, y=0.3, z=0.3)},
+            {"label_ref": "poi_011", "coordinates": PointCoordinate3D(x=0.8, y=0.5, z=0.3)},
+            {"label_ref": "poi_012", "coordinates": PointCoordinate3D(x=0.11, y=0.2, z=0.3)},
         ],
     },
     "scene-0655": {
         1: [
-            {
-                "label_ref": "poi_013",
-                "coordinates": PointCoordinate3D(x=0.2, y=0.1, z=0.3)
-            },
-            {
-                "label_ref": "poi_014",
-                "coordinates": PointCoordinate3D(x=0.6, y=0.6, z=0.3)
-            },
-            {
-                "label_ref": "poi_015",
-                "coordinates": PointCoordinate3D(x=0.10, y=0.1, z=0.3)
-            },
+            {"label_ref": "poi_013", "coordinates": PointCoordinate3D(x=0.2, y=0.1, z=0.3)},
+            {"label_ref": "poi_014", "coordinates": PointCoordinate3D(x=0.6, y=0.6, z=0.3)},
+            {"label_ref": "poi_015", "coordinates": PointCoordinate3D(x=0.10, y=0.1, z=0.3)},
         ],
         2: [
-            {
-                "label_ref": "poi_016",
-                "coordinates": PointCoordinate3D(x=0.4, y=0.1, z=0.3)
-            },
-            {
-                "label_ref": "poi_014",
-                "coordinates": PointCoordinate3D(x=0.8, y=0.5, z=0.3)
-            },
-            {
-                "label_ref": "poi_017",
-                "coordinates": PointCoordinate3D(x=0.11, y=0.2, z=0.3)
-            },
+            {"label_ref": "poi_016", "coordinates": PointCoordinate3D(x=0.4, y=0.1, z=0.3)},
+            {"label_ref": "poi_014", "coordinates": PointCoordinate3D(x=0.8, y=0.5, z=0.3)},
+            {"label_ref": "poi_017", "coordinates": PointCoordinate3D(x=0.11, y=0.2, z=0.3)},
         ],
         3: [
-            {
-                "label_ref": "poi_016",
-                "coordinates": PointCoordinate3D(x=0.5, y=0.2, z=0.3)
-            },
-            {
-                "label_ref": "poi_014",
-                "coordinates": PointCoordinate3D(x=0.7, y=0.4, z=0.3)
-            },
-            {
-                "label_ref": "poi_017",
-                "coordinates": PointCoordinate3D(x=0.9, y=0.3, z=0.3)
-            },
+            {"label_ref": "poi_016", "coordinates": PointCoordinate3D(x=0.5, y=0.2, z=0.3)},
+            {"label_ref": "poi_014", "coordinates": PointCoordinate3D(x=0.7, y=0.4, z=0.3)},
+            {"label_ref": "poi_017", "coordinates": PointCoordinate3D(x=0.9, y=0.3, z=0.3)},
         ],
     },
 }

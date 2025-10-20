@@ -34,11 +34,7 @@ pcd_labels = {
     "scene-1094": {
         0: {
             "label_ref": "person_001",
-            "coordinates": CuboidCoordinates(
-                position=(9, 9, 9), 
-                orientation=(0.11, 0.77, 0.33), 
-                size=(0.2, 0.2, 0.2)
-                ),
+            "coordinates": CuboidCoordinates(position=(9, 9, 9), orientation=(0.11, 0.77, 0.33), size=(0.2, 0.2, 0.2)),
         }
     },
     "scene-0916": {
@@ -46,25 +42,19 @@ pcd_labels = {
             {
                 "label_ref": "person_002",
                 "coordinates": CuboidCoordinates(
-                    position=(0.4, 0.4, 0.4), 
-                    orientation=(0.0, 0.0, 0.4), 
-                    size=(0.1, 0.1, 0.1)
+                    position=(0.4, 0.4, 0.4), orientation=(0.0, 0.0, 0.4), size=(0.1, 0.1, 0.1)
                 ),
             },
             {
                 "label_ref": "person_003",
                 "coordinates": CuboidCoordinates(
-                    position=(0.2, 0.2, 0.0), 
-                    orientation=(0.0, 0.0, 0.1), 
-                    size=(0.5, 0.5, 0.5)
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.5, 0.5, 0.5)
                 ),
             },
             {
                 "label_ref": "person_004",
                 "coordinates": CuboidCoordinates(
-                    position=(0.2, 0.2, 0.0), 
-                    orientation=(0.0, 0.0, 0.1), 
-                    size=(0.7, 0.7, 0.7)
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.7, 0.7, 0.7)
                 ),
             },
         ],
@@ -73,34 +63,26 @@ pcd_labels = {
         0: {
             "label_ref": "person_005",
             "coordinates": CuboidCoordinates(
-                position=(0.4, 0.4, 0.0), 
-                orientation=(0.0, 0.0, 0.4), 
-                size=(0.12, 0.12, 0.12)
+                position=(0.4, 0.4, 0.0), orientation=(0.0, 0.0, 0.4), size=(0.12, 0.12, 0.12)
             ),
         },
         2: [
             {
                 "label_ref": "person_006",
                 "coordinates": CuboidCoordinates(
-                    position=(0.1, 0.1, 0.0), 
-                    orientation=(0.0, 0.0, 0.2), 
-                    size=(0.5, 0.5, 0.5)
+                    position=(0.1, 0.1, 0.0), orientation=(0.0, 0.0, 0.2), size=(0.5, 0.5, 0.5)
                 ),
             },
             {
                 "label_ref": "person_007",
                 "coordinates": CuboidCoordinates(
-                    position=(0.1, 0.1, 0.0), 
-                    orientation=(0.0, 0.0, 0.2), 
-                    size=(0.0132, 0.0132, 0.0132)
+                    position=(0.1, 0.1, 0.0), orientation=(0.0, 0.0, 0.2), size=(0.0132, 0.0132, 0.0132)
                 ),
             },
             {
                 "label_ref": "person_008",
                 "coordinates": CuboidCoordinates(
-                    position=(0.2, 0.2, 0.0), 
-                    orientation=(0.0, 0.0, 0.1), 
-                    size=(0.8, 0.8, 0.8)
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.8, 0.8, 0.8)
                 ),
             },
         ],
@@ -109,34 +91,26 @@ pcd_labels = {
         0: {
             "label_ref": "person_009",
             "coordinates": CuboidCoordinates(
-                position=(0.4, 0.4, 0.0), 
-                orientation=(0.0, 0.0, 0.4), 
-                size=(0.012, 0.012, 0.012)
+                position=(0.4, 0.4, 0.0), orientation=(0.0, 0.0, 0.4), size=(0.012, 0.012, 0.012)
             ),
         },
         3: [
             {
                 "label_ref": "person_010",
                 "coordinates": CuboidCoordinates(
-                    position=(0.4, 0.4, 0.0), 
-                    orientation=(0.0, 0.0, 0.4), 
-                    size=(0.5, 0.5, 0.5)
+                    position=(0.4, 0.4, 0.0), orientation=(0.0, 0.0, 0.4), size=(0.5, 0.5, 0.5)
                 ),
             },
             {
                 "label_ref": "person_011",
                 "coordinates": CuboidCoordinates(
-                    position=(0.3, 0.3, 0.0), 
-                    orientation=(0.0, 0.0, 0.3), 
-                    size=(0.13, 0.13, 0.13)
+                    position=(0.3, 0.3, 0.0), orientation=(0.0, 0.0, 0.3), size=(0.13, 0.13, 0.13)
                 ),
             },
             {
                 "label_ref": "person_012",
                 "coordinates": CuboidCoordinates(
-                    position=(0.2, 0.2, 0.0), 
-                    orientation=(0.0, 0.0, 0.1), 
-                    size=(0.9, 0.9, 0.9)
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.9, 0.9, 0.9)
                 ),
             },
         ],
@@ -146,25 +120,19 @@ pcd_labels = {
             {
                 "label_ref": "person_013",
                 "coordinates": CuboidCoordinates(
-                    position=(0.5, 0.5, 0.0), 
-                    orientation=(0.0, 0.0, 0.5), 
-                    size=(0.11, 0.11, 0.11)
+                    position=(0.5, 0.5, 0.0), orientation=(0.0, 0.0, 0.5), size=(0.11, 0.11, 0.11)
                 ),
             },
             {
                 "label_ref": "person_014",
                 "coordinates": CuboidCoordinates(
-                    position=(0.2, 0.2, 0.0), 
-                    orientation=(0.0, 0.0, 0.2), 
-                    size=(0.6, 0.6, 0.6)
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.2), size=(0.6, 0.6, 0.6)
                 ),
             },
             {
                 "label_ref": "person_015",
                 "coordinates": CuboidCoordinates(
-                    position=(0.2, 0.2, 0.0), 
-                    orientation=(0.0, 0.0, 0.1), 
-                    size=(0.8, 0.8, 0.8)
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.8, 0.8, 0.8)
                 ),
             },
         ],
@@ -172,25 +140,19 @@ pcd_labels = {
             {
                 "label_ref": "person_016",
                 "coordinates": CuboidCoordinates(
-                    position=(0.5, 0.5, 0.0), 
-                    orientation=(0.0, 0.0, 0.5), 
-                    size=(0.3, 0.3, 0.3)
+                    position=(0.5, 0.5, 0.0), orientation=(0.0, 0.0, 0.5), size=(0.3, 0.3, 0.3)
                 ),
             },
             {
                 "label_ref": "person_014",
                 "coordinates": CuboidCoordinates(
-                    position=(0.2, 0.2, 0.0), 
-                    orientation=(0.0, 0.0, 0.2), 
-                    size=(0.6, 0.6, 0.6)
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.2), size=(0.6, 0.6, 0.6)
                 ),
             },
             {
                 "label_ref": "person_017",
                 "coordinates": CuboidCoordinates(
-                    position=(0.2, 0.2, 0.0), 
-                    orientation=(0.0, 0.0, 0.1), 
-                    size=(0.8, 0.8, 0.8)
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.8, 0.8, 0.8)
                 ),
             },
         ],
@@ -198,25 +160,19 @@ pcd_labels = {
             {
                 "label_ref": "person_016",
                 "coordinates": CuboidCoordinates(
-                    position=(0.5, 0.5, 0.0), 
-                    orientation=(0.0, 0.0, 0.5), 
-                    size=(0.1, 0.1, 0.1)
+                    position=(0.5, 0.5, 0.0), orientation=(0.0, 0.0, 0.5), size=(0.1, 0.1, 0.1)
                 ),
             },
             {
                 "label_ref": "person_014",
                 "coordinates": CuboidCoordinates(
-                    position=(0.2, 0.2, 0.0), 
-                    orientation=(0.0, 0.0, 0.2), 
-                    size=(0.6, 0.6, 0.6)
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.2), size=(0.6, 0.6, 0.6)
                 ),
             },
             {
                 "label_ref": "person_017",
                 "coordinates": CuboidCoordinates(
-                    position=(0.2, 0.2, 0.0), 
-                    orientation=(0.0, 0.0, 0.1), 
-                    size=(0.8, 0.8, 0.8)
+                    position=(0.2, 0.2, 0.0), orientation=(0.0, 0.0, 0.1), size=(0.8, 0.8, 0.8)
                 ),
             },
         ],
