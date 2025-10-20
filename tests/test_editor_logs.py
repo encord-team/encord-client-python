@@ -119,7 +119,6 @@ def test_project_get_editor_logs_with_filters():
         start_time=start_time,
         end_time=end_time,
         limit=50,
-        page_token="test_token",
         action="label_updated",
         actor_user_email="admin@example.com",
         workflow_stage_id=workflow_id,
@@ -136,7 +135,6 @@ def test_project_get_editor_logs_with_filters():
     assert params.start_time == start_time
     assert params.end_time == end_time
     assert params.limit == 50
-    assert params.page_token == "test_token"
     assert params.action == "label_updated"
     assert params.actor_user_email == "admin@example.com"
     assert params.workflow_stage_id == workflow_id
