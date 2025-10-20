@@ -587,7 +587,6 @@ class Project:
         self,
         start_time: datetime.datetime,
         end_time: datetime.datetime,
-        limit: int = 500,
         action: Optional[str] = None,
         actor_user_email: Optional[str] = None,
         workflow_stage_id: Optional[UUID] = None,
@@ -610,10 +609,12 @@ class Project:
            An iterator on the editor logs.
         """
 
+        # limit acts as a batch size for the iterator
+        batch_size = 500
         params = EditorLogParams(
             start_time=start_time,
             end_time=end_time,
-            limit=limit,
+            limit=batch_size,
             action=action,
             actor_user_email=actor_user_email,
             workflow_stage_id=workflow_stage_id,
