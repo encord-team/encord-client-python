@@ -73,12 +73,13 @@ from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.space import (
     AudioSpace,
+    ImageSpace,
     SceneStreamSpace,
     Space,
     SpaceT,
     SpaceType,
     TextSpace,
-    VisionSpace,
+    VideoSpace,
 )
 from encord.objects.utils import _lower_snake_case
 from encord.ontology import Ontology
@@ -1801,7 +1802,7 @@ class LabelRowV2:
                     object_answer_dict["range"] = [[range.start, range.end] for range in obj.range_list]
 
         for space in self._space_map.values():
-            if isinstance(space, VisionSpace):
+            if isinstance(space, VideoSpace) or isinstance(space, ImageSpace):
                 for obj in space.get_object_instances():
                     all_static_answers = self._get_all_static_answers(obj)
                     ret[obj.object_hash] = {
@@ -1823,7 +1824,7 @@ class LabelRowV2:
             }
 
         for space in self._space_map.values():
-            if isinstance(space, VisionSpace):
+            if isinstance(space, VideoSpace) or isinstance(space, ImageSpace):
                 for obj in space.get_object_instances():
                     all_static_answers = self._dynamic_answers_to_encord_dict(obj)
 
@@ -1861,7 +1862,7 @@ class LabelRowV2:
                 ret[classification.classification_hash]["manualAnnotation"] = annotation.manual_annotation
 
         for space in self._space_map.values():
-            if isinstance(space, VisionSpace):
+            if isinstance(space, VideoSpace) or isinstance(space, ImageSpace):
                 for classification in space.get_classification_instances():
                     all_static_answers = classification.get_all_static_answers()
                     classifications = [answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()]
@@ -1894,7 +1895,9 @@ class LabelRowV2:
     def _to_encord_spaces(self) -> Dict[str, SpaceInfo]:
         ret = {}
         for space_id, space in self._space_map.items():
-            if isinstance(space, VisionSpace):
+            if isinstance(space, VideoSpace):
+                ret[space_id] = space._to_space_dict()
+            elif isinstance(space, ImageSpace):
                 ret[space_id] = space._to_space_dict()
 
         return ret
@@ -2226,8 +2229,8 @@ class LabelRowV2:
                     res[space_id] = AudioSpace(space_id=space_id, title="Random title", parent=self)
                 elif space_type == SpaceType.TEXT:
                     res[space_id] = TextSpace(space_id=space_id, title="Random title", parent=self)
-                elif space_info["space_type"] == SpaceType.VISION:
-                    vision_space = VisionSpace(
+                elif space_info["space_type"] == SpaceType.VIDEO:
+                    vision_space = VideoSpace(
                         space_id=space_id,
                         title="Random title",
                         parent=self,
@@ -2235,7 +2238,14 @@ class LabelRowV2:
                     )
                     vision_space._parse_space_dict(space_info, classification_answers)
                     res[space_id] = vision_space
-
+                elif space_info["space_type"] == SpaceType.IMAGE:
+                    image_space = ImageSpace(
+                        space_id=space_id,
+                        title="Random title",
+                        parent=self,
+                    )
+                    image_space._parse_space_dict(space_info, classification_answers)
+                    res[space_id] = image_space
                 elif space_type == SpaceType.SCENE_STREAM:
                     res[space_id] = SceneStreamSpace(space_id=space_id, title=space_id, parent=self)
                 else:
@@ -2549,7 +2559,7 @@ class LabelRowV2:
 
             if object_instance is None:
                 for space in self._space_map.values():
-                    if isinstance(space, VisionSpace):
+                    if isinstance(space, VideoSpace) or isinstance(space, ImageSpace):
                         object_instance = space._objects_map.get(object_hash)
                         if object_instance is not None:
                             break

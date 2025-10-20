@@ -31,7 +31,7 @@ from encord.objects.coordinates import (
 from encord.objects.frames import Range
 from encord.objects.html_node import HtmlNode, HtmlRange
 from encord.objects.options import Option
-from encord.objects.space import AudioSpace, SceneStreamSpace, VisionSpace
+from encord.objects.space import AudioSpace, SceneStreamSpace, VideoSpace
 from encord.orm.label_row import LabelRowMetadata, LabelStatus
 from encord.storage import StorageItem
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
@@ -733,9 +733,9 @@ def test_spaces(ontology):
         print(f"layout key: {space.layout_key}")  # Returns None if space is not a data group child
 
     # ADD OBJECTS FROM SPACE
-    video_space_1 = label_row.get_space_by_title(title="Video 1", type_=VisionSpace)
+    video_space_1 = label_row.get_space_by_title(title="Video 1", type_=VideoSpace)
     # OR could get the space by its layout key
-    video_space_1 = label_row.get_space_by_layout_key(layout_key="video-left", type_=VisionSpace)
+    video_space_1 = label_row.get_space_by_layout_key(layout_key="video-left", type_=VideoSpace)
 
     bb_instance = video_space_1.add_object_instance(
         obj=box_ontology_item,
@@ -758,7 +758,7 @@ def test_spaces(ontology):
     video_space_1.remove_object_instance(object_hash=bb_instance.object_hash)
 
     # UPDATE SPACE
-    video_space_2 = label_row.get_space_by_title(title="Video 2", type_=VisionSpace)
+    video_space_2 = label_row.get_space_by_title(title="Video 2", type_=VideoSpace)
     video_space_1.move_object_instance_to_space(object_hash=bb_instance.object_hash, target_space_id=video_space_2.id)
 
     # List object instances in space
