@@ -21,3 +21,6 @@ class VideoSpaceInfo(BaseSpaceInfo):
 class AudioSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.AUDIO]
     duration_ms: int
+
+
+SpaceInfo = Union[VideoSpaceInfo | AudioSpaceInfo]

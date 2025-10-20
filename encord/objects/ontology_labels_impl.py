@@ -89,7 +89,7 @@ from encord.orm.label_row import (
     LabelStatus,
     WorkflowGraphNode,
 )
-from encord.orm.label_space import AudioSpaceInfo, BaseSpaceInfo, VideoSpaceInfo
+from encord.orm.label_space import AudioSpaceInfo, BaseSpaceInfo, SpaceInfo, VideoSpaceInfo
 from encord.storage import STORAGE_BUNDLE_CREATE_LIMIT, StorageItem, StorageItemInaccessible
 from encord.utilities.type_utilities import exhaustive_guard
 
@@ -2215,7 +2215,7 @@ class LabelRowV2:
                 annotation_object_hashes.remove(item_hash)
 
     def _parse_label_spaces(
-        self, spaces_info: Optional[dict[str, BaseSpaceInfo]], classification_answers: dict
+        self, spaces_info: Optional[dict[str, SpaceInfo]], classification_answers: dict
     ) -> dict[str, Space]:
         # TODO: Maybe we should automatically add global space here
         res: dict[str, Space] = dict()
@@ -2223,17 +2223,15 @@ class LabelRowV2:
             for space_id, space_info in spaces_info.items():
                 space_type = space_info["space_type"]
                 if space_type == SpaceType.AUDIO:
-                    audio_info = cast(AudioSpaceInfo, space_info)
                     res[space_id] = AudioSpace(space_id=space_id, title="Random title", parent=self)
                 elif space_type == SpaceType.TEXT:
                     res[space_id] = TextSpace(space_id=space_id, title="Random title", parent=self)
                 elif space_info["space_type"] == SpaceType.VISION:
-                    video_info = cast(VideoSpaceInfo, space_info)
                     vision_space = VisionSpace(
                         space_id=space_id,
                         title="Random title",
                         parent=self,
-                        number_of_frames=video_info["number_of_frames"],
+                        number_of_frames=space_info["number_of_frames"],
                     )
                     vision_space._parse_space_dict(space_info, classification_answers)
                     res[space_id] = vision_space

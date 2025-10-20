@@ -13,7 +13,7 @@ from encord.objects import Classification, ClassificationInstance
 from encord.objects.common import Shape
 from encord.objects.coordinates import AudioCoordinates, Coordinates, TextCoordinates, TwoDimensionalCoordinates
 from encord.objects.frames import Frames, Range
-from encord.orm.label_space import BaseSpaceInfo, LabelBlob, VideoSpaceInfo
+from encord.orm.label_space import BaseSpaceInfo, LabelBlob, SpaceInfo, VideoSpaceInfo
 
 logger = logging.getLogger(__name__)
 from encord.objects.ontology_object_instance import ObjectInstance, SetFramesKwargs
@@ -69,11 +69,11 @@ class Space(ABC):
         pass
 
     @abstractmethod
-    def _parse_space_dict(self, space_info: BaseSpaceInfo, classification_answers: dict) -> None:
+    def _parse_space_dict(self, space_info: SpaceInfo, classification_answers: dict) -> None:
         pass
 
     @abstractmethod
-    def _to_space_dict(self) -> BaseSpaceInfo:
+    def _to_space_dict(self) -> SpaceInfo:
         pass
 
 
@@ -284,7 +284,7 @@ class SceneStreamSpace(Space):
     def get_object_instances(
         self,
         filter_ontology_object: Optional[Object] = None,
-    ) -> Iterable[ObjectInstance]:
+    ) -> list[ObjectInstance]:
         raise NotImplementedError()
 
     def add_object_instance(self, obj: Object, coordinates: Coordinates) -> ObjectInstance:
@@ -306,7 +306,7 @@ class AudioSpace(Space):
         self,
         filter_ontology_object: Optional[Object] = None,
         filter_ranges: Optional[Range | list[Range]] = None,
-    ) -> Iterable[ObjectInstance]:
+    ) -> list[ObjectInstance]:
         raise NotImplementedError()
 
     def add_object_instance(self, obj: Object, ranges: list[Range] | Range):
@@ -328,7 +328,7 @@ class TextSpace(Space):
         self,
         filter_ontology_object: Optional[Object] = None,
         filter_ranges: Optional[Range | list[Range]] = None,
-    ) -> Iterable[ObjectInstance]:
+    ) -> list[ObjectInstance]:
         raise NotImplementedError()
 
     def add_object_instance(self, obj: Object, ranges: list[Range] | Range):
