@@ -9,10 +9,10 @@ from typing_extensions import Unpack
 
 from encord.constants.enums import DataType, SpaceType
 from encord.exceptions import LabelRowError
-from encord.objects import ClassificationInstance
+from encord.objects import Classification, ClassificationInstance
 from encord.objects.common import Shape
 from encord.objects.coordinates import AudioCoordinates, Coordinates, TextCoordinates, TwoDimensionalCoordinates
-from encord.objects.frames import Frames, Range, frames_class_to_frames_list
+from encord.objects.frames import Frames, Range
 from encord.orm.label_space import LabelBlob, SpaceInfo
 
 logger = logging.getLogger(__name__)
@@ -39,11 +39,31 @@ class Space(ABC):
         self.parent = parent
 
     @abstractmethod
+    def get_object_instances(
+        self,
+    ) -> list[ObjectInstance]:
+        pass
+
+    @abstractmethod
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         pass
 
     @abstractmethod
     def move_object_instance_from_space(self, object_to_move: ObjectInstance) -> Optional[ObjectInstance]:
+        pass
+
+    @abstractmethod
+    def get_classification_instances(
+        self,
+    ) -> list[ClassificationInstance]:
+        pass
+
+    @abstractmethod
+    def remove_classification_instance(self, object_hash: str) -> Optional[ClassificationInstance]:
+        pass
+
+    @abstractmethod
+    def move_classification_instance_from_space(self, object_to_move: ClassificationInstance) -> Optional[ClassificationInstance]:
         pass
 
     @abstractmethod
@@ -60,6 +80,7 @@ class VisionSpace(Space):
         super().__init__(space_id, title, SpaceType.VISION, parent)
         self._frames_to_hashes: defaultdict[int, Set[str]] = defaultdict(set)
         self._objects_map: Dict[str, ObjectInstance] = dict()
+        self._classifications_map: Dict[str, ClassificationInstance] = dict()
 
     def _add_to_single_frame_to_hashes_map(self, label: Union[ObjectInstance], frame: int) -> None:
         if isinstance(label, ObjectInstance):
@@ -74,6 +95,16 @@ class VisionSpace(Space):
             self._frames_to_hashes[frame].add(object_instance.object_hash)
 
         return object_instance
+
+    def _add_classification_instance(self, classification_instance: ClassificationInstance) -> ClassificationInstance:
+        self._classifications_map[classification_instance.classification_hash] = classification_instance
+        classification_instance._set_space(self)
+
+        frames_list = classification_instance.get_annotation_frames()
+        for frame in frames_list:
+            self._frames_to_hashes[frame].add(classification_instance.classification_hash)
+
+        return classification_instance
 
     def add_object_instance(
         self, obj: Object, coordinates: TwoDimensionalCoordinates, frames: Frames = 0, **kwargs: Unpack[SetFramesKwargs]
@@ -116,6 +147,49 @@ class VisionSpace(Space):
         else:
             logger.warning(
                 f"Unable to move object instance from space of type {original_space.space_type} to {self.space_type}"
+            )
+            return None
+
+    def add_classification_instance(
+        self, classification: Classification, frames: Frames = 0, **kwargs: Unpack[SetFramesKwargs]
+    ) -> ClassificationInstance:
+        classification_instance = classification.create_instance()
+        classification_instance.set_for_frames(frames=frames, overwrite=False, **kwargs)
+
+        return self._add_classification_instance(classification_instance)
+
+    def get_classification_instances(
+        self,
+    ) -> list[ClassificationInstance]:
+        return list(self._classifications_map.values())
+
+    def remove_classification_instance(self, classification_hash: str) -> Optional[ClassificationInstance]:
+        classification_instance = self._classifications_map.pop(classification_hash)
+
+        if classification_instance is None:
+            logger.warning(f"Classification instance {classification_hash} not found.")
+        else:
+            classification_instance_frame_list = classification_instance.get_annotation_frames()
+            for frame in classification_instance_frame_list:
+                self._frames_to_hashes[frame].discard(classification_hash)
+
+            classification_instance._set_space(None)
+
+        return classification_instance
+
+    def move_classification_instance_from_space(self, classification_to_move: ClassificationInstance) -> Optional[ClassificationInstance]:
+        original_space = classification_to_move._space
+
+        if original_space is None:
+            raise LabelRowError("Unable to move object instance, as it currently does not belong to any space.")
+
+        if isinstance(original_space, VisionSpace):
+            original_space.remove_classification_instance(classification_to_move.classification_hash)
+            self._add_classification_instance(classification_to_move)
+            return classification_to_move
+        else:
+            logger.warning(
+                f"Unable to move classification instance from space of type {original_space.space_type} to {self.space_type}"
             )
             return None
 

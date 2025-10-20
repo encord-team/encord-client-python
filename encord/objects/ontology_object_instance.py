@@ -610,10 +610,10 @@ class ObjectInstance:
         return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_instance_data.keys())]
 
     def get_annotation_frames(self) -> set[int]:
-        """Get all annotations for the object instance on all frames it has been placed on.
+        """Get a list of frames that the object instance exists on.
 
         Returns:
-            List[Annotation]: A list of `ObjectInstance.Annotation` in order of available frames.
+            List[int]: A list of frame numbers that the object instance exists on.
         """
         return {self.get_annotation(frame_num).frame for frame_num in sorted(self._frames_to_instance_data.keys())}
 

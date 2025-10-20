@@ -399,7 +399,9 @@ EXPECTED_DATA_GROUP_WITH_LABELS = {
                             "point": {"0": {"x": 0.5, "y": 0.5}},
                         },
                     ],
-                    "classifications": [],
+                    "classifications": [
+
+                    ],
                 },
                 "1": {
                     "objects": [
