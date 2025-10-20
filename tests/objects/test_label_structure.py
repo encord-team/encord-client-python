@@ -5,6 +5,7 @@ from unittest.mock import Mock, PropertyMock
 
 import pytest
 
+from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError, OntologyError
 from encord.objects import (
     AnswerForFrames,
@@ -31,7 +32,6 @@ from encord.objects.frames import Range
 from encord.objects.html_node import HtmlNode, HtmlRange
 from encord.objects.options import Option
 from encord.objects.space import AudioSpace, SceneStreamSpace, VisionSpace
-from encord.constants.enums import SpaceType
 from encord.orm.label_row import LabelRowMetadata, LabelStatus
 from encord.storage import StorageItem
 from tests.objects.common import FAKE_LABEL_ROW_METADATA

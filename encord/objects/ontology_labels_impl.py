@@ -1771,7 +1771,7 @@ class LabelRowV2:
             all_static_answers = self._get_all_static_answers(obj)
             ret[obj.object_hash] = {
                 "classifications": list(reversed(all_static_answers)),
-                "objectHash": obj.object_hash
+                "objectHash": obj.object_hash,
             }
 
             # # At some point, we also want to add these to the other modalities
@@ -1806,7 +1806,7 @@ class LabelRowV2:
                     all_static_answers = self._get_all_static_answers(obj)
                     ret[obj.object_hash] = {
                         "classifications": list(reversed(all_static_answers)),
-                        "objectHash": obj.object_hash
+                        "objectHash": obj.object_hash,
                     }
 
         return ret
@@ -1830,10 +1830,7 @@ class LabelRowV2:
                     if len(all_static_answers) == 0:
                         continue
 
-                    ret[obj.object_hash] = {
-                        "actions": list(all_static_answers),
-                        "objectHash": obj.object_hash
-                    }
+                    ret[obj.object_hash] = {"actions": list(all_static_answers), "objectHash": obj.object_hash}
         return ret
 
     def _to_classification_answers(self) -> Dict[str, Any]:
@@ -2216,17 +2213,11 @@ class LabelRowV2:
             for space_id, space_info in spaces_info.items():
                 space_type = space_info["space_type"]
                 if space_type == SpaceType.AUDIO:
-                    res[space_id] = AudioSpace(
-                        space_id=space_id, title="Random title", parent=self
-                    )
+                    res[space_id] = AudioSpace(space_id=space_id, title="Random title", parent=self)
                 elif space_type == SpaceType.TEXT:
-                    res[space_id] = TextSpace(
-                        space_id=space_id, title="Random title", parent=self
-                    )
+                    res[space_id] = TextSpace(space_id=space_id, title="Random title", parent=self)
                 elif space_type == SpaceType.VISION:
-                    vision_space = VisionSpace(
-                        space_id=space_id, title="Random title", parent=self
-                    )
+                    vision_space = VisionSpace(space_id=space_id, title="Random title", parent=self)
                     vision_space._parse_space_dict(space_info)
                     res[space_id] = vision_space
 

@@ -17,7 +17,6 @@ import uuid
 from typing import Any, Iterable, List, Optional, Type, TypeVar, cast
 
 
-
 def short_uuid_str() -> str:
     """This is being used as a condensed uuid."""
     return base64.b64encode(uuid.uuid4().bytes[:6]).decode("utf-8")
@@ -57,4 +56,3 @@ def is_valid_email(email: str) -> bool:
 def check_email(email: str) -> None:
     if not is_valid_email(email):
         raise ValueError("Invalid email address")
-

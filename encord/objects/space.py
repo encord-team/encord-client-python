@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Dict, Iterable, Optional, Set, TypeVar, Union
 from typing_extensions import Unpack
 
 from encord.constants.enums import DataType, SpaceType
+from encord.exceptions import LabelRowError
 from encord.objects import ClassificationInstance
 from encord.objects.common import Shape
 from encord.objects.coordinates import AudioCoordinates, Coordinates, TextCoordinates, TwoDimensionalCoordinates
@@ -31,9 +32,7 @@ class Space(ABC):
     Users should not instantiate this class directly, but must obtain these instances via LabelRow.list_spaces().
     """
 
-    def __init__(
-        self, space_id: str, title: str, space_type: SpaceType, parent: LabelRowV2
-    ):
+    def __init__(self, space_id: str, title: str, space_type: SpaceType, parent: LabelRowV2):
         self.space_id = space_id
         self.title = title
         self.space_type = space_type
@@ -45,16 +44,16 @@ class Space(ABC):
 
     @abstractmethod
     def move_object_instance_from_space(self, object_to_move: ObjectInstance) -> Optional[ObjectInstance]:
-       pass
+        pass
 
     @abstractmethod
     def _parse_space_dict(self, space_info: SpaceInfo) -> None:
         pass
 
-
     @abstractmethod
     def _to_space_dict(self) -> SpaceInfo:
         pass
+
 
 class VisionSpace(Space):
     def __init__(self, space_id: str, title: str, parent: LabelRowV2):
@@ -62,8 +61,9 @@ class VisionSpace(Space):
         self._frames_to_hashes: defaultdict[int, Set[str]] = defaultdict(set)
         self._objects_map: Dict[str, ObjectInstance] = dict()
 
-    def _add_to_single_frame_to_hashes_map(self, label: Union[ObjectInstance, ClassificationInstance], frame: int) -> None:
-        self._frames_to_hashes[frame].add(label.object_hash)
+    def _add_to_single_frame_to_hashes_map(self, label: Union[ObjectInstance], frame: int) -> None:
+        if isinstance(label, ObjectInstance):
+            self._frames_to_hashes[frame].add(label.object_hash)
 
     def _add_object_instance(self, object_instance: ObjectInstance) -> ObjectInstance:
         self._objects_map[object_instance.object_hash] = object_instance
@@ -84,7 +84,7 @@ class VisionSpace(Space):
         return self._add_object_instance(object_instance)
 
     def get_object_instances(
-        self
+        self,
         # TODO: Should this be iterable? Or a list?
     ) -> list[ObjectInstance]:
         return list(self._objects_map.values())
@@ -106,12 +106,17 @@ class VisionSpace(Space):
     def move_object_instance_from_space(self, object_to_move: ObjectInstance) -> Optional[ObjectInstance]:
         original_space = object_to_move._space
 
+        if original_space is None:
+            raise LabelRowError("Unable to move object instance, as it currently does not belong to any space.")
+
         if isinstance(original_space, VisionSpace):
             original_space.remove_object_instance(object_to_move.object_hash)
             self._add_object_instance(object_to_move)
             return object_to_move
         else:
-            logger.warning(f"Unable to move object instance from space of type {original_space.space_type} to {self.space_type}")
+            logger.warning(
+                f"Unable to move object instance from space of type {original_space.space_type} to {self.space_type}"
+            )
             return None
 
     def _parse_space_dict(self, space_info: SpaceInfo) -> None:
@@ -226,4 +231,3 @@ class TextSpace(Space):
         object_instance = obj.create_instance()
         object_instance.set_for_frames(coordinates=TextCoordinates(range=text_ranges))
         self.parent.add_object_instance(object_instance=object_instance)
-

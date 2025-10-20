@@ -76,13 +76,14 @@ class SetFramesKwargs(TypedDict, total=False):
     reviews: Optional[List[Dict]]
     is_deleted: Optional[bool]
 
+
 class ObjectInstance:
     """An object instance is an object that has coordinates and can be placed on one or multiple frames in a label row."""
 
     def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
         self._ontology_object = ontology_object
         self._object_hash = object_hash or short_uuid_str()
-        self._parent: Optional[LabelRowV2 | VisionSpace] = None
+        self._parent: Optional[LabelRowV2] = None
 
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_object.attributes)
         # feature_node_hash of attribute to the answer.

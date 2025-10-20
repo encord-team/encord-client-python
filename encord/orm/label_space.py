@@ -7,6 +7,7 @@ class LabelBlob(TypedDict):
     objects: list[dict]
     classifications: list[dict]
 
+
 class SpaceInfo(TypedDict):
     space_type: SpaceType
     data_type: DataType

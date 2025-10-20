@@ -559,7 +559,7 @@ TwoDimensionalCoordinates = Union[
     PolygonCoordinates,
     PolylineCoordinates,
     SkeletonCoordinates,
-    BitmaskCoordinates
+    BitmaskCoordinates,
 ]
 
 ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] = {
