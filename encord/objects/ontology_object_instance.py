@@ -59,11 +59,11 @@ from encord.objects.internal_helpers import (
 )
 from encord.objects.ontology_object import Object
 from encord.objects.options import Option
-from encord.objects.space import Space, VisionSpace
 from encord.objects.utils import check_email, short_uuid_str
 
 if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
+    from encord.objects.space import Space, VisionSpace
 
 
 class SetFramesKwargs(TypedDict, total=False):
@@ -534,8 +534,7 @@ class ObjectInstance:
             if self._parent is not None:
                 self._parent.add_to_single_frame_to_hashes_map(self, frame=frame)
             elif self._space is not None:
-                if isinstance(self._space, VisionSpace):
-                    self._space._add_to_single_frame_to_hashes_map(self, frame=frame)
+                self._space._add_to_single_frame_to_hashes_map(self, frame=frame)
 
     def _get_non_geometric_annotation(self) -> Optional[Annotation]:
         # Non-geometric annotations (e.g. Audio and Text) only have one frame.

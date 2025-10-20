@@ -696,14 +696,14 @@ class LabelRowV2:
 
     def get_space_by_id(
         self,
-        id: str,
+        space_id: str,
         type_: Optional[Type[SpaceT]] = None,
     ) -> SpaceT:
-        """Retrieves a single space which matches the specified title and type.
-        Throws an exception if more than one or no space with the specified title and type is found.
+        """Retrieves a single space which matches the specified id and type.
+        Throws an exception if more than one or no space with the specified id and type is found.
 
         Args:
-            title: The exact title of the space to find.
+            space_id: The id of the space to find.
             type_: Optional type to check the type of the space.
 
         Returns:
@@ -713,10 +713,10 @@ class LabelRowV2:
             OntologyError: If more than one or no matching child is found.
         """
         for element in self._space_map.values():
-            if element.id == id:
+            if element.space_id == space_id:
                 return cast(SpaceT, element)
 
-        raise LabelRowError(f"Could not find space with given id {id}")
+        raise LabelRowError(f"Could not find space with given id {space_id}")
 
     def get_image_hash(self, frame_number: int) -> Optional[str]:
         """Get the corresponding image hash for the frame number.
@@ -1873,7 +1873,7 @@ class LabelRowV2:
         ret = {}
         for space_id, space in self._space_map.items():
             if isinstance(space, VisionSpace):
-                ret[space_id] = space._to_encord_space()
+                ret[space_id] = space._to_space_dict()
 
         return ret
 
@@ -2203,44 +2203,21 @@ class LabelRowV2:
                 space_type = space_info["space_type"]
                 if space_type == SpaceType.AUDIO:
                     res[space_id] = AudioSpace(
-                        id=space_id, title="Random title", parent=self
+                        space_id=space_id, title="Random title", parent=self
                     )
                 elif space_type == SpaceType.TEXT:
                     res[space_id] = TextSpace(
-                        id=space_id, title="Random title", parent=self
+                        space_id=space_id, title="Random title", parent=self
                     )
                 elif space_type == SpaceType.VISION:
                     vision_space = VisionSpace(
-                        id=space_id, title="Random title", parent=self
+                        space_id=space_id, title="Random title", parent=self
                     )
-                    for frame, frame_label in space_info["labels"].items():
-                        for obj in frame_label["objects"]:
-                            object_hash = obj["objectHash"]
-                            if object_hash not in vision_space._objects_map:
-                                new_object_instance = self._create_new_object_instance(obj, int(frame))
-                                vision_space._add_object_instance(new_object_instance)
-                            else:
-                                object_instance = vision_space._objects_map[object_hash]
-
-                                coordinates = self._get_coordinates(obj)
-                                object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(obj)
-
-                                object_instance.set_for_frames(
-                                    coordinates=coordinates,
-                                    frames=int(frame),
-                                    created_at=object_frame_instance_info.created_at,
-                                    created_by=object_frame_instance_info.created_by,
-                                    last_edited_at=object_frame_instance_info.last_edited_at,
-                                    last_edited_by=object_frame_instance_info.last_edited_by,
-                                    confidence=object_frame_instance_info.confidence,
-                                    manual_annotation=object_frame_instance_info.manual_annotation,
-                                    reviews=object_frame_instance_info.reviews,
-                                    is_deleted=object_frame_instance_info.is_deleted,
-                                )
+                    vision_space._parse_space_dict(space_info)
                     res[space_id] = vision_space
 
                 elif space_type == SpaceType.SCENE_STREAM:
-                    res[space_id] = SceneStreamSpace(id=space_id, title=space_id, parent=self)
+                    res[space_id] = SceneStreamSpace(space_id=space_id, title=space_id, parent=self)
                 else:
                     exhaustive_guard(space_type, message="Missing condition for space types.")
 

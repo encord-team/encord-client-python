@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import TYPE_CHECKING, Dict, Iterable, Optional, Set, TypeVar, Union
 
@@ -15,30 +15,45 @@ from encord.objects.frames import Frames, Range, frames_class_to_frames_list
 from encord.orm.label_space import LabelBlob, SpaceInfo
 
 logger = logging.getLogger(__name__)
+from encord.objects.ontology_object_instance import ObjectInstance, SetFramesKwargs
 
 if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
     from encord.objects.ontology_object import Object
-    from encord.objects.ontology_object_instance import ObjectInstance, SetFramesKwargs
+
 
 SpaceT = TypeVar("SpaceT", bound="Space")
 
 
 class Space(ABC):
     def __init__(
-        self, id: str, title: str, space_type: SpaceType, parent: LabelRowV2
+        self, space_id: str, title: str, space_type: SpaceType, parent: LabelRowV2
     ):
-        self.id = id
+        self.space_id = space_id
         self.title = title
         self.space_type = space_type
         self.parent = parent
 
-    def move_object_instance_to_space(self, object_hash: str, target_space_id: str):
-        raise NotImplementedError()
+    @abstractmethod
+    def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
+        pass
+
+    @abstractmethod
+    def move_object_instance_from_space(self, object_to_move: ObjectInstance) -> Optional[ObjectInstance]:
+       pass
+
+    @abstractmethod
+    def _parse_space_dict(self, space_info: SpaceInfo) -> None:
+        pass
+
+
+    @abstractmethod
+    def _to_space_dict(self) -> SpaceInfo:
+        pass
 
 class VisionSpace(Space):
-    def __init__(self, id: str, title: str, parent: LabelRowV2):
-        super().__init__(id, title, SpaceType.VISION, parent)
+    def __init__(self, space_id: str, title: str, parent: LabelRowV2):
+        super().__init__(space_id, title, SpaceType.VISION, parent)
         self._frames_to_hashes: defaultdict[int, Set[str]] = defaultdict(set)
         self._objects_map: Dict[str, ObjectInstance] = dict()
 
@@ -94,7 +109,33 @@ class VisionSpace(Space):
             logger.warning(f"Unable to move object instance from space of type {original_space.space_type} to {self.space_type}")
             return None
 
-    def _to_encord_space(self) -> SpaceInfo:
+    def _parse_space_dict(self, space_info: SpaceInfo) -> None:
+        for frame, frame_label in space_info["labels"].items():
+            for obj in frame_label["objects"]:
+                object_hash = obj["objectHash"]
+                if object_hash not in self._objects_map:
+                    new_object_instance = self.parent._create_new_object_instance(obj, int(frame))
+                    self._add_object_instance(new_object_instance)
+                else:
+                    object_instance = self._objects_map[object_hash]
+
+                    coordinates = self.parent._get_coordinates(obj)
+                    object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(obj)
+
+                    object_instance.set_for_frames(
+                        coordinates=coordinates,
+                        frames=int(frame),
+                        created_at=object_frame_instance_info.created_at,
+                        created_by=object_frame_instance_info.created_by,
+                        last_edited_at=object_frame_instance_info.last_edited_at,
+                        last_edited_by=object_frame_instance_info.last_edited_by,
+                        confidence=object_frame_instance_info.confidence,
+                        manual_annotation=object_frame_instance_info.manual_annotation,
+                        reviews=object_frame_instance_info.reviews,
+                        is_deleted=object_frame_instance_info.is_deleted,
+                    )
+
+    def _to_space_dict(self) -> SpaceInfo:
         labels: dict[str, LabelBlob] = {}
 
         for frame, object_hashes in self._frames_to_hashes.items():
@@ -118,8 +159,8 @@ class VisionSpace(Space):
 
 
 class SceneStreamSpace(Space):
-    def __init__(self, id: str, title: str, parent: LabelRowV2):
-        super().__init__(id, title, SpaceType.SCENE_STREAM, parent)
+    def __init__(self, space_id: str, title: str, parent: LabelRowV2):
+        super().__init__(space_id, title, SpaceType.SCENE_STREAM, parent)
 
     def get_object_instances(
         self,
@@ -139,8 +180,8 @@ class SceneStreamSpace(Space):
 
 
 class AudioSpace(Space):
-    def __init__(self, id: str, title: str, parent: LabelRowV2):
-        super().__init__(id, title, SpaceType.AUDIO, parent)
+    def __init__(self, space_id: str, title: str, parent: LabelRowV2):
+        super().__init__(space_id, title, SpaceType.AUDIO, parent)
 
     def get_object_instances(
         self,
@@ -161,8 +202,8 @@ class AudioSpace(Space):
 
 
 class TextSpace(Space):
-    def __init__(self, id: str, title: str, parent: LabelRowV2):
-        super().__init__(id, title, SpaceType.TEXT, parent)
+    def __init__(self, space_id: str, title: str, parent: LabelRowV2):
+        super().__init__(space_id, title, SpaceType.TEXT, parent)
 
     def get_object_instances(
         self,
