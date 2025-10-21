@@ -32,13 +32,10 @@ from encord.objects.html_node import HtmlNode, HtmlRange
 from encord.objects.options import Option
 from encord.orm.label_row import LabelRowMetadata, LabelStatus
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
-from tests.objects.data import empty_video
 from tests.objects.data.all_ontology_types import all_ontology_types
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.audio_labels import EMPTY_AUDIO_LABELS
 from tests.objects.data.empty_image_group import empty_image_group_labels
-from tests.objects.data.html_text_labels import EMPTY_HTML_TEXT_LABELS
-from tests.objects.data.plain_text import EMPTY_PLAIN_TEXT_LABELS
 from tests.objects.test_label_structure_converter import ontology_from_dict
 
 box_ontology_item = all_types_structure.get_child_by_hash("MjI2NzEy", Object)
@@ -637,6 +634,8 @@ def test_add_and_get_classification_instances_to_label_row(ontology):
     overlapping_classification_instance.remove_from_frames(1)
     overlapping_classification_instance.set_for_frames(5)
     label_row.add_classification_instance(overlapping_classification_instance)
+
+    # Try to overwrite classification_instance_1 which is on frame 1
     with pytest.raises(LabelRowError):
         overlapping_classification_instance.set_for_frames(1)
 
@@ -1050,55 +1049,6 @@ def test_classification_can_be_added_edited_and_removed(ontology):
     assert len(label_row.get_classification_instances()) == 0
 
 
-@pytest.fixture
-def empty_video_label_row() -> LabelRowV2:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
-    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
-
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
-    label_row.from_labels_dict(empty_video.labels)
-    return label_row
-
-
-@pytest.fixture
-def empty_audio_label_row() -> LabelRowV2:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
-    label_row_metadata_dict["frames_per_second"] = 1000
-    label_row_metadata_dict["data_type"] = "AUDIO"
-    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
-
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
-    label_row.from_labels_dict(EMPTY_AUDIO_LABELS)
-
-    return label_row
-
-
-@pytest.fixture
-def empty_html_text_label_row() -> LabelRowV2:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
-    label_row_metadata_dict["data_type"] = "plain_text"
-    label_row_metadata_dict["file_type"] = "text/html"
-    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
-
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
-    label_row.from_labels_dict(EMPTY_HTML_TEXT_LABELS)
-
-    return label_row
-
-
-@pytest.fixture
-def empty_plain_text_label_row() -> LabelRowV2:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
-    label_row_metadata_dict["data_type"] = "plain_text"
-    label_row_metadata_dict["file_type"] = "text/plain"
-    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
-
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
-    label_row.from_labels_dict(EMPTY_PLAIN_TEXT_LABELS)
-
-    return label_row
-
-
 def test_non_geometric_label_rows_must_use_classification_instance_with_range_only(
     ontology,
     empty_audio_label_row: LabelRowV2,
@@ -1169,27 +1119,6 @@ def test_non_range_classification_cannot_be_added_to_audio_label_row(ontology):
         label_row.add_classification_instance(classification_instance)
 
 
-def test_non_geometric_label_rows_can_only_have_classifications_on_frame_0(
-    ontology,
-    empty_audio_label_row: LabelRowV2,
-    empty_plain_text_label_row: LabelRowV2,
-    empty_html_text_label_row: LabelRowV2,
-):
-    for label_row in [empty_audio_label_row, empty_html_text_label_row, empty_plain_text_label_row]:
-        classification_instance = ClassificationInstance(checklist_classification, range_only=True)
-        classification_instance.set_for_frames(Range(start=0, end=0))
-        label_row.add_classification_instance(classification_instance)
-
-        with pytest.raises(LabelRowError) as e:
-            classification_instance.set_for_frames(Range(start=0, end=1))
-
-        assert e.value.message == (
-            "For audio files and text files, classifications can only be "
-            "attached to frame=0 You may use "
-            "`ClassificationInstance.set_for_frames(frames=Range(start=0, end=0))`."
-        )
-
-
 def test_audio_object_exceed_max_frames(ontology, empty_audio_label_row: LabelRowV2):
     object_instance = ObjectInstance(audio_obj_ontology_item)
     object_instance.set_for_frames(AudioCoordinates(range=[Range(start=0, end=100)]))
@@ -1219,9 +1148,10 @@ def test_get_annotations_from_non_geometric_classification(ontology) -> None:
 
     annotations = classification_instance.get_annotations()
 
-    assert len(annotations) == 1
+    assert len(annotations) == 0
 
-    annotation = annotations[0]
+    annotation = classification_instance._frame_data
+    assert annotation is not None
     assert annotation.manual_annotation == DEFAULT_MANUAL_ANNOTATION
     assert annotation.confidence == DEFAULT_CONFIDENCE
     assert annotation.created_at == now

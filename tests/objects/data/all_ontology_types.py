@@ -1,3 +1,33 @@
+global_classification_dict = {  # should match GLOBAL_CLASSIFICATION.to_dict()
+    "id": "4",
+    "featureNodeHash": "3DuQbFx4",
+    "level": "global",
+    "attributes": [
+        {
+            "id": "4.1",
+            "name": "Global classification",
+            "type": "checklist",
+            "featureNodeHash": "2mwWr3Of",
+            "required": False,
+            "dynamic": False,
+            "options": [
+                {
+                    "id": "4.1.1",
+                    "label": "Global Answer 1",
+                    "value": "global_answer_1",
+                    "featureNodeHash": "3vLjF0q1",
+                },
+                {
+                    "id": "4.1.2",
+                    "label": "Global Answer 2",
+                    "value": "checklist_classification_answer_2",
+                    "featureNodeHash": "74r7nK9e",
+                },
+            ],
+        }
+    ],
+}
+
 all_ontology_types = {
     "objects": [
         {"id": "1", "name": "Box", "color": "#D33115", "shape": "bounding_box", "featureNodeHash": "MjI2NzEy"},
@@ -192,5 +222,6 @@ all_ontology_types = {
                 }
             ],
         },
+        global_classification_dict,
     ],
 }

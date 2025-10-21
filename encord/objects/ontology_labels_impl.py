@@ -20,6 +20,7 @@ from uuid import UUID
 
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
+from encord.common.deprecated import deprecated
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import format_datetime_to_long_string_optional, parse_datetime_optional
 from encord.constants.enums import DataType, is_geometric
@@ -41,9 +42,10 @@ from encord.objects.bundled_operations import (
     BundledWorkflowReopenPayload,
 )
 from encord.objects.classification import Classification
-from encord.objects.classification_instance import ClassificationInstance, _verify_non_geometric_classifications_range
+from encord.objects.classification_instance import (
+    ClassificationInstance,
+)
 from encord.objects.constants import (  # pylint: disable=unused-import # for backward compatibility
-    DATETIME_LONG_STRING_FORMAT,
     DEFAULT_CONFIDENCE,
     DEFAULT_MANUAL_ANNOTATION,
 )
@@ -64,22 +66,32 @@ from encord.objects.coordinates import (
     TextCoordinates,
     Visibility,
 )
-from encord.objects.frames import Frames, Range, Ranges, frames_class_to_frames_list, frames_to_ranges
+from encord.objects.frames import (
+    Frames,
+    Range,
+    Ranges,
+    frames_class_to_frames_list,
+    frames_to_ranges,
+    ranges_list_to_ranges,
+    ranges_to_list,
+)
 from encord.objects.html_node import HtmlRange
 from encord.objects.metadata import DataGroupMetadata, DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
+from encord.objects.types import ClassificationAnswer, ClassificationObject, is_containing_metadata
 from encord.objects.utils import _lower_snake_case
 from encord.ontology import Ontology
 from encord.orm import storage as orm_storage
 from encord.orm.label_row import (
     AnnotationTaskStatus,
+    LabelRow,
     LabelRowMetadata,
     LabelStatus,
     WorkflowGraphNode,
 )
-from encord.storage import STORAGE_BUNDLE_CREATE_LIMIT, StorageItem, StorageItemInaccessible
+from encord.storage import STORAGE_BUNDLE_CREATE_LIMIT, StorageItem
 from encord.utilities.type_utilities import exhaustive_guard
 
 log = logging.getLogger(__name__)
@@ -965,16 +977,7 @@ class LabelRowV2:
                 f"Pass 'force=True' to override it."
             )
 
-        """
-        Implementation here diverges because non-geometric data will operate on ranges, whereas
-        everything else will operate on frames.
-        """
-        if not is_geometric(self.data_type):
-            self._add_classification_instance_for_range(
-                classification_instance=classification_instance,
-                force=force,
-            )
-        else:
+        if not classification_instance.is_range_only():
             frames = set(_frame_views_to_frame_numbers(classification_instance.get_annotations()))
             already_present_frames = self._is_classification_already_present_on_frames(
                 classification_instance.ontology_item,
@@ -998,7 +1001,11 @@ class LabelRowV2:
             self._classifications_to_frames[classification_instance.ontology_item].update(frames)
             self._add_to_frame_to_hashes_map(classification_instance, frames)
 
-    # This should only be used for Non-geometric data
+        self._add_classification_instance_for_range(
+            classification_instance=classification_instance,
+            force=force,
+        )
+
     def _add_classification_instance_for_range(
         self,
         classification_instance: ClassificationInstance,
@@ -1006,9 +1013,6 @@ class LabelRowV2:
     ):
         classification_hash = classification_instance.classification_hash
         ranges_to_add = classification_instance.range_list
-
-        if classification_instance.is_range_only():
-            _verify_non_geometric_classifications_range(ranges_to_add, self)
 
         already_present_ranges = self._is_classification_already_present_on_ranges(
             classification_instance.ontology_item, ranges_to_add
@@ -1041,15 +1045,14 @@ class LabelRowV2:
         classification_hash = classification_instance.classification_hash
         self._classifications_map.pop(classification_hash)
 
-        if not is_geometric(self.data_type):
-            range_manager = self._classifications_to_ranges[classification_instance.ontology_item]
-            ranges_to_remove = classification_instance.range_list
-            range_manager.remove_ranges(ranges_to_remove)
-        else:
-            all_frames = self._classifications_to_frames[classification_instance.ontology_item]
-            actual_frames = _frame_views_to_frame_numbers(classification_instance.get_annotations())
-            for actual_frame in actual_frames:
-                all_frames.remove(actual_frame)
+        range_manager = self._classifications_to_ranges[classification_instance.ontology_item]
+        ranges_to_remove = classification_instance.range_list
+        range_manager.remove_ranges(ranges_to_remove)
+
+        all_frames = self._classifications_to_frames[classification_instance.ontology_item]
+        actual_frames = _frame_views_to_frame_numbers(classification_instance.get_annotations())
+        for actual_frame in actual_frames:
+            all_frames.remove(actual_frame)
 
     def add_to_single_frame_to_hashes_map(
         self, label_item: Union[ObjectInstance, ClassificationInstance], frame: int
@@ -1099,8 +1102,7 @@ class LabelRowV2:
             else:
                 append = False
             for frame in filtered_frames_list:
-                hashes = self._frame_to_hashes.get(frame, set())
-                if classification.classification_hash in hashes:
+                if classification.is_on_frame(frame):
                     append = True
                     break
 
@@ -1740,20 +1742,18 @@ class LabelRowV2:
             }
 
             # At some point, we also want to add these to the other modalities
-            if not is_geometric(self.data_type):
-                annotation = classification.get_annotations()[0]
-
+            if classification.is_range_only():
                 # For non-geometric data, classifications apply to whole file
                 ret[classification.classification_hash]["range"] = []
-                ret[classification.classification_hash]["createdBy"] = annotation.created_by
+                ret[classification.classification_hash]["createdBy"] = classification.created_by
                 ret[classification.classification_hash]["createdAt"] = format_datetime_to_long_string_optional(
-                    annotation.created_at
+                    classification.created_at
                 )
-                ret[classification.classification_hash]["lastEditedBy"] = annotation.last_edited_by
+                ret[classification.classification_hash]["lastEditedBy"] = classification.last_edited_by
                 ret[classification.classification_hash]["lastEditedAt"] = format_datetime_to_long_string_optional(
-                    annotation.last_edited_at
+                    classification.last_edited_at
                 )
-                ret[classification.classification_hash]["manualAnnotation"] = annotation.manual_annotation
+                ret[classification.classification_hash]["manualAnnotation"] = classification.manual_annotation
 
         return ret
 
@@ -2036,19 +2036,35 @@ class LabelRowV2:
         range_manager = self._classifications_to_ranges.get(classification, RangeManager())
         return range_manager.intersection(ranges)
 
-    def _add_frames_to_classification(self, classification: Classification, frames: Iterable[int]) -> None:
-        self._classifications_to_frames[classification].update(frames)
+    def _add_frames_to_classification(self, classification_instance: ClassificationInstance, frames: Frames) -> None:
+        classification = classification_instance.ontology_item
 
-    def _add_ranges_to_classification(self, classification: Classification, ranges_to_add: Ranges) -> None:
-        self._classifications_to_ranges[classification].add_ranges(ranges_to_add)
+        range_manager = RangeManager(frame_class=frames)
+        frames_set = range_manager.get_ranges_as_frames()
 
-    def _remove_frames_from_classification(self, classification: Classification, frames: Iterable[int]) -> None:
-        present_frames = self._classifications_to_frames.get(classification, set())
-        for frame in frames:
-            present_frames.remove(frame)
+        self._classifications_to_ranges[classification].add_ranges(range_manager.get_ranges())
 
-    def _remove_ranges_from_classification(self, classification: Classification, ranges_to_remove: Ranges) -> None:
-        self._classifications_to_ranges[classification].remove_ranges(ranges_to_remove)
+        if not classification_instance.is_range_only():
+            self._classifications_to_frames[classification].update(frames_set)
+            for frame in frames_set:
+                self.add_to_single_frame_to_hashes_map(classification_instance, frame)
+
+    def _remove_frames_from_classification(
+        self, classification_instance: ClassificationInstance, frames: Frames
+    ) -> None:
+        classification = classification_instance.ontology_item
+
+        range_manager = RangeManager(frame_class=frames)
+
+        self._classifications_to_ranges[classification].remove_ranges(range_manager.get_ranges())
+
+        if not classification_instance.is_range_only():
+            present_frames = self._classifications_to_frames.get(classification, set())
+
+            frames_set = range_manager.get_ranges_as_frames()
+            for frame in frames_set:
+                present_frames.remove(frame)
+                self._frame_to_hashes[frame].remove(classification_instance.classification_hash)
 
     def _add_to_frame_to_hashes_map(
         self, label_item: Union[ObjectInstance, ClassificationInstance], frames: Iterable[int]
@@ -2056,6 +2072,7 @@ class LabelRowV2:
         for frame in frames:
             self.add_to_single_frame_to_hashes_map(label_item, frame)
 
+    @deprecated("Only used in the ObjectInstance removal")
     def _remove_from_frame_to_hashes_map(self, frames: Iterable[int], item_hash: str):
         for frame in frames:
             self._frame_to_hashes[frame].remove(item_hash)
@@ -2229,6 +2246,8 @@ class LabelRowV2:
         for data_unit in label_row_dict["data_units"].values():
             data_type = DataType(label_row_dict["data_type"])
 
+            self._add_classification_instances_from_classifications_without_frames(classification_answers)
+
             if data_type == DataType.IMG_GROUP or data_type == DataType.IMAGE:
                 frame = int(data_unit["data_sequence"])
                 self._add_object_instances_from_objects(data_unit["labels"].get("objects", []), frame)
@@ -2272,7 +2291,6 @@ class LabelRowV2:
             elif data_type == DataType.AUDIO or data_type == DataType.PLAIN_TEXT:
                 is_html = data_unit["data_type"] == "text/html"
                 self._add_objects_instances_from_objects_without_frames(object_answers, html=is_html)
-                self._add_classification_instances_from_classifications_without_frames(classification_answers)
             else:
                 exhaustive_guard(data_type)
 
@@ -2537,11 +2555,12 @@ class LabelRowV2:
 
     def _add_classification_instances_from_classifications_without_frames(
         self,
-        classification_answers: dict,
+        classification_answers: dict[str, ClassificationAnswer],
     ):
         for classification_answer in classification_answers.values():
-            classification_instance = self._create_new_classification_instance_with_ranges(classification_answer)
-            self.add_classification_instance(classification_instance)
+            if is_containing_metadata(classification_answer):
+                classification_instance = self._create_new_classification_instance_with_ranges(classification_answer)
+                self.add_classification_instance(classification_instance)
 
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = {}
@@ -2597,7 +2616,9 @@ class LabelRowV2:
         return None
 
     # This is only to be used by non-frame modalities (e.g. Audio)
-    def _create_new_classification_instance_with_ranges(self, classification_answer: dict) -> ClassificationInstance:
+    def _create_new_classification_instance_with_ranges(
+        self, classification_answer: ClassificationAnswer
+    ) -> ClassificationInstance:
         feature_hash = classification_answer["featureHash"]
         classification_hash = classification_answer["classificationHash"]
 
@@ -2606,12 +2627,14 @@ class LabelRowV2:
         range_view = ClassificationInstance.FrameData.from_dict(classification_answer)
 
         classification_instance = ClassificationInstance(
-            label_class, classification_hash=classification_hash, range_only=True
+            label_class, classification_hash=classification_hash, range_only=True, frame_data=range_view
         )
 
-        # For non-geometric data, the classification will always be treated as being on frame=0,
-        # which is the entire file
+        frame_ranges = classification_answer.get("range", [])
+        parsed_frame_ranges = ranges_list_to_ranges(frame_ranges or [])
+
         classification_instance.set_for_frames(
+            frames=parsed_frame_ranges,
             created_at=range_view.created_at,
             created_by=range_view.created_by,
             confidence=range_view.confidence,
@@ -2621,13 +2644,13 @@ class LabelRowV2:
             reviews=range_view.reviews,
             overwrite=True,  # Always overwrite during label row dict parsing, as older dicts known to have duplicates
         )
-        answers_dict = classification_answer["classifications"]
-        self._add_static_answers_from_dict(classification_instance, answers_dict)
+        answers_list = classification_answer["classifications"]
+        self._add_static_answers_from_dict(classification_instance, answers_list)
 
         return classification_instance
 
     def _add_static_answers_from_dict(
-        self, classification_instance: ClassificationInstance, answers_list: List[dict]
+        self, classification_instance: ClassificationInstance, answers_list: List[ClassificationObject]
     ) -> None:
         classification_instance.set_answer_from_list(answers_list)
 

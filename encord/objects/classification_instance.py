@@ -41,7 +41,7 @@ from encord.objects.attributes import (
     TextAttribute,
     _get_attribute_by_hash,
 )
-from encord.objects.classification import Classification
+from encord.objects.classification import Classification, OntologyClassificationLevel
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.frames import Frames, Ranges, frames_class_to_frames_list, frames_to_ranges
 from encord.objects.internal_helpers import (
@@ -49,21 +49,11 @@ from encord.objects.internal_helpers import (
     _search_child_attributes,
 )
 from encord.objects.options import Option, _get_option_by_hash
+from encord.objects.types import ClassificationAnswer, ClassificationObject
 from encord.objects.utils import check_email, short_uuid_str
 
 if TYPE_CHECKING:
     from encord.objects import LabelRowV2
-
-
-# For Audio and Text files, classifications can only be applied to Range(start=0, end=0)
-# Because we treat the entire file as being on one frame (for classifications, its different for objects)
-def _verify_non_geometric_classifications_range(ranges_to_add: Ranges, label_row: Optional[LabelRowV2]) -> None:
-    is_range_only_on_frame_0 = len(ranges_to_add) == 1 and ranges_to_add[0].start == 0 and ranges_to_add[0].end == 0
-    if label_row is not None and not is_geometric(label_row.data_type) and not is_range_only_on_frame_0:
-        raise LabelRowError(
-            "For audio files and text files, classifications can only be attached to frame=0 "
-            "You may use `ClassificationInstance.set_for_frames(frames=Range(start=0, end=0))`."
-        )
 
 
 class ClassificationInstance:
@@ -73,6 +63,7 @@ class ClassificationInstance:
         *,
         classification_hash: Optional[str] = None,
         range_only: bool = False,
+        frame_data: Optional[FrameData] = None,
     ):
         self._ontology_classification = ontology_classification
         self._parent: Optional[LabelRowV2] = None
@@ -81,8 +72,10 @@ class ClassificationInstance:
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_classification.attributes)
         # feature_node_hash of attribute to the answer.
 
-        # Only used for non-frame entities
-        self._range_only = range_only
+        # Only used for non-frame entities, global classifications are frame only by definition
+        self._range_only = range_only or self.is_global()
+        self._frame_data = frame_data if frame_data else self.FrameData()
+
         self._range_manager: RangeManager = RangeManager()
 
         # Only used for frame entities
@@ -123,39 +116,78 @@ class ClassificationInstance:
 
     @property
     def range_list(self) -> Ranges:
-        if self._range_only:
-            return self._range_manager.get_ranges()
-        else:
-            raise LabelRowError(
-                "No ranges available for this classification instance."
-                "Please ensure the classification instance was created with "
-                "the range_only property to True. "
-                "You can do ClassificationInstance(range_only=True) or "
-                "Classification.create_instance(range_only=True) to achieve this."
-            )
+        return self._range_manager.get_ranges()
+
+    @property
+    def created_at(self) -> datetime:
+        return self._frame_data.created_at
+
+    @created_at.setter
+    def created_at(self, created_at: datetime) -> None:
+        self._frame_data.created_at = created_at
+
+    @property
+    def created_by(self) -> Optional[str]:
+        return self._frame_data.created_by
+
+    @created_by.setter
+    def created_by(self, created_by: Optional[str]) -> None:
+        """Set the created_by field with a user email or None if it should default to the current user of the SDK."""
+        if created_by is not None:
+            check_email(created_by)
+        self._frame_data.created_by = created_by
+
+    @property
+    def last_edited_at(self) -> datetime:
+        return self._frame_data.last_edited_at
+
+    @last_edited_at.setter
+    def last_edited_at(self, last_edited_at: datetime) -> None:
+        self._frame_data.last_edited_at = last_edited_at
+
+    @property
+    def last_edited_by(self) -> Optional[str]:
+        return self._frame_data.last_edited_by
+
+    @last_edited_by.setter
+    def last_edited_by(self, last_edited_by: Optional[str]) -> None:
+        """Set the last_edited_by field with a user email or None if it should default to the current user of the SDK."""
+        if last_edited_by is not None:
+            check_email(last_edited_by)
+        self._frame_data.last_edited_by = last_edited_by
+
+    @property
+    def confidence(self) -> float:
+        return self._frame_data.confidence
+
+    @confidence.setter
+    def confidence(self, confidence: float) -> None:
+        self._frame_data.confidence = confidence
+
+    @property
+    def manual_annotation(self) -> bool:
+        return self._frame_data.manual_annotation
+
+    @manual_annotation.setter
+    def manual_annotation(self, manual_annotation: bool) -> None:
+        self._frame_data.manual_annotation = manual_annotation
+
+    def is_on_frame(self, frame: int) -> bool:
+        intersection = self._range_manager.intersection(frame)
+        return len(intersection) > 0
 
     def is_range_only(self) -> bool:
         return self._range_only
 
+    def is_global(self) -> bool:
+        return self._ontology_classification.level == OntologyClassificationLevel.GLOBAL
+
     def is_assigned_to_label_row(self) -> bool:
         return self._parent is not None
 
-    def _set_for_ranges(
-        self,
-        frames: Frames,
-        overwrite: bool,
-        created_at: Optional[datetime],
-        created_by: Optional[str],
-        confidence: float,
-        manual_annotation: bool,
-        last_edited_at: Optional[datetime],
-        last_edited_by: Optional[str],
-        reviews: Optional[List[dict]],
-    ):
+    def _set_for_frames(self, frames: Frames, overwrite: bool):
         new_range_manager = RangeManager(frame_class=frames)
         ranges_to_add = new_range_manager.get_ranges()
-
-        _verify_non_geometric_classifications_range(ranges_to_add, self._parent)
 
         conflicting_ranges = self._is_classification_already_present_on_range(ranges_to_add)
         if conflicting_ranges and not overwrite:
@@ -164,28 +196,11 @@ class ClassificationInstance:
                 f"on the ranges {conflicting_ranges}. "
                 f"Set 'overwrite' parameter to True to override."
             )
+        else:
+            self._range_manager.add_ranges(ranges_to_add)
 
-        """
-        For non-geometric files, the frame_data for FRAME 0 will be
-        treated as the data for the entire classification instance.
-        """
-        self._set_frame_and_frame_data(
-            frame=0,
-            overwrite=True,  # We always overwrite the frame data here because it represents the entire instance
-            created_at=created_at,
-            created_by=created_by,
-            confidence=confidence,
-            manual_annotation=manual_annotation,
-            last_edited_at=last_edited_at,
-            last_edited_by=last_edited_by,
-            reviews=reviews,
-        )
-
-        self._range_manager.add_ranges(ranges_to_add)
-
-        if self.is_assigned_to_label_row():
-            assert self._parent is not None
-            self._parent._add_ranges_to_classification(self.ontology_item, ranges_to_add)
+            if self._parent:
+                self._parent._add_frames_to_classification(self, ranges_to_add)
 
     def set_for_frames(
         self,
@@ -223,20 +238,11 @@ class ClassificationInstance:
         if last_edited_at is None:
             last_edited_at = datetime.now()
 
-        if self._range_only:
-            self._set_for_ranges(
-                frames=frames,
-                overwrite=overwrite,
-                created_at=created_at,
-                created_by=created_by,
-                confidence=confidence,
-                manual_annotation=manual_annotation,
-                last_edited_at=last_edited_at,
-                last_edited_by=last_edited_by,
-                reviews=reviews,
-            )
+        self._frame_data.update_from_optional_fields(
+            created_at, created_by, confidence, manual_annotation, last_edited_at, last_edited_by, reviews
+        )
 
-        else:
+        if not self._range_only:
             frames_list = frames_class_to_frames_list(frames)
 
             conflicting_frames_list = self._is_classification_already_present(frames_list)
@@ -254,7 +260,7 @@ class ClassificationInstance:
 
             for frame in frames_list:
                 self._check_within_range(frame)
-                self._set_frame_and_frame_data(
+                self._set_frame_data(
                     frame,
                     overwrite=overwrite,
                     created_at=created_at,
@@ -266,37 +272,24 @@ class ClassificationInstance:
                     reviews=reviews,
                 )
 
-            if self.is_assigned_to_label_row():
-                assert self._parent is not None
-                if self._parent is not DataType.AUDIO:
-                    self._parent._add_frames_to_classification(self.ontology_item, frames_list)
-                    self._parent._add_to_frame_to_hashes_map(self, frames_list)
-                else:
-                    self._parent._add_ranges_to_classification(self.ontology_item, frames_list)
+        self._set_for_frames(frames=frames, overwrite=overwrite)
 
     def set_frame_data(self, frame_data: FrameData, frames: Frames) -> None:
         frames_list = frames_class_to_frames_list(frames)
 
+        self._set_for_frames(frames, overwrite=True)
+
         for frame in frames_list:
             self._frames_to_data[frame] = frame_data
-
-        if self.is_assigned_to_label_row():
-            assert self._parent is not None
-            self._parent._add_frames_to_classification(self.ontology_item, frames_list)
-            self._parent._add_to_frame_to_hashes_map(self, frames_list)
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """Args:
         frame: Either the frame number or the image hash if the data type is an image or image group.
             Defaults to the first frame.
         """
-        if self._range_only and frame != 0:
-            raise LabelRowError(
-                "This Classification Instance only works on ranges, technically only has one 'frame'"
-                "Use `get_annotation(0)` to get the frame data of the first frame."
-            )
-
-        if isinstance(frame, str):
+        if self.is_global():
+            raise LabelRowError("Cannot get annotation for a global classification instance.")
+        elif isinstance(frame, str):
             # TODO: this check should be consistent for both string and integer frames,
             #       but currently it is not possible due to the parsing logic
             if not self._parent:
@@ -312,28 +305,18 @@ class ClassificationInstance:
 
         return self.Annotation(self, frame_num)
 
-    def _remove_from_ranges(self, frames: Frames) -> None:
-        new_range_manager = RangeManager(frame_class=frames)
-        ranges_to_remove = new_range_manager.get_ranges()
+    def remove_from_frames(self, frames: Frames) -> None:
+        range_manager = RangeManager(frame_class=frames)
+        ranges_to_remove = range_manager.get_ranges()
 
         self._range_manager.remove_ranges(ranges_to_remove)
-        if self.is_assigned_to_label_row():
-            assert self._parent is not None
-            self._parent._remove_ranges_from_classification(self.ontology_item, ranges_to_remove)
-
-    def remove_from_frames(self, frames: Frames) -> None:
-        if self._range_only:
-            self._remove_from_ranges(frames)
-
-        else:
-            frame_list = frames_class_to_frames_list(frames)
+        if not self._range_only:
+            frame_list = range_manager.get_ranges_as_frames()
             for frame in frame_list:
                 self._frames_to_data.pop(frame)
 
-            if self.is_assigned_to_label_row():
-                assert self._parent is not None
-                self._parent._remove_frames_from_classification(self.ontology_item, frame_list)
-                self._parent._remove_from_frame_to_hashes_map(frame_list, self.classification_hash)
+        if self._parent:
+            self._parent._remove_frames_from_classification(self, frames)
 
     def get_annotations(self) -> List[Annotation]:
         """Returns:
@@ -342,7 +325,7 @@ class ClassificationInstance:
         return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_data.keys())]
 
     def is_valid(self) -> None:
-        if not len(self._frames_to_data) > 0:
+        if not len(self._frames_to_data) > 0 and not self.is_range_only():
             raise LabelRowError("ClassificationInstance is not on any frames. Please add it to at least one frame.")
 
     def set_answer(
@@ -383,7 +366,7 @@ class ClassificationInstance:
 
         static_answer.set(answer)
 
-    def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
+    def set_answer_from_list(self, answers_list: List[ClassificationObject]) -> None:
         """This is a low level helper function and should not be used directly.
 
         Sets the answer for the classification from a dictionary.
@@ -392,6 +375,7 @@ class ClassificationInstance:
             answers_list: The list to set the answer from.
         """
         for answer_dict in answers_list:
+            answers = answer_dict["answers"]
             attribute = _get_attribute_by_hash(answer_dict["featureHash"], self._ontology_classification.attributes)
             if attribute is None:
                 raise LabelRowError(
@@ -405,24 +389,24 @@ class ClassificationInstance:
                 )
 
             if isinstance(attribute, TextAttribute):
-                self._set_answer_unsafe(answer_dict["answers"], attribute)
+                self._set_answer_unsafe(answers, attribute)
             elif isinstance(attribute, RadioAttribute):
-                if len(answer_dict["answers"]) == 1:
+                if isinstance(answers, list) and len(answers) == 1:
                     # When classification is removed in UI, it keeps the entry about the classification,
                     # but removes the answers.
                     # Thus an empty answers array is equivalent to "no such attribute", and such attribute should be ignored
-                    feature_hash = answer_dict["answers"][0]["featureHash"]
+                    feature_hash = answers[0]["featureHash"]
                     option = _get_option_by_hash(feature_hash, attribute.options)
                     self._set_answer_unsafe(option, attribute)
-            elif isinstance(attribute, ChecklistAttribute):
+            elif isinstance(attribute, ChecklistAttribute) and isinstance(answers, list):
                 options = []
-                for answer in answer_dict["answers"]:
+                for answer in answers:
                     feature_hash = answer["featureHash"]
                     option = _get_option_by_hash(feature_hash, attribute.options)
                     options.append(option)
                 self._set_answer_unsafe(options, attribute)
             elif isinstance(attribute, NumericAttribute):
-                value = answer_dict["answers"]
+                value = answers
 
                 if not isinstance(value, float) and not isinstance(value, int):
                     raise LabelRowError(f"The answer for a numeric attribute must be a float or an int. Found {value}.")
@@ -474,9 +458,13 @@ class ClassificationInstance:
         associated to any LabelRowV2. This is useful if you want to add the semantically same
         ClassificationInstance to multiple `LabelRowV2`s.
         """
-        ret = ClassificationInstance(self._ontology_classification)
+        ret = ClassificationInstance(
+            self._ontology_classification, range_only=self._range_only, frame_data=self._frame_data
+        )
         ret._static_answer_map = deepcopy(self._static_answer_map)
         ret._frames_to_data = deepcopy(self._frames_to_data)
+        ret._range_manager = deepcopy(self._range_manager)
+
         return ret
 
     def get_all_static_answers(self) -> List[Answer]:
@@ -569,13 +557,19 @@ class ClassificationInstance:
             return self._get_object_frame_instance_data().reviews
 
         def _check_if_frame_view_valid(self) -> None:
-            if self._frame not in self._classification_instance._frames_to_data:
+            if (
+                not self._classification_instance.is_on_frame(self.frame)
+                and not self._classification_instance.is_global()
+            ):
                 raise LabelRowError(
                     "Trying to use a ClassificationInstance.Annotation for a ClassificationInstance that is not on the frame."
                 )
 
         def _get_object_frame_instance_data(self) -> ClassificationInstance.FrameData:
-            return self._classification_instance._frames_to_data[self._frame]
+            if self._classification_instance.is_range_only():
+                return self._classification_instance._frame_data
+            else:
+                return self._classification_instance._frames_to_data[self._frame]
 
     @dataclass
     class FrameData:
@@ -588,7 +582,7 @@ class ClassificationInstance:
         reviews: Optional[List[dict]] = None
 
         @staticmethod
-        def from_dict(d: dict) -> ClassificationInstance.FrameData:
+        def from_dict(d: Union[dict, ClassificationAnswer]) -> ClassificationInstance.FrameData:
             if "lastEditedAt" in d and d["lastEditedAt"] is not None:
                 last_edited_at = parse_datetime(d["lastEditedAt"])
             else:
@@ -599,11 +593,18 @@ class ClassificationInstance:
             else:
                 created_at = datetime.now()
 
+            manual_annotation = d.get("manualAnnotation")
+            # If the manual annotation is not set, we to infer it from the classifications answers≠
+            if not manual_annotation:
+                manual_annotation = any(
+                    classification.get("manualAnnotation") for classification in d.get("classifications", [])
+                )
+
             return ClassificationInstance.FrameData(
                 created_at=created_at,
                 created_by=d["createdBy"],
-                confidence=d.get("confidence", DEFAULT_CONFIDENCE),
-                manual_annotation=d["manualAnnotation"],
+                confidence=d.get("confidence") or DEFAULT_CONFIDENCE,
+                manual_annotation=manual_annotation,
                 last_edited_at=last_edited_at,
                 last_edited_by=d.get("lastEditedBy"),
                 reviews=d.get("reviews"),
@@ -633,7 +634,7 @@ class ClassificationInstance:
             if reviews is not None:
                 self.reviews = reviews
 
-    def _set_frame_and_frame_data(
+    def _set_frame_data(
         self,
         frame,
         *,
@@ -660,10 +661,6 @@ class ClassificationInstance:
             created_at, created_by, confidence, manual_annotation, last_edited_at, last_edited_by, reviews
         )
 
-        if self.is_assigned_to_label_row():
-            assert self._parent is not None
-            self._parent.add_to_single_frame_to_hashes_map(self, frame)
-
     def _set_answer_unsafe(self, answer: ValueType, attribute: Attribute) -> None:
         self._static_answer_map[attribute.feature_node_hash].set(answer)
 
@@ -677,7 +674,9 @@ class ClassificationInstance:
         return _search_child_attributes(attribute, top_attribute, self._static_answer_map)
 
     def _check_within_range(self, frame: int) -> None:
-        if frame < 0 or frame >= self._last_frame:
+        if self.is_global():
+            return
+        elif frame < 0 or frame >= self._last_frame:
             raise LabelRowError(
                 f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`. "
                 f"Note: for non-geometric data (e.g. {DataType.AUDIO} and {DataType.PLAIN_TEXT}), "

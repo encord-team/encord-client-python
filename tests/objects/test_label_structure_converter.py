@@ -2,13 +2,14 @@
 
 import json
 from dataclasses import asdict
-from typing import Any, Dict, List, Union
+from typing import Dict, List, Union
 from unittest.mock import Mock
 
 import pytest
 from deepdiff import DeepDiff
 
-from encord.objects import OntologyStructure
+from encord.common.time_parser import parse_datetime
+from encord.objects import ClassificationInstance, OntologyStructure
 from encord.objects.ontology_labels_impl import LabelRowV2
 from encord.orm.label_row import LabelRowMetadata
 from encord.orm.skeleton_template import SkeletonTemplate
@@ -24,6 +25,7 @@ from tests.objects.data import (
     video_with_dynamic_classifications_ui_constructed,
 )
 from tests.objects.data.all_ontology_types import all_ontology_types
+from tests.objects.data.all_types_ontology_structure import GLOBAL_CLASSIFICATION
 from tests.objects.data.audio_labels import AUDIO_LABELS
 from tests.objects.data.audio_objects import AUDIO_OBJECTS
 from tests.objects.data.dicom_labels import dicom_labels
@@ -34,6 +36,7 @@ from tests.objects.data.empty_image_group import (
     empty_image_group_labels,
     empty_image_group_ontology,
 )
+from tests.objects.data.global_classification_labels import GLOBAL_CLASSIFICATION_LABELS
 from tests.objects.data.html_text_labels import HTML_TEXT_LABELS
 from tests.objects.data.image_group import image_group_labels, image_group_ontology
 from tests.objects.data.ontology_with_many_dynamic_classifications import (
@@ -375,3 +378,54 @@ def test_skeleton_template_coordinates():
     expected_skeleton_dict = list(skeleton_coordinates.labels["data_units"].values())[0]["labels"]["objects"][0]
 
     assert skeleton_dict["skeleton"] == expected_skeleton_dict["skeleton"]
+
+
+def test_parse_serialise_global_classification() -> None:
+    """
+    Test that we can parse and serialise a global classification to match the expected dict.
+    """
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["duration"] = 0.08  # to match
+    label_row_metadata_dict["frames_per_second"] = 25.0
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+
+    label_row.from_labels_dict(GLOBAL_CLASSIFICATION_LABELS)
+
+    actual = label_row.to_encord_dict()
+
+    deep_diff_enhanced(actual, GLOBAL_CLASSIFICATION_LABELS, exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"])
+    assert_json_serializable(actual)
+
+
+def test_serialise_global_classification() -> None:
+    """
+    Test that we can serialise a global classification from scratch to match the expected dict.
+    """
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["duration"] = 0.08  # to match
+    label_row_metadata_dict["frames_per_second"] = 25.0
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+
+    label_row.from_labels_dict(empty_video.labels)  # initialise as empty
+
+    classification_instance = ClassificationInstance(
+        GLOBAL_CLASSIFICATION, classification_hash="globalClassificationHash"
+    )
+    classification_instance.set_answer(
+        [GLOBAL_CLASSIFICATION.attributes[0].options[0]], GLOBAL_CLASSIFICATION.attributes[0]
+    )
+
+    # set the metadata to match GLOBAL_CLASSIFICATION_LABELS
+    classification_instance.created_by = "user1Hash@encord.com"
+    classification_instance.created_at = parse_datetime("Tue, 05 Nov 2024 09:41:37 UTC")
+    classification_instance.last_edited_by = "user1Hash@encord.com"
+    classification_instance.last_edited_at = parse_datetime("Tue, 05 Nov 2024 09:41:37 UTC")
+
+    label_row.add_classification_instance(classification_instance)
+
+    actual = label_row.to_encord_dict()
+    deep_diff_enhanced(actual, GLOBAL_CLASSIFICATION_LABELS, exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"])
+    assert_json_serializable(actual)

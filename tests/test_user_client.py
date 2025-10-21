@@ -7,7 +7,7 @@ import pytest
 import encord.exceptions
 from encord.configs import _ENCORD_SSH_KEY, _ENCORD_SSH_KEY_FILE
 from encord.user_client import EncordUserClient
-from tests.fixtures import PRIVATE_KEY_PEM
+from tests.conftest import PRIVATE_KEY_PEM
 
 
 def teardown_function():
