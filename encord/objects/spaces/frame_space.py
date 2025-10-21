@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import TYPE_CHECKING, Dict, Iterable, Optional, Set
+from typing import TYPE_CHECKING, Dict, Iterable, Optional, Set, Any, TypedDict
 
 from typing_extensions import Unpack
 
@@ -23,6 +23,15 @@ if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
     from encord.objects.ontology_object import Object
 
+class FrameAnnotationIndex(TypedDict):
+    classifications: list[dict[str, Any]]
+
+class FrameClassificationIndex(FrameAnnotationIndex):
+    classificationHash: str
+    featureHash: str
+
+class FrameObjectIndex(FrameAnnotationIndex):
+    objectHash: str
 
 # TODO: Use this for DICOM/NIfTI
 class FrameBasedSpace(Space, ABC):
@@ -248,27 +257,30 @@ class FrameBasedSpace(Space, ABC):
 
         return labels
 
-    def _to_object_answers(self) -> dict:
-        ret = {}
+    def _to_object_answers(self) -> dict[str, FrameObjectIndex]:
+        ret: dict[str, FrameObjectIndex] = {}
         for obj in self.get_object_instances():
             all_static_answers = self.parent._get_all_static_answers(obj)
-            ret[obj.object_hash] = {
+            object_index_element: FrameObjectIndex = {
                 "classifications": list(reversed(all_static_answers)),
                 "objectHash": obj.object_hash,
             }
+            ret[obj.object_hash] = object_index_element
 
         return ret
 
-    def _to_classification_answers(self) -> dict:
-        ret = {}
+    def _to_classification_answers(self) -> dict[str, FrameClassificationIndex]:
+        ret: dict[str, FrameClassificationIndex] = {}
         for classification in self.get_classification_instances():
             all_static_answers = classification.get_all_static_answers()
             classifications = [answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()]
-            ret[classification.classification_hash] = {
+            classification_index_element: FrameClassificationIndex = {
                 "classifications": classifications,
                 "classificationHash": classification.classification_hash,
                 "featureHash": classification.feature_hash,
             }
+
+            ret[classification.classification_hash] = classification_index_element
 
         return ret
 

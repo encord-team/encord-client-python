@@ -154,7 +154,7 @@ class RangeBasedSpace(Space, ABC):
         """For range-based annotations, labels are stored in objects/classifications index"""
         return {}
 
-    def _to_object_answers(self) -> dict:
+    def _to_object_answers(self) -> dict[str, RangeObjectIndex]:
         ret: dict[str, RangeObjectIndex] = {}
         for obj in self.get_object_instances():
             all_static_answers = self.parent._get_all_static_answers(obj)
@@ -179,7 +179,7 @@ class RangeBasedSpace(Space, ABC):
 
         return ret
 
-    def _to_classification_answers(self) -> dict:
+    def _to_classification_answers(self) -> dict[str, RangeClassificationIndex]:
         ret: dict[str, RangeClassificationIndex] = {}
         for classification in self.get_classification_instances():
             all_static_answers = classification.get_all_static_answers()
