@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import logging
 from abc import ABC
-from typing import TYPE_CHECKING, Dict, Optional, Unpack
+from typing import TYPE_CHECKING, Dict, Optional, Unpack, TypedDict
 
+from encord.common.time_parser import format_datetime_to_long_string_optional
 from encord.constants.enums import DataType, SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects import Classification, ClassificationInstance
@@ -11,9 +12,11 @@ from encord.objects.coordinates import AudioCoordinates
 from encord.objects.frames import Range, Ranges
 from encord.objects.ontology_object_instance import ObjectInstance, SetFramesKwargs
 from encord.objects.spaces.base_space import Space
+from encord.objects.utils import _lower_snake_case
 from encord.orm.label_space import AudioSpaceInfo, BaseSpaceInfo, LabelBlob, SpaceInfo
 
 logger = logging.getLogger(__name__)
+
 
 if TYPE_CHECKING:
     from encord.objects import Object
@@ -130,6 +133,57 @@ class RangeBasedSpace(Space, ABC):
     def _build_labels_dict(self) -> dict[str, LabelBlob]:
         """For range-based annotations, labels are stored in objects/classifications index"""
         return {}
+
+    def _to_object_answers(self) -> dict:
+        ret = {}
+        for obj in self.get_object_instances():
+            all_static_answers = self.parent._get_all_static_answers(obj)
+            ret[obj.object_hash] = {
+                "classifications": list(reversed(all_static_answers)),
+                "objectHash": obj.object_hash,
+            }
+
+            annotation = obj.get_annotation(0)
+            object_answer_dict = ret[obj.object_hash]
+            object_answer_dict["createdBy"] = annotation.created_by
+            object_answer_dict["createdAt"] = format_datetime_to_long_string_optional(annotation.created_at)
+            object_answer_dict["lastEditedBy"] = annotation.last_edited_by
+            object_answer_dict["lastEditedAt"] = format_datetime_to_long_string_optional(annotation.last_edited_at)
+            object_answer_dict["manualAnnotation"] = annotation.manual_annotation
+            object_answer_dict["featureHash"] = obj.feature_hash
+            object_answer_dict["name"] = obj.ontology_item.name
+            object_answer_dict["color"] = obj.ontology_item.color
+            object_answer_dict["shape"] = obj.ontology_item.shape.value
+            object_answer_dict["value"] = _lower_snake_case(obj.ontology_item.name)
+            object_answer_dict["range"] = [[range.start, range.end] for range in obj.range_list]
+
+        return ret
+
+    def _to_classification_answers(self) -> dict:
+        ret = {}
+        for classification in self.get_classification_instances():
+            all_static_answers = classification.get_all_static_answers()
+            annotation = classification.get_annotations()[0]
+            classifications = [answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()]
+            ret[classification.classification_hash] = {
+                "classifications": list(reversed(classifications)),
+                "classificationHash": classification.classification_hash,
+                "featureHash": classification.feature_hash,
+            }
+
+            # For non-geometric data, classifications apply to whole file
+            ret[classification.classification_hash]["range"] = []
+            ret[classification.classification_hash]["createdBy"] = annotation.created_by
+            ret[classification.classification_hash]["createdAt"] = format_datetime_to_long_string_optional(
+                annotation.created_at
+            )
+            ret[classification.classification_hash]["lastEditedBy"] = annotation.last_edited_by
+            ret[classification.classification_hash]["lastEditedAt"] = format_datetime_to_long_string_optional(
+                annotation.last_edited_at
+            )
+            ret[classification.classification_hash]["manualAnnotation"] = annotation.manual_annotation
+
+        return ret
 
 class AudioSpace(RangeBasedSpace):
     """Audio space implementation for range-based annotations."""

@@ -250,6 +250,30 @@ class FrameBasedSpace(Space, ABC):
 
         return labels
 
+    def _to_object_answers(self) -> dict:
+        ret = {}
+        for obj in self.get_object_instances():
+            all_static_answers = self.parent._get_all_static_answers(obj)
+            ret[obj.object_hash] = {
+                "classifications": list(reversed(all_static_answers)),
+                "objectHash": obj.object_hash,
+            }
+
+        return ret
+
+    def _to_classification_answers(self) -> dict:
+        ret = {}
+        for classification in self.get_classification_instances():
+            all_static_answers = classification.get_all_static_answers()
+            classifications = [answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()]
+            ret[classification.classification_hash] = {
+                "classifications": classifications,
+                "classificationHash": classification.classification_hash,
+                "featureHash": classification.feature_hash,
+            }
+
+        return ret
+
 
 class VideoSpace(FrameBasedSpace):
     """Video space implementation for frame-based video annotations."""

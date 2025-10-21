@@ -63,6 +63,14 @@ class Space(ABC):
         pass
 
     @abstractmethod
+    def _to_object_answers(self):
+        pass
+
+    @abstractmethod
+    def _to_classification_answers(self):
+        pass
+
+    @abstractmethod
     def _build_labels_dict(self) -> dict[str, LabelBlob]:
         """Builds label blob, which is then used in _to_space_dict"""
         pass
