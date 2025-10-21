@@ -63,7 +63,7 @@ class ClassificationInstance:
         *,
         classification_hash: Optional[str] = None,
         range_only: bool = False,
-        frame_data: Optional[FrameData] = None,
+        instance_data: Optional[FrameData] = None,
     ):
         self._ontology_classification = ontology_classification
         self._parent: Optional[LabelRowV2] = None
@@ -74,7 +74,7 @@ class ClassificationInstance:
 
         # Only used for non-frame entities, global classifications are frame only by definition
         self._range_only = range_only or self.is_global()
-        self._frame_data = frame_data if frame_data else self.FrameData()
+        self._instance_data = instance_data if instance_data else self.FrameData()
 
         self._range_manager: RangeManager = RangeManager()
 
@@ -120,57 +120,57 @@ class ClassificationInstance:
 
     @property
     def created_at(self) -> datetime:
-        return self._frame_data.created_at
+        return self._instance_data.created_at
 
     @created_at.setter
     def created_at(self, created_at: datetime) -> None:
-        self._frame_data.created_at = created_at
+        self._instance_data.created_at = created_at
 
     @property
     def created_by(self) -> Optional[str]:
-        return self._frame_data.created_by
+        return self._instance_data.created_by
 
     @created_by.setter
     def created_by(self, created_by: Optional[str]) -> None:
         """Set the created_by field with a user email or None if it should default to the current user of the SDK."""
         if created_by is not None:
             check_email(created_by)
-        self._frame_data.created_by = created_by
+        self._instance_data.created_by = created_by
 
     @property
     def last_edited_at(self) -> datetime:
-        return self._frame_data.last_edited_at
+        return self._instance_data.last_edited_at
 
     @last_edited_at.setter
     def last_edited_at(self, last_edited_at: datetime) -> None:
-        self._frame_data.last_edited_at = last_edited_at
+        self._instance_data.last_edited_at = last_edited_at
 
     @property
     def last_edited_by(self) -> Optional[str]:
-        return self._frame_data.last_edited_by
+        return self._instance_data.last_edited_by
 
     @last_edited_by.setter
     def last_edited_by(self, last_edited_by: Optional[str]) -> None:
         """Set the last_edited_by field with a user email or None if it should default to the current user of the SDK."""
         if last_edited_by is not None:
             check_email(last_edited_by)
-        self._frame_data.last_edited_by = last_edited_by
+        self._instance_data.last_edited_by = last_edited_by
 
     @property
     def confidence(self) -> float:
-        return self._frame_data.confidence
+        return self._instance_data.confidence
 
     @confidence.setter
     def confidence(self, confidence: float) -> None:
-        self._frame_data.confidence = confidence
+        self._instance_data.confidence = confidence
 
     @property
     def manual_annotation(self) -> bool:
-        return self._frame_data.manual_annotation
+        return self._instance_data.manual_annotation
 
     @manual_annotation.setter
     def manual_annotation(self, manual_annotation: bool) -> None:
-        self._frame_data.manual_annotation = manual_annotation
+        self._instance_data.manual_annotation = manual_annotation
 
     def is_on_frame(self, frame: int) -> bool:
         intersection = self._range_manager.intersection(frame)
@@ -238,7 +238,7 @@ class ClassificationInstance:
         if last_edited_at is None:
             last_edited_at = datetime.now()
 
-        self._frame_data.update_from_optional_fields(
+        self._instance_data.update_from_optional_fields(
             created_at, created_by, confidence, manual_annotation, last_edited_at, last_edited_by, reviews
         )
 
@@ -459,7 +459,7 @@ class ClassificationInstance:
         ClassificationInstance to multiple `LabelRowV2`s.
         """
         ret = ClassificationInstance(
-            self._ontology_classification, range_only=self._range_only, frame_data=self._frame_data
+            self._ontology_classification, range_only=self._range_only, instance_data=self._instance_data
         )
         ret._static_answer_map = deepcopy(self._static_answer_map)
         ret._frames_to_data = deepcopy(self._frames_to_data)
@@ -567,7 +567,7 @@ class ClassificationInstance:
 
         def _get_object_frame_instance_data(self) -> ClassificationInstance.FrameData:
             if self._classification_instance.is_range_only():
-                return self._classification_instance._frame_data
+                return self._classification_instance._instance_data
             else:
                 return self._classification_instance._frames_to_data[self._frame]
 

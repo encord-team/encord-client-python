@@ -2627,7 +2627,7 @@ class LabelRowV2:
         range_view = ClassificationInstance.FrameData.from_dict(classification_answer)
 
         classification_instance = ClassificationInstance(
-            label_class, classification_hash=classification_hash, range_only=True, frame_data=range_view
+            label_class, classification_hash=classification_hash, range_only=True, instance_data=range_view
         )
 
         frame_ranges = classification_answer.get("range", [])

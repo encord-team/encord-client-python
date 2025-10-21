@@ -1150,7 +1150,7 @@ def test_get_annotations_from_non_geometric_classification(ontology) -> None:
 
     assert len(annotations) == 0
 
-    annotation = classification_instance._frame_data
+    annotation = classification_instance._instance_data
     assert annotation is not None
     assert annotation.manual_annotation == DEFAULT_MANUAL_ANNOTATION
     assert annotation.confidence == DEFAULT_CONFIDENCE
