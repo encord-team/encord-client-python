@@ -683,7 +683,7 @@ class LabelRowV2:
         self._objects_map = dict()
         self._classifications_map = dict()
         self._space_map = self._parse_label_spaces(
-            label_row_dict.get("spaces"), label_row_dict["classification_answers"]
+            label_row_dict.get("spaces"), label_row_dict["object_answers"], label_row_dict["classification_answers"]
         )
 
         self._parse_labels_from_dict(label_row_dict)
@@ -1811,6 +1811,29 @@ class LabelRowV2:
                         "objectHash": obj.object_hash,
                     }
 
+            elif isinstance(space, AudioSpace):
+                for obj in space.get_object_instances():
+                    all_static_answers = self._get_all_static_answers(obj)
+                    ret[obj.object_hash] = {
+                        "classifications": list(reversed(all_static_answers)),
+                        "objectHash": obj.object_hash,
+                    }
+
+                    annotation = obj.get_annotation(0)
+                    object_answer_dict = ret[obj.object_hash]
+                    object_answer_dict["createdBy"] = annotation.created_by
+                    object_answer_dict["createdAt"] = format_datetime_to_long_string_optional(annotation.created_at)
+                    object_answer_dict["lastEditedBy"] = annotation.last_edited_by
+                    object_answer_dict["lastEditedAt"] = format_datetime_to_long_string_optional(
+                        annotation.last_edited_at
+                    )
+                    object_answer_dict["manualAnnotation"] = annotation.manual_annotation
+                    object_answer_dict["featureHash"] = obj.feature_hash
+                    object_answer_dict["name"] = obj.ontology_item.name
+                    object_answer_dict["color"] = obj.ontology_item.color
+                    object_answer_dict["shape"] = obj.ontology_item.shape.value
+                    object_answer_dict["value"] = _lower_snake_case(obj.ontology_item.name)
+                    object_answer_dict["range"] = [[range.start, range.end] for range in obj.range_list]
         return ret
 
     def _to_object_actions(self) -> Dict[str, Any]:
@@ -1873,6 +1896,29 @@ class LabelRowV2:
                         "featureHash": classification.feature_hash,
                     }
 
+            elif isinstance(space, AudioSpace):
+                for classification in space.get_classification_instances():
+                    all_static_answers = classification.get_all_static_answers()
+                    annotation = classification.get_annotations()[0]
+                    classifications = [answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()]
+                    ret[classification.classification_hash] = {
+                        "classifications": list(reversed(classifications)),
+                        "classificationHash": classification.classification_hash,
+                        "featureHash": classification.feature_hash,
+                    }
+
+                    # For non-geometric data, classifications apply to whole file
+                    ret[classification.classification_hash]["range"] = []
+                    ret[classification.classification_hash]["createdBy"] = annotation.created_by
+                    ret[classification.classification_hash]["createdAt"] = format_datetime_to_long_string_optional(
+                        annotation.created_at
+                    )
+                    ret[classification.classification_hash]["lastEditedBy"] = annotation.last_edited_by
+                    ret[classification.classification_hash]["lastEditedAt"] = format_datetime_to_long_string_optional(
+                        annotation.last_edited_at
+                    )
+                    ret[classification.classification_hash]["manualAnnotation"] = annotation.manual_annotation
+
         return ret
 
     @staticmethod
@@ -1899,6 +1945,8 @@ class LabelRowV2:
             if isinstance(space, VideoSpace):
                 ret[space_id] = space._to_space_dict()
             elif isinstance(space, ImageSpace):
+                ret[space_id] = space._to_space_dict()
+            elif isinstance(space, AudioSpace):
                 ret[space_id] = space._to_space_dict()
 
         return ret
@@ -2219,7 +2267,7 @@ class LabelRowV2:
                 annotation_object_hashes.remove(item_hash)
 
     def _parse_label_spaces(
-        self, spaces_info: Optional[dict[str, SpaceInfo]], classification_answers: dict
+        self, spaces_info: Optional[dict[str, SpaceInfo]], object_answers: dict, classification_answers: dict
     ) -> dict[str, Space]:
         # TODO: Maybe we should automatically add global space here
         res: dict[str, Space] = dict()
@@ -2227,7 +2275,9 @@ class LabelRowV2:
             for space_id, space_info in spaces_info.items():
                 space_type = space_info["space_type"]
                 if space_type == SpaceType.AUDIO:
-                    res[space_id] = AudioSpace(space_id=space_id, title="Random title", parent=self)
+                    audio_space = AudioSpace(space_id=space_id, title="Random title", parent=self, duration_ms=space_info["duration_ms"])
+                    audio_space._parse_space_dict(space_info=space_info, object_answers=object_answers, classification_answers=classification_answers)
+                    res[space_id] = audio_space
                 elif space_type == SpaceType.TEXT:
                     res[space_id] = TextSpace(space_id=space_id, title="Random title", parent=self)
                 elif space_info["space_type"] == SpaceType.VIDEO:
@@ -2237,7 +2287,7 @@ class LabelRowV2:
                         parent=self,
                         number_of_frames=space_info["number_of_frames"],
                     )
-                    vision_space._parse_space_dict(space_info, classification_answers)
+                    vision_space._parse_space_dict(space_info, object_answers=object_answers, classification_answers=classification_answers)
                     res[space_id] = vision_space
                 elif space_info["space_type"] == SpaceType.IMAGE:
                     image_space = ImageSpace(
@@ -2245,7 +2295,7 @@ class LabelRowV2:
                         title="Random title",
                         parent=self,
                     )
-                    image_space._parse_space_dict(space_info, classification_answers)
+                    image_space._parse_space_dict(space_info, object_answers=object_answers, classification_answers=classification_answers)
                     res[space_id] = image_space
                 elif space_type == SpaceType.SCENE_STREAM:
                     res[space_id] = SceneStreamSpace(space_id=space_id, title=space_id, parent=self)
@@ -2525,7 +2575,7 @@ class LabelRowV2:
                 for range_elem in object_answer["range"]:
                     ranges.append(Range(range_elem[0], range_elem[1]))
 
-                object_instance = self._create_new_object_instance_with_ranges(object_answer, ranges)
+                object_instance = self._create_new_object_instance_with_ranges(object_answer, ranges, data_type=self._label_row_read_only_data.data_type)
                 self.add_object_instance(object_instance)
 
     def _add_object_instances_from_objects(
@@ -2601,6 +2651,7 @@ class LabelRowV2:
         self,
         object_answer: dict,
         ranges: Ranges,
+        data_type: DataType,
     ) -> ObjectInstance:
         feature_hash = object_answer["featureHash"]
         object_hash = object_answer["objectHash"]
@@ -2613,10 +2664,10 @@ class LabelRowV2:
 
         expected_shape: Shape
         coordinates: Union[AudioCoordinates, TextCoordinates]
-        if self._label_row_read_only_data.data_type == DataType.AUDIO:
+        if data_type == DataType.AUDIO:
             expected_shape = Shape.AUDIO
             coordinates = AudioCoordinates(range=ranges)
-        elif self._label_row_read_only_data.data_type == DataType.PLAIN_TEXT:
+        elif data_type == DataType.PLAIN_TEXT:
             expected_shape = Shape.TEXT
             coordinates = TextCoordinates(range=ranges)
         else:

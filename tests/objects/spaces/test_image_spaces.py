@@ -94,14 +94,12 @@ def test_image_space_can_remove_object_instances(ontology):
     # Check properties after adding object
     assert len(objects_on_image_space) == 1
     assert len(image_space._label_hashes) == 1
-    assert len(image_space._label_hashes) == 1
     assert added_object_instance.object_hash in image_space._objects_map
 
     # Check properties after removing object
     image_space.remove_object_instance(added_object_instance.object_hash)
     objects_on_image_space = image_space.get_object_instances()
     assert len(objects_on_image_space) == 0
-    assert len(image_space._label_hashes) == 0
     assert len(image_space._label_hashes) == 0
 
 
@@ -125,14 +123,12 @@ def test_image_space_move_object_instances(ontology):
     # Check properties of vision space 1 before moving object
     assert len(objects_on_image_space_1) == 1
     assert len(image_space_1._label_hashes) == 1
-    assert len(image_space_1._label_hashes) == 1
     assert object_on_image_space_1.object_hash in image_space_1._objects_map
 
     # Check properties of vision space 2 before moving object
     image_space_2 = label_row.get_space_by_id("image-2-uuid", type_=ImageSpace)
     objects_on_image_space_2 = image_space_2.get_object_instances()
     assert len(objects_on_image_space_2) == 0
-    assert len(image_space_2._label_hashes) == 0
     assert len(image_space_2._label_hashes) == 0
 
     # Move object from space 1 to space 2
@@ -142,12 +138,10 @@ def test_image_space_move_object_instances(ontology):
     objects_on_image_space_1 = image_space_1.get_object_instances()
     assert len(objects_on_image_space_1) == 0
     assert len(image_space_1._label_hashes) == 0
-    assert len(image_space_1._label_hashes) == 0
 
     # Check properties of image space 2 after moving object
     objects_on_image_space_2 = image_space_2.get_object_instances()
     assert len(objects_on_image_space_2) == 1
-    assert len(image_space_2._label_hashes) == 1
     assert len(image_space_2._label_hashes) == 1
 
 
@@ -186,7 +180,6 @@ def test_image_space_can_add_classification_instances(ontology):
 
     # Check that spaces has correct properties
     assert len(image_space._label_hashes) == 1
-    assert len(image_space._label_hashes) == 1
     assert added_classification_instance.classification_hash in image_space._classifications_map
 
 
@@ -203,14 +196,12 @@ def test_image_space_can_remove_classification_instances(ontology):
     # Check properties after adding classification
     assert len(classifications_on_image_space) == 1
     assert len(image_space._label_hashes) == 1
-    assert len(image_space._label_hashes) == 1
     assert added_classification_instance.classification_hash in image_space._classifications_map
 
     # Check properties after removing classification
     image_space.remove_classification_instance(added_classification_instance.classification_hash)
     classifications_on_image_space = image_space.get_classification_instances()
     assert len(classifications_on_image_space) == 0
-    assert len(image_space._label_hashes) == 0
     assert len(image_space._label_hashes) == 0
 
 
@@ -225,14 +216,12 @@ def test_vision_space_move_classification_instances(ontology):
     # Check properties of vision space 1 before moving classification
     assert len(classifications_on_image_space_1) == 1
     assert len(image_space_1._label_hashes) == 1
-    assert len(image_space_1._label_hashes) == 1
     assert classification_on_image_space_1.classification_hash in image_space_1._classifications_map
 
     # Check properties of vision space 2 before moving classification
     image_space_2 = label_row.get_space_by_id("image-2-uuid", type_=ImageSpace)
     classifications_on_image_space_2 = image_space_2.get_classification_instances()
     assert len(classifications_on_image_space_2) == 0
-    assert len(image_space_2._label_hashes) == 0
     assert len(image_space_2._label_hashes) == 0
 
     # Move classification from space 1 to space 2
@@ -242,12 +231,10 @@ def test_vision_space_move_classification_instances(ontology):
     classifications_on_image_space_1 = image_space_1.get_classification_instances()
     assert len(classifications_on_image_space_1) == 0
     assert len(image_space_1._label_hashes) == 0
-    assert len(image_space_1._label_hashes) == 0
 
     # Check properties of vision space 2 after moving classification
     classifications_on_image_space_2 = image_space_2.get_classification_instances()
     assert len(classifications_on_image_space_2) == 1
-    assert len(image_space_2._label_hashes) == 1
     assert len(image_space_2._label_hashes) == 1
 
 

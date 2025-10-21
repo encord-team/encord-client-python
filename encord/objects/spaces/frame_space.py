@@ -175,7 +175,7 @@ class FrameBasedSpace(Space, ABC):
             )
             return None
 
-    def _parse_space_dict(self, space_info: BaseSpaceInfo, classification_answers: dict) -> None:
+    def _parse_space_dict(self, space_info: BaseSpaceInfo, object_answers: dict, classification_answers: dict) -> None:
         """Parse space dictionary and populate object and classification instances."""
         for frame, frame_label in self._get_frames_to_process(space_info):
             # Process objects

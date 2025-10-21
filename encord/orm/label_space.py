@@ -21,10 +21,13 @@ class VideoSpaceInfo(BaseSpaceInfo):
 class ImageSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.IMAGE]
 
+class TextSpaceInfo(BaseSpaceInfo):
+    space_type: Literal[SpaceType.TEXT]
+    number_of_characters: int
 
 class AudioSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.AUDIO]
     duration_ms: int
 
 
-SpaceInfo = Union[VideoSpaceInfo | AudioSpaceInfo]
+SpaceInfo = Union[VideoSpaceInfo | AudioSpaceInfo | ImageSpaceInfo | TextSpaceInfo]

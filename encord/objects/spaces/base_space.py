@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional, TypeVar
 
 from encord.constants.enums import SpaceType
-from encord.orm.label_space import SpaceInfo
+from encord.orm.label_space import SpaceInfo, LabelBlob
 
 if TYPE_CHECKING:
     from encord.objects import ClassificationInstance, ObjectInstance
@@ -55,9 +55,14 @@ class Space(ABC):
         pass
 
     @abstractmethod
-    def _parse_space_dict(self, space_info: SpaceInfo, classification_answers: dict) -> None:
+    def _parse_space_dict(self, space_info: SpaceInfo, object_answers: dict, classification_answers: dict) -> None:
         pass
 
     @abstractmethod
     def _to_space_dict(self) -> SpaceInfo:
+        pass
+
+    @abstractmethod
+    def _build_labels_dict(self) -> dict[str, LabelBlob]:
+        """Builds label blob, which is then used in _to_space_dict"""
         pass
