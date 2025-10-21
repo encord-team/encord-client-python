@@ -242,7 +242,7 @@ class ClassificationInstance:
             created_at, created_by, confidence, manual_annotation, last_edited_at, last_edited_by, reviews
         )
 
-        if not self._range_only:
+        if not self.is_range_only():
             frames_list = frames_class_to_frames_list(frames)
 
             conflicting_frames_list = self._is_classification_already_present(frames_list)
@@ -310,7 +310,7 @@ class ClassificationInstance:
         ranges_to_remove = range_manager.get_ranges()
 
         self._range_manager.remove_ranges(ranges_to_remove)
-        if not self._range_only:
+        if not self.is_range_only():
             frame_list = range_manager.get_ranges_as_frames()
             for frame in frame_list:
                 self._frames_to_data.pop(frame)
@@ -459,7 +459,7 @@ class ClassificationInstance:
         ClassificationInstance to multiple `LabelRowV2`s.
         """
         ret = ClassificationInstance(
-            self._ontology_classification, range_only=self._range_only, instance_data=self._instance_data
+            self._ontology_classification, range_only=self.is_range_only(), instance_data=self._instance_data
         )
         ret._static_answer_map = deepcopy(self._static_answer_map)
         ret._frames_to_data = deepcopy(self._frames_to_data)
