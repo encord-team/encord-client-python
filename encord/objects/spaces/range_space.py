@@ -15,6 +15,7 @@ from encord.objects.coordinates import AudioCoordinates, Coordinates, TextCoordi
 from encord.objects.frames import Frames, Range
 from encord.objects.ontology_object_instance import ObjectInstance, SetFramesKwargs
 from encord.objects.spaces.base_space import Space
+from encord.objects.spaces.frame_space import FrameBasedSpace
 from encord.orm.label_space import BaseSpaceInfo, ImageSpaceInfo, LabelBlob, SpaceInfo, VideoSpaceInfo
 
 logger = logging.getLogger(__name__)

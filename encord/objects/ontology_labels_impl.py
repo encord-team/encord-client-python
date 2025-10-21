@@ -73,12 +73,14 @@ from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.spaces.base_space import Space, SpaceT
 from encord.objects.spaces.frame_space import (
-    AudioSpace,
     ImageSpace,
     SceneStreamSpace,
     SpaceType,
-    TextSpace,
     VideoSpace,
+)
+from encord.objects.spaces.range_space import (
+    AudioSpace,
+    TextSpace,
 )
 from encord.objects.utils import _lower_snake_case
 from encord.ontology import Ontology
@@ -89,8 +91,8 @@ from encord.orm.label_row import (
     LabelStatus,
     WorkflowGraphNode,
 )
-from encord.orm.label_space import AudioSpaceInfo, BaseSpaceInfo, SpaceInfo, VideoSpaceInfo
-from encord.storage import STORAGE_BUNDLE_CREATE_LIMIT, StorageItem, StorageItemInaccessible
+from encord.orm.label_space import SpaceInfo
+from encord.storage import STORAGE_BUNDLE_CREATE_LIMIT, StorageItem
 from encord.utilities.type_utilities import exhaustive_guard
 
 log = logging.getLogger(__name__)
