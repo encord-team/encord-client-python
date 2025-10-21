@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import logging
 from abc import ABC
-from typing import TYPE_CHECKING, Dict, Optional, Unpack, TypedDict
+from typing import TYPE_CHECKING, Any, Dict, Optional, TypedDict, Unpack
 
 from encord.common.time_parser import format_datetime_to_long_string_optional
 from encord.constants.enums import DataType, SpaceType
 from encord.exceptions import LabelRowError
-from encord.objects import Classification, ClassificationInstance
+from encord.objects import Classification, ClassificationInstance, Shape
 from encord.objects.coordinates import AudioCoordinates
 from encord.objects.frames import Range, Ranges
 from encord.objects.ontology_object_instance import ObjectInstance, SetFramesKwargs
@@ -16,6 +16,29 @@ from encord.objects.utils import _lower_snake_case
 from encord.orm.label_space import AudioSpaceInfo, BaseSpaceInfo, LabelBlob, SpaceInfo
 
 logger = logging.getLogger(__name__)
+
+
+class RangeAnnotationIndex(TypedDict):
+    featureHash: str
+    classifications: list[dict[str, Any]]
+    range: list[list[int]]
+    createdBy: Optional[str]
+    createdAt: Optional[str]
+    lastEditedBy: Optional[str]
+    lastEditedAt: Optional[str]
+    manualAnnotation: bool
+
+
+class RangeClassificationIndex(RangeAnnotationIndex):
+    classificationHash: str
+
+
+class RangeObjectIndex(RangeAnnotationIndex):
+    objectHash: str
+    name: str
+    color: str
+    shape: Shape
+    value: str
 
 
 if TYPE_CHECKING:
@@ -34,7 +57,6 @@ class RangeBasedSpace(Space, ABC):
         super().__init__(space_id, title, space_type, parent)
         self._objects_map: Dict[str, ObjectInstance] = dict()
         self._classifications_map: Dict[str, ClassificationInstance] = dict()
-
 
     def _add_object_instance(self, object_instance: ObjectInstance) -> ObjectInstance:
         self._objects_map[object_instance.object_hash] = object_instance
@@ -102,9 +124,7 @@ class RangeBasedSpace(Space, ABC):
         original_space = classification_to_move._space
 
         if original_space is None:
-            raise LabelRowError(
-                "Unable to move classification instance, as it currently does not belong to any space."
-            )
+            raise LabelRowError("Unable to move classification instance, as it currently does not belong to any space.")
 
         if isinstance(original_space, RangeBasedSpace):
             original_space.remove_classification_instance(classification_to_move.classification_hash)
@@ -116,7 +136,7 @@ class RangeBasedSpace(Space, ABC):
             )
             return None
 
-    def _parse_space_dict(self, space_info: BaseSpaceInfo, object_answers:dict, classification_answers: dict) -> None:
+    def _parse_space_dict(self, space_info: BaseSpaceInfo, object_answers: dict, classification_answers: dict) -> None:
         """Parse object and classification answers, and populate object and classification instances."""
         for object_answer in object_answers.values():
             ranges: Ranges = []
@@ -135,58 +155,57 @@ class RangeBasedSpace(Space, ABC):
         return {}
 
     def _to_object_answers(self) -> dict:
-        ret = {}
+        ret: dict[str, RangeObjectIndex] = {}
         for obj in self.get_object_instances():
             all_static_answers = self.parent._get_all_static_answers(obj)
-            ret[obj.object_hash] = {
+            annotation = obj.get_annotation(0)
+            object_index_element: RangeObjectIndex = {
                 "classifications": list(reversed(all_static_answers)),
                 "objectHash": obj.object_hash,
+                "createdBy": annotation.created_by,
+                "createdAt": format_datetime_to_long_string_optional(annotation.created_at),
+                "lastEditedBy": annotation.last_edited_by,
+                "lastEditedAt": format_datetime_to_long_string_optional(annotation.last_edited_at),
+                "manualAnnotation": annotation.manual_annotation,
+                "featureHash": obj.feature_hash,
+                "name": obj.ontology_item.name,
+                "color": obj.ontology_item.color,
+                "shape": obj.ontology_item.shape.value,
+                "value": _lower_snake_case(obj.ontology_item.name),
+                "range": [[range.start, range.end] for range in obj.range_list],
             }
 
-            annotation = obj.get_annotation(0)
-            object_answer_dict = ret[obj.object_hash]
-            object_answer_dict["createdBy"] = annotation.created_by
-            object_answer_dict["createdAt"] = format_datetime_to_long_string_optional(annotation.created_at)
-            object_answer_dict["lastEditedBy"] = annotation.last_edited_by
-            object_answer_dict["lastEditedAt"] = format_datetime_to_long_string_optional(annotation.last_edited_at)
-            object_answer_dict["manualAnnotation"] = annotation.manual_annotation
-            object_answer_dict["featureHash"] = obj.feature_hash
-            object_answer_dict["name"] = obj.ontology_item.name
-            object_answer_dict["color"] = obj.ontology_item.color
-            object_answer_dict["shape"] = obj.ontology_item.shape.value
-            object_answer_dict["value"] = _lower_snake_case(obj.ontology_item.name)
-            object_answer_dict["range"] = [[range.start, range.end] for range in obj.range_list]
+            ret[obj.object_hash] = object_index_element
 
         return ret
 
     def _to_classification_answers(self) -> dict:
-        ret = {}
+        ret: dict[str, RangeClassificationIndex] = {}
         for classification in self.get_classification_instances():
             all_static_answers = classification.get_all_static_answers()
             annotation = classification.get_annotations()[0]
             classifications = [answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()]
-            ret[classification.classification_hash] = {
+
+            classification_index_element: RangeClassificationIndex = {
                 "classifications": list(reversed(classifications)),
                 "classificationHash": classification.classification_hash,
                 "featureHash": classification.feature_hash,
+                "range": [],
+                "createdBy": annotation.created_by,
+                "createdAt": format_datetime_to_long_string_optional(annotation.created_at),
+                "lastEditedBy": annotation.last_edited_by,
+                "lastEditedAt": format_datetime_to_long_string_optional(annotation.last_edited_at),
+                "manualAnnotation": annotation.manual_annotation,
             }
 
-            # For non-geometric data, classifications apply to whole file
-            ret[classification.classification_hash]["range"] = []
-            ret[classification.classification_hash]["createdBy"] = annotation.created_by
-            ret[classification.classification_hash]["createdAt"] = format_datetime_to_long_string_optional(
-                annotation.created_at
-            )
-            ret[classification.classification_hash]["lastEditedBy"] = annotation.last_edited_by
-            ret[classification.classification_hash]["lastEditedAt"] = format_datetime_to_long_string_optional(
-                annotation.last_edited_at
-            )
-            ret[classification.classification_hash]["manualAnnotation"] = annotation.manual_annotation
+            ret[classification.classification_hash] = classification_index_element
 
         return ret
 
+
 class AudioSpace(RangeBasedSpace):
     """Audio space implementation for range-based annotations."""
+
     def __init__(self, space_id: str, title: str, parent: LabelRowV2, duration_ms: int):
         super().__init__(space_id, title, SpaceType.AUDIO, parent)
         self._duration_ms = duration_ms
@@ -216,6 +235,7 @@ class AudioSpace(RangeBasedSpace):
 
 class TextSpace(RangeBasedSpace):
     """Audio space implementation for range-based annotations."""
+
     def __init__(self, space_id: str, title: str, space_type: SpaceType, parent: LabelRowV2, duration_ms: int):
         super().__init__(space_id, title, space_type, parent)
         self._duration_ms = duration_ms

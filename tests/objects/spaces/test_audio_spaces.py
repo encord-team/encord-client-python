@@ -16,12 +16,14 @@ from tests.objects.data.data_group.two_videos import (
 audio_obj_ontology_item = all_types_structure.get_child_by_hash("KVfzNkFy", Object)
 text_classification = all_types_structure.get_child_by_hash("jPOcEsbw", Classification)
 
+
 @pytest.fixture
 def ontology():
     ontology_structure = Mock()
     ontology_structure.get_child_by_hash = all_types_structure.get_child_by_hash
     ontology = Mock(structure=ontology_structure)
     yield ontology
+
 
 def test_audio_space_can_add_object_instances(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)

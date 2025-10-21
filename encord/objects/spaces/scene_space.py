@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
     from encord.objects.ontology_object import Object
 
+
 class SceneStreamSpace(Space):
     def __init__(self, space_id: str, title: str, parent: LabelRowV2):
         super().__init__(space_id, title, SpaceType.SCENE_STREAM, parent)

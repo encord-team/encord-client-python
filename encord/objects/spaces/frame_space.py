@@ -161,9 +161,7 @@ class FrameBasedSpace(Space, ABC):
         original_space = classification_to_move._space
 
         if original_space is None:
-            raise LabelRowError(
-                "Unable to move classification instance, as it currently does not belong to any space."
-            )
+            raise LabelRowError("Unable to move classification instance, as it currently does not belong to any space.")
 
         if isinstance(original_space, FrameBasedSpace):
             original_space.remove_classification_instance(classification_to_move.classification_hash)

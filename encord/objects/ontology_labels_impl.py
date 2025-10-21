@@ -1860,7 +1860,6 @@ class LabelRowV2:
             space_classification_answers = space._to_classification_answers()
             ret.update(space_classification_answers)
 
-
         return ret
 
     @staticmethod
@@ -2217,8 +2216,14 @@ class LabelRowV2:
             for space_id, space_info in spaces_info.items():
                 space_type = space_info["space_type"]
                 if space_type == SpaceType.AUDIO:
-                    audio_space = AudioSpace(space_id=space_id, title="Random title", parent=self, duration_ms=space_info["duration_ms"])
-                    audio_space._parse_space_dict(space_info=space_info, object_answers=object_answers, classification_answers=classification_answers)
+                    audio_space = AudioSpace(
+                        space_id=space_id, title="Random title", parent=self, duration_ms=space_info["duration_ms"]
+                    )
+                    audio_space._parse_space_dict(
+                        space_info=space_info,
+                        object_answers=object_answers,
+                        classification_answers=classification_answers,
+                    )
                     res[space_id] = audio_space
                 elif space_type == SpaceType.TEXT:
                     res[space_id] = TextSpace(space_id=space_id, title="Random title", parent=self)
@@ -2229,7 +2234,9 @@ class LabelRowV2:
                         parent=self,
                         number_of_frames=space_info["number_of_frames"],
                     )
-                    vision_space._parse_space_dict(space_info, object_answers=object_answers, classification_answers=classification_answers)
+                    vision_space._parse_space_dict(
+                        space_info, object_answers=object_answers, classification_answers=classification_answers
+                    )
                     res[space_id] = vision_space
                 elif space_info["space_type"] == SpaceType.IMAGE:
                     image_space = ImageSpace(
@@ -2237,7 +2244,9 @@ class LabelRowV2:
                         title="Random title",
                         parent=self,
                     )
-                    image_space._parse_space_dict(space_info, object_answers=object_answers, classification_answers=classification_answers)
+                    image_space._parse_space_dict(
+                        space_info, object_answers=object_answers, classification_answers=classification_answers
+                    )
                     res[space_id] = image_space
                 elif space_type == SpaceType.SCENE_STREAM:
                     res[space_id] = SceneStreamSpace(space_id=space_id, title=space_id, parent=self)
@@ -2517,7 +2526,9 @@ class LabelRowV2:
                 for range_elem in object_answer["range"]:
                     ranges.append(Range(range_elem[0], range_elem[1]))
 
-                object_instance = self._create_new_object_instance_with_ranges(object_answer, ranges, data_type=self._label_row_read_only_data.data_type)
+                object_instance = self._create_new_object_instance_with_ranges(
+                    object_answer, ranges, data_type=self._label_row_read_only_data.data_type
+                )
                 self.add_object_instance(object_instance)
 
     def _add_object_instances_from_objects(

@@ -4,13 +4,14 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional, TypeVar
 
 from encord.constants.enums import SpaceType
-from encord.orm.label_space import SpaceInfo, LabelBlob
+from encord.orm.label_space import LabelBlob, SpaceInfo
 
 if TYPE_CHECKING:
     from encord.objects import ClassificationInstance, ObjectInstance
     from encord.objects.ontology_labels_impl import LabelRowV2
 
 SpaceT = TypeVar("SpaceT", bound="Space")
+
 
 class Space(ABC):
     """Manages the objects on a space within LabelRowV2.
