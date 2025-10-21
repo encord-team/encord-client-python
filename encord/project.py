@@ -587,18 +587,33 @@ class Project:
         self,
         start_time: datetime.datetime,
         end_time: datetime.datetime,
-        limit: int = 500,
-        page_token: Optional[str] = None,
         action: Optional[str] = None,
         actor_user_email: Optional[str] = None,
         workflow_stage_id: Optional[UUID] = None,
         data_unit_id: Optional[UUID] = None,
     ) -> Iterator[EditorLog]:
+        """Get editor logs, represents the actions taken in the Editor UI.
+
+        The limit has a default and maximum value of 500.
+        The start_time and end_time parameters are required.
+
+        Args:
+           action: Filter the editor logs by action.
+           actor_user_email: Filter the editor logs by the user email.
+           data_unit_id: Filter the editor logs by the data id (data_hash).
+           workflow_stage_id: Filter the editor logs by the workflow stage id.
+           end_time: Filter the editor logs to only include logs before the specified time.
+           start_time: Filter the editor logs to only include logs after the specified time.
+
+        Returns:
+           An iterator on the editor logs.
+        """
+
+        # we don't put the limit in the parameters anymore because it works as a batch size in the iterator.
+        # it is ok to have it set as the default limit value in the backend.
         params = EditorLogParams(
             start_time=start_time,
             end_time=end_time,
-            limit=limit,
-            page_token=page_token,
             action=action,
             actor_user_email=actor_user_email,
             workflow_stage_id=workflow_stage_id,

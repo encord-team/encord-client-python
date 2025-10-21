@@ -96,8 +96,6 @@ EditorLog = Union[EditorLogGeneralAction, EditorLogObject, EditorLogClassificati
 class EditorLogParams(BaseDTO):
     start_time: datetime
     end_time: datetime
-    limit: int
-    page_token: str | None = None
     action: str | None = None
     actor_user_email: str | None = None
     workflow_stage_id: UUID | None = None

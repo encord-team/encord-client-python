@@ -40,7 +40,6 @@ if logs_response:
 filtered_logs_response = project.get_editor_logs(
     start_time=start_time,
     end_time=end_time,
-    limit=200,
     action=ACTION,
     actor_user_email=ACTOR_USER_EMAIL,
     workflow_stage_id=UUID(WORKFLOW_STAGE_ID),

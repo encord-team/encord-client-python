@@ -75,7 +75,7 @@ def test_project_get_editor_logs_basic():
     start_time = datetime.now() - timedelta(days=7)
     end_time = datetime.now()
 
-    result = test_project.get_editor_logs(start_time=start_time, end_time=end_time, limit=100)
+    result = test_project.get_editor_logs(start_time=start_time, end_time=end_time)
 
     # Verify the API client was called correctly
     mock_api_client.get_paged_iterator.assert_called_once()
@@ -118,8 +118,6 @@ def test_project_get_editor_logs_with_filters():
     result = test_project.get_editor_logs(
         start_time=start_time,
         end_time=end_time,
-        limit=50,
-        page_token="test_token",
         action="label_updated",
         actor_user_email="admin@example.com",
         workflow_stage_id=workflow_id,
@@ -135,8 +133,6 @@ def test_project_get_editor_logs_with_filters():
     assert isinstance(params, EditorLogParams)
     assert params.start_time == start_time
     assert params.end_time == end_time
-    assert params.limit == 50
-    assert params.page_token == "test_token"
     assert params.action == "label_updated"
     assert params.actor_user_email == "admin@example.com"
     assert params.workflow_stage_id == workflow_id
@@ -275,9 +271,7 @@ def test_project_get_editor_logs_multiple_types():
     test_project.get_editor_logs = Project.get_editor_logs.__get__(test_project, Project)
 
     # Call the method
-    result = test_project.get_editor_logs(
-        start_time=datetime.now() - timedelta(days=7), end_time=datetime.now(), limit=100
-    )
+    result = test_project.get_editor_logs(start_time=datetime.now() - timedelta(days=7), end_time=datetime.now())
     results = []
     for item in result:
         results.append(item)
