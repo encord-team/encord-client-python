@@ -6,7 +6,7 @@ from deepdiff import DeepDiff
 
 from encord.objects import Classification, LabelRowV2, Object
 from encord.objects.coordinates import BoundingBoxCoordinates
-from encord.objects.space import VideoSpace
+from encord.objects.spaces.frame_space import VideoSpace
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.two_videos import (
     DATA_GROUP_METADATA,

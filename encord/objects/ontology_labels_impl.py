@@ -71,12 +71,11 @@ from encord.objects.metadata import DataGroupMetadata, DICOMSeriesMetadata, DICO
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
-from encord.objects.space import (
+from encord.objects.spaces.base_space import Space, SpaceT
+from encord.objects.spaces.frame_space import (
     AudioSpace,
     ImageSpace,
     SceneStreamSpace,
-    Space,
-    SpaceT,
     SpaceType,
     TextSpace,
     VideoSpace,

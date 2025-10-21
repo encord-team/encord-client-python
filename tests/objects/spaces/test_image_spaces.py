@@ -1,4 +1,3 @@
-import json
 from datetime import datetime, timezone
 from unittest.mock import Mock
 
@@ -7,7 +6,7 @@ from deepdiff import DeepDiff
 
 from encord.objects import Classification, LabelRowV2, Object
 from encord.objects.coordinates import BoundingBoxCoordinates
-from encord.objects.space import ImageSpace
+from encord.objects.spaces.frame_space import ImageSpace
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.two_images import DATA_GROUP_TWO_IMAGES_NO_LABELS, DATA_GROUP_WITH_TWO_IMAGES_LABELS
 from tests.objects.data.data_group.two_videos import (

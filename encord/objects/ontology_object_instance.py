@@ -63,7 +63,7 @@ from encord.objects.utils import check_email, short_uuid_str
 
 if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
-    from encord.objects.space import Space, VideoSpace
+    from encord.objects.spaces.base_space import Space
 
 
 class SetFramesKwargs(TypedDict, total=False):
