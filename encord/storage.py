@@ -1704,8 +1704,8 @@ class StorageItem:
         """str: The name of the storage item."""
         return self._orm_item.name
 
-    @deprecated(version="0.1.177")
     @property
+    @deprecated(version="0.1.177")
     def description(self) -> str:
         """str: This is always an empty string; descriptions on individual items are not supported."""
         return self._orm_item.description
