@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import TYPE_CHECKING, Dict, Iterable, Optional, Set, Any, TypedDict
+from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Set, TypedDict
 
 from typing_extensions import Unpack
 
@@ -23,15 +23,19 @@ if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
     from encord.objects.ontology_object import Object
 
+
 class FrameAnnotationIndex(TypedDict):
     classifications: list[dict[str, Any]]
+
 
 class FrameClassificationIndex(FrameAnnotationIndex):
     classificationHash: str
     featureHash: str
 
+
 class FrameObjectIndex(FrameAnnotationIndex):
     objectHash: str
+
 
 # TODO: Use this for DICOM/NIfTI
 class FrameBasedSpace(Space, ABC):

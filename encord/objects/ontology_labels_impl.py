@@ -1883,12 +1883,7 @@ class LabelRowV2:
     def _to_encord_spaces(self) -> Dict[str, SpaceInfo]:
         ret = {}
         for space_id, space in self._space_map.items():
-            if isinstance(space, VideoSpace):
-                ret[space_id] = space._to_space_dict()
-            elif isinstance(space, ImageSpace):
-                ret[space_id] = space._to_space_dict()
-            elif isinstance(space, AudioSpace):
-                ret[space_id] = space._to_space_dict()
+            ret[space_id] = space._to_space_dict()
 
         return ret
 
@@ -2226,7 +2221,18 @@ class LabelRowV2:
                     )
                     res[space_id] = audio_space
                 elif space_type == SpaceType.TEXT:
-                    res[space_id] = TextSpace(space_id=space_id, title="Random title", parent=self)
+                    text_space = TextSpace(
+                        space_id=space_id,
+                        title="Random title",
+                        parent=self,
+                        number_of_characters=space_info["number_of_characters"],
+                    )
+                    text_space._parse_space_dict(
+                        space_info=space_info,
+                        object_answers=object_answers,
+                        classification_answers=classification_answers,
+                    )
+                    res[space_id] = text_space
                 elif space_info["space_type"] == SpaceType.VIDEO:
                     vision_space = VideoSpace(
                         space_id=space_id,

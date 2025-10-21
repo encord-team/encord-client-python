@@ -8,12 +8,12 @@ from encord.common.time_parser import format_datetime_to_long_string_optional
 from encord.constants.enums import DataType, SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects import Classification, ClassificationInstance, Shape
-from encord.objects.coordinates import AudioCoordinates
+from encord.objects.coordinates import AudioCoordinates, TextCoordinates
 from encord.objects.frames import Range, Ranges
 from encord.objects.ontology_object_instance import ObjectInstance, SetFramesKwargs
 from encord.objects.spaces.base_space import Space
 from encord.objects.utils import _lower_snake_case
-from encord.orm.label_space import AudioSpaceInfo, BaseSpaceInfo, LabelBlob, SpaceInfo
+from encord.orm.label_space import AudioSpaceInfo, BaseSpaceInfo, LabelBlob, SpaceInfo, TextSpaceInfo
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +143,17 @@ class RangeBasedSpace(Space, ABC):
             for range_elem in object_answer["range"]:
                 ranges.append(Range(start=range_elem[0], end=range_elem[1]))
 
-            object_instance = self.parent._create_new_object_instance_with_ranges(object_answer, ranges, DataType.AUDIO)
+            if self.space_type == SpaceType.TEXT:
+                object_instance = self.parent._create_new_object_instance_with_ranges(
+                    object_answer, ranges, DataType.PLAIN_TEXT
+                )
+            elif self.space_type == SpaceType.AUDIO:
+                object_instance = self.parent._create_new_object_instance_with_ranges(
+                    object_answer, ranges, DataType.AUDIO
+                )
+            else:
+                raise ValueError(f"Space type {self.space_type} is invalid for this space.")
+
             self._add_object_instance(object_instance)
 
         for classification_answer in classification_answers.values():
@@ -234,16 +244,30 @@ class AudioSpace(RangeBasedSpace):
 
 
 class TextSpace(RangeBasedSpace):
-    """Audio space implementation for range-based annotations."""
+    """Text space implementation for range-based annotations."""
 
-    def __init__(self, space_id: str, title: str, space_type: SpaceType, parent: LabelRowV2, duration_ms: int):
-        super().__init__(space_id, title, space_type, parent)
-        self._duration_ms = duration_ms
+    def __init__(self, space_id: str, title: str, parent: LabelRowV2, number_of_characters: int):
+        super().__init__(space_id, title, SpaceType.TEXT, parent)
+        self._number_of_characters = number_of_characters
         self._objects_map: Dict[str, ObjectInstance] = dict()
         self._classifications_map: Dict[str, ClassificationInstance] = dict()
+
+    def _to_space_dict(self) -> TextSpaceInfo:
+        labels = self._build_labels_dict()
+        return TextSpaceInfo(
+            space_type=self.space_type,
+            number_of_characters=self._number_of_characters,
+            labels=labels,
+        )
 
     def add_object_instance(self, obj: Object, range: Range, **kwargs: Unpack[SetFramesKwargs]):
         """Add an object instance to the audio space."""
         object_instance = obj.create_instance()
-        object_instance.set_for_frames(coordinates=AudioCoordinates(range=[range]), frames=0, **kwargs)
+        object_instance.set_for_frames(coordinates=TextCoordinates(range=[range]), frames=0, **kwargs)
         return self._add_object_instance(object_instance)
+
+    def add_classification_instance(self, classification: Classification, **kwargs: Unpack[SetFramesKwargs]):
+        """Add an object instance to the audio space."""
+        classification_instance = classification.create_instance(range_only=True)
+        classification_instance.set_for_frames(frames=0, **kwargs)
+        return self._add_classification_instance(classification_instance)
