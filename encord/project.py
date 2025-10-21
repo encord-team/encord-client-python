@@ -196,9 +196,9 @@ class Project:
 
         Available only for workflow projects.
         """
-        assert (
-            self.project_type == ProjectType.WORKFLOW
-        ), "project.workflow property only available for workflow projects"
+        assert self.project_type == ProjectType.WORKFLOW, (
+            "project.workflow property only available for workflow projects"
+        )
         return self._workflow
 
     @property

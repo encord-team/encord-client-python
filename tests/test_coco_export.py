@@ -1,6 +1,5 @@
 from typing import Any, Dict
 
-
 from encord.objects.ontology_structure import OntologyStructure
 from tests.objects.data.data_1 import labels as BASE_LABEL_DICT
 from tests.objects.data.data_1 import ontology as BASE_ONTOLOGY_DICT
