@@ -946,8 +946,8 @@ class LabelRowV2:
 
         object_instance.is_valid()
 
-        # We want to ensure that we are only adding the object_instance to a label_row
-        # IF AND ONLY IF the file type is text/html and the object_instance has range_html set
+        # We want to ensure that we are only adding the annotation_instance to a label_row
+        # IF AND ONLY IF the file type is text/html and the annotation_instance has range_html set
         if self.file_type == "text/html" and object_instance.range_html is None:
             raise LabelRowError(
                 "Unable to assign object instance without a html range to a html file. "

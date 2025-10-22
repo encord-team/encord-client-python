@@ -70,11 +70,3 @@ class Space(ABC):
     @abstractmethod
     def _to_classification_answers(self):
         pass
-
-    @abstractmethod
-    def _on_set_for_frames(self, frame: int, object_hash: str):
-        """
-            Users can still call object_instance.set_for_frames or classification_instance.set_for_frames.
-            This will be the callback which is called when that happens.
-        """
-        pass

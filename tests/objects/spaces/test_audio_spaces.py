@@ -48,6 +48,7 @@ def test_audio_space_can_add_object_instances(ontology):
     assert len(objects_on_audio_space) == 1
 
     first_object_instance = objects_on_audio_space[0]
+
     annotations_on_first_object_instance = first_object_instance.get_annotations()
     assert first_object_instance.object_hash == added_object_instance.object_hash
     assert len(annotations_on_first_object_instance) == 1

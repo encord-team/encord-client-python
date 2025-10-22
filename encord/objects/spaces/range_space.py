@@ -11,6 +11,7 @@ from encord.objects import Classification, ClassificationInstance, Shape
 from encord.objects.coordinates import AudioCoordinates, TextCoordinates
 from encord.objects.frames import Range, Ranges
 from encord.objects.ontology_object_instance import ObjectInstance, SetFramesKwargs
+from encord.objects.spaces.annotation_instance.audio_instance import AudioObjectInstance, AudioClassificationInstance
 from encord.objects.spaces.base_space import Space
 from encord.objects.utils import _lower_snake_case
 from encord.orm.label_space import AudioSpaceInfo, BaseSpaceInfo, LabelBlob, SpaceInfo, TextSpaceInfo
@@ -55,10 +56,10 @@ class RangeBasedSpace(Space, ABC):
 
     def __init__(self, space_id: str, title: str, space_type: SpaceType, parent: LabelRowV2):
         super().__init__(space_id, title, space_type, parent)
-        self._objects_map: Dict[str, ObjectInstance] = dict()
-        self._classifications_map: Dict[str, ClassificationInstance] = dict()
+        self._objects_map: Dict[str, AudioObjectInstance] = dict()
+        self._classifications_map: Dict[str, AudioClassificationInstance] = dict()
 
-    def _add_object_instance(self, object_instance: ObjectInstance) -> ObjectInstance:
+    def _add_object_instance(self, object_instance: AudioObjectInstance) -> AudioObjectInstance:
         self._objects_map[object_instance.object_hash] = object_instance
         object_instance._set_space(self)
 
@@ -73,11 +74,11 @@ class RangeBasedSpace(Space, ABC):
     def _on_set_for_frames(self, frame: int, object_hash: str):
         pass
 
-    def get_object_instances(self) -> list[ObjectInstance]:
+    def get_object_instances(self) -> list[AudioObjectInstance]:
         """Get all object instances in this space."""
         return list(self._objects_map.values())
 
-    def get_classification_instances(self) -> list[ClassificationInstance]:
+    def get_classification_instances(self) -> list[AudioClassificationInstance]:
         """Get all classification instances in this space."""
         return list(self._classifications_map.values())
 
@@ -235,8 +236,8 @@ class AudioSpace(RangeBasedSpace):
 
     def add_object_instance(self, obj: Object, range: Range, **kwargs: Unpack[SetFramesKwargs]):
         """Add an object instance to the audio space."""
-        object_instance = obj.create_instance()
-        object_instance.set_for_frames(coordinates=AudioCoordinates(range=[range]), frames=0, **kwargs)
+        object_instance = AudioObjectInstance(ontology_object=obj, space=self)
+        object_instance.set_annotation_for_ranges(ranges=[range], **kwargs)
         return self._add_object_instance(object_instance)
 
     def add_classification_instance(self, classification: Classification, **kwargs: Unpack[SetFramesKwargs]):
