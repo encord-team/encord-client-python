@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.9"
 resolution-markers = [
     "python_full_version >= '3.12' and sys_platform == 'darwin'",
@@ -265,7 +265,7 @@ wheels = [
 
 [[package]]
 name = "encord"
-version = "0.1.177"
+version = "0.1.178"
 source = { editable = "." }
 dependencies = [
     { name = "cryptography" },
