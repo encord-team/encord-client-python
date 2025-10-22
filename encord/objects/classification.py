@@ -28,6 +28,19 @@ from encord.objects.ontology_element import OntologyElement
 class OntologyClassificationLevel(Enum):
     GLOBAL = "global"
 
+    @classmethod
+    def from_value(cls: Type[OntologyClassificationLevel], value: Any) -> Optional[OntologyClassificationLevel]:
+        """
+        Tries to create an enum member from a value.
+        Returns None if the value is not valid.
+        """
+        try:
+            # Try to create the enum instance from the value
+            return cls(value)
+        except ValueError:
+            # Value is not valid for this enum
+            return None
+
 
 @dataclass
 class Classification(OntologyElement):
@@ -82,7 +95,7 @@ class Classification(OntologyElement):
             Classification: An instance of Classification.
         """
         attributes_ret: List[Attribute] = [attribute_from_dict(attribute_dict) for attribute_dict in d["attributes"]]
-        level = OntologyClassificationLevel(d["level"]) if "level" in d else None
+        level = OntologyClassificationLevel.from_value(d.get("level"))
 
         return Classification(
             uid=int(d["id"]),
