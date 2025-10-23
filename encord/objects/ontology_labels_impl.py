@@ -72,15 +72,15 @@ from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.spaces.base_space import Space, SpaceT
-from encord.objects.spaces.frame_space import (
-    ImageSpace,
-    SceneStreamSpace,
-    SpaceType,
-    VideoSpace,
-)
+from encord.objects.spaces.image_space import ImageSpace
 from encord.objects.spaces.range_space import (
     AudioSpace,
     TextSpace,
+)
+from encord.objects.spaces.video_space import (
+    SceneStreamSpace,
+    SpaceType,
+    VideoSpace,
 )
 from encord.objects.utils import _lower_snake_case
 from encord.ontology import Ontology
@@ -2170,8 +2170,7 @@ class LabelRowV2:
         res: dict[str, Space] = dict()
         if spaces_info is not None:
             for space_id, space_info in spaces_info.items():
-                space_type = space_info["space_type"]
-                if space_type == SpaceType.AUDIO:
+                if space_info["space_type"] == SpaceType.AUDIO:
                     audio_space = AudioSpace(
                         space_id=space_id, title="Random title", parent=self, duration_ms=space_info["duration_ms"]
                     )
@@ -2181,7 +2180,7 @@ class LabelRowV2:
                         classification_answers=classification_answers,
                     )
                     res[space_id] = audio_space
-                elif space_type == SpaceType.TEXT:
+                elif space_info["space_type"] == SpaceType.TEXT:
                     text_space = TextSpace(
                         space_id=space_id,
                         title="Random title",
@@ -2200,6 +2199,8 @@ class LabelRowV2:
                         title="Random title",
                         parent=self,
                         number_of_frames=space_info["number_of_frames"],
+                        width=space_info["width"],
+                        height=space_info["height"],
                     )
                     vision_space._parse_space_dict(
                         space_info, object_answers=object_answers, classification_answers=classification_answers
@@ -2210,12 +2211,14 @@ class LabelRowV2:
                         space_id=space_id,
                         title="Random title",
                         parent=self,
+                        width=space_info["width"],
+                        height=space_info["height"],
                     )
                     image_space._parse_space_dict(
                         space_info, object_answers=object_answers, classification_answers=classification_answers
                     )
                     res[space_id] = image_space
-                elif space_type == SpaceType.SCENE_STREAM:
+                elif space_info[""] == SpaceType.POINT_CLOUD:
                     res[space_id] = SceneStreamSpace(space_id=space_id, title=space_id, parent=self)
                 else:
                     exhaustive_guard(space_type, message="Missing condition for space types.")

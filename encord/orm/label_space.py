@@ -16,10 +16,14 @@ class BaseSpaceInfo(TypedDict):
 class VideoSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.VIDEO]
     number_of_frames: int
+    width: int
+    height: int
 
 
 class ImageSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.IMAGE]
+    width: int
+    height: int
 
 
 class TextSpaceInfo(BaseSpaceInfo):
@@ -32,4 +36,8 @@ class AudioSpaceInfo(BaseSpaceInfo):
     duration_ms: int
 
 
-SpaceInfo = Union[VideoSpaceInfo | AudioSpaceInfo | ImageSpaceInfo | TextSpaceInfo]
+class PointCloudSpaceInfo(BaseSpaceInfo):
+    space_type: Literal[SpaceType.POINT_CLOUD]
+
+
+SpaceInfo = Union[VideoSpaceInfo, AudioSpaceInfo, ImageSpaceInfo, TextSpaceInfo]

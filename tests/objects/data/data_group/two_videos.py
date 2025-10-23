@@ -51,11 +51,15 @@ DATA_GROUP_TWO_VIDEOS_NO_LABELS = {
         "video-1-uuid": {
             "space_type": SpaceType.VIDEO,
             "number_of_frames": 10,
+            "width": 100,
+            "height": 100,
             "labels": {},
         },
         "video-2-uuid": {
             "space_type": SpaceType.VIDEO,
             "number_of_frames": 10,
+            "width": 100,
+            "height": 100,
             "labels": {},
         },
     },
@@ -136,6 +140,8 @@ DATA_GROUP_WITH_TWO_VIDEOS_LABELS = {
         "video-1-uuid": {
             "space_type": SpaceType.VIDEO,
             "number_of_frames": 10,
+            "width": 100,
+            "height": 100,
             "labels": {
                 "0": {
                     "objects": [
@@ -221,6 +227,8 @@ DATA_GROUP_WITH_TWO_VIDEOS_LABELS = {
         "video-2-uuid": {
             "space_type": SpaceType.VIDEO,
             "number_of_frames": 10,
+            "width": 100,
+            "height": 100,
             "labels": {},
         },
     },

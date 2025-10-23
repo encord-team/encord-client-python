@@ -77,7 +77,7 @@ class SetFramesKwargs(TypedDict, total=False):
     is_deleted: Optional[bool]
 
 
-class BaseObjectInstance:
+class ObjectInstance:
     """An object instance is an object that has coordinates and can be placed on one or multiple frames in a label row."""
 
     def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
@@ -450,96 +450,96 @@ class BaseObjectInstance:
                 f"The supplied frame of `{frame}` is not within the acceptable bounds of `0` to `{self._last_frame}`."
             )
 
-    # def set_for_frames(
-    #     self,
-    #     coordinates: Coordinates,
-    #     frames: Frames = 0,
-    #     *,
-    #     overwrite: bool = False,
-    #     created_at: Optional[datetime] = None,
-    #     created_by: Optional[str] = None,
-    #     last_edited_at: Optional[datetime] = None,
-    #     last_edited_by: Optional[str] = None,
-    #     confidence: Optional[float] = None,
-    #     manual_annotation: Optional[bool] = None,
-    #     reviews: Optional[List[dict]] = None,
-    #     is_deleted: Optional[bool] = None,
-    # ) -> None:
-    #     """Place the object onto the specified frame(s).
-    #
-    #     If the object already exists on the frame and overwrite is set to `True`,
-    #     the currently specified values will be overwritten.
-    #
-    #     Args:
-    #         coordinates: The coordinates of the object in the frame.
-    #             This will throw an error if the type of the coordinates does not match the type of the attribute in the object instance.
-    #         frames: The frames to add the object instance to. Defaults to the first frame for convenience.
-    #         overwrite: If `True`, overwrite existing data for the given frames.
-    #             This will not reset all the non-specified values.
-    #             If `False` and data already exists for the given frames, raises an error.
-    #         created_at: Optionally specify the creation time of the object instance on this frame.
-    #             Defaults to `datetime.now()`.
-    #         created_by: Optionally specify the creator of the object instance on this frame.
-    #             Defaults to the current SDK user.
-    #         last_edited_at: Optionally specify the last edit time of the object instance on this frame.
-    #             Defaults to `datetime.now()`.
-    #         last_edited_by: Optionally specify the last editor of the object instance on this frame.
-    #             Defaults to the current SDK user.
-    #         confidence: Optionally specify the confidence of the object instance on this frame. Defaults to `1.0`.
-    #         manual_annotation: Optionally specify whether the object instance on this frame was manually annotated. Defaults to `True`.
-    #         reviews: Should only be set by internal functions.
-    #         is_deleted: Should only be set by internal functions.
-    #     """
-    #     if self._non_geometric:
-    #         if not isinstance(coordinates, tuple(NON_GEOMETRIC_COORDINATES)):
-    #             raise LabelRowError("Expecting non-geometric coordinate type")
-    #
-    #         elif frames != 0:
-    #             raise LabelRowError(
-    #                 f"For objects with a non-geometric shape (e.g. {Shape.TEXT} and {Shape.AUDIO}), "
-    #                 f"There is only one frame. Please ensure `set_for_frames` is called with `frames=0`."
-    #             )
-    #
-    #     frames_list = frames_class_to_frames_list(frames)
-    #
-    #     for frame in frames_list:
-    #         existing_frame_data = self._frames_to_instance_data.get(frame)
-    #
-    #         if overwrite is False and existing_frame_data is not None:
-    #             raise LabelRowError(
-    #                 "Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite."
-    #             )
-    #
-    #         check_coordinate_type(coordinates, self._ontology_object, self._parent)
-    #
-    #         if isinstance(coordinates, (TextCoordinates, AudioCoordinates)):
-    #             for non_geometric_range in coordinates.range:
-    #                 self.check_within_range(non_geometric_range.end)
-    #         else:
-    #             self.check_within_range(frame)
-    #
-    #         if existing_frame_data is None:
-    #             existing_frame_data = ObjectInstance.FrameData(
-    #                 coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
-    #             )
-    #             self._frames_to_instance_data[frame] = existing_frame_data
-    #
-    #         existing_frame_data.object_frame_instance_info.update_from_optional_fields(
-    #             created_at=created_at,
-    #             created_by=created_by,
-    #             last_edited_at=last_edited_at,
-    #             last_edited_by=last_edited_by,
-    #             confidence=confidence,
-    #             manual_annotation=manual_annotation,
-    #             reviews=reviews,
-    #             is_deleted=is_deleted,
-    #         )
-    #         existing_frame_data.coordinates = coordinates
-    #
-    #         if self._parent is not None:
-    #             self._parent.add_to_single_frame_to_hashes_map(self, frame=frame)
-    #         elif self._space is not None:
-    #             self._space._on_set_for_frames(frame=frame, object_hash=self._object_hash)
+    def set_for_frames(
+        self,
+        coordinates: Coordinates,
+        frames: Frames = 0,
+        *,
+        overwrite: bool = False,
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        confidence: Optional[float] = None,
+        manual_annotation: Optional[bool] = None,
+        reviews: Optional[List[dict]] = None,
+        is_deleted: Optional[bool] = None,
+    ) -> None:
+        """Place the object onto the specified frame(s).
+
+        If the object already exists on the frame and overwrite is set to `True`,
+        the currently specified values will be overwritten.
+
+        Args:
+            coordinates: The coordinates of the object in the frame.
+                This will throw an error if the type of the coordinates does not match the type of the attribute in the object instance.
+            frames: The frames to add the object instance to. Defaults to the first frame for convenience.
+            overwrite: If `True`, overwrite existing data for the given frames.
+                This will not reset all the non-specified values.
+                If `False` and data already exists for the given frames, raises an error.
+            created_at: Optionally specify the creation time of the object instance on this frame.
+                Defaults to `datetime.now()`.
+            created_by: Optionally specify the creator of the object instance on this frame.
+                Defaults to the current SDK user.
+            last_edited_at: Optionally specify the last edit time of the object instance on this frame.
+                Defaults to `datetime.now()`.
+            last_edited_by: Optionally specify the last editor of the object instance on this frame.
+                Defaults to the current SDK user.
+            confidence: Optionally specify the confidence of the object instance on this frame. Defaults to `1.0`.
+            manual_annotation: Optionally specify whether the object instance on this frame was manually annotated. Defaults to `True`.
+            reviews: Should only be set by internal functions.
+            is_deleted: Should only be set by internal functions.
+        """
+        if self._non_geometric:
+            if not isinstance(coordinates, tuple(NON_GEOMETRIC_COORDINATES)):
+                raise LabelRowError("Expecting non-geometric coordinate type")
+
+            elif frames != 0:
+                raise LabelRowError(
+                    f"For objects with a non-geometric shape (e.g. {Shape.TEXT} and {Shape.AUDIO}), "
+                    f"There is only one frame. Please ensure `set_for_frames` is called with `frames=0`."
+                )
+
+        frames_list = frames_class_to_frames_list(frames)
+
+        for frame in frames_list:
+            existing_frame_data = self._frames_to_instance_data.get(frame)
+
+            if overwrite is False and existing_frame_data is not None:
+                raise LabelRowError(
+                    "Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite."
+                )
+
+            check_coordinate_type(coordinates, self._ontology_object, self._parent)
+
+            if isinstance(coordinates, (TextCoordinates, AudioCoordinates)):
+                for non_geometric_range in coordinates.range:
+                    self.check_within_range(non_geometric_range.end)
+            else:
+                self.check_within_range(frame)
+
+            if existing_frame_data is None:
+                existing_frame_data = ObjectInstance.FrameData(
+                    coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
+                )
+                self._frames_to_instance_data[frame] = existing_frame_data
+
+            existing_frame_data.object_frame_instance_info.update_from_optional_fields(
+                created_at=created_at,
+                created_by=created_by,
+                last_edited_at=last_edited_at,
+                last_edited_by=last_edited_by,
+                confidence=confidence,
+                manual_annotation=manual_annotation,
+                reviews=reviews,
+                is_deleted=is_deleted,
+            )
+            existing_frame_data.coordinates = coordinates
+
+            if self._parent is not None:
+                self._parent.add_to_single_frame_to_hashes_map(self, frame=frame)
+            elif self._space is not None:
+                self._space._on_set_for_frames(frame=frame, object_hash=self._object_hash)
 
     def _get_non_geometric_annotation(self) -> Optional[Annotation]:
         # Non-geometric annotations (e.g. Audio and Text) only have one frame.
@@ -612,6 +612,25 @@ class BaseObjectInstance:
             List[int]: A list of frame numbers that the object instance exists on.
         """
         return {self.get_annotation(frame_num).frame for frame_num in sorted(self._frames_to_instance_data.keys())}
+
+    def remove_from_frames(self, frames: Frames) -> None:
+        """Remove the object instance from the specified frames.
+
+        Args:
+            frames: The frames from which to remove the object instance.
+        """
+        if self._non_geometric and frames != 0:
+            raise LabelRowError(
+                f"For objects with a non-geometric shape (e.g. {Shape.TEXT} and {Shape.AUDIO}), "
+                f"There is only one frame. Please ensure `remove_from_frames` is called with `frames=0`."
+            )
+
+        frames_list = frames_class_to_frames_list(frames)
+        for frame in frames_list:
+            self._frames_to_instance_data.pop(frame)
+
+        if self._parent:
+            self._parent._remove_from_frame_to_hashes_map(frames_list, self.object_hash)
 
     def is_valid(self) -> None:
         """Check if the ObjectInstance is valid.
@@ -762,6 +781,7 @@ class BaseObjectInstance:
     @dataclass
     class FrameInfo:
         """Contains metadata information about a frame."""
+
         created_at: datetime = field(default_factory=datetime.now)
         created_by: Optional[str] = None
         """None defaults to the user of the SDK once uploaded to the server."""
@@ -1159,118 +1179,3 @@ AnswersForFrames = List[AnswerForFrames]
 """
 A list of AnswerForFrames objects, representing answers and their associated frame ranges.
 """
-
-class ObjectInstance(BaseObjectInstance):
-    def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None):
-        super().__init__(ontology_object, object_hash=object_hash)
-
-    def set_for_frames(
-        self,
-        coordinates: Coordinates,
-        frames: Frames = 0,
-        *,
-        overwrite: bool = False,
-        created_at: Optional[datetime] = None,
-        created_by: Optional[str] = None,
-        last_edited_at: Optional[datetime] = None,
-        last_edited_by: Optional[str] = None,
-        confidence: Optional[float] = None,
-        manual_annotation: Optional[bool] = None,
-        reviews: Optional[List[dict]] = None,
-        is_deleted: Optional[bool] = None,
-    ) -> None:
-        """Place the object onto the specified frame(s).
-
-        If the object already exists on the frame and overwrite is set to `True`,
-        the currently specified values will be overwritten.
-
-        Args:
-            coordinates: The coordinates of the object in the frame.
-                This will throw an error if the type of the coordinates does not match the type of the attribute in the object instance.
-            frames: The frames to add the object instance to. Defaults to the first frame for convenience.
-            overwrite: If `True`, overwrite existing data for the given frames.
-                This will not reset all the non-specified values.
-                If `False` and data already exists for the given frames, raises an error.
-            created_at: Optionally specify the creation time of the object instance on this frame.
-                Defaults to `datetime.now()`.
-            created_by: Optionally specify the creator of the object instance on this frame.
-                Defaults to the current SDK user.
-            last_edited_at: Optionally specify the last edit time of the object instance on this frame.
-                Defaults to `datetime.now()`.
-            last_edited_by: Optionally specify the last editor of the object instance on this frame.
-                Defaults to the current SDK user.
-            confidence: Optionally specify the confidence of the object instance on this frame. Defaults to `1.0`.
-            manual_annotation: Optionally specify whether the object instance on this frame was manually annotated. Defaults to `True`.
-            reviews: Should only be set by internal functions.
-            is_deleted: Should only be set by internal functions.
-        """
-        if self._non_geometric:
-            if not isinstance(coordinates, tuple(NON_GEOMETRIC_COORDINATES)):
-                raise LabelRowError("Expecting non-geometric coordinate type")
-
-            elif frames != 0:
-                raise LabelRowError(
-                    f"For objects with a non-geometric shape (e.g. {Shape.TEXT} and {Shape.AUDIO}), "
-                    f"There is only one frame. Please ensure `set_for_frames` is called with `frames=0`."
-                )
-
-        frames_list = frames_class_to_frames_list(frames)
-
-        for frame in frames_list:
-            existing_frame_data = self._frames_to_instance_data.get(frame)
-
-            if overwrite is False and existing_frame_data is not None:
-                raise LabelRowError(
-                    "Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite."
-                )
-
-            check_coordinate_type(coordinates, self._ontology_object, self._parent)
-
-            if isinstance(coordinates, (TextCoordinates, AudioCoordinates)):
-                for non_geometric_range in coordinates.range:
-                    self.check_within_range(non_geometric_range.end)
-            else:
-                self.check_within_range(frame)
-
-            if existing_frame_data is None:
-                existing_frame_data = ObjectInstance.FrameData(
-                    coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
-                )
-                self._frames_to_instance_data[frame] = existing_frame_data
-
-            existing_frame_data.object_frame_instance_info.update_from_optional_fields(
-                created_at=created_at,
-                created_by=created_by,
-                last_edited_at=last_edited_at,
-                last_edited_by=last_edited_by,
-                confidence=confidence,
-                manual_annotation=manual_annotation,
-                reviews=reviews,
-                is_deleted=is_deleted,
-            )
-            existing_frame_data.coordinates = coordinates
-
-            if self._parent is not None:
-                self._parent.add_to_single_frame_to_hashes_map(self, frame=frame)
-            elif self._space is not None:
-                self._space._on_set_for_frames(frame=frame, object_hash=self._object_hash)
-
-    def remove_from_frames(self, frames: Frames) -> None:
-        """Remove the object instance from the specified frames.
-
-        Args:
-            frames: The frames from which to remove the object instance.
-        """
-        if self._non_geometric and frames != 0:
-            raise LabelRowError(
-                f"For objects with a non-geometric shape (e.g. {Shape.TEXT} and {Shape.AUDIO}), "
-                f"There is only one frame. Please ensure `remove_from_frames` is called with `frames=0`."
-            )
-
-        frames_list = frames_class_to_frames_list(frames)
-        for frame in frames_list:
-            self._frames_to_instance_data.pop(frame)
-
-        if self._parent:
-            self._parent._remove_from_frame_to_hashes_map(frames_list, self.object_hash)
-

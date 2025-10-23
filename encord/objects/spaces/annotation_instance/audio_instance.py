@@ -3,17 +3,16 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
-from encord.exceptions import LabelRowError
 from encord.objects.classification_instance import BaseClassificationInstance
-from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
-from encord.objects.coordinates import Coordinates, AudioCoordinates
-from encord.objects.frames import Frames, frames_class_to_frames_list, frames_to_ranges, Ranges
-from encord.objects.ontology_object_instance import BaseObjectInstance, ObjectInstance, check_coordinate_type
+from encord.objects.coordinates import AudioCoordinates
+from encord.objects.frames import Ranges
+from encord.objects.ontology_object_instance import ObjectInstance
+from encord.objects.spaces.annotation_instance.base_instance import BaseObjectInstance
 
 if TYPE_CHECKING:
     from encord.objects.classification import Classification
     from encord.objects.ontology_object import Object
-    from encord.objects.spaces.range_space import RangeBasedSpace
+    from encord.objects.spaces.range_space import AudioSpace
 
 
 class AudioObjectInstance(BaseObjectInstance):
@@ -81,6 +80,8 @@ class AudioObjectInstance(BaseObjectInstance):
 
 
 class AudioClassificationInstance(BaseClassificationInstance):
-    def __init__(self, ontology_classification: Classification, *, classification_hash: Optional[str] = None, space: AudioSpace):
+    def __init__(
+        self, ontology_classification: Classification, *, classification_hash: Optional[str] = None, space: AudioSpace
+    ):
         super().__init__(ontology_classification, classification_hash=classification_hash)
         self._space = space

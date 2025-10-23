@@ -576,3 +576,32 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] 
     Shape.AUDIO: [AudioCoordinates],
     Shape.TEXT: [TextCoordinates, HtmlCoordinates],
 }
+
+
+def add_coordinates_to_object_dict(
+    coordinates: Coordinates,
+    frame_object_dict: Dict[str, Any],
+    width: int,
+    height: int,
+) -> None:
+    if isinstance(coordinates, BoundingBoxCoordinates):
+        frame_object_dict["boundingBox"] = coordinates.to_dict()
+    elif isinstance(coordinates, RotatableBoundingBoxCoordinates):
+        frame_object_dict["rotatableBoundingBox"] = coordinates.to_dict()
+    elif isinstance(coordinates, PolygonCoordinates):
+        frame_object_dict["polygon"] = coordinates.to_dict()
+        frame_object_dict["polygons"] = coordinates.to_dict(PolygonCoordsToDict.multiple_polygons)
+    elif isinstance(coordinates, PolylineCoordinates):
+        frame_object_dict["polyline"] = coordinates.to_dict()
+    elif isinstance(coordinates, (PointCoordinate, PointCoordinate3D)):
+        frame_object_dict["point"] = coordinates.to_dict()
+    elif isinstance(coordinates, BitmaskCoordinates):
+        if not (height == coordinates._encoded_bitmask.height and width == coordinates._encoded_bitmask.width):
+            raise ValueError("Bitmask dimensions don't match the media dimensions")
+        frame_object_dict["bitmask"] = coordinates.to_dict()
+    elif isinstance(coordinates, SkeletonCoordinates):
+        frame_object_dict["skeleton"] = coordinates.to_dict()
+    elif isinstance(coordinates, CuboidCoordinates):
+        frame_object_dict["cuboid"] = coordinates.to_dict()
+    else:
+        raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")

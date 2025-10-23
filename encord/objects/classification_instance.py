@@ -631,13 +631,14 @@ class BaseClassificationInstance:
     def __lt__(self, other) -> bool:
         return self.classification_hash < other.classification_hash
 
+
 class ClassificationInstance(BaseClassificationInstance):
     def __init__(
-            self,
-            ontology_classification: Classification,
-            *,
-            classification_hash: Optional[str] = None,
-            range_only: bool = False,
+        self,
+        ontology_classification: Classification,
+        *,
+        classification_hash: Optional[str] = None,
+        range_only: bool = False,
     ):
         super().__init__(ontology_classification, classification_hash=classification_hash, range_only=range_only)
 

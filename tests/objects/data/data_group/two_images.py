@@ -21,10 +21,14 @@ DATA_GROUP_TWO_IMAGES_NO_LABELS = {
     "spaces": {
         "image-1-uuid": {
             "space_type": SpaceType.IMAGE,
+            "width": 100,
+            "height": 100,
             "labels": {},
         },
         "image-2-uuid": {
             "space_type": SpaceType.IMAGE,
+            "width": 100,
+            "height": 100,
             "labels": {},
         },
     },
@@ -56,7 +60,6 @@ DATA_GROUP_WITH_TWO_IMAGES_LABELS = {
             "objectHash": "object1",
             "classifications": [],
         },
-        "dynamicPoint1": {"classifications": [], "objectHash": "dynamicPoint1"},
     },
     "classification_answers": {
         "classification1": {
@@ -73,27 +76,13 @@ DATA_GROUP_WITH_TWO_IMAGES_LABELS = {
             ],
         },
     },
-    "object_actions": {
-        "dynamicPoint1": {
-            "objectHash": "dynamicPoint1",
-            "actions": [
-                {
-                    "name": "First name",
-                    "range": [[0, 0]],
-                    "value": "first_name",
-                    "answers": "Some dynamic Text",
-                    "dynamic": True,
-                    "featureHash": "OTkxMjU1",
-                    "shouldPropagate": False,
-                    "manualAnnotation": True,
-                },
-            ],
-        },
-    },
+    "object_actions": {},
     "label_status": "LABEL_IN_PROGRESS",
     "spaces": {
         "image-1-uuid": {
             "space_type": SpaceType.IMAGE,
+            "width": 100,
+            "height": 100,
             "labels": {
                 "0": {
                     "objects": [
@@ -110,21 +99,7 @@ DATA_GROUP_WITH_TWO_IMAGES_LABELS = {
                             "featureHash": "MjI2NzEy",
                             "manualAnnotation": True,
                             "boundingBox": {"h": 0.1, "w": 0.1, "x": 0.1, "y": 0.1},
-                        },
-                        {
-                            "name": "Keypoint Dynamic Answers",
-                            "color": "#FE9200",
-                            "shape": "point",
-                            "value": "keypoint_dynamic_answers",
-                            "createdAt": "Tue, 17 Jan 2023 17:23:10 UTC",
-                            "createdBy": "denis@cord.tech",
-                            "confidence": 1,
-                            "objectHash": "dynamicPoint1",
-                            "lastEditedAt": "Wed, 18 Jan 2023 17:23:24 UTC",
-                            "featureHash": "MTY2MTQx",
-                            "manualAnnotation": True,
-                            "point": {"0": {"x": 0.5, "y": 0.5}},
-                        },
+                        }
                     ],
                     "classifications": [
                         {
@@ -145,6 +120,8 @@ DATA_GROUP_WITH_TWO_IMAGES_LABELS = {
         },
         "image-2-uuid": {
             "space_type": SpaceType.IMAGE,
+            "width": 100,
+            "height": 100,
             "labels": {
                 "0": {
                     "objects": [],

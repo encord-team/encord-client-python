@@ -5,8 +5,9 @@ import pytest
 from deepdiff import DeepDiff
 
 from encord.objects import Classification, LabelRowV2, Object
+from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import BoundingBoxCoordinates
-from encord.objects.spaces.frame_space import ImageSpace
+from encord.objects.spaces.image_space import ImageSpace
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.two_images import DATA_GROUP_TWO_IMAGES_NO_LABELS, DATA_GROUP_WITH_TWO_IMAGES_LABELS
 from tests.objects.data.data_group.two_videos import (
@@ -57,17 +58,13 @@ def test_image_space_can_add_object_instances(ontology):
     assert len(objects_on_image_space) == 1
 
     first_object_instance = objects_on_image_space[0]
-    annotations_on_first_object_instance = first_object_instance.get_annotations()
+    first_object_instance_annotation = first_object_instance.get_annotation()
     assert first_object_instance.object_hash == added_object_instance.object_hash
-    assert len(annotations_on_first_object_instance) == 1
 
-    frames_on_annotations = [annotation.frame for annotation in annotations_on_first_object_instance]
-    assert frames_on_annotations == [0]
-    for annotation in annotations_on_first_object_instance:
-        assert annotation.coordinates == frame_0_box_coordinates
-        assert annotation.created_by == created_by
-        assert annotation.created_at == created_at
-        assert annotation.manual_annotation is False
+    assert first_object_instance_annotation.coordinates == frame_0_box_coordinates
+    assert first_object_instance_annotation.created_by == created_by
+    assert first_object_instance_annotation.created_at == created_at
+    assert first_object_instance_annotation.manual_annotation is False
 
     # Check that spaces has correct properties
     assert len(image_space._objects_map.keys()) == 1
@@ -143,6 +140,60 @@ def test_image_space_move_object_instances(ontology):
     objects_on_image_space_2 = image_space_2.get_object_instances()
     assert len(objects_on_image_space_2) == 1
     assert len(image_space_2._objects_map.keys()) == 1
+
+
+def test_image_space_can_update_annotations_on_object_instance(ontology):
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
+
+    box_coordinates = BoundingBoxCoordinates(
+        height=0.1,
+        width=0.2,
+        top_left_x=0.3,
+        top_left_y=0.4,
+    )
+
+    image_space = label_row.get_space_by_id("image-1-uuid", type_=ImageSpace)
+    added_object = image_space.add_object_instance(obj=box_ontology_item, coordinates=box_coordinates)
+
+    annotation_on_image = added_object.get_annotation()
+
+    # Change annotation values
+    annotation_on_image.last_edited_by = "arthur@encord.com"
+    annotation_on_image.created_by = "clinton@encord.com"
+    annotation_on_image.coordinates = BoundingBoxCoordinates(
+        height=0.5,
+        width=0.6,
+        top_left_x=0.7,
+        top_left_y=0.8,
+    )
+
+    # Check output dict
+    actual_frame_labels = image_space._to_space_dict()["labels"]
+    EXPECTED_FRAME_LABELS = {
+        "0": {
+            "objects": [
+                {
+                    "name": "Box",
+                    "color": "#D33115",
+                    "shape": "bounding_box",
+                    "value": "box",
+                    "createdBy": "clinton@encord.com",
+                    "confidence": 1.0,
+                    "objectHash": added_object.object_hash,
+                    "featureHash": "MjI2NzEy",
+                    "manualAnnotation": DEFAULT_MANUAL_ANNOTATION,
+                    "lastEditedBy": "arthur@encord.com",
+                    "boundingBox": {"h": 0.5, "w": 0.6, "x": 0.7, "y": 0.8},
+                }
+            ],
+            "classifications": [],
+        },
+    }
+
+    assert not DeepDiff(
+        EXPECTED_FRAME_LABELS, actual_frame_labels, exclude_regex_paths=[r".*\['lastEditedAt'\]|.*\['createdAt'\]"]
+    )
 
 
 def test_image_space_can_add_classification_instances(ontology):
@@ -242,20 +293,15 @@ def test_read_and_export_labels(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_WITH_TWO_IMAGES_LABELS)
 
-    image_space_1 = label_row.get_space_by_id("image-1-uuid", type_=ImageSpace)
-    objects_on_image_space_1 = image_space_1.get_object_instances()
-    assert len(objects_on_image_space_1) == 2
+    image_space = label_row.get_space_by_id("image-1-uuid", type_=ImageSpace)
+    objects_on_image_space_1 = image_space.get_object_instances()
+    assert len(objects_on_image_space_1) == 1
 
     box_object_instance = objects_on_image_space_1[0]
     assert box_object_instance.object_hash == "object1"
-    assert box_object_instance.get_annotation_frames() == {0}
 
-    dynamic_point_instance = objects_on_image_space_1[1]
-    assert dynamic_point_instance.object_hash == "dynamicPoint1"
-    assert dynamic_point_instance.get_annotation_frames() == {0}
-
-    classifications_on_vision_space_1 = image_space_1.get_classification_instances()
-    classification_instance = classifications_on_vision_space_1[0]
+    classifications_on_vision_space = image_space.get_classification_instances()
+    classification_instance = classifications_on_vision_space[0]
     assert classification_instance.classification_hash == "classification1"
     assert classification_instance.get_annotation_frames() == {0}
 

@@ -11,7 +11,7 @@ from encord.objects import Classification, ClassificationInstance, Shape
 from encord.objects.coordinates import AudioCoordinates, TextCoordinates
 from encord.objects.frames import Range, Ranges
 from encord.objects.ontology_object_instance import ObjectInstance, SetFramesKwargs
-from encord.objects.spaces.annotation_instance.audio_instance import AudioObjectInstance, AudioClassificationInstance
+from encord.objects.spaces.annotation_instance.audio_instance import AudioClassificationInstance, AudioObjectInstance
 from encord.objects.spaces.base_space import Space
 from encord.objects.utils import _lower_snake_case
 from encord.orm.label_space import AudioSpaceInfo, BaseSpaceInfo, LabelBlob, SpaceInfo, TextSpaceInfo

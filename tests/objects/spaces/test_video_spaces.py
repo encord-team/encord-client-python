@@ -1,4 +1,3 @@
-import json
 from datetime import datetime, timezone
 from unittest.mock import Mock
 
@@ -6,8 +5,9 @@ import pytest
 from deepdiff import DeepDiff
 
 from encord.objects import Classification, LabelRowV2, Object
+from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import BoundingBoxCoordinates
-from encord.objects.spaces.frame_space import VideoSpace
+from encord.objects.spaces.video_space import VideoSpace
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.two_videos import (
     DATA_GROUP_METADATA,
@@ -65,7 +65,7 @@ def test_video_space_can_add_object_instances(ontology):
     assert first_object_instance.object_hash == added_object_instance.object_hash
     assert len(annotations_on_first_object_instance) == 2
 
-    frames_on_annotations = [annotation.frame for annotation in annotations_on_first_object_instance]
+    frames_on_annotations = first_object_instance.get_annotation_frames()
     assert frames_on_annotations == [0, 1]
     for annotation in annotations_on_first_object_instance:
         assert annotation.coordinates == frame_0_box_coordinates
@@ -156,6 +156,79 @@ def test_video_space_move_object_instances(ontology):
     assert len(objects_on_video_space_2) == 1
     assert len(video_space_2._frames_to_hashes[0]) == 1
     assert len(video_space_2._frames_to_hashes[1]) == 1
+
+
+def test_video_space_can_update_annotations_on_object_instance(ontology):
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
+
+    frame_0_box_coordinates = BoundingBoxCoordinates(
+        height=0.1,
+        width=0.2,
+        top_left_x=0.3,
+        top_left_y=0.4,
+    )
+
+    video_space_1 = label_row.get_space_by_id("video-1-uuid", type_=VideoSpace)
+    added_object = video_space_1.add_object_instance(
+        obj=box_ontology_item, frames=[0, 1], coordinates=frame_0_box_coordinates
+    )
+
+    annotation_on_frame_1 = added_object.get_annotation(frame=1)
+
+    # Change annotation values
+    annotation_on_frame_1.last_edited_by = "arthur@encord.com"
+    annotation_on_frame_1.created_by = "clinton@encord.com"
+    annotation_on_frame_1.coordinates = BoundingBoxCoordinates(
+        height=0.5,
+        width=0.6,
+        top_left_x=0.7,
+        top_left_y=0.8,
+    )
+
+    # Check output dict
+    actual_frame_labels = video_space_1._to_space_dict()["labels"]
+    EXPECTED_FRAME_LABELS = {
+        "0": {
+            "objects": [
+                {
+                    "name": "Box",
+                    "color": "#D33115",
+                    "shape": "bounding_box",
+                    "value": "box",
+                    "createdBy": None,
+                    "confidence": 1.0,
+                    "objectHash": added_object.object_hash,
+                    "featureHash": "MjI2NzEy",
+                    "manualAnnotation": DEFAULT_MANUAL_ANNOTATION,
+                    "boundingBox": {"h": 0.1, "w": 0.2, "x": 0.3, "y": 0.4},
+                }
+            ],
+            "classifications": [],
+        },
+        "1": {
+            "objects": [
+                {
+                    "name": "Box",
+                    "color": "#D33115",
+                    "shape": "bounding_box",
+                    "value": "box",
+                    "createdBy": "clinton@encord.com",
+                    "confidence": 1.0,
+                    "objectHash": added_object.object_hash,
+                    "featureHash": "MjI2NzEy",
+                    "manualAnnotation": DEFAULT_MANUAL_ANNOTATION,
+                    "lastEditedBy": "arthur@encord.com",
+                    "boundingBox": {"h": 0.5, "w": 0.6, "x": 0.7, "y": 0.8},
+                }
+            ],
+            "classifications": [],
+        },
+    }
+
+    assert not DeepDiff(
+        EXPECTED_FRAME_LABELS, actual_frame_labels, exclude_regex_paths=[r".*\['lastEditedAt'\]|.*\['createdAt'\]"]
+    )
 
 
 def test_video_space_can_add_classification_instances(ontology):
@@ -273,12 +346,12 @@ def test_read_and_export_labels(ontology):
 
     box_object_instance = objects_on_video_space_1[0]
     assert box_object_instance.object_hash == "object1"
-    assert box_object_instance.get_annotation_frames() == {0, 1}
+    assert box_object_instance.get_annotation_frames() == [0, 1]
     assert video_space_1._frames_to_hashes[1] == {"object1", "dynamicPoint1"}
 
     dynamic_point_instance = objects_on_video_space_1[1]
     assert dynamic_point_instance.object_hash == "dynamicPoint1"
-    assert dynamic_point_instance.get_annotation_frames() == {0, 1}
+    assert dynamic_point_instance.get_annotation_frames() == [0, 1]
 
     classifications_on_video_space_1 = video_space_1.get_classification_instances()
     classification_instance = classifications_on_video_space_1[0]
