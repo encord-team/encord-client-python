@@ -2,7 +2,7 @@
 Code Block Name: View Editor logs
 """
 
-from datetime import datetime, timedelta
+import datetime
 from uuid import UUID
 
 # Import dependencies

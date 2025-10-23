@@ -100,3 +100,4 @@ class EditorLogParams(BaseDTO):
     actor_user_email: str | None = None
     workflow_stage_id: UUID | None = None
     data_unit_id: UUID | None = None
+    page_token: str | None = None
