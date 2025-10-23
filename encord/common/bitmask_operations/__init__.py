@@ -18,3 +18,9 @@ except ImportError:
         serialise_bitmask,
         transpose_bytearray,
     )
+
+__all__ = [
+    "deserialise_bitmask",
+    "serialise_bitmask",
+    "transpose_bytearray",
+]
