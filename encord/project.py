@@ -596,7 +596,7 @@ class Project:
         """Get editor logs, represents the actions taken in the Editor UI.
 
         The limit has a default and maximum value of 500.
-        The start_time and end_time parameters are required.
+        The start_time and end_time parameters are required. The maximum time range is 30 days.
 
         Args:
            action: Filter the editor logs by action.
@@ -605,6 +605,7 @@ class Project:
            workflow_stage_id: Filter the editor logs by the workflow stage id.
            end_time: Filter the editor logs to only include logs before the specified time.
            start_time: Filter the editor logs to only include logs after the specified time.
+           page_token: Token for pagination to retrieve the next set of results.
 
         Returns:
            An iterator on the editor logs.
@@ -619,7 +620,7 @@ class Project:
             actor_user_email=actor_user_email,
             workflow_stage_id=workflow_stage_id,
             data_unit_id=data_unit_id,
-            page_token=page_token
+            page_token=page_token,
         )
 
         editor_logs_response: Iterator[EditorLog] = self._api_client.get_paged_iterator(
