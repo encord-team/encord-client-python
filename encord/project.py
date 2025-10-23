@@ -604,7 +604,6 @@ class Project:
            workflow_stage_id: Filter the editor logs by the workflow stage id.
            end_time: Filter the editor logs to only include logs before the specified time.
            start_time: Filter the editor logs to only include logs after the specified time.
-           page_token: Token for pagination to retrieve the next set of results.
 
         Returns:
            An iterator on the editor logs.
