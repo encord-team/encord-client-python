@@ -594,8 +594,7 @@ class Project:
     ) -> Iterator[EditorLog]:
         """Get editor logs, represents the actions taken in the Editor UI.
 
-        The limit has a default and maximum value of 500.
-        The start_time and end_time parameters are required.
+        The start_time and end_time parameters are required. The maximum time range is 30 days.
 
         Args:
            action: Filter the editor logs by action.
