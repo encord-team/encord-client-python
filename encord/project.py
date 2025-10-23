@@ -591,7 +591,6 @@ class Project:
         actor_user_email: Optional[str] = None,
         workflow_stage_id: Optional[UUID] = None,
         data_unit_id: Optional[UUID] = None,
-        page_token: Optional[str] = None,
     ) -> Iterator[EditorLog]:
         """Get editor logs, represents the actions taken in the Editor UI.
 
@@ -620,7 +619,6 @@ class Project:
             actor_user_email=actor_user_email,
             workflow_stage_id=workflow_stage_id,
             data_unit_id=data_unit_id,
-            page_token=page_token,
         )
 
         editor_logs_response: Iterator[EditorLog] = self._api_client.get_paged_iterator(
