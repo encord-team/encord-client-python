@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import List, TypedDict, Union
 
 
-class AnswersAnswer(TypedDict):
+class Answer(TypedDict):
     name: str
     value: str
     featureHash: str
@@ -12,7 +12,7 @@ class AnswersAnswer(TypedDict):
 class ClassificationObject(TypedDict):
     name: str
     value: str
-    answers: Union[List[AnswersAnswer], str, float]
+    answers: Union[List[Answer], str, float]
     featureHash: str
     manualAnnotation: bool
 

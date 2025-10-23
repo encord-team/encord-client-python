@@ -177,7 +177,8 @@ class ClassificationInstance:
         return len(intersection) > 0
 
     def is_range_only(self) -> bool:
-        return self._range_only
+        # this is a temporary check, all future classifications will be range only
+        return self._range_only or (self._parent is not None and not is_geometric(self._parent.data_type))
 
     def is_global(self) -> bool:
         return self._ontology_classification.level == OntologyClassificationLevel.GLOBAL
