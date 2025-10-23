@@ -63,19 +63,18 @@ class ClassificationInstance:
         *,
         classification_hash: Optional[str] = None,
         range_only: bool = False,
-        instance_data: Optional[FrameData] = None,
     ):
         self._ontology_classification = ontology_classification
-        self._parent: Optional[LabelRowV2] = None
         self._classification_hash = classification_hash or short_uuid_str()
+        self._range_only = range_only or self.is_global()
 
-        self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_classification.attributes)
+        self._parent: Optional[LabelRowV2] = None
         # feature_node_hash of attribute to the answer.
+        self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_classification.attributes)
 
         # Only used for non-frame entities, global classifications are frame only by definition
-        self._range_only = range_only or self.is_global()
-        self._instance_data = instance_data if instance_data else self.FrameData()
 
+        self._instance_data = self.FrameData()
         self._range_manager: RangeManager = RangeManager()
 
         # Only used for frame entities
@@ -459,9 +458,9 @@ class ClassificationInstance:
         associated to any LabelRowV2. This is useful if you want to add the semantically same
         ClassificationInstance to multiple `LabelRowV2`s.
         """
-        ret = ClassificationInstance(
-            self._ontology_classification, range_only=self.is_range_only(), instance_data=self._instance_data
-        )
+        ret = ClassificationInstance(self._ontology_classification, range_only=self.is_range_only())
+
+        ret._instance_data = deepcopy(self._instance_data)
         ret._static_answer_map = deepcopy(self._static_answer_map)
         ret._frames_to_data = deepcopy(self._frames_to_data)
         ret._range_manager = deepcopy(self._range_manager)

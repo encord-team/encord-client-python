@@ -30,15 +30,9 @@ class OntologyClassificationLevel(Enum):
 
     @classmethod
     def from_value(cls: Type[OntologyClassificationLevel], value: Any) -> Optional[OntologyClassificationLevel]:
-        """
-        Tries to create an enum member from a value.
-        Returns None if the value is not valid.
-        """
         try:
-            # Try to create the enum instance from the value
             return cls(value)
         except ValueError:
-            # Value is not valid for this enum
             return None
 
 
