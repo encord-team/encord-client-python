@@ -247,7 +247,7 @@ class CustomerProvidedImageMetadata(BaseDTO):
 
 
 class CustomerProvidedVideoMetadata(BaseDTO):
-    """Media metadata for a video file; if provided, Encord service will skip frame synchronisation checks
+    """Media metadata for a video file; if provided, Encord service will skip frame synchronization checks
     and will use the values specified here to render the video in the label editor.
     """
 
@@ -412,7 +412,7 @@ class DataUploadImageGroup(BaseDTO):
     images: List[DataUploadImageGroupImage]
     """List of images to be used as frames in the image group. See :class:`DataUploadImageGroupImage` for more details."""
     title: Optional[str]
-    """Title of the image group item (requred if using cloud integration)."""
+    """Title of the image group item (required if using cloud integration)."""
     client_metadata: Dict = Field(default_factory=dict)
     """Custom metadata to be associated with the image group item."""
     create_video: bool = False
