@@ -964,6 +964,7 @@ class EncordClientProject(EncordClient):
         include_classification_feature_hashes: Optional[typing.Set[str]] = None,
         include_reviews: bool = False,
         include_export_history: bool = False,
+        include_archived: bool = False,
     ) -> List[LabelRow]:
         """This function is documented in :meth:`encord.project.Project.get_label_rows`."""
         payload = {
@@ -973,6 +974,7 @@ class EncordClientProject(EncordClient):
             "include_classification_feature_hashes": optional_set_to_list(include_classification_feature_hashes),
             "include_reviews": include_reviews,
             "include_export_history": include_export_history,
+            "include_archived": include_archived,
         }
 
         return self._querier.get_multiple(LabelRow, uids, payload=payload, retryable=True)
