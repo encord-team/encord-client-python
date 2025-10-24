@@ -122,7 +122,7 @@ class AgentPathway:
 
 @dataclass(frozen=True)
 class AgentStage(WorkflowStageBase):
-    pathways: list[AgentPathway]
+    pathways: List[AgentPathway]
     stage_type: Literal[WorkflowStageType.AGENT] = WorkflowStageType.AGENT
 
     """
@@ -136,7 +136,7 @@ class AgentStage(WorkflowStageBase):
         data_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         data_title: Optional[str] = None,
-        status: Optional[AgentTaskStatus | List[AgentTaskStatus]] = None,
+        status: Optional[Union[AgentTaskStatus, List[AgentTaskStatus]]] = None,
     ) -> Iterable[AgentTask]:
         """Retrieves tasks for the AgentStage.
 

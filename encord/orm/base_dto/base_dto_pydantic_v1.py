@@ -122,7 +122,7 @@ class RootModelDTO(GenericModel, Generic[RootType]):
     def model_validate(cls, *args, **kwargs) -> Self:
         return cls.validate(*args, **kwargs)
 
-    def model_dump(self, *args, **kwargs) -> dict:
+    def model_dump(self, *args, **kwargs) -> Dict:
         mode = kwargs.pop("mode")
         value = self.dict(*args, **kwargs)
         raw_value = value.get("__root__")

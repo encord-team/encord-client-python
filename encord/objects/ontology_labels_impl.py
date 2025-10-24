@@ -202,7 +202,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.data_type
 
     @property
-    def file_type(self) -> str | None:
+    def file_type(self) -> Optional[str]:
         """Returns the file type of the data row.
 
         Returns:
@@ -211,7 +211,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.file_type
 
     @property
-    def client_metadata(self) -> dict | None:
+    def client_metadata(self) -> Optional[dict]:
         """Returns the client metadata associated with the label row.
 
         Returns:
@@ -494,7 +494,7 @@ class LabelRowV2:
         return self.workflow_graph_node is not None
 
     @property
-    def assigned_user_email(self) -> str | None:
+    def assigned_user_email(self) -> Optional[str]:
         """Email of the user assigned to annotation or review task for a workflow-based project.
         In case of completed task, it is None.
 
@@ -505,7 +505,7 @@ class LabelRowV2:
         return self._label_row_read_only_data.assigned_user_email
 
     @property
-    def last_actioned_by_user_email(self) -> str | None:
+    def last_actioned_by_user_email(self) -> Optional[str]:
         """Email of the user who last actioned the data.
 
         Returns:
@@ -1222,7 +1222,7 @@ class LabelRowV2:
             payload=BundledSetPriorityPayload(priorities=[(self.data_hash, priority)]),
         )
 
-    def get_validation_errors(self) -> List[str] | None:
+    def get_validation_errors(self) -> Optional[List[str]]:
         """Get validation errors for the label row.
 
         Returns:
@@ -1911,7 +1911,7 @@ class LabelRowV2:
 
         return ret
 
-    def _to_encord_objects_list(self, frame: int) -> list:
+    def _to_encord_objects_list(self, frame: int) -> List:
         # Get objects for frame
         ret: List[dict] = []
 
@@ -1984,7 +1984,7 @@ class LabelRowV2:
         else:
             raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
 
-    def _to_encord_classifications_list(self, frame: int) -> list:
+    def _to_encord_classifications_list(self, frame: int) -> List:
         ret: List[Dict[str, Any]] = []
 
         classifications = self.get_classification_instances(filter_frames=frame)

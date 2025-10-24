@@ -1,3 +1,6 @@
-def _get_dict_without_none_keys(d: dict) -> dict:
+from typing import Dict
+
+
+def _get_dict_without_none_keys(d: Dict) -> Dict:
     """Remove keys with value None from a dictionary. Does not change the dict in place."""
     return {k: v for k, v in d.items() if v is not None}

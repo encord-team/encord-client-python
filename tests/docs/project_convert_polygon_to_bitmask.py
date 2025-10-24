@@ -5,7 +5,7 @@ Code Block Name: Polygons to Bitmasks
 import logging
 import time
 from pathlib import Path
-from typing import cast
+from typing import Dict, List, cast
 
 import cv2
 import numpy as np
@@ -33,7 +33,7 @@ def try_execute(func, kwargs=None):
     raise Exception("Reached maximum number of execution attempts.")
 
 
-def initialize_label_rows(project: Project, batch_size: int = 200, include_unlabeled: bool = False) -> list[LabelRowV2]:
+def initialize_label_rows(project: Project, batch_size: int = 200, include_unlabeled: bool = False) -> List[LabelRowV2]:
     label_rows = [lr for lr in project.list_label_rows_v2() if include_unlabeled or lr.label_hash is not None]
     for start in trange(
         0,
@@ -50,12 +50,12 @@ def initialize_label_rows(project: Project, batch_size: int = 200, include_unlab
 
 def populate_ontology_of_target_project(
     client: EncordUserClient, source: Project, target: Project
-) -> dict[str, Object]:
+) -> Dict[str, Object]:
     # Update the target ontology with potentially missing items
     source_ontology = source.ontology_structure
     target_ontology = client.get_ontology(target.ontology_hash)
 
-    ontology_lookup: dict[str, Object] = {}
+    ontology_lookup: Dict[str, Object] = {}
     for obj in source_ontology.objects:
         if obj.shape != Shape.POLYGON:
             continue

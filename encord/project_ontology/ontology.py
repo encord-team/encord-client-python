@@ -198,7 +198,7 @@ class Ontology:
 
         return classification_attribute
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict:
         """Convert the ontology object to a python dictionary."""
         objects = []
         classifications = []

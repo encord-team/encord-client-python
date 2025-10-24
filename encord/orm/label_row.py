@@ -352,7 +352,7 @@ class LabelRowMetadata(Formatter):
             ret.append(cls.from_dict(i))
         return ret
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict:
         """Returns:
         The dict equivalent of LabelRowMetadata.
         """

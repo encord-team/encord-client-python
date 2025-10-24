@@ -161,7 +161,7 @@ class Project:
 
     @property
     @deprecated(version="0.1.104", alternative=".list_label_rows_v2")
-    def label_rows(self) -> dict:
+    def label_rows(self) -> Dict:
         """Get the label rows.
         DEPRECATED: Prefer using :meth:`list_label_rows_v2()` method and :meth:`LabelRowV2` class to work with the data.
 
