@@ -10,20 +10,20 @@ from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.options import FlatOption, NestableOption, Option
 
 __all__ = [
+    "AnswerForFrames",
     "ChecklistAttribute",
-    "RadioAttribute",
-    "TextAttribute",
     "Classification",
     "ClassificationInstance",
-    "Shape",
     "DICOMSeriesMetadata",
     "DICOMSliceMetadata",
+    "FlatOption",
     "LabelRowV2",
+    "NestableOption",
     "Object",
-    "AnswerForFrames",
     "ObjectInstance",
     "OntologyStructure",
-    "FlatOption",
-    "NestableOption",
     "Option",
+    "RadioAttribute",
+    "Shape",
+    "TextAttribute",
 ]

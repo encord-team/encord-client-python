@@ -4,4 +4,4 @@ from encord.project import Project
 from encord.user_client import EncordUserClient
 
 # Make Pyright happy
-__all__ = ["EncordUserClient", "Project", "Dataset", "__version__"]
+__all__ = ["Dataset", "EncordUserClient", "Project", "__version__"]

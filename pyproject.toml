@@ -67,7 +67,7 @@ target-version = "py38"
 line-length = 120
 
 [tool.ruff.lint]
-select = ["W", "Q", "I", "D417"]
+select = ["W", "Q", "I", "D417", "RUF022"]
 
 [tool.ruff.lint.pydocstyle]
 ignore-var-parameters = true
