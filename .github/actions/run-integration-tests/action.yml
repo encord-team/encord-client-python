@@ -19,6 +19,12 @@ inputs:
   private-key-service-account:
     description: 'Private key for service account user for integration tests'
     required: true
+  robot-account-email:
+    description: 'Email of the robot account for integration tests'
+    required: true
+  robot-account-password:
+    description: 'Password of the robot account for integration tests'
+    required: true
   integration-tests-location:
     description: 'project of the backend repo.'
     default: ./encord-backend/projects/sdk-integration-tests
@@ -56,6 +62,8 @@ runs:
         export PRIVATE_KEY="${{ inputs.private-key }}"
         export PRIVATE_KEY_SERVICE_ACCOUNT="${{ inputs.private-key-service-account }}"
         export PRIVATE_KEY_NON_ORG='${{ inputs.private-key-non-org }}'
+        export ROBOT_ACCOUNT_EMAIL='${{ inputs.robot-account-email }}'
+        export ROBOT_ACCOUNT_PASSWORD='${{ inputs.robot-account-password }}'
         export CORD_ENV="${{ inputs.environment }}"
         uv sync
         uv add git+${{ inputs.sdk-repository-url }}
