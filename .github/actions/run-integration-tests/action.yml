@@ -62,6 +62,8 @@ runs:
         export PRIVATE_KEY="${{ inputs.private-key }}"
         export PRIVATE_KEY_SERVICE_ACCOUNT="${{ inputs.private-key-service-account }}"
         export PRIVATE_KEY_NON_ORG='${{ inputs.private-key-non-org }}'
+        export ROBOT_ACCOUNT_EMAIL='${{ inputs.robot-account-email }}'
+        export ROBOT_ACCOUNT_PASSWORD='${{ inputs.robot-account-password }}'
         export CORD_ENV="${{ inputs.environment }}"
         uv sync
         uv add git+${{ inputs.sdk-repository-url }}
