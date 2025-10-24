@@ -52,7 +52,7 @@ class EditorLogCommon(BaseDTO):
     data_unit_dataset_title: str
     ontology_id: UUID
     label_id: str
-    workflow_stage_type: ActionableWorkflowNodeType | Literal[""]
+    workflow_stage_type: Union[ActionableWorkflowNodeType, Literal[""]]
     workflow_stage_title: str
     event_information: dict[str, Any]
 
