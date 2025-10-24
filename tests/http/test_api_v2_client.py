@@ -10,7 +10,7 @@ from requests import Session
 from encord.configs import SshConfig
 from encord.http.v2.api_client import ApiClient
 from encord.orm.base_dto import BaseDTO, RootModelDTO
-from tests.fixtures import PRIVATE_KEY
+from tests.conftest import PRIVATE_KEY
 
 
 class TestPayload(BaseDTO):

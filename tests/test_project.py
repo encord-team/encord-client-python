@@ -8,10 +8,6 @@ from encord.orm.label_row import LabelRow
 from encord.orm.project import Project as OrmProject
 from encord.orm.project import ProjectDataset
 from encord.project import Project
-from tests.fixtures import ontology, project, user_client
-
-assert user_client and project and ontology
-
 
 UID = "d958ddbb-fcd0-477a-adf9-de14431dbbd2"
 

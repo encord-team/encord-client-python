@@ -12,6 +12,7 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any, Dict, List, Optional, Sequence, Type, TypeVar
 
 from encord.objects.attributes import (
@@ -22,6 +23,17 @@ from encord.objects.attributes import (
     attributes_to_list_dict,
 )
 from encord.objects.ontology_element import OntologyElement
+
+
+class OntologyClassificationLevel(Enum):
+    GLOBAL = "global"
+
+    @classmethod
+    def from_value(cls: Type[OntologyClassificationLevel], value: Any) -> Optional[OntologyClassificationLevel]:
+        try:
+            return cls(value)
+        except ValueError:
+            return None
 
 
 @dataclass
@@ -38,6 +50,7 @@ class Classification(OntologyElement):
     uid: int
     feature_node_hash: str
     attributes: List[Attribute]
+    level: OntologyClassificationLevel | None = None
 
     @property
     def title(self) -> str:
@@ -76,10 +89,13 @@ class Classification(OntologyElement):
             Classification: An instance of Classification.
         """
         attributes_ret: List[Attribute] = [attribute_from_dict(attribute_dict) for attribute_dict in d["attributes"]]
+        level = OntologyClassificationLevel.from_value(d.get("level"))
+
         return Classification(
             uid=int(d["id"]),
             feature_node_hash=d["featureNodeHash"],
             attributes=attributes_ret,
+            level=level,
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -95,6 +111,9 @@ class Classification(OntologyElement):
             "id": str(self.uid),
             "featureNodeHash": self.feature_node_hash,
         }
+
+        if self.level is not None:
+            ret["level"] = self.level.value
         if attributes_list := attributes_to_list_dict(self.attributes):
             ret["attributes"] = attributes_list
         else:

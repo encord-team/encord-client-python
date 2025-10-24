@@ -7,8 +7,38 @@ from encord.objects import (
     RadioAttribute,
     TextAttribute,
 )
+from encord.objects.classification import OntologyClassificationLevel
 from encord.objects.common import Shape
 from encord.objects.ontology_labels_impl import Classification
+
+GLOBAL_CLASSIFICATION = Classification(
+    uid=4,
+    feature_node_hash="3DuQbFx4",
+    level=OntologyClassificationLevel.GLOBAL,
+    attributes=[
+        ChecklistAttribute(
+            uid=[4, 1],
+            feature_node_hash="2mwWr3Of",
+            name="Global classification",
+            required=False,
+            dynamic=False,
+            options=[
+                FlatOption(
+                    uid=[4, 1, 1],
+                    feature_node_hash="3vLjF0q1",
+                    label="Global Answer 1",
+                    value="global_answer_1",
+                ),
+                FlatOption(
+                    uid=[4, 1, 2],
+                    feature_node_hash="74r7nK9e",
+                    label="Global Answer 2",
+                    value="checklist_classification_answer_2",
+                ),
+            ],
+        )
+    ],
+)
 
 all_types_structure = OntologyStructure(
     objects=[
@@ -295,5 +325,6 @@ all_types_structure = OntologyStructure(
                 )
             ],
         ),
+        GLOBAL_CLASSIFICATION,
     ],
 )
