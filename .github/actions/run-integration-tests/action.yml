@@ -19,6 +19,12 @@ inputs:
   private-key-service-account:
     description: 'Private key for service account user for integration tests'
     required: true
+  robot-account-email:
+    description: 'Email of the robot account for integration tests'
+    required: true
+  robot-account-password:
+    description: 'Password of the robot account for integration tests'
+    required: true
   integration-tests-location:
     description: 'project of the backend repo.'
     default: ./encord-backend/projects/sdk-integration-tests
