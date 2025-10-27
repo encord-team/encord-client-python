@@ -4,9 +4,13 @@ from unittest.mock import Mock
 import pytest
 from deepdiff import DeepDiff
 
+from encord.exceptions import LabelRowError
 from encord.objects import Classification, LabelRowV2, Object
 from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import BoundingBoxCoordinates
+from encord.objects.spaces.annotation_instance.base_instance import BaseObjectInstance
+from encord.objects.spaces.annotation_instance.image_instance import ImageObjectInstance
+from encord.objects.spaces.annotation_instance.video_instance import VideoObjectInstance
 from encord.objects.spaces.video_space import VideoSpace
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.two_videos import (
@@ -366,3 +370,46 @@ def test_read_and_export_labels(ontology):
         exclude_regex_paths=[r".*\['trackHash'\]"],
         ignore_order_func=lambda x: x.path().endswith("['objects']"),
     )
+
+
+def test_add_entity_to_video_space(ontology):
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
+
+    video_space_1 = label_row.get_space_by_id("video-1-uuid", type_=VideoSpace)
+    new_entity = label_row.create_entity(ontology_class=box_ontology_item)
+    video_space_1.place_object_entity(entity=new_entity, frames=[1], coordinates=BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0))
+    video_space_1.place_object_entity(entity=new_entity, frames=[0, 2, 3], coordinates=BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5))
+
+    entities = video_space_1.get_entities()
+    annotations = video_space_1.get_annotations()
+    assert len(annotations) == 4
+    first_annotation = annotations[0]
+    assert first_annotation.frame == 0
+    assert first_annotation.coordinates == BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5)
+
+    assert len(entities) == 1
+
+    video_space_2 = label_row.get_space_by_id("video-2-uuid", type_=VideoSpace)
+    video_space_2.place_object_entity(entity=new_entity, frames=[0], coordinates=BoundingBoxCoordinates(height=0.7, width=0.7, top_left_x=0.7, top_left_y=0.7))
+    annotations = video_space_2.get_annotations()
+    assert len(annotations) == 1
+
+    # Remove entity
+    video_space_1.remove_entity(new_entity.entity_hash)
+    annotations = video_space_1.get_annotations()
+    assert len(annotations) == 0
+    with pytest.raises(LabelRowError):
+        assert first_annotation.coordinates
+
+
+def test_read_and_export_video_space_labels(ontology):
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_WITH_TWO_VIDEOS_LABELS)
+
+    video_space_1 = label_row.get_space_by_id("video-1-uuid", type_=VideoSpace)
+    video_space_1_annotations = video_space_1.get_annotations()
+    assert len(video_space_1_annotations) == 4
+
+    entities = video_space_1.get_entities()
+    assert len(entities) == 2

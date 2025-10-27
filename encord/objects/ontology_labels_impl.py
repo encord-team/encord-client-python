@@ -72,6 +72,7 @@ from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.spaces.base_space import Space, SpaceT
+from encord.objects.spaces.entity import Entity
 from encord.objects.spaces.image_space import ImageSpace
 from encord.objects.spaces.range_space import (
     AudioSpace,
@@ -117,7 +118,7 @@ class LabelRowV2:
     ) -> None:
         self._project_client = project_client
         self._ontology = ontology
-
+        self._entities_map: dict[str, Entity] = {}
         self._label_row_read_only_data: LabelRowV2.LabelRowReadOnlyData = self._parse_label_row_metadata(
             label_row_metadata
         )
@@ -140,6 +141,7 @@ class LabelRowV2:
         # at least at the final objects_index/classifications_index level.
 
         self._storage_item: Optional[StorageItem] = None
+        self._entity_hash_to_space_id: dict[str, str] = dict()
 
     @property
     def label_hash(self) -> Optional[str]:
@@ -685,6 +687,12 @@ class LabelRowV2:
             res.append(space)
 
         return res
+
+    def create_entity(self, ontology_class: Object, entity_hash: Optional[str] = None) -> Entity:
+        new_entity = Entity(label_row=self, ontology_class=ontology_class, entity_hash=entity_hash)
+        self._entities_map[new_entity.entity_hash] = new_entity
+
+        return new_entity
 
     def get_space_by_id(
         self,
@@ -2194,7 +2202,7 @@ class LabelRowV2:
                     )
                     res[space_id] = text_space
                 elif space_info["space_type"] == SpaceType.VIDEO:
-                    vision_space = VideoSpace(
+                    video_space = VideoSpace(
                         space_id=space_id,
                         title="Random title",
                         parent=self,
@@ -2202,10 +2210,10 @@ class LabelRowV2:
                         width=space_info["width"],
                         height=space_info["height"],
                     )
-                    vision_space._parse_space_dict(
+                    video_space._parse_space_dict(
                         space_info, object_answers=object_answers, classification_answers=classification_answers
                     )
-                    res[space_id] = vision_space
+                    res[space_id] = video_space
                 elif space_info["space_type"] == SpaceType.IMAGE:
                     image_space = ImageSpace(
                         space_id=space_id,

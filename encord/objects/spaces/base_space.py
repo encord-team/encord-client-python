@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional, TypeVar
 
 from encord.constants.enums import SpaceType
+from encord.objects.spaces.entity import Entity
 from encord.orm.label_space import LabelBlob, SpaceInfo
 
 if TYPE_CHECKING:
@@ -26,34 +27,15 @@ class Space(ABC):
         self.parent = parent
 
     @abstractmethod
-    def get_object_instances(
+    def get_entities(
         self,
-    ) -> list[ObjectInstance]:
+    ) -> list[Entity]:
         pass
 
     @abstractmethod
-    def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
+    def remove_entity(self, entity_hash: str) -> Optional[ObjectInstance]:
         pass
 
-    @abstractmethod
-    def move_object_instance_from_space(self, object_to_move: ObjectInstance) -> Optional[ObjectInstance]:
-        pass
-
-    @abstractmethod
-    def get_classification_instances(
-        self,
-    ) -> list[ClassificationInstance]:
-        pass
-
-    @abstractmethod
-    def remove_classification_instance(self, classification_hash: str) -> Optional[ClassificationInstance]:
-        pass
-
-    @abstractmethod
-    def move_classification_instance_from_space(
-        self, classification_to_move: ClassificationInstance
-    ) -> Optional[ClassificationInstance]:
-        pass
 
     @abstractmethod
     def _parse_space_dict(self, space_info: SpaceInfo, object_answers: dict, classification_answers: dict) -> None:

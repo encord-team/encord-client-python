@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Set
+from datetime import datetime
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set
 
 from typing_extensions import Unpack
 
@@ -15,14 +16,17 @@ from encord.objects.coordinates import (
     TwoDimensionalCoordinates,
     add_coordinates_to_frame_object_dict,
 )
-from encord.objects.frames import Frames
+from encord.objects.frames import Frames, frames_class_to_frames_list
 from encord.objects.label_utils import create_frame_object_dict
 from encord.objects.ontology_object_instance import (
     ObjectInstance,
 )
+from encord.objects.spaces.annotation.base_annotation import AnnotationInfo
+from encord.objects.spaces.annotation.video_annotation import FrameAnnotation, FrameAnnotationData
 from encord.objects.spaces.annotation_instance.base_instance import BaseObjectInstance
 from encord.objects.spaces.annotation_instance.video_instance import VideoClassificationInstance, VideoObjectInstance
 from encord.objects.spaces.base_space import Space
+from encord.objects.spaces.entity import Entity
 from encord.objects.spaces.types import AddObjectInstanceParams, FrameClassificationIndex, FrameObjectIndex
 from encord.orm.label_space import LabelBlob, SpaceInfo, VideoSpaceInfo
 
@@ -44,6 +48,8 @@ class VideoSpace(Space):
         self._number_of_frames: int = number_of_frames
         self._width = width
         self._height = height
+        self._frames_to_object_hash_to_annotation_data: defaultdict[int, dict[str, VideoObjectInstance.FrameAnnotationData]] = defaultdict(dict)
+        self._entities_map: dict[str, Entity] = dict()
 
     def _track_hash_for_frames(self, item_hash: str, frames: Iterable[int]) -> None:
         for frame in frames:
@@ -65,7 +71,7 @@ class VideoSpace(Space):
 
         return object_instance
 
-    def _create_new_object_instance_from_frame_label_dict(self, frame_object_label: dict, frame: int):
+    def _create_new_entity_from_frame_label_dict(self, frame_object_label: dict) -> Entity:
         from encord.objects.ontology_object import Object
 
         ontology = self.parent._ontology.structure
@@ -73,23 +79,9 @@ class VideoSpace(Space):
         object_hash = frame_object_label["objectHash"]
         label_class = ontology.get_child_by_hash(feature_hash, type_=Object)
 
-        object_instance = VideoObjectInstance(label_class, object_hash=object_hash, space=self)
+        entity = self.parent.create_entity(ontology_class=label_class, entity_hash=object_hash)
 
-        coordinates = self.parent._get_coordinates(frame_object_label)
-        object_frame_instance_info = BaseObjectInstance.AnnotationInfo.from_dict(frame_object_label)
-        object_instance.add_annotation(
-            coordinates=coordinates,
-            frames=frame,
-            created_at=object_frame_instance_info.created_at,
-            created_by=object_frame_instance_info.created_by,
-            last_edited_at=object_frame_instance_info.last_edited_at,
-            last_edited_by=object_frame_instance_info.last_edited_by,
-            confidence=object_frame_instance_info.confidence,
-            manual_annotation=object_frame_instance_info.manual_annotation,
-            reviews=object_frame_instance_info.reviews,
-            is_deleted=object_frame_instance_info.is_deleted,
-        )
-        return object_instance
+        return entity
 
     def _add_classification_instance(self, classification_instance: VideoClassificationInstance) -> None:
         """Add an object instance to this space and track it across its frames."""
@@ -212,6 +204,73 @@ class VideoSpace(Space):
         original_space.remove_classification_instance(classification_to_move.classification_hash)
         self._add_classification_instance(classification_to_move)
 
+    def _get_frame_annotation_data(self, entity_hash: str, frame: int) -> Optional[FrameAnnotationData]:
+        entity_to_frame_annotation_data = self._frames_to_object_hash_to_annotation_data.get(frame)
+        if entity_to_frame_annotation_data is None:
+            return None
+        else:
+            return entity_to_frame_annotation_data.get(entity_hash)
+
+    def place_object_entity(
+        self,
+        entity: Entity,
+        frames: Frames,
+        coordinates: TwoDimensionalCoordinates,
+        *,
+        overwrite: bool = False,
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        confidence: Optional[float] = None,
+        manual_annotation: Optional[bool] = None,
+        reviews: Optional[List[dict]] = None,
+        is_deleted: Optional[bool] = None,
+    ) -> None:
+        frame_list = frames_class_to_frames_list(frames)
+        self._entities_map[entity.entity_hash] = entity
+
+        # TODO: Check overwrites
+
+        for frame in frame_list:
+            existing_frame_annotation_data = self._get_frame_annotation_data(entity_hash=entity.entity_hash, frame=frame)
+            if existing_frame_annotation_data is None:
+                existing_frame_annotation_data = FrameAnnotationData(
+                    object_frame_instance_info=AnnotationInfo(),
+                    coordinates=coordinates,
+                )
+
+                self._frames_to_object_hash_to_annotation_data[frame][entity.entity_hash] = existing_frame_annotation_data
+
+            existing_frame_annotation_data.object_frame_instance_info.update_from_optional_fields(
+                created_at=created_at,
+                created_by=created_by,
+                last_edited_at=last_edited_at,
+                last_edited_by=last_edited_by,
+                confidence=confidence,
+                manual_annotation=manual_annotation,
+                reviews=reviews,
+                is_deleted=is_deleted,
+            )
+
+    def get_annotations(self) -> list[FrameAnnotation]:
+        res: list[FrameAnnotation] = []
+
+        for frame, obj in dict(sorted(self._frames_to_object_hash_to_annotation_data.items())).items():
+            for obj_hash, annotation in obj.items():
+                res.append(FrameAnnotation(space=self, entity=self._entities_map[obj_hash], frame=frame))
+
+        return res
+
+    def get_entities(self) -> list[Entity]:
+        return list(self._entities_map.values())
+
+    def remove_entity(self, entity_hash: str) -> Optional[ObjectInstance]:
+        self._entities_map.pop(entity_hash, None)
+        for frame, obj in self._frames_to_object_hash_to_annotation_data.items():
+            if entity_hash in obj:
+                obj.pop(entity_hash)
+
     """INTERNAL METHODS FOR DESERDE"""
 
     def _to_encord_object(
@@ -295,49 +354,48 @@ class VideoSpace(Space):
     def _parse_frame_label_dict(self, frame: int, frame_label: dict, classification_answers: dict):
         for obj in frame_label["objects"]:
             object_hash = obj["objectHash"]
-            if object_hash not in self._objects_map:
-                new_object_instance = self._create_new_object_instance_from_frame_label_dict(obj, frame)
-                self._add_object_instance(new_object_instance)
-            else:
-                object_instance = self._objects_map[object_hash]
-                coordinates = self.parent._get_coordinates(obj)
-                object_frame_instance_info = BaseObjectInstance.AnnotationInfo.from_dict(obj)
+            entity = self.parent._entities_map.get(object_hash)
+            if entity is None:
+                entity = self._create_new_entity_from_frame_label_dict(frame_object_label=obj)
 
-                object_instance.add_annotation(
-                    coordinates=coordinates,
-                    frames=frame,
-                    created_at=object_frame_instance_info.created_at,
-                    created_by=object_frame_instance_info.created_by,
-                    last_edited_at=object_frame_instance_info.last_edited_at,
-                    last_edited_by=object_frame_instance_info.last_edited_by,
-                    confidence=object_frame_instance_info.confidence,
-                    manual_annotation=object_frame_instance_info.manual_annotation,
-                    reviews=object_frame_instance_info.reviews,
-                    is_deleted=object_frame_instance_info.is_deleted,
-                )
+            coordinates = self.parent._get_coordinates(obj)
+            object_frame_instance_info = BaseObjectInstance.AnnotationInfo.from_dict(obj)
+            self.place_object_entity(
+                entity=entity,
+                coordinates=coordinates,
+                frames=frame,
+                created_at=object_frame_instance_info.created_at,
+                created_by=object_frame_instance_info.created_by,
+                last_edited_at=object_frame_instance_info.last_edited_at,
+                last_edited_by=object_frame_instance_info.last_edited_by,
+                manual_annotation=object_frame_instance_info.manual_annotation,
+                reviews=object_frame_instance_info.reviews,
+                confidence=object_frame_instance_info.confidence,
+                is_deleted=object_frame_instance_info.is_deleted,
+            )
 
         # Process classifications
-        for classification in frame_label["classifications"]:
-            classification_hash = classification["classificationHash"]
-            if classification_hash not in self._classifications_map:
-                new_classification_instance = self._create_new_classification_instance_from_frame_label_dict(
-                    classification, frame, classification_answers
-                )
-                self._add_classification_instance(new_classification_instance)
-            else:
-                classification_instance = self._classifications_map[classification_hash]
-                classification_frame_instance_info = ClassificationInstance.FrameData.from_dict(classification)
-
-                classification_instance.set_for_frames(
-                    frames=frame,
-                    created_at=classification_frame_instance_info.created_at,
-                    created_by=classification_frame_instance_info.created_by,
-                    last_edited_at=classification_frame_instance_info.last_edited_at,
-                    last_edited_by=classification_frame_instance_info.last_edited_by,
-                    confidence=classification_frame_instance_info.confidence,
-                    manual_annotation=classification_frame_instance_info.manual_annotation,
-                    reviews=classification_frame_instance_info.reviews,
-                )
+        # for classification in frame_label["classifications"]:
+        #     classification_hash = classification["classificationHash"]
+        #     if classification_hash not in self._classifications_map:
+        #         new_classification_instance = self._create_new_classification_instance_from_frame_label_dict(
+        #             classification, frame, classification_answers
+        #         )
+        #         self._add_classification_instance(new_classification_instance)
+        #     else:
+        #         classification_instance = self._classifications_map[classification_hash]
+        #         classification_frame_instance_info = ClassificationInstance.FrameData.from_dict(classification)
+        #
+        #         classification_instance.set_for_frames(
+        #             frames=frame,
+        #             created_at=classification_frame_instance_info.created_at,
+        #             created_by=classification_frame_instance_info.created_by,
+        #             last_edited_at=classification_frame_instance_info.last_edited_at,
+        #             last_edited_by=classification_frame_instance_info.last_edited_by,
+        #             confidence=classification_frame_instance_info.confidence,
+        #             manual_annotation=classification_frame_instance_info.manual_annotation,
+        #             reviews=classification_frame_instance_info.reviews,
+        #         )
 
     def _to_space_dict(self) -> VideoSpaceInfo:
         """Export video space to dictionary format."""
