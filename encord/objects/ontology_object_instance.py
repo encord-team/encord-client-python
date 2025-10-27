@@ -66,7 +66,7 @@ if TYPE_CHECKING:
     from encord.objects.spaces.base_space import Space
 
 
-class SetFramesKwargs(TypedDict, total=False):
+class AddObjectInstanceParams(TypedDict, total=False):
     created_at: Optional[datetime]
     created_by: Optional[str]
     last_edited_at: Optional[datetime]
@@ -988,6 +988,7 @@ class DynamicAnswerManager:
         self._object_instance = object_instance
         self._frames_to_answers: Dict[int, Set[Answer]] = defaultdict(set)
         self._answers_to_frames: Dict[Answer, Set[int]] = defaultdict(set)
+
         self._dynamic_uninitialised_answer_options: Set[Answer] = self._get_dynamic_answers()
         # ^ these are like the static answers. Everything that is possibly an answer. However,
         # don't forget also nested-ness. In this case nested-ness should be ignored.

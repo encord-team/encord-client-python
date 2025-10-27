@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Dict, List, Optional
 
@@ -96,7 +97,7 @@ class VideoObjectInstance(BaseObjectInstance):
             self.check_within_range(frame)
 
             if existing_frame_data is None:
-                existing_frame_data = BaseObjectInstance.AnnotationData(
+                existing_frame_data = VideoObjectInstance.FrameAnnotationData(
                     coordinates=coordinates, object_frame_instance_info=BaseObjectInstance.AnnotationInfo()
                 )
                 self._frames_to_annotation_data[frame] = existing_frame_data
@@ -152,6 +153,10 @@ class VideoObjectInstance(BaseObjectInstance):
             List[Annotation]: A list of `ObjectInstance.Annotation` in order of available frames.
         """
         return [self.FrameAnnotation(self, frame_num) for frame_num in sorted(self._frames_to_annotation_data.keys())]
+
+    @dataclass
+    class FrameAnnotationData(BaseObjectInstance.AnnotationData):
+        coordinates: Coordinates
 
     class FrameAnnotation(BaseObjectInstance.Annotation):
         def __init__(self, object_instance: VideoObjectInstance, frame: int):

@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timezone
 from unittest.mock import Mock
 
@@ -5,6 +6,7 @@ import pytest
 from deepdiff import DeepDiff
 
 from encord.objects import Classification, LabelRowV2, Object
+from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.frames import Range
 from encord.objects.spaces.range_space import AudioSpace
 from tests.objects.data.all_types_ontology_structure import all_types_structure
@@ -49,17 +51,13 @@ def test_audio_space_can_add_object_instances(ontology):
 
     first_object_instance = objects_on_audio_space[0]
 
-    annotations_on_first_object_instance = first_object_instance.get_annotations()
+    first_object_instance_annotation = first_object_instance.get_annotation()
     assert first_object_instance.object_hash == added_object_instance.object_hash
-    assert len(annotations_on_first_object_instance) == 1
 
-    frames_on_annotations = [annotation.frame for annotation in annotations_on_first_object_instance]
-    assert frames_on_annotations == [0]
-    for annotation in annotations_on_first_object_instance:
-        assert annotation.coordinates.range[0] == Range(start=10, end=100)
-        assert annotation.created_by == created_by
-        assert annotation.created_at == created_at
-        assert annotation.manual_annotation is False
+    assert first_object_instance_annotation.ranges[0] == Range(start=10, end=100)
+    assert first_object_instance_annotation.created_by == created_by
+    assert first_object_instance_annotation.created_at == created_at
+    assert first_object_instance_annotation.manual_annotation is False
 
     # Check that spaces has correct properties
     assert len(audio_space._objects_map.keys()) == 1
@@ -121,6 +119,49 @@ def test_audio_space_move_object_instances(ontology):
     objects_on_audio_space_2 = audio_space_2.get_object_instances()
     assert len(objects_on_audio_space_2) == 1
     assert len(audio_space_2._objects_map.keys()) == 1
+
+def test_audio_space_can_update_annotations_on_object_instance(ontology):
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
+
+    audio_space = label_row.get_space_by_id("audio-1-uuid", type_=AudioSpace)
+    added_object = audio_space.add_object_instance(obj=audio_obj_ontology_item, range=Range(start=10, end=100))
+
+    annotation_on_audio = added_object.get_annotation()
+
+    # Change annotation values
+    annotation_on_audio.last_edited_by = "arthur@encord.com"
+    annotation_on_audio.created_by = "clinton@encord.com"
+    annotation_on_audio.ranges = Range(start=200, end=300)
+
+    # Check output dict
+    actual_object_answers = audio_space._to_object_answers()
+    EXPECTED_OBJECT_ANSWERS = {
+      added_object.object_hash: {
+        "classifications": [],
+        "objectHash": added_object.object_hash,
+        "createdBy": "clinton@encord.com",
+        "createdAt": "Fri, 24 Oct 2025 12:14:56 UTC",
+        "lastEditedBy": "arthur@encord.com",
+        "lastEditedAt": "Fri, 24 Oct 2025 12:14:56 UTC",
+        "manualAnnotation": True,
+        "featureHash": "KVfzNkFy",
+        "name": "audio object",
+        "color": "#A4FF00",
+        "shape": "audio",
+        "value": "audio_object",
+        "range": [
+          [
+            10,
+            100
+          ]
+        ]
+      }
+    }
+
+    assert not DeepDiff(
+        EXPECTED_OBJECT_ANSWERS, actual_object_answers, exclude_regex_paths=[r".*\['lastEditedAt'\]|.*\['createdAt'\]"]
+    )
 
 
 def test_audio_space_can_add_classification_instances(ontology):

@@ -578,7 +578,7 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] 
 }
 
 
-def add_coordinates_to_object_dict(
+def add_coordinates_to_frame_object_dict(
     coordinates: Coordinates,
     frame_object_dict: Dict[str, Any],
     width: int,

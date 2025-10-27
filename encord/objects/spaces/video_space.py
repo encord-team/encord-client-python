@@ -1,44 +1,29 @@
 from __future__ import annotations
 
 import logging
-from abc import ABC, abstractmethod
 from collections import defaultdict
-from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, TypedDict, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Set
 
 from typing_extensions import Unpack
 
-from encord.common.time_parser import format_datetime_to_long_string_optional
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects import Classification, ClassificationInstance
-from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
 from encord.objects.coordinates import (
-    BoundingBoxCoordinates,
     Coordinates,
-    CuboidCoordinates,
-    PointCoordinate,
-    PointCoordinate3D,
-    PolygonCoordinates,
-    PolygonCoordsToDict,
-    PolylineCoordinates,
-    RotatableBoundingBoxCoordinates,
-    SkeletonCoordinates,
     TwoDimensionalCoordinates,
-    add_coordinates_to_object_dict,
+    add_coordinates_to_frame_object_dict,
 )
 from encord.objects.frames import Frames
-from encord.objects.label_utils import add_annotation_info_to_frame_object_dict
+from encord.objects.label_utils import create_frame_object_dict
 from encord.objects.ontology_object_instance import (
     ObjectInstance,
-    SetFramesKwargs,
 )
 from encord.objects.spaces.annotation_instance.base_instance import BaseObjectInstance
 from encord.objects.spaces.annotation_instance.video_instance import VideoClassificationInstance, VideoObjectInstance
 from encord.objects.spaces.base_space import Space
-from encord.objects.spaces.types import FrameClassificationIndex, FrameObjectIndex
-from encord.objects.utils import _lower_snake_case
+from encord.objects.spaces.types import AddObjectInstanceParams, FrameClassificationIndex, FrameObjectIndex
 from encord.orm.label_space import LabelBlob, SpaceInfo, VideoSpaceInfo
 
 logger = logging.getLogger(__name__)
@@ -149,7 +134,11 @@ class VideoSpace(Space):
         return None
 
     def add_object_instance(
-        self, obj: Object, coordinates: TwoDimensionalCoordinates, frames: Frames = 0, **kwargs: Unpack[SetFramesKwargs]
+        self,
+        obj: Object,
+        coordinates: TwoDimensionalCoordinates,
+        frames: Frames = 0,
+        **kwargs: Unpack[AddObjectInstanceParams],
     ) -> VideoObjectInstance:
         """Add an object instance to the video space."""
         object_instance = VideoObjectInstance(obj, space=self)
@@ -163,7 +152,7 @@ class VideoSpace(Space):
         return list(self._objects_map.values())
 
     def add_classification_instance(
-        self, classification: Classification, frames: Frames = 0, **kwargs: Unpack[SetFramesKwargs]
+        self, classification: Classification, frames: Frames = 0, **kwargs: Unpack[AddObjectInstanceParams]
     ) -> VideoClassificationInstance:
         """Add a classification instance to the video space."""
         classification_instance = VideoClassificationInstance(ontology_classification=classification, space=self)
@@ -238,13 +227,13 @@ class VideoSpace(Space):
         ontology_hash = object_.ontology_item.feature_node_hash
         ontology_object = self.parent._ontology.structure.get_child_by_hash(ontology_hash, type_=Object)
 
-        frame_object_dict = add_annotation_info_to_frame_object_dict(
+        frame_object_dict = create_frame_object_dict(
             ontology_object=ontology_object,
             object_instance=object_,
             object_instance_annotation=object_instance_annotation,
         )
 
-        add_coordinates_to_object_dict(
+        add_coordinates_to_frame_object_dict(
             coordinates=coordinates, frame_object_dict=frame_object_dict, width=self._width, height=self._height
         )
 

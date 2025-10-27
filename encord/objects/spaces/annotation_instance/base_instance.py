@@ -688,11 +688,8 @@ class BaseObjectInstance:
         """Data class for storing frame-specific data.
 
         Attributes:
-            coordinates (Coordinates): The coordinates associated with the frame.
             object_frame_instance_info (ObjectInstance.FrameInfo): The frame's metadata information.
         """
-
-        coordinates: Coordinates
         object_frame_instance_info: BaseObjectInstance.AnnotationInfo
 
     def _set_answer_unsafe(

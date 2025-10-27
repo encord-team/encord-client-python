@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict
+import dataclasses
+from datetime import datetime
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypedDict, Unpack
 
 from encord.common.time_parser import format_datetime_to_long_string_optional
 from encord.objects.spaces.annotation_instance.base_instance import BaseObjectInstance
@@ -10,7 +12,7 @@ if TYPE_CHECKING:
     from encord.objects import Object
 
 
-def add_annotation_info_to_frame_object_dict(
+def create_frame_object_dict(
     ontology_object: Object,
     object_instance_annotation: BaseObjectInstance.Annotation,
     object_instance: BaseObjectInstance,

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
+from encord.exceptions import LabelRowError
 from encord.objects.classification_instance import BaseClassificationInstance
 from encord.objects.coordinates import AudioCoordinates
 from encord.objects.frames import Ranges
@@ -19,8 +21,12 @@ class AudioObjectInstance(BaseObjectInstance):
     def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None, space: AudioSpace):
         super().__init__(ontology_object, object_hash=object_hash)
         self._space = space
+        self._annotation_data: Optional[AudioObjectInstance.AnnotationData] = None
 
-    def set_annotation_for_ranges(
+    def get_annotation(self) -> Annotation:
+        return AudioObjectInstance.Annotation(self)
+
+    def add_annotation(
         self,
         ranges: Ranges,
         *,
@@ -54,19 +60,17 @@ class AudioObjectInstance(BaseObjectInstance):
             is_deleted: Should only be set by internal functions.
         """
 
-        existing_frame_data = self._frames_to_instance_data.get(0)
-        audio_coordinates = AudioCoordinates(range=ranges)
+        # audio_coordinates = AudioCoordinates(range=ranges)
 
         # No overwrite
         # No checking frame instance data, as its only on one frame
 
-        if existing_frame_data is None:
-            existing_frame_data = ObjectInstance.FrameData(
-                coordinates=audio_coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
+        if self._annotation_data is None:
+            self._annotation_data = AudioObjectInstance.AnnotationData(
+                ranges=ranges, object_frame_instance_info=BaseObjectInstance.AnnotationInfo()
             )
-            self._frames_to_instance_data[0] = existing_frame_data
 
-        existing_frame_data.object_frame_instance_info.update_from_optional_fields(
+        self._annotation_data.object_frame_instance_info.update_from_optional_fields(
             created_at=created_at,
             created_by=created_by,
             last_edited_at=last_edited_at,
@@ -76,7 +80,37 @@ class AudioObjectInstance(BaseObjectInstance):
             reviews=reviews,
             is_deleted=is_deleted,
         )
-        existing_frame_data.coordinates = audio_coordinates
+
+    class Annotation(BaseObjectInstance.Annotation):
+        def __init__(self, object_instance: AudioObjectInstance):
+            super().__init__(object_instance)
+            self._object_instance = object_instance
+
+        @property
+        def ranges(self) -> Ranges:
+            self._check_if_annotation_is_valid()
+            return self._get_annotation_data().ranges
+
+        @ranges.setter
+        def ranges(self, ranges: Ranges) -> None:
+            self._check_if_annotation_is_valid()
+            self._object_instance.add_annotation(ranges)
+
+        def _get_annotation_data(self) -> AudioObjectInstance.AnnotationData:
+            return self._object_instance._annotation_data
+
+        def _check_if_annotation_is_valid(self) -> None:
+            if self._object_instance._space is None:
+                raise LabelRowError("Annotation does not exist on this audio")
+
+    @dataclass
+    class AnnotationData(BaseObjectInstance.AnnotationData):
+        """Data class for storing annotation data on range objects.
+
+        Attributes:
+            object_frame_instance_info (ObjectInstance.FrameInfo): The frame's metadata information.
+        """
+        ranges: Ranges
 
 
 class AudioClassificationInstance(BaseClassificationInstance):

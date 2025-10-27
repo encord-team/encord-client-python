@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
@@ -20,7 +21,7 @@ class ImageObjectInstance(BaseObjectInstance):
     def __init__(self, ontology_object: Object, *, object_hash: Optional[str] = None, space: ImageSpace):
         super().__init__(ontology_object, object_hash=object_hash)
         self._space = space
-        self._annotation: Optional[ImageObjectInstance.AnnotationData] = None
+        self._annotation_data: Optional[ImageObjectInstance.TwoDimensionalAnnotationData] = None
 
     def get_annotation(self) -> Annotation:
         return ImageObjectInstance.Annotation(self)
@@ -63,13 +64,13 @@ class ImageObjectInstance(BaseObjectInstance):
         # TODO: Remove this self._parent requirement
         check_coordinate_type(coordinates, self._ontology_object, self._parent)
 
-        if self._annotation is None:
-            existing_frame_data = BaseObjectInstance.AnnotationData(
+        if self._annotation_data is None:
+            existing_frame_data = ImageObjectInstance.TwoDimensionalAnnotationData(
                 coordinates=coordinates, object_frame_instance_info=BaseObjectInstance.AnnotationInfo()
             )
-            self._annotation = existing_frame_data
+            self._annotation_data = existing_frame_data
 
-        self._annotation.object_frame_instance_info.update_from_optional_fields(
+        self._annotation_data.object_frame_instance_info.update_from_optional_fields(
             created_at=created_at,
             created_by=created_by,
             last_edited_at=last_edited_at,
@@ -79,11 +80,11 @@ class ImageObjectInstance(BaseObjectInstance):
             reviews=reviews,
             is_deleted=is_deleted,
         )
-        self._annotation.coordinates = coordinates
+        self._annotation_data.coordinates = coordinates
 
     def remove_annotation(self) -> None:
         """Remove the object instance from the specified frames."""
-        self._annotation = None
+        self._annotation_data = None
 
     class Annotation(BaseObjectInstance.Annotation):
         def __init__(self, object_instance: ImageObjectInstance):
@@ -100,12 +101,16 @@ class ImageObjectInstance(BaseObjectInstance):
             self._check_if_annotation_is_valid()
             self._object_instance.add_annotation(coordinates)
 
-        def _get_annotation_data(self) -> BaseObjectInstance.AnnotationData:
-            return self._object_instance._annotation
+        def _get_annotation_data(self) -> ImageObjectInstance.TwoDimensionalAnnotationData:
+            return self._object_instance._annotation_data
 
         def _check_if_annotation_is_valid(self) -> None:
             if self._object_instance._space is None:
                 raise LabelRowError("Annotation does not exist on this image")
+
+    @dataclass
+    class TwoDimensionalAnnotationData(BaseObjectInstance.AnnotationData):
+        coordinates: Coordinates
 
 
 class ImageClassificationInstance(BaseClassificationInstance):

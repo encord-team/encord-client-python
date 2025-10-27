@@ -10,11 +10,11 @@ from encord.exceptions import LabelRowError
 from encord.objects import Classification, ClassificationInstance
 from encord.objects.coordinates import (
     TwoDimensionalCoordinates,
-    add_coordinates_to_object_dict,
+    add_coordinates_to_frame_object_dict,
 )
-from encord.objects.label_utils import add_annotation_info_to_frame_object_dict
+from encord.objects.label_utils import create_frame_object_dict
 from encord.objects.ontology_object_instance import (
-    SetFramesKwargs,
+    AddObjectInstanceParams,
 )
 from encord.objects.spaces.annotation_instance.base_instance import BaseObjectInstance
 from encord.objects.spaces.annotation_instance.image_instance import ImageClassificationInstance, ImageObjectInstance
@@ -106,7 +106,7 @@ class ImageSpace(Space):
         self._classifications_map[classification_instance.classification_hash] = classification_instance
 
     def add_object_instance(
-        self, obj: Object, coordinates: TwoDimensionalCoordinates, **kwargs: Unpack[SetFramesKwargs]
+        self, obj: Object, coordinates: TwoDimensionalCoordinates, **kwargs: Unpack[AddObjectInstanceParams]
     ) -> ImageObjectInstance:
         object_instance = ImageObjectInstance(ontology_object=obj, space=self)
         object_instance.add_annotation(coordinates=coordinates, **kwargs)
@@ -124,7 +124,7 @@ class ImageSpace(Space):
         return list(self._classifications_map.values())
 
     def add_classification_instance(
-        self, classification: Classification, **kwargs: Unpack[SetFramesKwargs]
+        self, classification: Classification, **kwargs: Unpack[AddObjectInstanceParams]
     ) -> ImageClassificationInstance:
         """Add a classification instance to the image space."""
         classification_instance = ImageClassificationInstance(ontology_classification=classification, space=self)
@@ -177,7 +177,6 @@ class ImageSpace(Space):
         return classification_instance
 
     """INTERNAL METHODS FOR DESERDE"""
-
     def _to_encord_object(
         self,
         object_: ImageObjectInstance,
@@ -190,13 +189,13 @@ class ImageSpace(Space):
         ontology_hash = object_.ontology_item.feature_node_hash
         ontology_object = self.parent._ontology.structure.get_child_by_hash(ontology_hash, type_=Object)
 
-        frame_object_dict = add_annotation_info_to_frame_object_dict(
+        frame_object_dict = create_frame_object_dict(
             ontology_object=ontology_object,
             object_instance=object_,
             object_instance_annotation=object_instance_annotation,
         )
 
-        add_coordinates_to_object_dict(
+        add_coordinates_to_frame_object_dict(
             coordinates=coordinates, frame_object_dict=frame_object_dict, width=self._width, height=self._height
         )
 
