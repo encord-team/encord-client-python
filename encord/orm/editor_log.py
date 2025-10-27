@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Dict, List, Literal, Optional, Tuple
 from uuid import UUID
 
 from typing_extensions import Union
@@ -54,20 +54,20 @@ class EditorLogCommon(BaseDTO):
     label_id: str
     workflow_stage_type: Union[ActionableWorkflowNodeType, Literal[""]]
     workflow_stage_title: str
-    event_information: dict[str, Any]
+    event_information: Dict[str, Any]
 
 
 class LabelAttributes(BaseDTO):
     label_name: str
     feature_id: str
-    label_ranges: list[tuple[int, int]]
+    label_ranges: List[Tuple[int, int]]
 
 
 class ObjectAttributes(LabelAttributes, BaseDTO):
     object_shape: str
-    object_current_frame: int | None = None
+    object_current_frame: Optional[int] = None
     object_hash: str
-    object_id: int | None = None
+    object_id: Optional[int] = None
 
 
 class ClassificationAttributes(LabelAttributes, BaseDTO):
@@ -96,8 +96,8 @@ EditorLog = Union[EditorLogGeneralAction, EditorLogObject, EditorLogClassificati
 class EditorLogParams(BaseDTO):
     start_time: datetime
     end_time: datetime
-    action: str | None = None
-    actor_user_email: str | None = None
-    workflow_stage_id: UUID | None = None
-    data_unit_id: UUID | None = None
-    page_token: str | None = None
+    action: Optional[str] = None
+    actor_user_email: Optional[str] = None
+    workflow_stage_id: Optional[UUID] = None
+    data_unit_id: Optional[UUID] = None
+    page_token: Optional[str] = None
