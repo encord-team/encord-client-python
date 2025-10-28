@@ -120,6 +120,7 @@ def test_audio_space_move_object_instances(ontology):
     assert len(objects_on_audio_space_2) == 1
     assert len(audio_space_2._objects_map.keys()) == 1
 
+
 def test_audio_space_can_update_annotations_on_object_instance(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
@@ -137,26 +138,21 @@ def test_audio_space_can_update_annotations_on_object_instance(ontology):
     # Check output dict
     actual_object_answers = audio_space._to_object_answers()
     EXPECTED_OBJECT_ANSWERS = {
-      added_object.object_hash: {
-        "classifications": [],
-        "objectHash": added_object.object_hash,
-        "createdBy": "clinton@encord.com",
-        "createdAt": "Fri, 24 Oct 2025 12:14:56 UTC",
-        "lastEditedBy": "arthur@encord.com",
-        "lastEditedAt": "Fri, 24 Oct 2025 12:14:56 UTC",
-        "manualAnnotation": True,
-        "featureHash": "KVfzNkFy",
-        "name": "audio object",
-        "color": "#A4FF00",
-        "shape": "audio",
-        "value": "audio_object",
-        "range": [
-          [
-            10,
-            100
-          ]
-        ]
-      }
+        added_object.object_hash: {
+            "classifications": [],
+            "objectHash": added_object.object_hash,
+            "createdBy": "clinton@encord.com",
+            "createdAt": "Fri, 24 Oct 2025 12:14:56 UTC",
+            "lastEditedBy": "arthur@encord.com",
+            "lastEditedAt": "Fri, 24 Oct 2025 12:14:56 UTC",
+            "manualAnnotation": True,
+            "featureHash": "KVfzNkFy",
+            "name": "audio object",
+            "color": "#A4FF00",
+            "shape": "audio",
+            "value": "audio_object",
+            "range": [[10, 100]],
+        }
     }
 
     assert not DeepDiff(

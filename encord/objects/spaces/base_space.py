@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional, TypeVar
 
 from encord.constants.enums import SpaceType
-from encord.objects.spaces.entity import Entity
+from encord.objects.spaces.entity import ObjectEntity
 from encord.orm.label_space import LabelBlob, SpaceInfo
 
 if TYPE_CHECKING:
@@ -29,13 +29,12 @@ class Space(ABC):
     @abstractmethod
     def get_object_entities(
         self,
-    ) -> list[Entity]:
+    ) -> list[ObjectEntity]:
         pass
 
     @abstractmethod
     def remove_entity(self, entity_hash: str) -> Optional[ObjectInstance]:
         pass
-
 
     @abstractmethod
     def _parse_space_dict(self, space_info: SpaceInfo, object_answers: dict, classification_answers: dict) -> None:

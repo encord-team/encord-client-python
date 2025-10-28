@@ -110,6 +110,7 @@ class AudioObjectInstance(BaseObjectInstance):
         Attributes:
             object_frame_instance_info (ObjectInstance.FrameInfo): The frame's metadata information.
         """
+
         ranges: Ranges
 
 

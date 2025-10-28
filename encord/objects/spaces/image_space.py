@@ -177,6 +177,7 @@ class ImageSpace(Space):
         return classification_instance
 
     """INTERNAL METHODS FOR DESERDE"""
+
     def _to_encord_object(
         self,
         object_: ImageObjectInstance,

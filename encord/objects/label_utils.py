@@ -11,13 +11,11 @@ from encord.objects.spaces.annotation_instance.base_instance import BaseObjectIn
 from encord.objects.utils import _lower_snake_case
 
 if TYPE_CHECKING:
-    from encord.objects import Object, ObjectInstance, Classification
+    from encord.objects import Classification, Object, ObjectInstance
 
 
 def create_frame_object_dict(
-    ontology_object: Object,
-    object_instance_annotation: AnnotationInfo,
-    object_hash: str
+    ontology_object: Object, object_instance_annotation: AnnotationInfo, object_hash: str
 ) -> Dict[str, Any]:
     frame_object_dict: Dict[str, Any] = {}
 
@@ -54,7 +52,9 @@ def create_frame_classification_dict(
 
     frame_classification_dict["name"] = attribute.name
     frame_classification_dict["value"] = _lower_snake_case(attribute.name)
-    frame_classification_dict["createdAt"] = format_datetime_to_long_string_optional(classification_instance_annotation.created_at)
+    frame_classification_dict["createdAt"] = format_datetime_to_long_string_optional(
+        classification_instance_annotation.created_at
+    )
     frame_classification_dict["createdBy"] = classification_instance_annotation.created_by
     frame_classification_dict["confidence"] = classification_instance_annotation.confidence
     frame_classification_dict["featureHash"] = ontology_classification.feature_node_hash

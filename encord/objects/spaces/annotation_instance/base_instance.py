@@ -690,6 +690,7 @@ class BaseObjectInstance:
         Attributes:
             object_frame_instance_info (ObjectInstance.FrameInfo): The frame's metadata information.
         """
+
         object_frame_instance_info: BaseObjectInstance.AnnotationInfo
 
     def _set_answer_unsafe(

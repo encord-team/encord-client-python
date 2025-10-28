@@ -7,11 +7,12 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from encord.common.time_parser import parse_datetime
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
-from encord.objects.spaces.entity import Entity
+from encord.objects.spaces.entity import ObjectEntity
 from encord.objects.utils import check_email
 
 if TYPE_CHECKING:
     from encord.objects.spaces.base_space import Space
+
 
 @dataclass
 class AnnotationInfo:
@@ -93,6 +94,7 @@ class AnnotationInfo:
         if is_deleted is not None:
             self.is_deleted = is_deleted
 
+
 @dataclass
 class AnnotationData:
     """Data class for storing frame-specific data.
@@ -100,6 +102,7 @@ class AnnotationData:
     Attributes:
         object_frame_instance_info (ObjectInstance.FrameInfo): The frame's metadata information.
     """
+
     object_frame_instance_info: AnnotationInfo
 
 
@@ -109,7 +112,7 @@ class Annotation:
     Allows setting or getting annotation data for the ObjectInstance.
     """
 
-    def __init__(self, space: Space, entity: Entity):
+    def __init__(self, space: Space, entity: ObjectEntity):
         self._space = space
         self._entity = entity
 
