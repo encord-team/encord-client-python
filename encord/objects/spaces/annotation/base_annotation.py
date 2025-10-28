@@ -26,6 +26,7 @@ class AnnotationInfo:
     confidence: float = DEFAULT_CONFIDENCE
     manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
     reviews: Optional[List[dict]] = None
+    # TODO: Classifications do not have this field
     is_deleted: Optional[bool] = None
 
     @staticmethod

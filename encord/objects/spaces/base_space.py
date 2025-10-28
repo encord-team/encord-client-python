@@ -27,7 +27,7 @@ class Space(ABC):
         self.parent = parent
 
     @abstractmethod
-    def get_entities(
+    def get_object_entities(
         self,
     ) -> list[Entity]:
         pass

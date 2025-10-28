@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timezone
 from unittest.mock import Mock
 
@@ -381,8 +382,8 @@ def test_add_entity_to_video_space(ontology):
     video_space_1.place_object_entity(entity=new_entity, frames=[1], coordinates=BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0))
     video_space_1.place_object_entity(entity=new_entity, frames=[0, 2, 3], coordinates=BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5))
 
-    entities = video_space_1.get_entities()
-    annotations = video_space_1.get_annotations()
+    entities = video_space_1.get_object_entities()
+    annotations = video_space_1.get_object_annotations()
     assert len(annotations) == 4
     first_annotation = annotations[0]
     assert first_annotation.frame == 0
@@ -392,12 +393,12 @@ def test_add_entity_to_video_space(ontology):
 
     video_space_2 = label_row.get_space_by_id("video-2-uuid", type_=VideoSpace)
     video_space_2.place_object_entity(entity=new_entity, frames=[0], coordinates=BoundingBoxCoordinates(height=0.7, width=0.7, top_left_x=0.7, top_left_y=0.7))
-    annotations = video_space_2.get_annotations()
+    annotations = video_space_2.get_object_annotations()
     assert len(annotations) == 1
 
     # Remove entity
     video_space_1.remove_entity(new_entity.entity_hash)
-    annotations = video_space_1.get_annotations()
+    annotations = video_space_1.get_object_annotations()
     assert len(annotations) == 0
     with pytest.raises(LabelRowError):
         assert first_annotation.coordinates
@@ -408,8 +409,24 @@ def test_read_and_export_video_space_labels(ontology):
     label_row.from_labels_dict(DATA_GROUP_WITH_TWO_VIDEOS_LABELS)
 
     video_space_1 = label_row.get_space_by_id("video-1-uuid", type_=VideoSpace)
-    video_space_1_annotations = video_space_1.get_annotations()
-    assert len(video_space_1_annotations) == 4
+    video_space_1_object_annotations = video_space_1.get_object_annotations()
+    assert len(video_space_1_object_annotations) == 4
 
-    entities = video_space_1.get_entities()
-    assert len(entities) == 2
+    video_space_1_object_entities = video_space_1.get_object_entities()
+    assert len(video_space_1_object_entities) == 2
+
+    video_space_1_classification_annotations = video_space_1.get_classification_annotations()
+    assert len(video_space_1_classification_annotations) == 1
+    classification_entities = video_space_1.get_classification_entities()
+    assert len(classification_entities) == 1
+
+    output_dict = label_row.to_encord_dict()
+
+    print(json.dumps(output_dict, indent=2))
+
+    assert not DeepDiff(
+        DATA_GROUP_WITH_TWO_VIDEOS_LABELS,
+        output_dict,
+        exclude_regex_paths=[r".*\['trackHash'\]"],
+        ignore_order_func=lambda x: x.path().endswith("['objects']"),
+    )

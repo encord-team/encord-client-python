@@ -688,8 +688,15 @@ class LabelRowV2:
 
         return res
 
-    def create_entity(self, ontology_class: Object, entity_hash: Optional[str] = None) -> Entity:
-        new_entity = Entity(label_row=self, ontology_class=ontology_class, entity_hash=entity_hash)
+    def create_entity(self, ontology_class: Object | Classification, entity_hash: Optional[str] = None) -> Entity:
+        if isinstance(ontology_class, Classification):
+            new_instance = ClassificationInstance(ontology_classification=ontology_class, classification_hash=entity_hash)
+        elif isinstance(ontology_class, Object):
+            new_instance = ObjectInstance(ontology_object=ontology_class, object_hash=entity_hash)
+        else:
+            raise LabelRowError("Attempt to create invalid entity.")
+
+        new_entity = Entity(label_row=self, ontology_instance=new_instance)
         self._entities_map[new_entity.entity_hash] = new_entity
 
         return new_entity
