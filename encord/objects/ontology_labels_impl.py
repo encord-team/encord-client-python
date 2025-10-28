@@ -1805,15 +1805,16 @@ class LabelRowV2:
                 "objectHash": obj.object_hash,
             }
 
-        for space in self._space_map.values():
-            if isinstance(space, VideoSpace) or isinstance(space, ImageSpace):
-                for obj in space.get_object_instances():
-                    all_static_answers = self._dynamic_answers_to_encord_dict(obj)
+        for entity in self._entities_map.values():
+            entity_instance = entity._entity_instance
+            if isinstance(entity_instance, ObjectInstance):
+                all_static_answers = self._dynamic_answers_to_encord_dict(entity_instance)
 
-                    if len(all_static_answers) == 0:
-                        continue
+                if len(all_static_answers) == 0:
+                    continue
 
-                    ret[obj.object_hash] = {"actions": list(all_static_answers), "objectHash": obj.object_hash}
+                ret[entity_instance.object_hash] = {"actions": list(all_static_answers), "objectHash": entity_instance.object_hash}
+
         return ret
 
     def _to_classification_answers(self) -> Dict[str, Any]:
@@ -2181,7 +2182,6 @@ class LabelRowV2:
     def _parse_label_spaces(
         self, spaces_info: Optional[dict[str, SpaceInfo]], object_answers: dict, classification_answers: dict
     ) -> dict[str, Space]:
-        # TODO: Maybe we should automatically add global space here
         res: dict[str, Space] = dict()
         if spaces_info is not None:
             for space_id, space_info in spaces_info.items():
@@ -2236,7 +2236,7 @@ class LabelRowV2:
                 elif space_info[""] == SpaceType.POINT_CLOUD:
                     res[space_id] = SceneStreamSpace(space_id=space_id, title=space_id, parent=self)
                 else:
-                    exhaustive_guard(space_type, message="Missing condition for space types.")
+                    exhaustive_guard(space_info["space_type"], message="Missing condition for space types.")
 
         return res
 
@@ -2540,11 +2540,9 @@ class LabelRowV2:
             object_instance = self._objects_map.get(object_hash)
 
             if object_instance is None:
-                for space in self._space_map.values():
-                    if isinstance(space, VideoSpace) or isinstance(space, ImageSpace):
-                        object_instance = space._objects_map.get(object_hash)
-                        if object_instance is not None:
-                            break
+                entity = self._entities_map.get(object_hash)
+                if entity is not None:
+                    object_instance = entity._entity_instance
 
             if object_instance is None:
                 continue

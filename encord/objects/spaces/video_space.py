@@ -21,10 +21,11 @@ from encord.objects.label_utils import create_frame_classification_dict, create_
 from encord.objects.ontology_object_instance import (
     ObjectInstance,
 )
-from encord.objects.spaces.annotation.base_annotation import AnnotationData, AnnotationInfo
+from encord.objects.spaces.annotation.base_annotation import AnnotationData, AnnotationInfo, Annotation
 from encord.objects.spaces.annotation.video_annotation import (
     TwoDimensionalAnnotationData,
     TwoDimensionalFrameAnnotation,
+    FrameAnnotation,
 )
 from encord.objects.spaces.annotation_instance.base_instance import BaseObjectInstance
 from encord.objects.spaces.annotation_instance.video_instance import VideoClassificationInstance, VideoObjectInstance
@@ -334,7 +335,7 @@ class VideoSpace(Space):
 
         return res
 
-    def get_classification_annotations(self) -> list[TwoDimensionalFrameAnnotation]:
+    def get_classification_annotations(self) -> list[FrameAnnotation]:
         res: list[TwoDimensionalFrameAnnotation] = []
 
         for frame, classification in dict(sorted(self._frames_to_classification_hash_to_annotation_data.items())).items():
