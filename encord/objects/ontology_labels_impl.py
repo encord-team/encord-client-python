@@ -18,8 +18,6 @@ from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Type, Union, cast
 from uuid import UUID
 
-from pydantic import TypeAdapter
-
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
 from encord.common.range_manager import RangeManager

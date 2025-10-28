@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Optional, TypeVar
+from typing import TYPE_CHECKING, Optional, TypeVar, Any
 
 from encord.constants.enums import SpaceType
 from encord.objects.spaces.entity import ClassificationEntity, ObjectEntity
@@ -39,12 +39,12 @@ class Space(ABC):
         pass
 
     @abstractmethod
-    def place_object_entity(self, entity: ObjectEntity, **kwargs):
+    def place_object_entity(self, entity: ObjectEntity, **kwargs: Any):
         """All implementations must accept 'data' as first param"""
         pass
 
     @abstractmethod
-    def place_classification_entity(self, entity: ClassificationEntity, **kwargs):
+    def place_classification_entity(self, entity: ClassificationEntity, **kwargs: Any):
         """All implementations must accept 'data' as first param"""
         pass
 

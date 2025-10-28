@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from datetime import datetime
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from typing_extensions import Unpack
 
@@ -12,13 +13,22 @@ from encord.objects.coordinates import (
     TwoDimensionalCoordinates,
     add_coordinates_to_frame_object_dict,
 )
+from encord.objects.frames import Frames
 from encord.objects.label_utils import create_frame_object_dict
 from encord.objects.ontology_object_instance import (
     AddObjectInstanceParams,
 )
+from encord.objects.spaces.annotation.base_annotation import Annotation, AnnotationData, AnnotationInfo
+from encord.objects.spaces.annotation.video_annotation import (
+    FrameAnnotation,
+    TwoDimensionalAnnotation,
+    TwoDimensionalAnnotationData,
+    TwoDimensionalFrameAnnotation,
+)
 from encord.objects.spaces.annotation_instance.base_instance import BaseObjectInstance
 from encord.objects.spaces.annotation_instance.image_instance import ImageClassificationInstance, ImageObjectInstance
 from encord.objects.spaces.base_space import Space
+from encord.objects.spaces.entity import ClassificationEntity, ObjectEntity
 from encord.objects.spaces.types import FrameClassificationIndex, FrameObjectIndex
 from encord.orm.label_space import ImageSpaceInfo, LabelBlob, SpaceInfo
 
@@ -36,8 +46,139 @@ class ImageSpace(Space):
         super().__init__(space_id, title, SpaceType.IMAGE, parent)
         self._objects_map: dict[str, ImageObjectInstance] = dict()
         self._classifications_map: dict[str, ImageClassificationInstance] = dict()
+        self._object_entities_map: dict[str, ObjectEntity] = dict()
+        self._classification_entities_map: dict[str, ClassificationEntity] = dict()
+        self._object_entity_hash_to_annotation_data: dict[str, TwoDimensionalAnnotationData] = dict()
+        self._classification_entity_hash_to_annotation_data: dict[str, AnnotationData] = dict()
+
         self._width = width
         self._height = height
+
+    def place_object_entity(
+        self,
+        entity: ObjectEntity,
+        coordinates: TwoDimensionalCoordinates,
+        *,
+        overwrite: bool = False,
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        confidence: Optional[float] = None,
+        manual_annotation: Optional[bool] = None,
+        reviews: Optional[List[dict]] = None,
+        is_deleted: Optional[bool] = None,
+    ) -> None:
+        self._object_entities_map[entity.object_hash] = entity
+        entity._space_ids.add(self.space_id)
+
+        # TODO: Check overwrites
+
+
+        existing_frame_annotation_data = self._object_entity_hash_to_annotation_data.get(
+           entity.object_hash
+        )
+        if existing_frame_annotation_data is None:
+            existing_frame_annotation_data = TwoDimensionalAnnotationData(
+                object_frame_instance_info=AnnotationInfo(),
+                coordinates=coordinates,
+            )
+
+            self._object_entity_hash_to_annotation_data[entity.object_hash] = existing_frame_annotation_data
+
+
+            existing_frame_annotation_data.object_frame_instance_info.update_from_optional_fields(
+                created_at=created_at,
+                created_by=created_by,
+                last_edited_at=last_edited_at,
+                last_edited_by=last_edited_by,
+                confidence=confidence,
+                manual_annotation=manual_annotation,
+                reviews=reviews,
+                is_deleted=is_deleted,
+            )
+
+    def place_classification_entity(
+        self,
+        entity: ClassificationEntity,
+        *,
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        confidence: Optional[float] = None,
+        manual_annotation: Optional[bool] = None,
+        reviews: Optional[List[dict]] = None,
+    ) -> None:
+        self._classification_entities_map[entity.classification_hash] = entity
+        entity._space_ids.add(self.space_id)
+
+        # TODO: Check overwrites
+
+        existing_frame_classification_annotation_data = self._classification_entity_hash_to_annotation_data.get(entity.classification_hash)
+        if existing_frame_classification_annotation_data is None:
+            existing_frame_classification_annotation_data = AnnotationData(
+                object_frame_instance_info=AnnotationInfo(),
+            )
+
+            self._classification_entity_hash_to_annotation_data[entity.classification_hash] = existing_frame_classification_annotation_data
+
+        existing_frame_classification_annotation_data.object_frame_instance_info.update_from_optional_fields(
+            created_at=created_at,
+            created_by=created_by,
+            last_edited_at=last_edited_at,
+            last_edited_by=last_edited_by,
+            confidence=confidence,
+            manual_annotation=manual_annotation,
+            reviews=reviews,
+        )
+
+    def get_object_annotations(self) -> list[TwoDimensionalAnnotation]:
+        res: list[TwoDimensionalAnnotation] = []
+
+        for obj_hash, annotation in self._object_entity_hash_to_annotation_data.items():
+            res.append(
+                TwoDimensionalAnnotation(space=self, entity=self._object_entities_map[obj_hash])
+            )
+
+        return res
+
+    def get_classification_annotations(self) -> list[Annotation]:
+        res: list[Annotation] = []
+
+        for frame, classification in dict(
+            sorted(self._frames_to_classification_hash_to_annotation_data.items())
+        ).items():
+            for classification_hash, annotation in classification.items():
+                res.append(
+                    Annotation(
+                        space=self, entity=self._classification_entities_map[classification_hash]
+                    )
+                )
+
+        return res
+
+    def get_object_entities(self) -> list[ObjectEntity]:
+        return list(self._object_entities_map.values())
+
+    def get_classification_entities(self) -> list[ClassificationEntity]:
+        return list(self._classification_entities_map.values())
+
+    def remove_object_entity(self, object_hash: str) -> Optional[ObjectEntity]:
+        obj_entity = self._object_entities_map.pop(object_hash, None)
+        for frame, obj in self._frames_to_entity_hash_to_annotation_data.items():
+            if object_hash in obj:
+                obj.pop(object_hash)
+
+        return obj_entity
+
+    def remove_classification_entity(self, classification_hash: str) -> Optional[ClassificationEntity]:
+        classification_entity = self._classification_entities_map.pop(classification_hash, None)
+        for frame, classification in self._frames_to_classification_hash_to_annotation_data.items():
+            if classification_hash in classification:
+                classification.pop(classification_hash)
+
+        return classification_entity
 
     def _create_new_object_instance_from_frame_label_dict(self, frame_object_label: dict):
         from encord.objects.ontology_object import Object
@@ -104,77 +245,6 @@ class ImageSpace(Space):
     def _add_classification_instance(self, classification_instance: ImageClassificationInstance) -> None:
         """Add a classification instance to this space and track it across its frames."""
         self._classifications_map[classification_instance.classification_hash] = classification_instance
-
-    def add_object_instance(
-        self, obj: Object, coordinates: TwoDimensionalCoordinates, **kwargs: Unpack[AddObjectInstanceParams]
-    ) -> ImageObjectInstance:
-        object_instance = ImageObjectInstance(ontology_object=obj, space=self)
-        object_instance.add_annotation(coordinates=coordinates, **kwargs)
-
-        self._add_object_instance(object_instance)
-
-        return object_instance
-
-    def get_object_instances(self) -> list[ImageObjectInstance]:
-        """Get all object instances in this space."""
-        return list(self._objects_map.values())
-
-    def get_classification_instances(self) -> list[ImageClassificationInstance]:
-        """Get all classification instances in this space."""
-        return list(self._classifications_map.values())
-
-    def add_classification_instance(
-        self, classification: Classification, **kwargs: Unpack[AddObjectInstanceParams]
-    ) -> ImageClassificationInstance:
-        """Add a classification instance to the image space."""
-        classification_instance = ImageClassificationInstance(ontology_classification=classification, space=self)
-        classification_instance.set_annotation(**kwargs)
-
-        self._add_classification_instance(classification_instance)
-
-        return classification_instance
-
-    def move_object_instance_from_space(self, object_to_move: ImageObjectInstance) -> None:
-        """Move an object instance from another space to this space."""
-        original_space = object_to_move._space
-
-        if original_space is None:
-            raise LabelRowError("Unable to move object instance, as it currently does not belong to any space.")
-
-        original_space.remove_object_instance(object_to_move.object_hash)
-        self._add_object_instance(object_to_move)
-
-    def move_classification_instance_from_space(self, classification_to_move: ImageClassificationInstance) -> None:
-        """Move a classification instance from another space to this space."""
-        original_space = classification_to_move._space
-
-        if original_space is None:
-            raise LabelRowError("Unable to move classification instance, as it currently does not belong to any space.")
-
-        original_space.remove_classification_instance(classification_to_move.classification_hash)
-        self._add_classification_instance(classification_to_move)
-
-    def remove_object_instance(self, object_hash: str) -> Optional[ImageObjectInstance]:
-        """Remove an object instance from this space by its hash."""
-        object_instance = self._objects_map.pop(object_hash, None)
-
-        if object_instance is None:
-            return None
-        else:
-            object_instance._set_space(None)
-
-        return object_instance
-
-    def remove_classification_instance(self, classification_hash: str) -> Optional[ImageClassificationInstance]:
-        """Remove a classification instance from this space by its hash."""
-        classification_instance = self._classifications_map.pop(classification_hash, None)
-
-        if classification_instance is None:
-            return None
-        else:
-            classification_instance._set_space(None)
-
-        return classification_instance
 
     """INTERNAL METHODS FOR DESERDE"""
 
