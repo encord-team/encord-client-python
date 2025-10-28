@@ -8,11 +8,7 @@ from deepdiff import DeepDiff
 from encord.exceptions import LabelRowError
 from encord.objects import Classification, LabelRowV2, Object
 from encord.objects.attributes import Attribute
-from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import BoundingBoxCoordinates
-from encord.objects.spaces.annotation_instance.base_instance import BaseObjectInstance
-from encord.objects.spaces.annotation_instance.image_instance import ImageObjectInstance
-from encord.objects.spaces.annotation_instance.video_instance import VideoObjectInstance
 from encord.objects.spaces.video_space import VideoSpace
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.two_videos import (
@@ -89,7 +85,7 @@ def test_remove_object_entity_from_video_space(ontology):
     first_annotation = annotations[0]
 
     # Act
-    video_space_1.remove_entity(new_entity.object_hash)
+    video_space_1.remove_object_entity(new_entity.object_hash)
 
     # Assert
     annotations = video_space_1.get_object_annotations()
@@ -203,7 +199,7 @@ def test_remove_classification_entity_from_video_space(ontology):
     assert len(annotations) == 3
 
     # Act
-    video_space_1.remove_entity(new_entity.classification_hash)
+    video_space_1.remove_classification_entity(new_entity.classification_hash)
 
     # Assert
     entities = video_space_1.get_classification_entities()

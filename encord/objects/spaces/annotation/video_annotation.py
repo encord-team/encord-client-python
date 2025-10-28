@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from encord.exceptions import LabelRowError
 from encord.objects.coordinates import Coordinates
 from encord.objects.spaces.annotation.base_annotation import Annotation, AnnotationData
-from encord.objects.spaces.entity import ObjectEntity
+from encord.objects.spaces.entity import ClassificationEntity, ObjectEntity
 
 if TYPE_CHECKING:
     from encord.objects.spaces.video_space import VideoSpace
@@ -51,7 +51,7 @@ class TwoDimensionalFrameAnnotation(Annotation):
 
 
 class FrameAnnotation(Annotation):
-    def __init__(self, space: VideoSpace, entity: ObjectEntity, frame: int):
+    def __init__(self, space: VideoSpace, entity: ObjectEntity | ClassificationEntity, frame: int):
         super().__init__(space, entity)
         self._space = space
         self._frame = frame

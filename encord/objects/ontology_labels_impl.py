@@ -1811,17 +1811,19 @@ class LabelRowV2:
             }
 
         for entity in self._object_entities_map.values():
+            # Case where we've removed the entity from all spaces
+            if len(entity._space_ids) == 0:
+                continue
+
             entity_instance = entity._object_instance
-            if isinstance(entity_instance, ObjectInstance):
-                all_static_answers = self._dynamic_answers_to_encord_dict(entity_instance)
+            all_static_answers = self._dynamic_answers_to_encord_dict(entity_instance)
+            if len(all_static_answers) == 0:
+                continue
 
-                if len(all_static_answers) == 0:
-                    continue
-
-                ret[entity_instance.object_hash] = {
-                    "actions": list(all_static_answers),
-                    "objectHash": entity_instance.object_hash,
-                }
+            ret[entity_instance.object_hash] = {
+                "actions": list(all_static_answers),
+                "objectHash": entity_instance.object_hash,
+            }
 
         return ret
 

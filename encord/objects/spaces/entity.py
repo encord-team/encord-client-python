@@ -16,6 +16,7 @@ class ObjectEntity:
     def __init__(self, label_row: LabelRowV2, object_instance: ObjectInstance):
         self._object_instance = object_instance
         self._label_row = label_row
+        self._space_ids: set[str] = set()
 
     @property
     def object_hash(self) -> str:
@@ -51,6 +52,7 @@ class ClassificationEntity:
     def __init__(self, label_row: LabelRowV2, classification_instance: ClassificationInstance):
         self._classification_instance = classification_instance
         self._label_row = label_row
+        self._space_ids: set[str] = set()
 
     @property
     def classification_hash(self) -> str:

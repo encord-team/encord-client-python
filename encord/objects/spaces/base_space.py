@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional, TypeVar
 
 from encord.constants.enums import SpaceType
-from encord.objects.spaces.entity import ObjectEntity
+from encord.objects.spaces.entity import ClassificationEntity, ObjectEntity
 from encord.orm.label_space import LabelBlob, SpaceInfo
 
 if TYPE_CHECKING:
@@ -33,7 +33,27 @@ class Space(ABC):
         pass
 
     @abstractmethod
-    def remove_entity(self, entity_hash: str) -> Optional[ObjectInstance]:
+    def get_classification_entities(
+        self,
+    ) -> list[ClassificationEntity]:
+        pass
+
+    @abstractmethod
+    def place_object_entity(self, entity: ObjectEntity, **kwargs):
+        """All implementations must accept 'data' as first param"""
+        pass
+
+    @abstractmethod
+    def place_classification_entity(self, entity: ClassificationEntity, **kwargs):
+        """All implementations must accept 'data' as first param"""
+        pass
+
+    @abstractmethod
+    def remove_object_entity(self, object_hash: str) -> Optional[ObjectEntity]:
+        pass
+
+    @abstractmethod
+    def remove_classification_entity(self, classification_hash: str) -> Optional[ClassificationEntity]:
         pass
 
     @abstractmethod
