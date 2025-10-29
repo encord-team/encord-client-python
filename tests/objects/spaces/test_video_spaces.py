@@ -1,5 +1,3 @@
-import json
-from datetime import datetime, timezone
 from unittest.mock import Mock
 
 import pytest
@@ -33,27 +31,27 @@ def ontology():
     yield ontology
 
 
-def test_add_object_entity_to_video_space(ontology):
+def test_add_object_to_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space_by_id("video-1-uuid", type_=VideoSpace)
 
     # Act
-    new_entity = label_row.create_object_entity(ontology_class=box_ontology_item)
-    video_space_1.place_object_entity(
-        entity=new_entity,
+    new_object = label_row.create_space_object(ontology_class=box_ontology_item)
+    video_space_1.place_object(
+        object=new_object,
         frames=[1],
         coordinates=BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0),
     )
-    video_space_1.place_object_entity(
-        entity=new_entity,
+    video_space_1.place_object(
+        object=new_object,
         frames=[0, 2, 3],
         coordinates=BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5),
     )
 
     # Assert
-    entities = video_space_1.get_object_entities()
+    entities = video_space_1.get_objects()
     assert len(entities) == 1
 
     annotations = video_space_1.get_object_annotations()
@@ -64,19 +62,19 @@ def test_add_object_entity_to_video_space(ontology):
     assert first_annotation.coordinates == BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5)
 
 
-def test_remove_object_entity_from_video_space(ontology):
+def test_remove_object_from_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space_by_id("video-1-uuid", type_=VideoSpace)
-    new_entity = label_row.create_object_entity(ontology_class=box_ontology_item)
-    video_space_1.place_object_entity(
-        entity=new_entity,
+    new_object = label_row.create_space_object(ontology_class=box_ontology_item)
+    video_space_1.place_object(
+        object=new_object,
         frames=[0, 1, 2],
         coordinates=BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5),
     )
 
-    entities = video_space_1.get_object_entities()
+    entities = video_space_1.get_objects()
     assert len(entities) == 1
 
     annotations = video_space_1.get_object_annotations()
@@ -85,7 +83,7 @@ def test_remove_object_entity_from_video_space(ontology):
     first_annotation = annotations[0]
 
     # Act
-    video_space_1.remove_object_entity(new_entity.object_hash)
+    video_space_1.remove_space_object(new_object.object_hash)
 
     # Assert
     annotations = video_space_1.get_object_annotations()
@@ -94,27 +92,27 @@ def test_remove_object_entity_from_video_space(ontology):
         assert first_annotation.coordinates
 
 
-def test_add_object_entity_to_two_spaces(ontology):
+def test_add_object_to_two_spaces(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space_by_id("video-1-uuid", type_=VideoSpace)
     video_space_2 = label_row.get_space_by_id("video-2-uuid", type_=VideoSpace)
 
-    new_entity = label_row.create_object_entity(ontology_class=box_ontology_item)
+    new_object = label_row.create_space_object(ontology_class=box_ontology_item)
     box_coordinates_1 = BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5)
     box_coordinates_2 = BoundingBoxCoordinates(height=0.8, width=0.8, top_left_x=0.8, top_left_y=0.8)
 
     # Act
-    video_space_1.place_object_entity(
-        entity=new_entity,
+    video_space_1.place_object(
+        object=new_object,
         frames=[0, 1, 2],
         coordinates=box_coordinates_1,
     )
-    video_space_2.place_object_entity(entity=new_entity, frames=[4, 5], coordinates=box_coordinates_2)
+    video_space_2.place_object(object=new_object, frames=[4, 5], coordinates=box_coordinates_2)
 
     # Assert
-    entities = video_space_1.get_object_entities()
+    entities = video_space_1.get_objects()
     assert len(entities) == 1
 
     annotations_on_video_space_1 = video_space_1.get_object_annotations()
@@ -128,54 +126,74 @@ def test_add_object_entity_to_two_spaces(ontology):
     assert first_annotation_on_video_space_2.coordinates == box_coordinates_2
 
 
-def test_update_attribute_for_object_entity_which_exist_on_two_spaces(ontology):
+def test_update_attribute_for_object_which_exist_on_two_spaces(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space_by_id("video-1-uuid", type_=VideoSpace)
     video_space_2 = label_row.get_space_by_id("video-2-uuid", type_=VideoSpace)
 
-    new_entity = label_row.create_object_entity(ontology_class=box_with_attributes_ontology_item)
+    new_object = label_row.create_space_object(ontology_class=box_with_attributes_ontology_item)
     box_coordinates_1 = BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5)
 
-    video_space_1.place_object_entity(
-        entity=new_entity,
+    video_space_1.place_object(
+        object=new_object,
         frames=[0, 1, 2],
         coordinates=box_coordinates_1,
     )
-    video_space_2.place_object_entity(entity=new_entity, frames=[4, 5], coordinates=box_coordinates_1)
+    video_space_2.place_object(object=new_object, frames=[4, 5], coordinates=box_coordinates_1)
 
-    entity_answer = new_entity.get_answer(attribute=box_text_attribute_ontology_item)
-    assert entity_answer is None
+    object_answer = new_object.get_answer(attribute=box_text_attribute_ontology_item)
+    assert object_answer is None
 
     # Act
     new_answer = "Hello!"
-    new_entity.set_answer(attribute=box_text_attribute_ontology_item, answer=new_answer)
+    new_object.set_answer(attribute=box_text_attribute_ontology_item, answer=new_answer)
 
     # Assert
-    entity_answer = new_entity.get_answer(attribute=box_text_attribute_ontology_item)
-    assert entity_answer == new_answer
+    object_answer = new_object.get_answer(attribute=box_text_attribute_ontology_item)
+    assert object_answer == new_answer
 
-    entity_on_video_space_1 = video_space_1.get_object_entities()[0]
-    assert entity_on_video_space_1.get_answer(box_text_attribute_ontology_item) == new_answer
+    object_on_video_space_1 = video_space_1.get_objects()[0]
+    assert object_on_video_space_1.get_answer(box_text_attribute_ontology_item) == new_answer
 
-    entity_on_video_space_2 = video_space_2.get_object_entities()[0]
-    assert entity_on_video_space_2.get_answer(box_text_attribute_ontology_item) == new_answer
+    object_on_video_space_2 = video_space_2.get_objects()[0]
+    assert object_on_video_space_2.get_answer(box_text_attribute_ontology_item) == new_answer
+
+    object_answer_dict = label_row.to_encord_dict()["object_answers"]
+    EXPECTED_DICT = {
+        new_object.object_hash: {
+            "classifications": [
+                {
+                    "name": "First name",
+                    "value": "first_name",
+                    "answers": "Hello!",
+                    "featureHash": "OTkxMjU1",
+                    "manualAnnotation": True,
+                }
+            ],
+            "objectHash": new_object.object_hash,
+        }
+    }
+    assert not DeepDiff(object_answer_dict, EXPECTED_DICT)
 
 
-def test_add_classification_entity_to_video_space(ontology):
+def test_add_classification_object_to_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space_by_id("video-1-uuid", type_=VideoSpace)
 
     # Act
-    new_entity = label_row.create_classification_entity(ontology_class=text_classification)
-    video_space_1.place_classification_entity(entity=new_entity, frames=[1])
-    video_space_1.place_classification_entity(entity=new_entity, frames=[0, 2, 3])
+    new_classification = label_row.create_space_classification(ontology_class=text_classification)
+    video_space_1.place_classification(classification=new_classification, frames=[1])
+    video_space_1.place_classification(classification=new_classification, frames=[0, 2, 3])
+
+    text_answer = "Some answer"
+    new_classification.set_answer(answer=text_answer)
 
     # Assert
-    entities = video_space_1.get_classification_entities()
+    entities = video_space_1.get_classifications()
     assert len(entities) == 1
 
     annotations = video_space_1.get_classification_annotations()
@@ -184,25 +202,44 @@ def test_add_classification_entity_to_video_space(ontology):
     first_annotation = annotations[0]
     assert first_annotation.frame == 0
 
+    classification_answers_dict = label_row.to_encord_dict()["classification_answers"]
+    expected_dict = {
+        new_classification.classification_hash: {
+            "classifications": [
+                {
+                    "name": "Text classification",
+                    "value": "text_classification",
+                    "answers": text_answer,
+                    "featureHash": "OxrtEM+v",
+                    "manualAnnotation": True,
+                }
+            ],
+            "classificationHash": new_classification.classification_hash,
+            "featureHash": "jPOcEsbw",
+        }
+    }
 
-def test_remove_classification_entity_from_video_space(ontology):
+    assert not DeepDiff(classification_answers_dict, expected_dict)
+
+
+def test_remove_classification_object_from_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space_by_id("video-1-uuid", type_=VideoSpace)
 
-    new_entity = label_row.create_classification_entity(ontology_class=text_classification)
-    video_space_1.place_classification_entity(entity=new_entity, frames=[0, 2, 3])
-    entities = video_space_1.get_classification_entities()
+    new_classification = label_row.create_space_classification(ontology_class=text_classification)
+    video_space_1.place_classification(classification=new_classification, frames=[0, 2, 3])
+    entities = video_space_1.get_classifications()
     assert len(entities) == 1
     annotations = video_space_1.get_classification_annotations()
     assert len(annotations) == 3
 
     # Act
-    video_space_1.remove_classification_entity(new_entity.classification_hash)
+    video_space_1.remove_space_classification(new_classification.classification_hash)
 
     # Assert
-    entities = video_space_1.get_classification_entities()
+    entities = video_space_1.get_classifications()
     assert len(entities) == 0
     annotations = video_space_1.get_classification_annotations()
     assert len(annotations) == 0
@@ -216,19 +253,10 @@ def test_read_and_export_video_space_labels(ontology):
     video_space_1_object_annotations = video_space_1.get_object_annotations()
     assert len(video_space_1_object_annotations) == 4
 
-    video_space_1_object_entities = video_space_1.get_object_entities()
+    video_space_1_object_entities = video_space_1.get_objects()
     assert len(video_space_1_object_entities) == 2
 
     video_space_1_classification_annotations = video_space_1.get_classification_annotations()
     assert len(video_space_1_classification_annotations) == 1
-    classification_entities = video_space_1.get_classification_entities()
+    classification_entities = video_space_1.get_classifications()
     assert len(classification_entities) == 1
-
-    output_dict = label_row.to_encord_dict()
-
-    assert not DeepDiff(
-        DATA_GROUP_WITH_TWO_VIDEOS_LABELS,
-        output_dict,
-        exclude_regex_paths=[r".*\['trackHash'\]"],
-        ignore_order_func=lambda x: x.path().endswith("['objects']"),
-    )

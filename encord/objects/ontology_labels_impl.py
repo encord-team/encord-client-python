@@ -70,7 +70,7 @@ from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.spaces.base_space import Space, SpaceT
-from encord.objects.spaces.entity import ClassificationEntity, ObjectEntity
+from encord.objects.spaces.entity import SpaceClassification, SpaceObject
 from encord.objects.spaces.image_space import ImageSpace
 from encord.objects.spaces.range_space import (
     AudioSpace,
@@ -116,8 +116,8 @@ class LabelRowV2:
     ) -> None:
         self._project_client = project_client
         self._ontology = ontology
-        self._object_entities_map: dict[str, ObjectEntity] = {}
-        self._classification_entities_map: dict[str, ClassificationEntity] = {}
+        self._space_objects_map: dict[str, SpaceObject] = {}
+        self._space_classifications_map: dict[str, SpaceClassification] = {}
         self._label_row_read_only_data: LabelRowV2.LabelRowReadOnlyData = self._parse_label_row_metadata(
             label_row_metadata
         )
@@ -687,20 +687,20 @@ class LabelRowV2:
 
         return res
 
-    def create_object_entity(self, ontology_class: Object, entity_hash: Optional[str] = None) -> ObjectEntity:
+    def create_space_object(self, ontology_class: Object, entity_hash: Optional[str] = None) -> SpaceObject:
         new_instance = ObjectInstance(ontology_object=ontology_class, object_hash=entity_hash)
-        new_entity = ObjectEntity(label_row=self, object_instance=new_instance)
-        self._object_entities_map[new_entity.object_hash] = new_entity
+        new_entity = SpaceObject(label_row=self, object_instance=new_instance)
+        self._space_objects_map[new_entity.object_hash] = new_entity
 
         return new_entity
 
-    def create_classification_entity(
+    def create_space_classification(
         self, ontology_class: Classification, entity_hash: Optional[str] = None
-    ) -> ClassificationEntity:
+    ) -> SpaceClassification:
         # TODO: Shouldn't this validate and prevent users from passing in an Object?
         new_instance = ClassificationInstance(ontology_classification=ontology_class, classification_hash=entity_hash)
-        new_entity = ClassificationEntity(label_row=self, classification_instance=new_instance)
-        self._classification_entities_map[new_entity.classification_hash] = new_entity
+        new_entity = SpaceClassification(label_row=self, classification_instance=new_instance)
+        self._space_classifications_map[new_entity.classification_hash] = new_entity
 
         return new_entity
 
@@ -1808,7 +1808,7 @@ class LabelRowV2:
                 "objectHash": obj.object_hash,
             }
 
-        for entity in self._object_entities_map.values():
+        for entity in self._space_objects_map.values():
             # Case where we've removed the entity from all spaces
             if len(entity._space_ids) == 0:
                 continue
@@ -2548,7 +2548,7 @@ class LabelRowV2:
             object_instance = self._objects_map.get(object_hash)
 
             if object_instance is None:
-                entity = self._object_entities_map.get(object_hash)
+                entity = self._space_objects_map.get(object_hash)
                 if entity is not None:
                     object_instance = entity._object_instance
 

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypedDict, Unpack
 
 from encord.common.time_parser import format_datetime_to_long_string_optional
 from encord.objects.attributes import Attribute
-from encord.objects.spaces.annotation.base_annotation import Annotation, AnnotationInfo
+from encord.objects.spaces.annotation.base_annotation import AnnotationInfo, ObjectAnnotation
 from encord.objects.spaces.annotation_instance.base_instance import BaseObjectInstance
 from encord.objects.utils import _lower_snake_case
 

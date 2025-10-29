@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from encord.objects import LabelRowV2, ObjectInstance, Option
 
 
-class ObjectEntity:
+class SpaceObject:
     def __init__(self, label_row: LabelRowV2, object_instance: ObjectInstance):
         self._object_instance = object_instance
         self._label_row = label_row
@@ -48,7 +48,7 @@ class ObjectEntity:
         )
 
 
-class ClassificationEntity:
+class SpaceClassification:
     def __init__(self, label_row: LabelRowV2, classification_instance: ClassificationInstance):
         self._classification_instance = classification_instance
         self._label_row = label_row

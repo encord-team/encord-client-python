@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Optional, TypeVar, Any
+from typing import TYPE_CHECKING, Any, Optional, TypeVar
 
 from encord.constants.enums import SpaceType
-from encord.objects.spaces.entity import ClassificationEntity, ObjectEntity
+from encord.objects.coordinates import Coordinates
+from encord.objects.spaces.entity import SpaceClassification, SpaceObject
 from encord.orm.label_space import LabelBlob, SpaceInfo
 
 if TYPE_CHECKING:
@@ -27,33 +28,31 @@ class Space(ABC):
         self.parent = parent
 
     @abstractmethod
-    def get_object_entities(
+    def get_objects(
         self,
-    ) -> list[ObjectEntity]:
+    ) -> list[SpaceObject]:
         pass
 
     @abstractmethod
-    def get_classification_entities(
+    def get_classifications(
         self,
-    ) -> list[ClassificationEntity]:
+    ) -> list[SpaceClassification]:
         pass
 
     @abstractmethod
-    def place_object_entity(self, entity: ObjectEntity, **kwargs: Any):
-        """All implementations must accept 'data' as first param"""
+    def place_object(self, object: SpaceObject, coordinates: Coordinates, **kwargs: Any):
         pass
 
     @abstractmethod
-    def place_classification_entity(self, entity: ClassificationEntity, **kwargs: Any):
-        """All implementations must accept 'data' as first param"""
+    def place_classification(self, classification: SpaceClassification, **kwargs: Any):
         pass
 
     @abstractmethod
-    def remove_object_entity(self, object_hash: str) -> Optional[ObjectEntity]:
+    def remove_space_object(self, object_hash: str) -> Optional[SpaceObject]:
         pass
 
     @abstractmethod
-    def remove_classification_entity(self, classification_hash: str) -> Optional[ClassificationEntity]:
+    def remove_space_classification(self, classification_hash: str) -> Optional[SpaceClassification]:
         pass
 
     @abstractmethod

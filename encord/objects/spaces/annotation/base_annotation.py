@@ -7,11 +7,12 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from encord.common.time_parser import parse_datetime
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
-from encord.objects.spaces.entity import ObjectEntity
+from encord.objects.spaces.entity import SpaceClassification, SpaceObject
 from encord.objects.utils import check_email
 
 if TYPE_CHECKING:
     from encord.objects.spaces.base_space import Space
+    from encord.objects.spaces.image_space import ImageSpace
 
 
 @dataclass
@@ -100,36 +101,36 @@ class AnnotationData:
     """Data class for storing frame-specific data.
 
     Attributes:
-        object_frame_instance_info (ObjectInstance.FrameInfo): The frame's metadata information.
+        annotation_info (ObjectInstance.FrameInfo): The frame's metadata information.
     """
 
-    object_frame_instance_info: AnnotationInfo
+    annotation_info: AnnotationInfo
 
 
-class Annotation:
+class ObjectAnnotation:
     """Represents an annotation on a Space.
 
     Allows setting or getting annotation data for the ObjectInstance.
     """
 
-    def __init__(self, space: Space, entity: ObjectEntity):
+    def __init__(self, space: Space, entity: SpaceObject):
         self._space = space
         self._entity = entity
 
     @property
     def created_at(self) -> datetime:
         self._check_if_annotation_is_valid()
-        return self._get_annotation_data().object_frame_instance_info.created_at
+        return self._get_annotation_data().annotation_info.created_at
 
     @created_at.setter
     def created_at(self, created_at: datetime) -> None:
         self._check_if_annotation_is_valid()
-        self._get_annotation_data().object_frame_instance_info.created_at = created_at
+        self._get_annotation_data().annotation_info.created_at = created_at
 
     @property
     def created_by(self) -> Optional[str]:
         self._check_if_annotation_is_valid()
-        return self._get_annotation_data().object_frame_instance_info.created_by
+        return self._get_annotation_data().annotation_info.created_by
 
     @created_by.setter
     def created_by(self, created_by: Optional[str]) -> None:
@@ -137,22 +138,22 @@ class Annotation:
         self._check_if_annotation_is_valid()
         if created_by is not None:
             check_email(created_by)
-        self._get_annotation_data().object_frame_instance_info.created_by = created_by
+        self._get_annotation_data().annotation_info.created_by = created_by
 
     @property
     def last_edited_at(self) -> datetime:
         self._check_if_annotation_is_valid()
-        return self._get_annotation_data().object_frame_instance_info.last_edited_at
+        return self._get_annotation_data().annotation_info.last_edited_at
 
     @last_edited_at.setter
     def last_edited_at(self, last_edited_at: datetime) -> None:
         self._check_if_annotation_is_valid()
-        self._get_annotation_data().object_frame_instance_info.last_edited_at = last_edited_at
+        self._get_annotation_data().annotation_info.last_edited_at = last_edited_at
 
     @property
     def last_edited_by(self) -> Optional[str]:
         self._check_if_annotation_is_valid()
-        return self._get_annotation_data().object_frame_instance_info.last_edited_by
+        return self._get_annotation_data().annotation_info.last_edited_by
 
     @last_edited_by.setter
     def last_edited_by(self, last_edited_by: Optional[str]) -> None:
@@ -160,27 +161,27 @@ class Annotation:
         self._check_if_annotation_is_valid()
         if last_edited_by is not None:
             check_email(last_edited_by)
-        self._get_annotation_data().object_frame_instance_info.last_edited_by = last_edited_by
+        self._get_annotation_data().annotation_info.last_edited_by = last_edited_by
 
     @property
     def confidence(self) -> float:
         self._check_if_annotation_is_valid()
-        return self._get_annotation_data().object_frame_instance_info.confidence
+        return self._get_annotation_data().annotation_info.confidence
 
     @confidence.setter
     def confidence(self, confidence: float) -> None:
         self._check_if_annotation_is_valid()
-        self._get_annotation_data().object_frame_instance_info.confidence = confidence
+        self._get_annotation_data().annotation_info.confidence = confidence
 
     @property
     def manual_annotation(self) -> bool:
         self._check_if_annotation_is_valid()
-        return self._get_annotation_data().object_frame_instance_info.manual_annotation
+        return self._get_annotation_data().annotation_info.manual_annotation
 
     @manual_annotation.setter
     def manual_annotation(self, manual_annotation: bool) -> None:
         self._check_if_annotation_is_valid()
-        self._get_annotation_data().object_frame_instance_info.manual_annotation = manual_annotation
+        self._get_annotation_data().annotation_info.manual_annotation = manual_annotation
 
     @property
     def reviews(self) -> Optional[List[Dict[str, Any]]]:
@@ -190,7 +191,7 @@ class Annotation:
             Optional[List[Dict[str, Any]]]: A list of review dictionaries, if any.
         """
         self._check_if_annotation_is_valid()
-        return self._get_annotation_data().object_frame_instance_info.reviews
+        return self._get_annotation_data().annotation_info.reviews
 
     @property
     def is_deleted(self) -> Optional[bool]:
@@ -200,11 +201,116 @@ class Annotation:
             Optional[bool]: `True` if deleted, `False` otherwise, or `None` if not set.
         """
         self._check_if_annotation_is_valid()
-        return self._get_annotation_data().object_frame_instance_info.is_deleted
+        return self._get_annotation_data().annotation_info.is_deleted
 
     @abstractmethod
     def _get_annotation_data(self) -> AnnotationData:
         pass
+
+    @abstractmethod
+    def _check_if_annotation_is_valid(self) -> None:
+        pass
+
+
+class ClassificationAnnotation:
+    """Represents an annotation on a Space.
+
+    Allows setting or getting annotation data for the Classification.
+    """
+
+    def __init__(self, space: ImageSpace, classification: SpaceClassification):
+        self._space = space
+        self._classification = classification
+
+    @property
+    def created_at(self) -> datetime:
+        self._check_if_annotation_is_valid()
+        return self._get_annotation_data().annotation_info.created_at
+
+    @created_at.setter
+    def created_at(self, created_at: datetime) -> None:
+        self._check_if_annotation_is_valid()
+        self._get_annotation_data().annotation_info.created_at = created_at
+
+    @property
+    def created_by(self) -> Optional[str]:
+        self._check_if_annotation_is_valid()
+        return self._get_annotation_data().annotation_info.created_by
+
+    @created_by.setter
+    def created_by(self, created_by: Optional[str]) -> None:
+        """Set the created_by field with a user email or None if it should default to the current user of the SDK."""
+        self._check_if_annotation_is_valid()
+        if created_by is not None:
+            check_email(created_by)
+        self._get_annotation_data().annotation_info.created_by = created_by
+
+    @property
+    def last_edited_at(self) -> datetime:
+        self._check_if_annotation_is_valid()
+        return self._get_annotation_data().annotation_info.last_edited_at
+
+    @last_edited_at.setter
+    def last_edited_at(self, last_edited_at: datetime) -> None:
+        self._check_if_annotation_is_valid()
+        self._get_annotation_data().annotation_info.last_edited_at = last_edited_at
+
+    @property
+    def last_edited_by(self) -> Optional[str]:
+        self._check_if_annotation_is_valid()
+        return self._get_annotation_data().annotation_info.last_edited_by
+
+    @last_edited_by.setter
+    def last_edited_by(self, last_edited_by: Optional[str]) -> None:
+        """Set the last_edited_by field with a user email or None if it should default to the current user of the SDK."""
+        self._check_if_annotation_is_valid()
+        if last_edited_by is not None:
+            check_email(last_edited_by)
+        self._get_annotation_data().annotation_info.last_edited_by = last_edited_by
+
+    @property
+    def confidence(self) -> float:
+        self._check_if_annotation_is_valid()
+        return self._get_annotation_data().annotation_info.confidence
+
+    @confidence.setter
+    def confidence(self, confidence: float) -> None:
+        self._check_if_annotation_is_valid()
+        self._get_annotation_data().annotation_info.confidence = confidence
+
+    @property
+    def manual_annotation(self) -> bool:
+        self._check_if_annotation_is_valid()
+        return self._get_annotation_data().annotation_info.manual_annotation
+
+    @manual_annotation.setter
+    def manual_annotation(self, manual_annotation: bool) -> None:
+        self._check_if_annotation_is_valid()
+        self._get_annotation_data().annotation_info.manual_annotation = manual_annotation
+
+    @property
+    def reviews(self) -> Optional[List[Dict[str, Any]]]:
+        """Get the reviews for this object on this frame.
+
+        Returns:
+            Optional[List[Dict[str, Any]]]: A list of review dictionaries, if any.
+        """
+        self._check_if_annotation_is_valid()
+        return self._get_annotation_data().annotation_info.reviews
+
+    @property
+    def is_deleted(self) -> Optional[bool]:
+        """Check if the object instance is marked as deleted on this frame.
+
+        Returns:
+            Optional[bool]: `True` if deleted, `False` otherwise, or `None` if not set.
+        """
+        self._check_if_annotation_is_valid()
+        return self._get_annotation_data().annotation_info.is_deleted
+
+    @abstractmethod
+    def _get_annotation_data(self) -> AnnotationData:
+        return self._space._classification_hash_to_annotation_data[self._classification.classification_hash]
 
     @abstractmethod
     def _check_if_annotation_is_valid(self) -> None:
