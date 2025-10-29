@@ -115,14 +115,17 @@ class LabelRowV2:
     ) -> None:
         self._project_client = project_client
         self._ontology = ontology
-        self._space_objects_map: dict[str, SpaceObject] = {}
-        self._space_classifications_map: dict[str, SpaceClassification] = {}
+
         self._label_row_read_only_data: LabelRowV2.LabelRowReadOnlyData = self._parse_label_row_metadata(
             label_row_metadata
         )
 
         self._is_labelling_initialised = False
+
+        # Spaces
         self._space_map: dict[str, Space] = {}
+        self._space_objects_map: dict[str, SpaceObject] = {}
+        self._space_classifications_map: dict[str, SpaceClassification] = {}
 
         self._frame_to_hashes: defaultdict[int, Set[str]] = defaultdict(set)
         # ^ frames to object and classification hashes
@@ -139,7 +142,6 @@ class LabelRowV2:
         # at least at the final objects_index/classifications_index level.
 
         self._storage_item: Optional[StorageItem] = None
-        self._entity_hash_to_space_id: dict[str, str] = dict()
 
     @property
     def label_hash(self) -> Optional[str]:
@@ -922,7 +924,7 @@ class LabelRowV2:
         else:
             filtered_frames_list = list()
 
-        for object_, object_ in self._objects_map.items():
+        for object_ in self._objects_map.values():
             # filter by ontology object
             if not (
                 filter_ontology_object is None
@@ -935,7 +937,6 @@ class LabelRowV2:
                 append = True
             else:
                 append = False
-
             for frame in filtered_frames_list:
                 hashes = self._frame_to_hashes.get(frame, set())
                 if object_.object_hash in hashes:
@@ -963,8 +964,8 @@ class LabelRowV2:
 
         object_instance.is_valid()
 
-        # We want to ensure that we are only adding the annotation_instance to a label_row
-        # IF AND ONLY IF the file type is text/html and the annotation_instance has range_html set
+        # We want to ensure that we are only adding the object_instance to a label_row
+        # IF AND ONLY IF the file type is text/html and the object_instance has range_html set
         if self.file_type == "text/html" and object_instance.range_html is None:
             raise LabelRowError(
                 "Unable to assign object instance without a html range to a html file. "
@@ -1126,7 +1127,7 @@ class LabelRowV2:
     ) -> None:
         # This is an internal function, it is not meant to be called by the SDK user.
         self._check_labelling_is_initalised()
-        annotation_path = str(frame)
+
         if isinstance(label_item, ObjectInstance):
             self._frame_to_hashes[frame].add(label_item.object_hash)
         elif isinstance(label_item, ClassificationInstance):
@@ -1185,6 +1186,7 @@ class LabelRowV2:
             object_instance: The object instance to remove.
         """
         self._check_labelling_is_initalised()
+
         self._objects_map.pop(object_instance.object_hash)
         if not object_instance.is_range_only():
             self._remove_from_frame_to_hashes_map(
@@ -2027,11 +2029,10 @@ class LabelRowV2:
         return ret
 
     def _to_encord_objects_list(self, frame: int) -> list:
-        # Get objects for annotation_path
+        # Get objects for frame
         ret: List[dict] = []
 
         objects = self.get_object_instances(filter_frames=frame)
-
         for object_ in objects:
             encord_object = self._to_encord_object(object_, frame)
             ret.append(encord_object)
@@ -2045,7 +2046,6 @@ class LabelRowV2:
         ret: Dict[str, Any] = {}
 
         object_instance_annotation = object_.get_annotation(frame)
-
         coordinates = object_instance_annotation.coordinates
         ontology_hash = object_.ontology_item.feature_node_hash
         ontology_object = self._ontology.structure.get_child_by_hash(ontology_hash, type_=Object)
@@ -2171,7 +2171,7 @@ class LabelRowV2:
         self, label_item: Union[ObjectInstance, ClassificationInstance], frames: Iterable[int]
     ) -> None:
         for frame in frames:
-            self.add_to_single_frame_to_hashes_map(label_item, frame=frame)
+            self.add_to_single_frame_to_hashes_map(label_item, frame)
 
     def _remove_from_frame_to_hashes_map(self, frames: Iterable[int], item_hash: str):
         for frame in frames:
@@ -2231,8 +2231,6 @@ class LabelRowV2:
                         space_info, object_answers=object_answers, classification_answers=classification_answers
                     )
                     res[space_id] = image_space
-                elif space_info[""] == SpaceType.POINT_CLOUD:
-                    res[space_id] = SceneStreamSpace(space_id=space_id, title=space_id, parent=self)
                 else:
                     exhaustive_guard(space_info["space_type"], message="Missing condition for space types.")
 
@@ -2283,7 +2281,6 @@ class LabelRowV2:
         frame_level_data = self._parse_image_group_frame_level_data(label_row_dict["data_units"])
         image_hash_to_frame = {item.image_hash: item.frame_number for item in frame_level_data.values()}
         frame_to_image_hash = {item.frame_number: item.image_hash for item in frame_level_data.values()}
-
         data_type = DataType(label_row_dict["data_type"])
 
         audio_codec = None
@@ -2301,7 +2298,7 @@ class LabelRowV2:
             height = data_dict.get("height")
             width = data_dict.get("width")
 
-        # Here, what should we expect here?
+        # TODO: what should we expect here?
         elif data_type == DataType.GROUP:
             data_dict = list(label_row_dict["data_units"].values())[0]
             file_type = None
@@ -2656,11 +2653,12 @@ class LabelRowV2:
         return object_instance
 
     def _add_coordinates_to_object_instance(
-        self, frame_object_label: dict, frame: int = 0, space: Optional[str] = None
+        self,
+        frame_object_label: dict,
+        frame: int = 0,
     ) -> None:
         object_hash = frame_object_label["objectHash"]
-        object_key = object_hash if space is None else f"{space}#{object_hash}"
-        object_instance = self._objects_map[object_key]
+        object_instance = self._objects_map[object_hash]
 
         coordinates = self._get_coordinates(frame_object_label)
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_label)
@@ -2844,9 +2842,7 @@ class LabelRowV2:
             )
 
     def _method_not_supported_for_audio(self, range_only: bool = False):
-        is_audio = self.data_type == DataType.AUDIO
-
-        if is_audio and not range_only:
+        if self.data_type == DataType.AUDIO and not range_only:
             raise LabelRowError("This method is not supported for audio.")
 
     def __repr__(self) -> str:

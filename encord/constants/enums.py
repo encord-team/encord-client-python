@@ -70,4 +70,3 @@ class SpaceType(StringEnum):
     TEXT = "TEXT"
     VIDEO = "VIDEO"
     IMAGE = "IMAGE"
-    POINT_CLOUD = "POINT_CLOUD"

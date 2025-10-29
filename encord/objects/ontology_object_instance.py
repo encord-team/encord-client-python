@@ -135,7 +135,7 @@ class ObjectInstance:
             return self._parent.number_of_frames
 
     @property
-    def range_list(self) -> Optional[Ranges]:
+    def range_list(self) -> Ranges | None:
         if self._non_geometric:
             non_geometric_annotation = self._get_non_geometric_annotation()
             if non_geometric_annotation is None:
