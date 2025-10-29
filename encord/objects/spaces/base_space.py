@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Optional, TypeVar
 
 from encord.constants.enums import SpaceType
 from encord.objects.coordinates import Coordinates
-from encord.objects.spaces.entity import SpaceClassification, SpaceObject
+from encord.objects.spaces.space_entity import SpaceClassification, SpaceObject
 from encord.orm.label_space import LabelBlob, SpaceInfo
 
 if TYPE_CHECKING:

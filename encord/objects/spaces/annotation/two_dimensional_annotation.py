@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from encord.exceptions import LabelRowError
 from encord.objects.coordinates import Coordinates
 from encord.objects.spaces.annotation.base_annotation import AnnotationData, ClassificationAnnotation, ObjectAnnotation
-from encord.objects.spaces.entity import SpaceClassification, SpaceObject
+from encord.objects.spaces.space_entity import SpaceClassification, SpaceObject
 
 if TYPE_CHECKING:
     from encord.objects.spaces.image_space import ImageSpace

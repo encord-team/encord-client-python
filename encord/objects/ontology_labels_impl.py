@@ -70,7 +70,7 @@ from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.spaces.base_space import Space, SpaceT
-from encord.objects.spaces.entity import SpaceClassification, SpaceObject
+from encord.objects.spaces.space_entity import SpaceClassification, SpaceObject
 from encord.objects.spaces.image_space import ImageSpace
 from encord.objects.spaces.range_space import (
     AudioSpace,

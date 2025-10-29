@@ -18,7 +18,7 @@ from encord.objects.spaces.annotation.range_annotation import (
     RangeObjectAnnotation,
 )
 from encord.objects.spaces.base_space import Space
-from encord.objects.spaces.entity import SpaceClassification, SpaceObject
+from encord.objects.spaces.space_entity import SpaceClassification, SpaceObject
 from encord.objects.utils import _lower_snake_case
 from encord.orm.label_space import AudioSpaceInfo, BaseSpaceInfo, LabelBlob, SpaceInfo, TextSpaceInfo
 

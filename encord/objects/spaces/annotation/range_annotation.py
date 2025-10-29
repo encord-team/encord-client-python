@@ -11,7 +11,7 @@ from encord.objects.spaces.annotation.base_annotation import (
     ClassificationAnnotation,
     ObjectAnnotation,
 )
-from encord.objects.spaces.entity import SpaceClassification, SpaceObject
+from encord.objects.spaces.space_entity import SpaceClassification, SpaceObject
 
 if TYPE_CHECKING:
     from encord.objects.spaces.range_space import RangeBasedSpace

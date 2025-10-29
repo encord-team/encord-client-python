@@ -25,7 +25,7 @@ from encord.objects.spaces.annotation.two_dimensional_annotation import (
     TwoDimensionalFrameObjectAnnotation,
 )
 from encord.objects.spaces.base_space import Space
-from encord.objects.spaces.entity import SpaceClassification, SpaceObject
+from encord.objects.spaces.space_entity import SpaceClassification, SpaceObject
 from encord.objects.spaces.types import FrameClassificationIndex, FrameObjectIndex
 from encord.orm.label_space import LabelBlob, SpaceInfo, VideoSpaceInfo
 
