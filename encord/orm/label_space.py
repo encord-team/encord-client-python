@@ -35,8 +35,4 @@ class AudioSpaceInfo(BaseSpaceInfo):
     duration_ms: int
 
 
-class PointCloudSpaceInfo(BaseSpaceInfo):
-    space_type: Literal[SpaceType.POINT_CLOUD]
-
-
 SpaceInfo = Union[VideoSpaceInfo, AudioSpaceInfo, ImageSpaceInfo, TextSpaceInfo]

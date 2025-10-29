@@ -19,12 +19,14 @@ if TYPE_CHECKING:
 
 @dataclass
 class RangeAnnotationData(AnnotationData):
-    """Represents an annotation on a Space."""
+    """Annotation Data for 1D objects."""
 
     range_manager: RangeManager
 
 
 class RangeObjectAnnotation(ObjectAnnotation):
+    """Annotations for 1D objects (e.g. Audio and Text)."""
+
     def __init__(self, space: RangeBasedSpace, object_instance: SpaceObject):
         super().__init__(space, object_instance)
         self._space = space
@@ -47,6 +49,8 @@ class RangeObjectAnnotation(ObjectAnnotation):
 
 
 class RangeClassificationAnnotation(ClassificationAnnotation):
+    """Annotations for 1D classifications (e.g. Audio and Text)."""
+
     def __init__(self, space: RangeBasedSpace, classification: SpaceClassification):
         super().__init__(space, classification)
         self._space = space
