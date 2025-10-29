@@ -56,6 +56,7 @@ def test_add_object_to_audio_space(ontology):
     first_annotation = annotations[0]
 
     assert first_annotation.ranges == [Range(start=0, end=1000)]
+    assert first_annotation.object_hash == new_object.object_hash
 
 
 def test_remove_object_from_audio_space(ontology):
@@ -215,7 +216,6 @@ def test_read_and_export_labels(ontology):
 
     output_dict = label_row.to_encord_dict()
 
-    print(json.dumps(output_dict, indent=2))
     assert not DeepDiff(
         DATA_GROUP_WITH_TWO_AUDIO_LABELS,
         output_dict,

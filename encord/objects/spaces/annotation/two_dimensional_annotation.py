@@ -86,8 +86,8 @@ class TwoDimensionalFrameObjectAnnotation(ObjectAnnotation):
 class FrameClassificationAnnotation(ClassificationAnnotation):
     """Annotations for multi-frame classifications (e.g. Video)."""
 
-    def __init__(self, space: VideoSpace, classification: SpaceClassification, frame: int):
-        super().__init__(space, classification)
+    def __init__(self, space: VideoSpace, classification_instance: SpaceClassification, frame: int):
+        super().__init__(space, classification_instance)
         self._space = space
         self._frame = frame
 
@@ -97,13 +97,13 @@ class FrameClassificationAnnotation(ClassificationAnnotation):
 
     def _get_annotation_data(self) -> AnnotationData:
         return self._space._frames_to_classification_hash_to_annotation_data[self._frame][
-            self._classification.classification_hash
+            self._classification_instance.classification_hash
         ]
 
     def _check_if_annotation_is_valid(self) -> None:
         if (
             self._frame not in self._space._frames_to_classification_hash_to_annotation_data
-            or self._classification.classification_hash
+            or self._classification_instance.classification_hash
             not in self._space._frames_to_classification_hash_to_annotation_data[self._frame]
         ):
             raise LabelRowError(

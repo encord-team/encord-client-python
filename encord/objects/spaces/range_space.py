@@ -176,7 +176,7 @@ class RangeBasedSpace(Space, ABC):
             res.append(
                 RangeClassificationAnnotation(
                     space=self,
-                    classification=self._classifications_map[classification_hash],
+                    classification_instance=self._classifications_map[classification_hash],
                 )
             )
 

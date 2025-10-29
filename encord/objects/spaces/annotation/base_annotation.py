@@ -258,6 +258,11 @@ class ObjectAnnotation(Annotation):
         self._space = space
         self._object_instance = object_instance
 
+    @property
+    def object_hash(self) -> str:
+        """Get the hash of the object instance."""
+        return self._object_instance.object_hash
+
     # Subclasses must implement these two methods
     @abstractmethod
     def _get_annotation_data(self) -> AnnotationData:
@@ -274,13 +279,18 @@ class ClassificationAnnotation(Annotation):
     Allows setting or getting annotation data for the Classification.
     """
 
-    def __init__(self, space: VideoSpace | ImageSpace | RangeBasedSpace, classification: SpaceClassification):
+    def __init__(self, space: VideoSpace | ImageSpace | RangeBasedSpace, classification_instance: SpaceClassification):
         self._space = space
-        self._classification = classification
+        self._classification_instance = classification_instance
+
+    @property
+    def classification_hash(self) -> str:
+        """Get the hash of the object instance."""
+        return self._classification_instance.classification_hash
 
     def _get_annotation_data(self) -> AnnotationData:
-        return self._space._classification_hash_to_annotation_data[self._classification.classification_hash]
+        return self._space._classification_hash_to_annotation_data[self._classification_instance.classification_hash]
 
     def _check_if_annotation_is_valid(self) -> None:
-        if not self._classification.classification_hash in self._space._classification_hash_to_annotation_data:
+        if not self._classification_instance.classification_hash in self._space._classification_hash_to_annotation_data:
             raise LabelRowError("Annotation is invalid")

@@ -144,7 +144,7 @@ class ImageSpace(Space):
             res.append(
                 ClassificationAnnotation(
                     space=self,
-                    classification=self._classifications_map[classification_hash],
+                    classification_instance=self._classifications_map[classification_hash],
                 )
             )
 

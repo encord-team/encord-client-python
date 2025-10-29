@@ -60,6 +60,7 @@ def test_add_object_to_video_space(ontology):
     first_annotation = annotations[0]
     assert first_annotation.frame == 0
     assert first_annotation.coordinates == BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5)
+    assert first_annotation.object_hash == new_object.object_hash
 
 
 def test_remove_object_from_video_space(ontology):
@@ -178,7 +179,7 @@ def test_update_attribute_for_object_which_exist_on_two_spaces(ontology):
     assert not DeepDiff(object_answer_dict, EXPECTED_DICT)
 
 
-def test_add_classification_object_to_video_space(ontology):
+def test_add_classification_to_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
@@ -201,6 +202,7 @@ def test_add_classification_object_to_video_space(ontology):
 
     first_annotation = annotations[0]
     assert first_annotation.frame == 0
+    assert first_annotation.classification_hash == new_classification.classification_hash
 
     classification_answers_dict = label_row.to_encord_dict()["classification_answers"]
     expected_dict = {
@@ -222,7 +224,7 @@ def test_add_classification_object_to_video_space(ontology):
     assert not DeepDiff(classification_answers_dict, expected_dict)
 
 
-def test_remove_classification_object_from_video_space(ontology):
+def test_remove_classification_from_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)

@@ -51,8 +51,8 @@ class RangeObjectAnnotation(ObjectAnnotation):
 class RangeClassificationAnnotation(ClassificationAnnotation):
     """Annotations for 1D classifications (e.g. Audio and Text)."""
 
-    def __init__(self, space: RangeBasedSpace, classification: SpaceClassification):
-        super().__init__(space, classification)
+    def __init__(self, space: RangeBasedSpace, classification_instance: SpaceClassification):
+        super().__init__(space, classification_instance)
         self._space = space
 
     @property
@@ -62,10 +62,10 @@ class RangeClassificationAnnotation(ClassificationAnnotation):
     # TODO: Should we allow setting of ranges?
 
     def _get_annotation_data(self) -> RangeAnnotationData:
-        return self._space._classification_hash_to_annotation_data[self._classification.classification_hash]
+        return self._space._classification_hash_to_annotation_data[self._classification_instance.classification_hash]
 
     def _check_if_annotation_is_valid(self) -> None:
-        if self._classification.classification_hash not in self._space._classification_hash_to_annotation_data:
+        if self._classification_instance.classification_hash not in self._space._classification_hash_to_annotation_data:
             raise LabelRowError(
                 "Trying to use an ObjectInstance.FrameAnnotation for a VideoObjectInstance that is not on the frame"
             )

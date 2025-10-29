@@ -168,7 +168,7 @@ class VideoSpace(Space):
             for classification_hash, annotation in classification.items():
                 res.append(
                     FrameClassificationAnnotation(
-                        space=self, classification=self._classification_map[classification_hash], frame=frame
+                        space=self, classification_instance=self._classification_map[classification_hash], frame=frame
                     )
                 )
 

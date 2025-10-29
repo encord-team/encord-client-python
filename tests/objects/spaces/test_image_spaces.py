@@ -57,6 +57,7 @@ def test_add_object_to_image_space(ontology):
 
     first_annotation = annotations[0]
     assert first_annotation.coordinates == coordinates
+    assert first_annotation.object_hash == new_object.object_hash
 
 
 def test_remove_object_from_image_space(ontology):
@@ -172,7 +173,7 @@ def test_update_attribute_for_object_which_exist_on_two_spaces(ontology):
     assert not DeepDiff(object_answer_dict, EXPECTED_DICT)
 
 
-def test_add_classification_object_to_image_space(ontology):
+def test_add_classification_to_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
@@ -196,6 +197,7 @@ def test_add_classification_object_to_image_space(ontology):
 
     first_annotation = annotations[0]
     assert first_annotation.created_by == created_by
+    assert first_annotation.classification_hash == new_classification.classification_hash
 
     classification_answers_dict = label_row.to_encord_dict()["classification_answers"]
     expected_dict = {
@@ -217,7 +219,7 @@ def test_add_classification_object_to_image_space(ontology):
     assert not DeepDiff(classification_answers_dict, expected_dict)
 
 
-def test_remove_classification_object_from_image_space(ontology):
+def test_remove_classification_from_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)

@@ -56,6 +56,7 @@ def test_add_object_to_text_space(ontology):
     first_annotation = annotations[0]
 
     assert first_annotation.ranges == [Range(start=0, end=1000)]
+    assert first_annotation.object_hash == new_object.object_hash
 
 
 def test_remove_object_from_text_space(ontology):
