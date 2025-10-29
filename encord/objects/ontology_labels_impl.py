@@ -77,7 +77,6 @@ from encord.objects.spaces.range_space import (
     TextSpace,
 )
 from encord.objects.spaces.video_space import (
-    SceneStreamSpace,
     SpaceType,
     VideoSpace,
 )
@@ -1991,7 +1990,7 @@ class LabelRowV2:
         if data_type == DataType.IMAGE or data_type == DataType.IMG_GROUP:
             # single frame
             frame = frame_level_data.frame_number
-            ret.update(self._to_encord_label(str(frame)))
+            ret.update(self._to_encord_label(frame))
 
         elif (
             # multi-frame
@@ -2019,26 +2018,17 @@ class LabelRowV2:
 
         return ret
 
-    def _to_encord_label(self, annotation_path: str) -> Dict[str, Any]:
+    def _to_encord_label(self, frame: int) -> Dict[str, Any]:
         ret: Dict[str, Any] = {}
 
-        ret["objects"] = self._to_encord_objects_list(annotation_path)
-        ret["classifications"] = self._to_encord_classifications_list(annotation_path)
+        ret["objects"] = self._to_encord_objects_list(frame)
+        ret["classifications"] = self._to_encord_classifications_list(frame)
 
         return ret
 
-    def _to_encord_objects_list(self, annotation_path: str) -> list:
+    def _to_encord_objects_list(self, frame: int) -> list:
         # Get objects for annotation_path
         ret: List[dict] = []
-
-        annotation_path_parts = annotation_path.split("#")
-
-        if len(annotation_path_parts) == 1:
-            frame = int(annotation_path_parts[0])
-        elif len(annotation_path_parts) == 2:
-            frame = int(annotation_path_parts[1])
-        else:
-            raise LabelRowError(f"Invalid annotation path: {annotation_path}")
 
         objects = self.get_object_instances(filter_frames=frame)
 
@@ -2111,7 +2101,7 @@ class LabelRowV2:
         else:
             raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
 
-    def _to_encord_classifications_list(self, annotation_path: str) -> list:
+    def _to_encord_classifications_list(self, frame: int) -> list:
         ret: List[Dict[str, Any]] = []
 
         classifications = self.get_classification_instances(filter_frames=frame)

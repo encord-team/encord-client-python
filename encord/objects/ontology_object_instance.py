@@ -538,8 +538,6 @@ class ObjectInstance:
 
             if self._parent is not None:
                 self._parent.add_to_single_frame_to_hashes_map(self, frame=frame)
-            elif self._space is not None:
-                self._space._on_set_for_frames(frame=frame, object_hash=self._object_hash)
 
     def _get_non_geometric_annotation(self) -> Optional[Annotation]:
         # Non-geometric annotations (e.g. Audio and Text) only have one frame.

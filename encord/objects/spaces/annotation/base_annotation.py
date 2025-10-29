@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from encord.common.time_parser import parse_datetime
+from encord.exceptions import LabelRowError
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.spaces.entity import SpaceClassification, SpaceObject
 from encord.objects.utils import check_email
@@ -13,6 +14,8 @@ from encord.objects.utils import check_email
 if TYPE_CHECKING:
     from encord.objects.spaces.base_space import Space
     from encord.objects.spaces.image_space import ImageSpace
+    from encord.objects.spaces.range_space import RangeBasedSpace
+    from encord.objects.spaces.video_space import VideoSpace
 
 
 @dataclass
@@ -113,9 +116,9 @@ class ObjectAnnotation:
     Allows setting or getting annotation data for the ObjectInstance.
     """
 
-    def __init__(self, space: Space, entity: SpaceObject):
+    def __init__(self, space: Space, object_instance: SpaceObject):
         self._space = space
-        self._entity = entity
+        self._object_instance = object_instance
 
     @property
     def created_at(self) -> datetime:
@@ -218,7 +221,7 @@ class ClassificationAnnotation:
     Allows setting or getting annotation data for the Classification.
     """
 
-    def __init__(self, space: ImageSpace, classification: SpaceClassification):
+    def __init__(self, space: VideoSpace | ImageSpace | RangeBasedSpace, classification: SpaceClassification):
         self._space = space
         self._classification = classification
 
@@ -308,10 +311,9 @@ class ClassificationAnnotation:
         self._check_if_annotation_is_valid()
         return self._get_annotation_data().annotation_info.is_deleted
 
-    @abstractmethod
     def _get_annotation_data(self) -> AnnotationData:
         return self._space._classification_hash_to_annotation_data[self._classification.classification_hash]
 
-    @abstractmethod
     def _check_if_annotation_is_valid(self) -> None:
-        pass
+        if not self._classification.classification_hash in self._space._classification_hash_to_annotation_data:
+            raise LabelRowError("Annotation is invalid")

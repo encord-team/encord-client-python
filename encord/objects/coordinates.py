@@ -605,3 +605,93 @@ def add_coordinates_to_frame_object_dict(
         frame_object_dict["cuboid"] = coordinates.to_dict()
     else:
         raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
+
+
+def get_coordinates_from_frame_object_label(frame_object_label: Dict[str, Any]) -> Coordinates:
+    if "boundingBox" in frame_object_label:
+        return BoundingBoxCoordinates.from_dict(frame_object_label)
+    if "rotatableBoundingBox" in frame_object_label:
+        return RotatableBoundingBoxCoordinates.from_dict(frame_object_label)
+    elif "polygon" in frame_object_label or "polygons" in frame_object_label:
+        return PolygonCoordinates.from_dict(frame_object_label)
+    elif "point" in frame_object_label:
+        coords = frame_object_label["point"]["0"]
+        if "x" in coords and "y" in coords and "z" in coords:
+            return PointCoordinate3D.from_dict(frame_object_label)
+        elif "x" in coords and "y" in coords:
+            return PointCoordinate.from_dict(frame_object_label)
+        else:
+            raise ValueError(f"Invalid point coordinates in {frame_object_label}")
+    elif "polyline" in frame_object_label:
+        return PolylineCoordinates.from_dict(frame_object_label)
+    elif "skeleton" in frame_object_label:
+
+        def _with_visibility_enum(point: dict):
+            if point.get(Visibility.INVISIBLE.value):
+                point["visibility"] = Visibility.INVISIBLE
+            elif point.get(Visibility.OCCLUDED.value):
+                point["visibility"] = Visibility.OCCLUDED
+            elif point.get(Visibility.SELF_OCCLUDED.value):
+                point["visibility"] = Visibility.SELF_OCCLUDED
+            elif point.get(Visibility.VISIBLE.value):
+                point["visibility"] = Visibility.VISIBLE
+            return point
+
+        values = [_with_visibility_enum(pnt) for pnt in frame_object_label["skeleton"].values()]
+        skeleton_frame_object_label = {
+            "name": frame_object_label["name"],
+            "values": values,
+        }
+        return SkeletonCoordinates.from_dict(skeleton_frame_object_label)
+    elif "bitmask" in frame_object_label:
+        return BitmaskCoordinates.from_dict(frame_object_label)
+    elif "cuboid" in frame_object_label:
+        return CuboidCoordinates.from_dict(frame_object_label)
+    else:
+        raise NotImplementedError(f"Getting coordinates for `{frame_object_label}` is not supported yet.")
+
+
+def get_two_dimensional_coordinates_from_frame_object_label(
+    frame_object_label: Dict[str, Any],
+) -> TwoDimensionalCoordinates:
+    if "boundingBox" in frame_object_label:
+        return BoundingBoxCoordinates.from_dict(frame_object_label)
+    if "rotatableBoundingBox" in frame_object_label:
+        return RotatableBoundingBoxCoordinates.from_dict(frame_object_label)
+    elif "polygon" in frame_object_label or "polygons" in frame_object_label:
+        return PolygonCoordinates.from_dict(frame_object_label)
+    elif "point" in frame_object_label:
+        coords = frame_object_label["point"]["0"]
+        if "x" in coords and "y" in coords and "z" in coords:
+            raise NotImplementedError(f"3D Points are not a two dimensional coordinate.")
+        elif "x" in coords and "y" in coords:
+            return PointCoordinate.from_dict(frame_object_label)
+        else:
+            raise ValueError(f"Invalid point coordinates in {frame_object_label}")
+    elif "polyline" in frame_object_label:
+        return PolylineCoordinates.from_dict(frame_object_label)
+    elif "skeleton" in frame_object_label:
+
+        def _with_visibility_enum(point: dict):
+            if point.get(Visibility.INVISIBLE.value):
+                point["visibility"] = Visibility.INVISIBLE
+            elif point.get(Visibility.OCCLUDED.value):
+                point["visibility"] = Visibility.OCCLUDED
+            elif point.get(Visibility.SELF_OCCLUDED.value):
+                point["visibility"] = Visibility.SELF_OCCLUDED
+            elif point.get(Visibility.VISIBLE.value):
+                point["visibility"] = Visibility.VISIBLE
+            return point
+
+        values = [_with_visibility_enum(pnt) for pnt in frame_object_label["skeleton"].values()]
+        skeleton_frame_object_label = {
+            "name": frame_object_label["name"],
+            "values": values,
+        }
+        return SkeletonCoordinates.from_dict(skeleton_frame_object_label)
+    elif "bitmask" in frame_object_label:
+        return BitmaskCoordinates.from_dict(frame_object_label)
+    elif "cuboid" in frame_object_label:
+        raise NotImplementedError(f"Cuboid is not a two dimensional coordinate.")
+    else:
+        raise NotImplementedError(f"Getting coordinates for `{frame_object_label}` is not supported yet.")

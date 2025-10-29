@@ -19,7 +19,7 @@ from encord.objects.ontology_object_instance import (
     ObjectInstance,
 )
 from encord.objects.spaces.annotation.base_annotation import AnnotationData, AnnotationInfo
-from encord.objects.spaces.annotation.video_annotation import (
+from encord.objects.spaces.annotation.two_dimensional_annotation import (
     FrameObjectAnnotation,
     TwoDimensionalAnnotationData,
     TwoDimensionalFrameObjectAnnotation,
@@ -152,7 +152,9 @@ class VideoSpace(Space):
         for frame, obj in dict(sorted(self._frames_to_object_hash_to_annotation_data.items())).items():
             for obj_hash, annotation in obj.items():
                 res.append(
-                    TwoDimensionalFrameObjectAnnotation(space=self, entity=self._objects_map[obj_hash], frame=frame)
+                    TwoDimensionalFrameObjectAnnotation(
+                        space=self, object_instance=self._objects_map[obj_hash], frame=frame
+                    )
                 )
 
         return res
@@ -165,7 +167,9 @@ class VideoSpace(Space):
         ).items():
             for classification_hash, annotation in classification.items():
                 res.append(
-                    FrameObjectAnnotation(space=self, entity=self._classification_map[classification_hash], frame=frame)
+                    FrameObjectAnnotation(
+                        space=self, object_instance=self._classification_map[classification_hash], frame=frame
+                    )
                 )
 
         return res
@@ -244,17 +248,17 @@ class VideoSpace(Space):
 
     def _to_encord_object(
         self,
-        object_entity: SpaceObject,
+        space_object: SpaceObject,
         frame_object_annotation_data: TwoDimensionalAnnotationData,
     ) -> Dict[str, Any]:
         from encord.objects.ontology_object import Object
 
-        ontology_hash = object_entity._object_instance._ontology_object.feature_node_hash
+        ontology_hash = space_object._object_instance._ontology_object.feature_node_hash
         ontology_object = self.parent._ontology.structure.get_child_by_hash(ontology_hash, type_=Object)
 
         frame_object_dict = create_frame_object_dict(
             ontology_object=ontology_object,
-            object_hash=object_entity.object_hash,
+            object_hash=space_object.object_hash,
             object_instance_annotation=frame_object_annotation_data.annotation_info,
         )
 
@@ -269,22 +273,22 @@ class VideoSpace(Space):
 
     def _to_encord_classification(
         self,
-        classification_entity: SpaceClassification,
+        space_classification: SpaceClassification,
         frame_classification_annotation_data: AnnotationData,
     ) -> Dict[str, Any]:
         from encord.objects import Classification
         from encord.objects.attributes import Attribute
 
-        ontology_hash = classification_entity._classification_instance._ontology_classification.feature_node_hash
+        ontology_hash = space_classification._classification_instance._ontology_classification.feature_node_hash
         ontology_classification = self.parent._ontology.structure.get_child_by_hash(ontology_hash, type_=Classification)
 
-        attribute_hash = classification_entity._classification_instance.ontology_item.attributes[0].feature_node_hash
+        attribute_hash = space_classification._classification_instance.ontology_item.attributes[0].feature_node_hash
         attribute = self.parent._ontology.structure.get_child_by_hash(attribute_hash, type_=Attribute)
 
         frame_object_dict = create_frame_classification_dict(
             ontology_classification=ontology_classification,
             classification_instance_annotation=frame_classification_annotation_data.annotation_info,
-            classification_hash=classification_entity.classification_hash,
+            classification_hash=space_classification.classification_hash,
             attribute=attribute,
         )
 
@@ -298,16 +302,18 @@ class VideoSpace(Space):
         classifications_to_annotation_data = self._frames_to_classification_hash_to_annotation_data.get(frame, {})
 
         for object_hash, frame_object_annotation_data in objects_to_annotation_data.items():
-            entity = self._objects_map[object_hash]
+            space_object = self._objects_map[object_hash]
             object_list.append(
-                self._to_encord_object(object_entity=entity, frame_object_annotation_data=frame_object_annotation_data)
+                self._to_encord_object(
+                    space_object=space_object, frame_object_annotation_data=frame_object_annotation_data
+                )
             )
 
         for classification_hash, frame_classification_annotation_data in classifications_to_annotation_data.items():
-            entity = self._classification_map[classification_hash]
+            space_classification = self._classification_map[classification_hash]
             classification_list.append(
                 self._to_encord_classification(
-                    classification_entity=entity,
+                    space_classification=space_classification,
                     frame_classification_annotation_data=frame_classification_annotation_data,
                 )
             )
@@ -415,24 +421,3 @@ class VideoSpace(Space):
             width=self._width,
             height=self._height,
         )
-
-
-class SceneStreamSpace(Space):
-    def __init__(self, space_id: str, title: str, parent: LabelRowV2):
-        super().__init__(space_id, title, SpaceType.SCENE_STREAM, parent)
-
-    def get_object_instances(
-        self,
-        filter_ontology_object: Optional[Object] = None,
-    ) -> list[ObjectInstance]:
-        raise NotImplementedError()
-
-    def add_object_instance(self, obj: Object, coordinates: Coordinates) -> ObjectInstance:
-        if obj.shape != Shape.SEGMENTATION:
-            raise ValueError(f"Only segmentation spaces are allowed on SceneStreamSpace.")
-
-        object_instance = obj.create_instance()
-        # For Point Cloud, no frames, it applies to whole file
-        object_instance.set_for_frames(coordinates=coordinates)
-        self.parent.add_object_instance(object_instance=object_instance)
-        return object_instance

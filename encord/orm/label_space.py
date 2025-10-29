@@ -9,7 +9,6 @@ class LabelBlob(TypedDict):
 
 
 class BaseSpaceInfo(TypedDict):
-    space_type: SpaceType
     labels: dict[str, LabelBlob]
 
 

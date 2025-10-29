@@ -260,3 +260,12 @@ def test_read_and_export_video_space_labels(ontology):
     assert len(video_space_1_classification_annotations) == 1
     classification_entities = video_space_1.get_classifications()
     assert len(classification_entities) == 1
+
+    output_dict = label_row.to_encord_dict()
+
+    assert not DeepDiff(
+        DATA_GROUP_WITH_TWO_VIDEOS_LABELS,
+        output_dict,
+        exclude_regex_paths=[r".*\['trackHash'\]"],
+        ignore_order_func=lambda x: x.path().endswith("['objects']"),
+    )

@@ -67,7 +67,7 @@ def _verify_non_geometric_classifications_range(ranges_to_add: Ranges, label_row
         )
 
 
-class BaseClassificationInstance:
+class ClassificationInstance:
     def __init__(
         self,
         ontology_classification: Classification,
@@ -192,6 +192,93 @@ class BaseClassificationInstance:
         if self.is_assigned_to_label_row():
             assert self._parent is not None
             self._parent._add_ranges_to_classification(self.ontology_item, ranges_to_add)
+
+    def set_for_frames(
+        self,
+        frames: Frames = 0,
+        *,
+        overwrite: bool = False,
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        confidence: float = DEFAULT_CONFIDENCE,
+        manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        reviews: Optional[List[dict]] = None,
+    ) -> None:
+        """Places the classification onto the specified frame. If the classification already exists on the frame and
+        overwrite is set to `True`, the currently specified values will be overwritten.
+
+        Args:
+            frames: The frame to add the classification instance to. Defaulting to the first frame for convenience.
+            overwrite: If `True`, overwrite existing data for the given frames. This will not reset all the
+                non-specified values. If `False` and data already exists for the given frames,
+                raises an error.
+            created_at: Optionally specify the creation time of the classification instance on this frame. Defaults to `datetime.now()`.
+            created_by: Optionally specify the creator of the classification instance on this frame. Defaults to the current SDK user.
+            last_edited_at: Optionally specify the last edit time of the classification instance on this frame. Defaults to `datetime.now()`.
+            last_edited_by: Optionally specify the last editor of the classification instance on this frame. Defaults to the current SDK
+                user.
+            confidence: Optionally specify the confidence of the classification instance on this frame. Defaults to `1.0`.
+            manual_annotation: Optionally specify whether the classification instance on this frame was manually annotated. Defaults to `True`.
+            reviews: Should only be set by internal functions.
+        """
+        if created_at is None:
+            created_at = datetime.now()
+
+        if last_edited_at is None:
+            last_edited_at = datetime.now()
+
+        if self._range_only:
+            self._set_for_ranges(
+                frames=frames,
+                overwrite=overwrite,
+                created_at=created_at,
+                created_by=created_by,
+                confidence=confidence,
+                manual_annotation=manual_annotation,
+                last_edited_at=last_edited_at,
+                last_edited_by=last_edited_by,
+                reviews=reviews,
+            )
+
+        else:
+            frames_list = frames_class_to_frames_list(frames)
+
+            conflicting_frames_list = self._is_classification_already_present(frames_list)
+            if conflicting_frames_list and not overwrite:
+                raise LabelRowError(
+                    f"The classification '{self.classification_hash}' already exists "
+                    f"on the frames {frames_to_ranges(conflicting_frames_list)}. "
+                    f"Set 'overwrite' parameter to True to override."
+                )
+
+            frames_to_add = set(frames_list) - conflicting_frames_list if conflicting_frames_list else frames_list
+            if not frames_to_add:
+                # Nothing to do
+                return
+
+            for frame in frames_list:
+                self._check_within_range(frame)
+                self._set_frame_and_frame_data(
+                    frame,
+                    overwrite=overwrite,
+                    created_at=created_at,
+                    created_by=created_by,
+                    confidence=confidence,
+                    manual_annotation=manual_annotation,
+                    last_edited_at=last_edited_at,
+                    last_edited_by=last_edited_by,
+                    reviews=reviews,
+                )
+
+            if self.is_assigned_to_label_row():
+                assert self._parent is not None
+                if self._parent is not DataType.AUDIO:
+                    self._parent._add_frames_to_classification(self.ontology_item, frames_list)
+                    self._parent._add_to_frame_to_hashes_map(self, frames_list)
+                else:
+                    self._parent._add_ranges_to_classification(self.ontology_item, frames_list)
 
     def set_frame_data(self, frame_data: FrameData, frames: Frames) -> None:
         frames_list = frames_class_to_frames_list(frames)
@@ -630,101 +717,3 @@ class BaseClassificationInstance:
 
     def __lt__(self, other) -> bool:
         return self.classification_hash < other.classification_hash
-
-
-class ClassificationInstance(BaseClassificationInstance):
-    def __init__(
-        self,
-        ontology_classification: Classification,
-        *,
-        classification_hash: Optional[str] = None,
-        range_only: bool = False,
-    ):
-        super().__init__(ontology_classification, classification_hash=classification_hash, range_only=range_only)
-
-    def set_for_frames(
-        self,
-        frames: Frames = 0,
-        *,
-        overwrite: bool = False,
-        created_at: Optional[datetime] = None,
-        created_by: Optional[str] = None,
-        confidence: float = DEFAULT_CONFIDENCE,
-        manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION,
-        last_edited_at: Optional[datetime] = None,
-        last_edited_by: Optional[str] = None,
-        reviews: Optional[List[dict]] = None,
-    ) -> None:
-        """Places the classification onto the specified frame. If the classification already exists on the frame and
-        overwrite is set to `True`, the currently specified values will be overwritten.
-
-        Args:
-            frames: The frame to add the classification instance to. Defaulting to the first frame for convenience.
-            overwrite: If `True`, overwrite existing data for the given frames. This will not reset all the
-                non-specified values. If `False` and data already exists for the given frames,
-                raises an error.
-            created_at: Optionally specify the creation time of the classification instance on this frame. Defaults to `datetime.now()`.
-            created_by: Optionally specify the creator of the classification instance on this frame. Defaults to the current SDK user.
-            last_edited_at: Optionally specify the last edit time of the classification instance on this frame. Defaults to `datetime.now()`.
-            last_edited_by: Optionally specify the last editor of the classification instance on this frame. Defaults to the current SDK
-                user.
-            confidence: Optionally specify the confidence of the classification instance on this frame. Defaults to `1.0`.
-            manual_annotation: Optionally specify whether the classification instance on this frame was manually annotated. Defaults to `True`.
-            reviews: Should only be set by internal functions.
-        """
-        if created_at is None:
-            created_at = datetime.now()
-
-        if last_edited_at is None:
-            last_edited_at = datetime.now()
-
-        if self._range_only:
-            self._set_for_ranges(
-                frames=frames,
-                overwrite=overwrite,
-                created_at=created_at,
-                created_by=created_by,
-                confidence=confidence,
-                manual_annotation=manual_annotation,
-                last_edited_at=last_edited_at,
-                last_edited_by=last_edited_by,
-                reviews=reviews,
-            )
-
-        else:
-            frames_list = frames_class_to_frames_list(frames)
-
-            conflicting_frames_list = self._is_classification_already_present(frames_list)
-            if conflicting_frames_list and not overwrite:
-                raise LabelRowError(
-                    f"The classification '{self.classification_hash}' already exists "
-                    f"on the frames {frames_to_ranges(conflicting_frames_list)}. "
-                    f"Set 'overwrite' parameter to True to override."
-                )
-
-            frames_to_add = set(frames_list) - conflicting_frames_list if conflicting_frames_list else frames_list
-            if not frames_to_add:
-                # Nothing to do
-                return
-
-            for frame in frames_list:
-                self._check_within_range(frame)
-                self._set_frame_and_frame_data(
-                    frame,
-                    overwrite=overwrite,
-                    created_at=created_at,
-                    created_by=created_by,
-                    confidence=confidence,
-                    manual_annotation=manual_annotation,
-                    last_edited_at=last_edited_at,
-                    last_edited_by=last_edited_by,
-                    reviews=reviews,
-                )
-
-            if self.is_assigned_to_label_row():
-                assert self._parent is not None
-                if self._parent is not DataType.AUDIO:
-                    self._parent._add_frames_to_classification(self.ontology_item, frames_list)
-                    self._parent._add_to_frame_to_hashes_map(self, frames_list)
-                else:
-                    self._parent._add_ranges_to_classification(self.ontology_item, frames_list)

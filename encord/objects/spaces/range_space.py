@@ -2,17 +2,23 @@ from __future__ import annotations
 
 import logging
 from abc import ABC
-from typing import TYPE_CHECKING, Any, Dict, Optional, TypedDict, Unpack
+from datetime import datetime
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypedDict, Unpack
 
+from encord.common.range_manager import RangeManager
 from encord.common.time_parser import format_datetime_to_long_string_optional
 from encord.constants.enums import DataType, SpaceType
-from encord.exceptions import LabelRowError
-from encord.objects import Classification, ClassificationInstance, Shape
-from encord.objects.coordinates import AudioCoordinates, TextCoordinates
+from encord.objects import ClassificationInstance, Shape
 from encord.objects.frames import Range, Ranges
-from encord.objects.ontology_object_instance import AddObjectInstanceParams, ObjectInstance
-from encord.objects.spaces.annotation_instance.audio_instance import AudioClassificationInstance, AudioObjectInstance
+from encord.objects.ontology_object_instance import ObjectInstance
+from encord.objects.spaces.annotation.base_annotation import AnnotationInfo
+from encord.objects.spaces.annotation.range_annotation import (
+    RangeAnnotationData,
+    RangeClassificationAnnotation,
+    RangeObjectAnnotation,
+)
 from encord.objects.spaces.base_space import Space
+from encord.objects.spaces.entity import SpaceClassification, SpaceObject
 from encord.objects.utils import _lower_snake_case
 from encord.orm.label_space import AudioSpaceInfo, BaseSpaceInfo, LabelBlob, SpaceInfo, TextSpaceInfo
 
@@ -56,89 +62,173 @@ class RangeBasedSpace(Space, ABC):
 
     def __init__(self, space_id: str, title: str, space_type: SpaceType, parent: LabelRowV2):
         super().__init__(space_id, title, space_type, parent)
-        self._objects_map: Dict[str, AudioObjectInstance] = dict()
-        self._classifications_map: Dict[str, AudioClassificationInstance] = dict()
+        self._objects_map: dict[str, SpaceObject] = dict()
+        self._classifications_map: dict[str, SpaceClassification] = dict()
+        self._object_hash_to_annotation_data: dict[str, RangeAnnotationData] = dict()
+        self._classification_hash_to_annotation_data: dict[str, RangeAnnotationData] = dict()
 
-    def _add_object_instance(self, object_instance: AudioObjectInstance) -> AudioObjectInstance:
-        self._objects_map[object_instance.object_hash] = object_instance
-        object_instance._set_space(self)
+    # TODO: Problem here is that its abit confusing because
+    # for non-range objects, each frame has their own annotation_info
+    # but here, we overwrite the annotation_info for everytime you do place
+    def place_object(
+        self,
+        object: SpaceObject,
+        ranges: Ranges | Range,
+        *,
+        overwrite: bool = False,
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        confidence: Optional[float] = None,
+        manual_annotation: Optional[bool] = None,
+        reviews: Optional[List[dict]] = None,
+        is_deleted: Optional[bool] = None,
+    ) -> None:
+        self._objects_map[object.object_hash] = object
+        object._space_ids.add(self.space_id)
 
-        return object_instance
+        if isinstance(ranges, Range):
+            ranges = [ranges]
 
-    def _add_classification_instance(self, classification_instance: ClassificationInstance) -> ClassificationInstance:
-        self._classifications_map[classification_instance.classification_hash] = classification_instance
-        classification_instance._set_space(self)
+        # TODO: Check overwrites
 
-        return classification_instance
+        existing_frame_annotation_data = self._object_hash_to_annotation_data.get(object.object_hash)
+        if existing_frame_annotation_data is None:
+            existing_frame_annotation_data = RangeAnnotationData(
+                annotation_info=AnnotationInfo(),
+                range_manager=RangeManager(),
+            )
 
-    def _on_set_for_frames(self, frame: int, object_hash: str):
-        pass
+            self._object_hash_to_annotation_data[object.object_hash] = existing_frame_annotation_data
 
-    def get_object_instances(self) -> list[AudioObjectInstance]:
-        """Get all object instances in this space."""
+        existing_frame_annotation_data.annotation_info.update_from_optional_fields(
+            created_at=created_at,
+            created_by=created_by,
+            last_edited_at=last_edited_at,
+            last_edited_by=last_edited_by,
+            confidence=confidence,
+            manual_annotation=manual_annotation,
+            reviews=reviews,
+            is_deleted=is_deleted,
+        )
+
+        existing_frame_annotation_data.range_manager.add_ranges(ranges)
+
+    def place_classification(
+        self,
+        classification: SpaceClassification,
+        ranges: Ranges | Range,
+        *,
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        confidence: Optional[float] = None,
+        manual_annotation: Optional[bool] = None,
+        reviews: Optional[List[dict]] = None,
+    ) -> None:
+        self._classifications_map[classification.classification_hash] = classification
+        classification._space_ids.add(self.space_id)
+
+        if isinstance(ranges, Range):
+            ranges = [ranges]
+
+        # TODO: Check overwrites
+
+        existing_frame_classification_annotation_data = self._classification_hash_to_annotation_data.get(
+            classification.classification_hash
+        )
+        if existing_frame_classification_annotation_data is None:
+            existing_frame_classification_annotation_data = RangeAnnotationData(
+                annotation_info=AnnotationInfo(),
+                range_manager=RangeManager(),
+            )
+
+            self._classification_hash_to_annotation_data[classification.classification_hash] = (
+                existing_frame_classification_annotation_data
+            )
+
+        existing_frame_classification_annotation_data.annotation_info.update_from_optional_fields(
+            created_at=created_at,
+            created_by=created_by,
+            last_edited_at=last_edited_at,
+            last_edited_by=last_edited_by,
+            confidence=confidence,
+            manual_annotation=manual_annotation,
+            reviews=reviews,
+        )
+
+    def get_object_annotations(self) -> list[RangeObjectAnnotation]:
+        res: list[RangeObjectAnnotation] = []
+
+        for obj_hash, annotation in self._object_hash_to_annotation_data.items():
+            res.append(RangeObjectAnnotation(space=self, object_instance=self._objects_map[obj_hash]))
+
+        return res
+
+    def get_classification_annotations(self) -> list[RangeClassificationAnnotation]:
+        res: list[RangeClassificationAnnotation] = []
+
+        for classification_hash, annotation_data in dict(
+            sorted(self._classification_hash_to_annotation_data.items())
+        ).items():
+            res.append(
+                RangeClassificationAnnotation(
+                    space=self,
+                    classification=self._classifications_map[classification_hash],
+                )
+            )
+
+        return res
+
+    def get_objects(self) -> list[SpaceObject]:
         return list(self._objects_map.values())
 
-    def get_classification_instances(self) -> list[AudioClassificationInstance]:
-        """Get all classification instances in this space."""
+    def get_classifications(self) -> list[SpaceClassification]:
         return list(self._classifications_map.values())
 
-    def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
-        """Remove an object instance from this space by its hash."""
-        object_instance = self._objects_map.pop(object_hash, None)
+    def remove_space_object(self, object_hash: str) -> Optional[SpaceObject]:
+        obj_entity = self._objects_map.pop(object_hash, None)
+        self._object_hash_to_annotation_data.pop(object_hash)
 
-        if object_instance is None:
-            logger.warning(f"Object instance {object_hash} not found.")
-        else:
-            object_instance._set_space(None)
+        return obj_entity
+
+    def remove_space_classification(self, classification_hash: str) -> Optional[SpaceClassification]:
+        classification_entity = self._classifications_map.pop(classification_hash, None)
+        self._classification_hash_to_annotation_data.pop(classification_hash)
+
+        return classification_entity
+
+    def _create_new_space_object_from_object_answers(self, object_answer: dict):
+        feature_hash = object_answer["featureHash"]
+        object_hash = object_answer["objectHash"]
+
+        label_class = self.parent._ontology.structure.get_child_by_hash(feature_hash, type_=Object)
+
+        frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
+        frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
+        object_frame_instance_info = AnnotationInfo.from_dict(frame_info_dict)
+
+        object_instance = self.parent.create_space_object(ontology_class=label_class, entity_hash=object_hash)
+
+        self.place_object(
+            object=object_instance,
+            ranges=object_answer["ranges"],
+            created_at=object_frame_instance_info.created_at,
+            created_by=object_frame_instance_info.created_by,
+            confidence=object_frame_instance_info.confidence,
+            manual_annotation=object_frame_instance_info.manual_annotation,
+            last_edited_at=object_frame_instance_info.last_edited_at,
+            last_edited_by=object_frame_instance_info.last_edited_by,
+            reviews=object_frame_instance_info.reviews,
+            overwrite=True,
+        )
+
+        answer_list = object_answer["classifications"]
+        object_instance._object_instance.set_answer_from_list(answer_list)
 
         return object_instance
-
-    def remove_classification_instance(self, classification_hash: str) -> Optional[ClassificationInstance]:
-        """Remove a classification instance from this space by its hash."""
-        classification_instance = self._classifications_map.pop(classification_hash, None)
-
-        if classification_instance is None:
-            logger.warning(f"Classification instance {classification_hash} not found.")
-        else:
-            classification_instance._set_space(None)
-
-        return classification_instance
-
-    def move_object_instance_from_space(self, object_to_move: ObjectInstance) -> Optional[ObjectInstance]:
-        """Move an object instance from another space to this space."""
-        original_space = object_to_move._space
-
-        if original_space is None:
-            raise LabelRowError("Unable to move object instance, as it currently does not belong to any space.")
-
-        if isinstance(original_space, RangeBasedSpace):
-            original_space.remove_object_instance(object_to_move.object_hash)
-            self._add_object_instance(object_to_move)
-            return object_to_move
-        else:
-            logger.warning(
-                f"Unable to move object instance from space of type {original_space.space_type} to {self.space_type}"
-            )
-            return None
-
-    def move_classification_instance_from_space(
-        self, classification_to_move: ClassificationInstance
-    ) -> Optional[ClassificationInstance]:
-        """Move a classification instance from another space to this space."""
-        original_space = classification_to_move._space
-
-        if original_space is None:
-            raise LabelRowError("Unable to move classification instance, as it currently does not belong to any space.")
-
-        if isinstance(original_space, RangeBasedSpace):
-            original_space.remove_classification_instance(classification_to_move.classification_hash)
-            self._add_classification_instance(classification_to_move)
-            return classification_to_move
-        else:
-            logger.warning(
-                f"Unable to move classification instance from space of type {original_space.space_type} to {self.space_type}"
-            )
-            return None
 
     def _parse_space_dict(self, space_info: BaseSpaceInfo, object_answers: dict, classification_answers: dict) -> None:
         """Parse object and classification answers, and populate object and classification instances."""
@@ -151,18 +241,54 @@ class RangeBasedSpace(Space, ABC):
                 object_instance = self.parent._create_new_object_instance_with_ranges(
                     object_answer, ranges, DataType.PLAIN_TEXT
                 )
+                space_object = SpaceObject(label_row=self.parent, object_instance=object_instance)
+                frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
+                frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
+                object_frame_instance_info = AnnotationInfo.from_dict(frame_info_dict)
+
+                self.place_object(
+                    object=space_object,
+                    ranges=ranges,
+                    created_at=object_frame_instance_info.created_at,
+                    created_by=object_frame_instance_info.created_by,
+                    last_edited_at=object_frame_instance_info.last_edited_at,
+                    last_edited_by=object_frame_instance_info.last_edited_by,
+                    manual_annotation=object_frame_instance_info.manual_annotation,
+                    reviews=object_frame_instance_info.reviews,
+                    confidence=object_frame_instance_info.confidence,
+                )
+
             elif self.space_type == SpaceType.AUDIO:
                 object_instance = self.parent._create_new_object_instance_with_ranges(
                     object_answer, ranges, DataType.AUDIO
                 )
+                space_object = SpaceObject(label_row=self.parent, object_instance=object_instance)
+                frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
+                frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
+                object_frame_instance_info = AnnotationInfo.from_dict(frame_info_dict)
+
+                self.place_object(
+                    object=space_object,
+                    ranges=ranges,
+                    created_at=object_frame_instance_info.created_at,
+                    created_by=object_frame_instance_info.created_by,
+                    last_edited_at=object_frame_instance_info.last_edited_at,
+                    last_edited_by=object_frame_instance_info.last_edited_by,
+                    manual_annotation=object_frame_instance_info.manual_annotation,
+                    reviews=object_frame_instance_info.reviews,
+                    confidence=object_frame_instance_info.confidence,
+                )
+
             else:
                 raise ValueError(f"Space type {self.space_type} is invalid for this space.")
 
-            self._add_object_instance(object_instance)
-
         for classification_answer in classification_answers.values():
             classification_instance = self.parent._create_new_classification_instance_with_ranges(classification_answer)
-            self._add_classification_instance(classification_instance)
+            space_classification = SpaceClassification(
+                label_row=self.parent, classification_instance=classification_instance
+            )
+            # TODO: Need to use global classifications here
+            self.place_classification(space_classification, ranges=Range(start=0, end=200))
 
     def _build_labels_dict(self) -> dict[str, LabelBlob]:
         """For range-based annotations, labels are stored in objects/classifications index"""
@@ -170,23 +296,24 @@ class RangeBasedSpace(Space, ABC):
 
     def _to_object_answers(self) -> dict[str, RangeObjectIndex]:
         ret: dict[str, RangeObjectIndex] = {}
-        for obj in self.get_object_instances():
-            all_static_answers = self.parent._get_all_static_answers(obj)
-            annotation = obj.get_annotation()
+        for obj in self.get_objects():
+            all_static_answers = self.parent._get_all_static_answers(obj._object_instance)
+            annotation = self._object_hash_to_annotation_data[obj.object_hash]
+            annotation_info = annotation.annotation_info
             object_index_element: RangeObjectIndex = {
                 "classifications": list(reversed(all_static_answers)),
                 "objectHash": obj.object_hash,
-                "createdBy": annotation.created_by,
-                "createdAt": format_datetime_to_long_string_optional(annotation.created_at),
-                "lastEditedBy": annotation.last_edited_by,
-                "lastEditedAt": format_datetime_to_long_string_optional(annotation.last_edited_at),
-                "manualAnnotation": annotation.manual_annotation,
-                "featureHash": obj.feature_hash,
-                "name": obj.ontology_item.name,
-                "color": obj.ontology_item.color,
-                "shape": obj.ontology_item.shape.value,
-                "value": _lower_snake_case(obj.ontology_item.name),
-                "range": [[range.start, range.oteend] for range in annotation.ranges],
+                "createdBy": annotation_info.created_by,
+                "createdAt": format_datetime_to_long_string_optional(annotation_info.created_at),
+                "lastEditedBy": annotation_info.last_edited_by,
+                "lastEditedAt": format_datetime_to_long_string_optional(annotation_info.last_edited_at),
+                "manualAnnotation": annotation_info.manual_annotation,
+                "featureHash": obj._object_instance.feature_hash,
+                "name": obj._object_instance.ontology_item.name,
+                "color": obj._object_instance.ontology_item.color,
+                "shape": obj._object_instance.ontology_item.shape.value,
+                "value": _lower_snake_case(obj._object_instance.ontology_item.name),
+                "range": [[range.start, range.end] for range in annotation.range_manager.ranges],
             }
 
             ret[obj.object_hash] = object_index_element
@@ -195,15 +322,15 @@ class RangeBasedSpace(Space, ABC):
 
     def _to_classification_answers(self) -> dict[str, RangeClassificationIndex]:
         ret: dict[str, RangeClassificationIndex] = {}
-        for classification in self.get_classification_instances():
-            all_static_answers = classification.get_all_static_answers()
-            annotation = classification.get_annotations()[0]
+        for classification in self.get_classifications():
+            all_static_answers = classification._classification_instance.get_all_static_answers()
+            annotation = classification._classification_instance.get_annotations()[0]
             classifications = [answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()]
 
             classification_index_element: RangeClassificationIndex = {
                 "classifications": list(reversed(classifications)),
                 "classificationHash": classification.classification_hash,
-                "featureHash": classification.feature_hash,
+                "featureHash": classification._classification_instance.feature_hash,
                 "range": [],
                 "createdBy": annotation.created_by,
                 "createdAt": format_datetime_to_long_string_optional(annotation.created_at),
@@ -223,28 +350,14 @@ class AudioSpace(RangeBasedSpace):
     def __init__(self, space_id: str, title: str, parent: LabelRowV2, duration_ms: int):
         super().__init__(space_id, title, SpaceType.AUDIO, parent)
         self._duration_ms = duration_ms
-        self._objects_map: Dict[str, ObjectInstance] = dict()
-        self._classifications_map: Dict[str, ClassificationInstance] = dict()
 
     def _to_space_dict(self) -> SpaceInfo:
         labels = self._build_labels_dict()
         return AudioSpaceInfo(
-            space_type=self.space_type,
+            space_type=SpaceType.AUDIO,
             duration_ms=self._duration_ms,
             labels=labels,
         )
-
-    def add_object_instance(self, obj: Object, range: Range, **kwargs: Unpack[AddObjectInstanceParams]):
-        """Add an object instance to the audio space."""
-        object_instance = AudioObjectInstance(ontology_object=obj, space=self)
-        object_instance.add_annotation(ranges=[range], **kwargs)
-        return self._add_object_instance(object_instance)
-
-    def add_classification_instance(self, classification: Classification, **kwargs: Unpack[AddObjectInstanceParams]):
-        """Add an object instance to the audio space."""
-        classification_instance = classification.create_instance(range_only=True)
-        classification_instance.set_for_frames(frames=0, **kwargs)
-        return self._add_classification_instance(classification_instance)
 
 
 class TextSpace(RangeBasedSpace):
@@ -253,25 +366,11 @@ class TextSpace(RangeBasedSpace):
     def __init__(self, space_id: str, title: str, parent: LabelRowV2, number_of_characters: int):
         super().__init__(space_id, title, SpaceType.TEXT, parent)
         self._number_of_characters = number_of_characters
-        self._objects_map: Dict[str, ObjectInstance] = dict()
-        self._classifications_map: Dict[str, ClassificationInstance] = dict()
 
     def _to_space_dict(self) -> TextSpaceInfo:
         labels = self._build_labels_dict()
         return TextSpaceInfo(
-            space_type=self.space_type,
+            space_type=SpaceType.TEXT,
             number_of_characters=self._number_of_characters,
             labels=labels,
         )
-
-    def add_object_instance(self, obj: Object, range: Range, **kwargs: Unpack[AddObjectInstanceParams]):
-        """Add an object instance to the audio space."""
-        object_instance = obj.create_instance()
-        object_instance.set_for_frames(coordinates=TextCoordinates(range=[range]), frames=0, **kwargs)
-        return self._add_object_instance(object_instance)
-
-    def add_classification_instance(self, classification: Classification, **kwargs: Unpack[AddObjectInstanceParams]):
-        """Add an object instance to the audio space."""
-        classification_instance = classification.create_instance(range_only=True)
-        classification_instance.set_for_frames(frames=0, **kwargs)
-        return self._add_classification_instance(classification_instance)

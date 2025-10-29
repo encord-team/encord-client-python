@@ -19,8 +19,8 @@ class TwoDimensionalAnnotationData(AnnotationData):
 
 
 class TwoDimensionalFrameObjectAnnotation(ObjectAnnotation):
-    def __init__(self, space: VideoSpace, entity: SpaceObject, frame: int):
-        super().__init__(space, entity)
+    def __init__(self, space: VideoSpace, object_instance: SpaceObject, frame: int):
+        super().__init__(space, object_instance)
         self._space = space
         self._frame = frame
 
@@ -36,15 +36,16 @@ class TwoDimensionalFrameObjectAnnotation(ObjectAnnotation):
     @coordinates.setter
     def coordinates(self, coordinates: Coordinates) -> None:
         self._check_if_annotation_is_valid()
-        self._space.place_object(entity=self._entity, coordinates=coordinates, frames=self._frame)
+        self._space.place_object(object=self._object_instance, coordinates=coordinates, frames=self._frame)
 
     def _get_annotation_data(self) -> TwoDimensionalAnnotationData:
-        return self._space._frames_to_object_hash_to_annotation_data[self._frame][self._entity.object_hash]
+        return self._space._frames_to_object_hash_to_annotation_data[self._frame][self._object_instance.object_hash]
 
     def _check_if_annotation_is_valid(self) -> None:
         if (
             self._frame not in self._space._frames_to_object_hash_to_annotation_data
-            or self._entity.object_hash not in self._space._frames_to_object_hash_to_annotation_data[self._frame]
+            or self._object_instance.object_hash
+            not in self._space._frames_to_object_hash_to_annotation_data[self._frame]
         ):
             raise LabelRowError(
                 "Trying to use an ObjectInstance.FrameAnnotation for a VideoObjectInstance that is not on the frame"
@@ -52,8 +53,8 @@ class TwoDimensionalFrameObjectAnnotation(ObjectAnnotation):
 
 
 class TwoDimensionalObjectAnnotation(ObjectAnnotation):
-    def __init__(self, space: ImageSpace, entity: SpaceObject):
-        super().__init__(space, entity)
+    def __init__(self, space: ImageSpace, object_instance: SpaceObject):
+        super().__init__(space, object_instance)
         self._space = space
 
     @property
@@ -64,21 +65,21 @@ class TwoDimensionalObjectAnnotation(ObjectAnnotation):
     @coordinates.setter
     def coordinates(self, coordinates: Coordinates) -> None:
         self._check_if_annotation_is_valid()
-        self._space.place_object(object=self._entity, coordinates=coordinates)
+        self._space.place_object(object=self._object_instance, coordinates=coordinates)
 
     def _get_annotation_data(self) -> TwoDimensionalAnnotationData:
-        return self._space._object_hash_to_annotation_data[self._entity.object_hash]
+        return self._space._object_hash_to_annotation_data[self._object_instance.object_hash]
 
     def _check_if_annotation_is_valid(self) -> None:
-        if self._entity.object_hash not in self._space._object_hash_to_annotation_data:
+        if self._object_instance.object_hash not in self._space._object_hash_to_annotation_data:
             raise LabelRowError(
                 "Trying to use an ObjectInstance.FrameAnnotation for a VideoObjectInstance that is not on the frame"
             )
 
 
 class FrameObjectAnnotation(ObjectAnnotation):
-    def __init__(self, space: VideoSpace, entity: SpaceObject | SpaceClassification, frame: int):
-        super().__init__(space, entity)
+    def __init__(self, space: VideoSpace, object_instance: SpaceObject, frame: int):
+        super().__init__(space, object_instance)
         self._space = space
         self._frame = frame
 
@@ -88,12 +89,13 @@ class FrameObjectAnnotation(ObjectAnnotation):
 
     # TODO: Here it should be classifiation_hash
     def _get_annotation_data(self) -> AnnotationData:
-        return self._space._frames_to_object_hash_to_annotation_data[self._frame][self._entity.object_hash]
+        return self._space._frames_to_object_hash_to_annotation_data[self._frame][self._object_instance.object_hash]
 
     def _check_if_annotation_is_valid(self) -> None:
         if (
             self._frame not in self._space._frames_to_object_hash_to_annotation_data
-            or self._entity.object_hash not in self._space._frames_to_object_hash_to_annotation_data[self._frame]
+            or self._object_instance.object_hash
+            not in self._space._frames_to_object_hash_to_annotation_data[self._frame]
         ):
             raise LabelRowError(
                 "Trying to use an ObjectInstance.FrameAnnotation for a VideoObjectInstance that is not on the frame"
