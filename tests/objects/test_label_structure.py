@@ -5,7 +5,6 @@ from unittest.mock import Mock, PropertyMock
 
 import pytest
 
-from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError, OntologyError
 from encord.objects import (
     AnswerForFrames,
@@ -45,7 +44,7 @@ from tests.objects.test_label_structure_converter import ontology_from_dict
 box_ontology_item = all_types_structure.get_child_by_hash("MjI2NzEy", Object)
 polygon_ontology_item = all_types_structure.get_child_by_hash("ODkxMzAx", Object)
 polyline_ontology_item = all_types_structure.get_child_by_hash("OTcxMzIy", Object)
-segmentation_ontology_item = all_types_structure.get_child_by_hash("pointCloud", Object)
+
 audio_obj_ontology_item = all_types_structure.get_child_by_hash("KVfzNkFy", Object)
 
 text_obj_ontology_item = all_types_structure.get_child_by_hash("textFeatureNodeHash", Object)
