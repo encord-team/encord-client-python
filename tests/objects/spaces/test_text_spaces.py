@@ -192,6 +192,83 @@ def test_update_attribute_for_object_which_exist_on_two_spaces(ontology):
     )
 
 
+def test_add_classification_to_text_space(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_TEXT_NO_LABELS)
+    text_space_1 = label_row.get_space_by_id("text-1-uuid", type_=TextSpace)
+
+    # Act
+    new_classification = label_row.create_space_classification(ontology_class=text_classification)
+    text_space_1.place_classification(classification=new_classification, ranges=Range(start=0, end=500))
+    text_space_1.place_classification(classification=new_classification, ranges=Range(start=700, end=1000))
+
+    text_answer = "Some answer"
+    new_classification.set_answer(answer=text_answer)
+
+    # Assert
+    entities = text_space_1.get_classifications()
+    assert len(entities) == 1
+
+    annotations = text_space_1.get_classification_annotations()
+    assert len(annotations) == 1
+
+    first_annotation = annotations[0]
+    assert first_annotation.classification_hash == new_classification.classification_hash
+
+    classification_answers_dict = label_row.to_encord_dict()["classification_answers"]
+    expected_dict = {
+        new_classification.classification_hash: {
+            "classifications": [
+                {
+                    "name": "Text classification",
+                    "value": "text_classification",
+                    "answers": text_answer,
+                    "featureHash": "OxrtEM+v",
+                    "manualAnnotation": True,
+                }
+            ],
+            "classificationHash": new_classification.classification_hash,
+            "featureHash": "jPOcEsbw",
+            "range": [],
+            "createdBy": None,
+            "createdAt": "Wed, 29 Oct 2025 23:38:32 UTC",
+            "lastEditedBy": None,
+            "lastEditedAt": "Wed, 29 Oct 2025 23:38:32 UTC",
+            "manualAnnotation": True,
+        }
+    }
+
+    assert not DeepDiff(
+        classification_answers_dict,
+        expected_dict,
+        exclude_regex_paths=[r".*\['createdAt'\]", r".*\['lastEditedAt'\]"],
+    )
+
+
+def test_remove_classification_from_text_space(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_TEXT_NO_LABELS)
+    text_space_1 = label_row.get_space_by_id("text-1-uuid", type_=TextSpace)
+
+    new_classification = label_row.create_space_classification(ontology_class=text_classification)
+    text_space_1.place_classification(classification=new_classification, ranges=Range(start=0, end=500))
+    entities = text_space_1.get_classifications()
+    assert len(entities) == 1
+    annotations = text_space_1.get_classification_annotations()
+    assert len(annotations) == 1
+
+    # Act
+    text_space_1.remove_space_classification(new_classification.classification_hash)
+
+    # Assert
+    entities = text_space_1.get_classifications()
+    assert len(entities) == 0
+    annotations = text_space_1.get_classification_annotations()
+    assert len(annotations) == 0
+
+
 def test_read_and_export_labels(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_WITH_TWO_TEXT_LABELS)

@@ -32,7 +32,7 @@ class AnnotationInfo:
     manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
     reviews: Optional[List[dict]] = None
     # TODO: Classifications do not have this field
-    is_deleted: Optional[bool] = None
+    # is_deleted: Optional[bool] = None
 
     @staticmethod
     def from_dict(d: dict) -> "AnnotationInfo":
@@ -54,10 +54,10 @@ class AnnotationInfo:
             created_by=d["createdBy"],
             last_edited_at=last_edited_at,
             last_edited_by=d.get("lastEditedBy"),
-            confidence=d["confidence"],
+            confidence=d.get("confidence", DEFAULT_CONFIDENCE),
             manual_annotation=d.get("manualAnnotation", True),
             reviews=d.get("reviews"),
-            is_deleted=d.get("isDeleted"),
+            # is_deleted=d.get("isDeleted"),
         )
 
     def update_from_optional_fields(

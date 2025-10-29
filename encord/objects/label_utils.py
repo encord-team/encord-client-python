@@ -33,8 +33,8 @@ def create_frame_object_dict(
         )
     if object_instance_annotation.last_edited_by is not None:
         frame_object_dict["lastEditedBy"] = object_instance_annotation.last_edited_by
-    if object_instance_annotation.is_deleted is not None:
-        frame_object_dict["isDeleted"] = object_instance_annotation.is_deleted
+    # if object_instance_annotation.is_deleted is not None:
+    #     frame_object_dict["isDeleted"] = object_instance_annotation.is_deleted
 
     return frame_object_dict
 

@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from unittest.mock import Mock
 
 import pytest
@@ -7,14 +6,12 @@ from deepdiff import DeepDiff
 from encord.exceptions import LabelRowError
 from encord.objects import Classification, LabelRowV2, Object
 from encord.objects.attributes import Attribute
-from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import BoundingBoxCoordinates
 from encord.objects.spaces.image_space import ImageSpace
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.two_images import DATA_GROUP_TWO_IMAGES_NO_LABELS, DATA_GROUP_WITH_TWO_IMAGES_LABELS
 from tests.objects.data.data_group.two_videos import (
     DATA_GROUP_METADATA,
-    DATA_GROUP_TWO_VIDEOS_NO_LABELS,
 )
 
 segmentation_ontology_item = all_types_structure.get_child_by_hash("segmentationFeatureNodeHash", Object)

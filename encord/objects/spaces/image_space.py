@@ -320,7 +320,7 @@ class ImageSpace(Space):
                 manual_annotation=object_frame_instance_info.manual_annotation,
                 reviews=object_frame_instance_info.reviews,
                 confidence=object_frame_instance_info.confidence,
-                is_deleted=object_frame_instance_info.is_deleted,
+                # is_deleted=object_frame_instance_info.is_deleted,
             )
 
         # Process classifications

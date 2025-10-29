@@ -284,11 +284,23 @@ class RangeBasedSpace(Space, ABC):
 
         for classification_answer in classification_answers.values():
             classification_instance = self.parent._create_new_classification_instance_with_ranges(classification_answer)
+            classification_instance_info = AnnotationInfo.from_dict(classification_answer)
+
             space_classification = SpaceClassification(
                 label_row=self.parent, classification_instance=classification_instance
             )
             # TODO: Need to use global classifications here
-            self.place_classification(space_classification, ranges=Range(start=0, end=200))
+            self.place_classification(
+                space_classification,
+                ranges=Range(start=0, end=200),
+                created_at=classification_instance_info.created_at,
+                created_by=classification_instance_info.created_by,
+                confidence=classification_instance_info.confidence,
+                manual_annotation=classification_instance_info.manual_annotation,
+                last_edited_at=classification_instance_info.last_edited_at,
+                last_edited_by=classification_instance_info.last_edited_by,
+                reviews=classification_instance_info.reviews,
+            )
 
     def _build_labels_dict(self) -> dict[str, LabelBlob]:
         """For range-based annotations, labels are stored in objects/classifications index"""
@@ -324,7 +336,8 @@ class RangeBasedSpace(Space, ABC):
         ret: dict[str, RangeClassificationIndex] = {}
         for classification in self.get_classifications():
             all_static_answers = classification._classification_instance.get_all_static_answers()
-            annotation = classification._classification_instance.get_annotations()[0]
+            annotation = self._classification_hash_to_annotation_data[classification.classification_hash]
+            annotation_info = annotation.annotation_info
             classifications = [answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()]
 
             classification_index_element: RangeClassificationIndex = {
@@ -332,11 +345,11 @@ class RangeBasedSpace(Space, ABC):
                 "classificationHash": classification.classification_hash,
                 "featureHash": classification._classification_instance.feature_hash,
                 "range": [],
-                "createdBy": annotation.created_by,
-                "createdAt": format_datetime_to_long_string_optional(annotation.created_at),
-                "lastEditedBy": annotation.last_edited_by,
-                "lastEditedAt": format_datetime_to_long_string_optional(annotation.last_edited_at),
-                "manualAnnotation": annotation.manual_annotation,
+                "createdBy": annotation_info.created_by,
+                "createdAt": format_datetime_to_long_string_optional(annotation_info.created_at),
+                "lastEditedBy": annotation_info.last_edited_by,
+                "lastEditedAt": format_datetime_to_long_string_optional(annotation_info.last_edited_at),
+                "manualAnnotation": annotation_info.manual_annotation,
             }
 
             ret[classification.classification_hash] = classification_index_element

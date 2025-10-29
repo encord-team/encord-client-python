@@ -7,17 +7,12 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
 from encord.constants.enums import SpaceType
 from encord.objects import Classification
-from encord.objects.common import Shape
 from encord.objects.coordinates import (
-    Coordinates,
     TwoDimensionalCoordinates,
     add_coordinates_to_frame_object_dict,
 )
 from encord.objects.frames import Frames, frames_class_to_frames_list
 from encord.objects.label_utils import create_frame_classification_dict, create_frame_object_dict
-from encord.objects.ontology_object_instance import (
-    ObjectInstance,
-)
 from encord.objects.spaces.annotation.base_annotation import AnnotationData, AnnotationInfo
 from encord.objects.spaces.annotation.two_dimensional_annotation import (
     FrameClassificationAnnotation,
@@ -377,7 +372,7 @@ class VideoSpace(Space):
                 manual_annotation=object_frame_instance_info.manual_annotation,
                 reviews=object_frame_instance_info.reviews,
                 confidence=object_frame_instance_info.confidence,
-                is_deleted=object_frame_instance_info.is_deleted,
+                # is_deleted=object_frame_instance_info.is_deleted,
             )
 
         # Process classifications

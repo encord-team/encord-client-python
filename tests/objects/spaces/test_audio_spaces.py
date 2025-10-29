@@ -188,8 +188,85 @@ def test_update_attribute_for_object_which_exist_on_two_spaces(ontology):
     assert not DeepDiff(
         object_answer_dict,
         EXPECTED_DICT,
-        exclude_regex_paths=[r".*\['trackHash'\]", r".*\['createdAt'\]", r".*\['lastEditedAt'\]"],
+        exclude_regex_paths=[r".*\['createdAt'\]", r".*\['lastEditedAt'\]"],
     )
+
+
+def test_add_classification_to_audio_space(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
+    audio_space_1 = label_row.get_space_by_id("audio-1-uuid", type_=AudioSpace)
+
+    # Act
+    new_classification = label_row.create_space_classification(ontology_class=text_classification)
+    audio_space_1.place_classification(classification=new_classification, ranges=Range(start=0, end=500))
+    audio_space_1.place_classification(classification=new_classification, ranges=Range(start=700, end=1000))
+
+    text_answer = "Some answer"
+    new_classification.set_answer(answer=text_answer)
+
+    # Assert
+    entities = audio_space_1.get_classifications()
+    assert len(entities) == 1
+
+    annotations = audio_space_1.get_classification_annotations()
+    assert len(annotations) == 1
+
+    first_annotation = annotations[0]
+    assert first_annotation.classification_hash == new_classification.classification_hash
+
+    classification_answers_dict = label_row.to_encord_dict()["classification_answers"]
+    expected_dict = {
+        new_classification.classification_hash: {
+            "classifications": [
+                {
+                    "name": "Text classification",
+                    "value": "text_classification",
+                    "answers": text_answer,
+                    "featureHash": "OxrtEM+v",
+                    "manualAnnotation": True,
+                }
+            ],
+            "classificationHash": new_classification.classification_hash,
+            "featureHash": "jPOcEsbw",
+            "range": [],
+            "createdBy": None,
+            "createdAt": "Wed, 29 Oct 2025 23:38:32 UTC",
+            "lastEditedBy": None,
+            "lastEditedAt": "Wed, 29 Oct 2025 23:38:32 UTC",
+            "manualAnnotation": True,
+        }
+    }
+
+    assert not DeepDiff(
+        classification_answers_dict,
+        expected_dict,
+        exclude_regex_paths=[r".*\['createdAt'\]", r".*\['lastEditedAt'\]"],
+    )
+
+
+def test_remove_classification_from_audio_space(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
+    audio_space_1 = label_row.get_space_by_id("audio-1-uuid", type_=AudioSpace)
+
+    new_classification = label_row.create_space_classification(ontology_class=text_classification)
+    audio_space_1.place_classification(classification=new_classification, ranges=Range(start=0, end=500))
+    entities = audio_space_1.get_classifications()
+    assert len(entities) == 1
+    annotations = audio_space_1.get_classification_annotations()
+    assert len(annotations) == 1
+
+    # Act
+    audio_space_1.remove_space_classification(new_classification.classification_hash)
+
+    # Assert
+    entities = audio_space_1.get_classifications()
+    assert len(entities) == 0
+    annotations = audio_space_1.get_classification_annotations()
+    assert len(annotations) == 0
 
 
 def test_read_and_export_labels(ontology):
@@ -200,7 +277,6 @@ def test_read_and_export_labels(ontology):
     objects_on_audio_space_1 = audio_space_1.get_objects()
     assert len(objects_on_audio_space_1) == 1
 
-    # TODO: Need to somehow know which space an annotation is on
     audio_object_instance = objects_on_audio_space_1[0]
     assert audio_object_instance.object_hash == "speaker1"
 
