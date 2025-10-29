@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple, Type, Union
 
+from requests.sessions import _Data
 from tqdm import tqdm
 
 from encord.configs import BaseConfig
@@ -139,14 +140,15 @@ def upload_to_signed_url_list_for_single_file(
         backoff_factor (float): Backoff factor for retry delays.
     """
     try:
-        _upload_single_file(
-            file_path,
-            title,
-            signed_url,
-            _get_content_type(upload_item_type, file_path),
-            max_retries=max_retries,
-            backoff_factor=backoff_factor,
-        )
+        with open(file_path, "rb") as f:
+            _upload_single_file(
+                f,
+                title,
+                signed_url,
+                _get_content_type(upload_item_type, file_path),
+                max_retries=max_retries,
+                backoff_factor=backoff_factor,
+            )
     except CloudUploadError as e:
         failures.append(
             UploadToSignedUrlFailure(
@@ -266,7 +268,7 @@ def upload_to_signed_url_list(
 
 
 def _upload_single_file(
-    file_path: Union[str, Path],
+    data: _Data,
     title: str,
     signed_url: str,
     content_type: Optional[str],
@@ -278,20 +280,19 @@ def _upload_single_file(
     with create_new_session(
         max_retries=max_retries, backoff_factor=backoff_factor, connect_retries=max_retries
     ) as session:
-        with open(file_path, "rb") as f:
-            res_upload = session.put(
-                signed_url, data=f, headers={"Content-Type": content_type, "Cache-Control": f"max-age={cache_max_age}"}
+        res_upload = session.put(
+            signed_url, data=data, headers={"Content-Type": content_type, "Cache-Control": f"max-age={cache_max_age}"}
+        )
+
+        if res_upload.status_code != 200:
+            status_code = res_upload.status_code
+            headers = res_upload.headers
+            res_text = res_upload.text
+            error_string = str(
+                f"Error uploading file '{title}' to signed url: "
+                f"'{signed_url}'.\n"
+                f"Response data:\n\tstatus code: '{status_code}'\n\theaders: '{headers}'\n\tcontent: '{res_text}'",
             )
 
-            if res_upload.status_code != 200:
-                status_code = res_upload.status_code
-                headers = res_upload.headers
-                res_text = res_upload.text
-                error_string = str(
-                    f"Error uploading file '{title}' to signed url: "
-                    f"'{signed_url}'.\n"
-                    f"Response data:\n\tstatus code: '{status_code}'\n\theaders: '{headers}'\n\tcontent: '{res_text}'",
-                )
-
-                logger.error(error_string)
-                raise CloudUploadError(error_string)
+            logger.error(error_string)
+            raise CloudUploadError(error_string)

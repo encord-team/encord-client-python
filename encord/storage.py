@@ -13,7 +13,6 @@ import json
 import logging
 import mimetypes
 import os
-import tempfile
 import time
 from datetime import datetime
 from math import ceil
@@ -707,7 +706,7 @@ class StorageFolder:
     def upload_text(
         self,
         file_path: Optional[Union[Path, str]] = None,
-        text_contents: Optional[str] = None,
+        text_contents: Optional[Union[str, bytes]] = None,
         title: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
         text_metadata: Optional[orm_storage.CustomerProvidedTextMetadata] = None,
@@ -739,6 +738,9 @@ class StorageFolder:
         """
         if file_path and text_contents:
             raise EncordException("We only support passing either the file_path or the text_contents. Can't pass both")
+
+        if not file_path and not text_contents:
+            raise EncordException("Either file_path or text_contents must be provided")
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.PLAIN_TEXT, count=1, frames_subfolder_name=None
         )
@@ -747,13 +749,10 @@ class StorageFolder:
 
         title = self._guess_title(title, file_path, text_contents)
 
-        if text_contents:
-            with tempfile.NamedTemporaryFile(suffix=".txt") as f:
-                f.write(text_contents.encode())
-                f.flush()
-                file_path = f
+        data = Path(file_path) if file_path else text_contents
+        assert data is not None  # Checked above
         self._upload_local_file(
-            file_path,
+            data,
             title,
             StorageItemType.PLAIN_TEXT,
             upload_url_info[0].signed_url,
@@ -1384,7 +1383,10 @@ class StorageFolder:
         return urls.results
 
     def _guess_title(
-        self, title: Optional[str], file_path: Optional[Union[Path, str]], text_contents: Optional[str] = None
+        self,
+        title: Optional[str],
+        file_path: Optional[Union[Path, str]],
+        text_contents: Optional[Union[str, bytes]] = None,
     ) -> str:
         if title:
             return title
@@ -1398,9 +1400,9 @@ class StorageFolder:
             return file_path.name
         else:
             assert text_contents
-            return text_contents[:10]
+            return str(text_contents[:10])
 
-    def _get_content_type(self, file_path: Union[Path, str], item_type: StorageItemType) -> str:
+    def _get_content_type(self, file_path: Path, item_type: StorageItemType) -> str:
         if item_type == StorageItemType.IMAGE:
             return mimetypes.guess_type(str(file_path))[0] or "application/octet-stream"
         elif item_type == StorageItemType.VIDEO or item_type == StorageItemType.AUDIO:
@@ -1428,14 +1430,12 @@ class StorageFolder:
 
     def _upload_local_file(
         self,
-        file_path: Union[Path, str],
+        data: Union[Path, str, bytes],
         title: str,
         item_type: StorageItemType,
         signed_url: str,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> None:
-        content_type = self._get_content_type(file_path, item_type)
-
         max_retries = (
             cloud_upload_settings.max_retries
             if cloud_upload_settings.max_retries is not None
@@ -1446,15 +1446,28 @@ class StorageFolder:
             if cloud_upload_settings.backoff_factor is not None
             else DEFAULT_REQUESTS_SETTINGS.backoff_factor
         )
-
-        _upload_single_file(
-            str(file_path),
-            title,
-            signed_url,
-            content_type,
-            max_retries=max_retries,
-            backoff_factor=backoff_factor,
-        )
+        if isinstance(data, Path):
+            file_path = data
+            content_type = self._get_content_type(file_path, item_type)
+            with open(file_path, "rb") as file_obj:
+                _upload_single_file(
+                    file_obj,
+                    title,
+                    signed_url,
+                    content_type,
+                    max_retries=max_retries,
+                    backoff_factor=backoff_factor,
+                )
+        else:
+            content_type = "text/plain" if item_type == StorageItemType.PLAIN_TEXT else "application/octet-stream"
+            _upload_single_file(
+                data,
+                title,
+                signed_url,
+                content_type,
+                max_retries=max_retries,
+                backoff_factor=backoff_factor,
+            )
 
     def _add_data(
         self,
