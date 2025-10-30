@@ -87,7 +87,6 @@ def test_remove_object_from_image_space(ontology):
     # Assert
     space_objects_on_label_row = label_row.list_space_objects()
     space_object_on_label_row = space_objects_on_label_row[0]
-
     assert len(space_objects_on_label_row) == 1
     assert space_object_on_label_row.spaces == {}
 
@@ -200,8 +199,13 @@ def test_add_classification_to_image_space(ontology):
     new_classification.set_answer(answer=text_answer)
 
     # Assert
-    entities = image_space_1.get_classifications()
-    assert len(entities) == 1
+    space_classifications_on_label_row = label_row.list_space_classifications()
+    assert len(space_classifications_on_label_row) == 1
+
+    space_classifications = image_space_1.get_classifications()
+    space_classification = space_classifications[0]
+    assert len(space_classifications) == 1
+    assert space_classification.spaces == {image_space_1.space_id: image_space_1}
 
     annotations = image_space_1.get_classification_annotations()
     assert len(annotations) == 1
@@ -238,8 +242,8 @@ def test_remove_classification_from_image_space(ontology):
 
     new_classification = label_row.create_space_classification(ontology_class=text_classification)
     image_space_1.place_classification(classification=new_classification)
-    entities = image_space_1.get_classifications()
-    assert len(entities) == 1
+    space_classifications = image_space_1.get_classifications()
+    assert len(space_classifications) == 1
     annotations = image_space_1.get_classification_annotations()
     assert len(annotations) == 1
 
@@ -247,8 +251,14 @@ def test_remove_classification_from_image_space(ontology):
     image_space_1.remove_space_classification(new_classification.classification_hash)
 
     # Assert
-    entities = image_space_1.get_classifications()
-    assert len(entities) == 0
+    space_classifications_on_label_row = label_row.list_space_classifications()
+    space_classification_on_label_row = space_classifications_on_label_row[0]
+    assert len(space_classifications_on_label_row) == 1
+    assert space_classification_on_label_row.spaces == {}
+
+    space_classifications = image_space_1.get_classifications()
+    assert len(space_classifications) == 0
+
     annotations = image_space_1.get_classification_annotations()
     assert len(annotations) == 0
 

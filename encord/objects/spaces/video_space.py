@@ -113,7 +113,7 @@ class VideoSpace(Space):
     ) -> None:
         frame_list = frames_class_to_frames_list(frames)
         self._classification_map[classification.classification_hash] = classification
-        classification._space_ids.add(self.space_id)
+        classification._add_to_space(self)
 
         # TODO: Check overwrites
 
@@ -186,6 +186,7 @@ class VideoSpace(Space):
 
     def remove_space_classification(self, classification_hash: str) -> Optional[SpaceClassification]:
         classification_entity = self._classification_map.pop(classification_hash, None)
+        classification_entity._remove_from_space(self)
         for frame, classification in self._frames_to_classification_hash_to_annotation_data.items():
             if classification_hash in classification:
                 classification.pop(classification_hash)

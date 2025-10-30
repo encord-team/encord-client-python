@@ -63,7 +63,11 @@ class SpaceClassification:
     def __init__(self, label_row: LabelRowV2, classification_instance: ClassificationInstance):
         self._classification_instance = classification_instance
         self._label_row = label_row
-        self._space_ids: set[str] = set()
+        self._space_map: dict[str, Space] = dict()
+
+    @property
+    def spaces(self) -> dict[str, Space]:
+        return self._space_map
 
     @property
     def classification_hash(self) -> str:
@@ -84,3 +88,9 @@ class SpaceClassification:
         return self._classification_instance.get_answer(
             attribute=attribute,
         )
+
+    def _add_to_space(self, space: Space) -> None:
+        self._space_map.update({space.space_id: space})
+
+    def _remove_from_space(self, space: Space) -> None:
+        self._space_map.pop(space.space_id)

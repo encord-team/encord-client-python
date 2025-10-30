@@ -5,12 +5,10 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from encord.constants.enums import SpaceType
-from encord.exceptions import LabelRowError
 from encord.objects import Classification
 from encord.objects.coordinates import (
     TwoDimensionalCoordinates,
     add_coordinates_to_frame_object_dict,
-    get_coordinates_from_frame_object_label,
     get_two_dimensional_coordinates_from_frame_object_label,
 )
 from encord.objects.label_utils import create_frame_classification_dict, create_frame_object_dict
@@ -101,7 +99,7 @@ class ImageSpace(Space):
         reviews: Optional[List[dict]] = None,
     ) -> None:
         self._classifications_map[classification.classification_hash] = classification
-        classification._space_ids.add(self.space_id)
+        classification._add_to_space(self)
 
         # TODO: Check overwrites
 
@@ -164,10 +162,11 @@ class ImageSpace(Space):
         return obj_entity
 
     def remove_space_classification(self, classification_hash: str) -> Optional[SpaceClassification]:
-        classification_entity = self._classifications_map.pop(classification_hash, None)
+        space_classification = self._classifications_map.pop(classification_hash, None)
+        space_classification._remove_from_space(self)
         self._classification_hash_to_annotation_data.pop(classification_hash)
 
-        return classification_entity
+        return space_classification
 
     """INTERNAL METHODS FOR DESERDE"""
 

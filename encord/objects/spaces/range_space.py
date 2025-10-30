@@ -129,7 +129,7 @@ class RangeBasedSpace(Space, ABC):
         reviews: Optional[List[dict]] = None,
     ) -> None:
         self._classifications_map[classification.classification_hash] = classification
-        classification._space_ids.add(self.space_id)
+        classification._add_to_space(self)
 
         if isinstance(ranges, Range):
             ranges = [ranges]
@@ -197,6 +197,7 @@ class RangeBasedSpace(Space, ABC):
 
     def remove_space_classification(self, classification_hash: str) -> Optional[SpaceClassification]:
         classification_entity = self._classifications_map.pop(classification_hash, None)
+        classification_entity._remove_from_space(self)
         self._classification_hash_to_annotation_data.pop(classification_hash)
 
         return classification_entity
