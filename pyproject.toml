@@ -64,6 +64,10 @@ coco = [
 requires = ["uv_build>=0.9.6,<0.10.0"]
 build-backend = "uv_build"
 
+[tool.uv.build-backend]
+module-name = "encord"
+module-root = ""
+
 [tool.mypy]
 ignore_missing_imports = true
 
