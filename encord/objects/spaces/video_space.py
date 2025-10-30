@@ -96,6 +96,16 @@ class VideoSpace(Space):
                 is_deleted=is_deleted,
             )
 
+    def unplace_object(
+        self,
+        object: SpaceObject,
+        frames: Frames,
+    ):
+        frame_list = frames_class_to_frames_list(frames)
+        # TODO: What if all frames are unplaaced?
+        for frame in frame_list:
+            self._frames_to_object_hash_to_annotation_data[frame].pop(object.object_hash)
+
     def place_classification(
         self,
         classification: SpaceClassification,
@@ -140,6 +150,16 @@ class VideoSpace(Space):
                 reviews=reviews,
                 is_deleted=is_deleted,
             )
+
+    def unplace_classification(
+        self,
+        classification: SpaceClassification,
+        frames: Frames,
+    ):
+        frame_list = frames_class_to_frames_list(frames)
+        # TODO: What if all frames are unplaaced?
+        for frame in frame_list:
+            self._frames_to_classification_hash_to_annotation_data[frame].pop(classification.classification_hash)
 
     def get_object_annotations(self) -> list[TwoDimensionalFrameObjectAnnotation]:
         res: list[TwoDimensionalFrameObjectAnnotation] = []

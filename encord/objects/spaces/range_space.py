@@ -93,16 +93,16 @@ class RangeBasedSpace(Space, ABC):
 
         # TODO: Check overwrites
 
-        existing_frame_annotation_data = self._object_hash_to_annotation_data.get(object.object_hash)
-        if existing_frame_annotation_data is None:
-            existing_frame_annotation_data = RangeAnnotationData(
+        existing_annotation_data = self._object_hash_to_annotation_data.get(object.object_hash)
+        if existing_annotation_data is None:
+            existing_annotation_data = RangeAnnotationData(
                 annotation_info=AnnotationInfo(),
                 range_manager=RangeManager(),
             )
 
-            self._object_hash_to_annotation_data[object.object_hash] = existing_frame_annotation_data
+            self._object_hash_to_annotation_data[object.object_hash] = existing_annotation_data
 
-        existing_frame_annotation_data.annotation_info.update_from_optional_fields(
+        existing_annotation_data.annotation_info.update_from_optional_fields(
             created_at=created_at,
             created_by=created_by,
             last_edited_at=last_edited_at,
@@ -113,7 +113,10 @@ class RangeBasedSpace(Space, ABC):
             is_deleted=is_deleted,
         )
 
-        existing_frame_annotation_data.range_manager.add_ranges(ranges)
+        existing_annotation_data.range_manager.add_ranges(ranges)
+
+    def unplace_object(self, object: SpaceObject, ranges: Ranges | Range) -> None:
+        self._object_hash_to_annotation_data[object.object_hash].range_manager.remove_ranges(ranges)
 
     def place_classification(
         self,
@@ -136,20 +139,16 @@ class RangeBasedSpace(Space, ABC):
 
         # TODO: Check overwrites
 
-        existing_frame_classification_annotation_data = self._classification_hash_to_annotation_data.get(
-            classification.classification_hash
-        )
-        if existing_frame_classification_annotation_data is None:
-            existing_frame_classification_annotation_data = RangeAnnotationData(
+        existing_annotation_data = self._classification_hash_to_annotation_data.get(classification.classification_hash)
+        if existing_annotation_data is None:
+            existing_annotation_data = RangeAnnotationData(
                 annotation_info=AnnotationInfo(),
                 range_manager=RangeManager(),
             )
 
-            self._classification_hash_to_annotation_data[classification.classification_hash] = (
-                existing_frame_classification_annotation_data
-            )
+            self._classification_hash_to_annotation_data[classification.classification_hash] = existing_annotation_data
 
-        existing_frame_classification_annotation_data.annotation_info.update_from_optional_fields(
+        existing_annotation_data.annotation_info.update_from_optional_fields(
             created_at=created_at,
             created_by=created_by,
             last_edited_at=last_edited_at,
@@ -157,6 +156,13 @@ class RangeBasedSpace(Space, ABC):
             confidence=confidence,
             manual_annotation=manual_annotation,
             reviews=reviews,
+        )
+
+        existing_annotation_data.range_manager.add_ranges(ranges)
+
+    def unplace_classification(self, classification: SpaceClassification, ranges: Ranges | Range) -> None:
+        self._classification_hash_to_annotation_data[classification.classification_hash].range_manager.remove_ranges(
+            ranges
         )
 
     def get_object_annotations(self) -> list[RangeObjectAnnotation]:

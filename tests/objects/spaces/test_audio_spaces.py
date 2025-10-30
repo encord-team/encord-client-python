@@ -62,6 +62,32 @@ def test_add_object_to_audio_space(ontology):
     assert first_annotation.object_hash == new_object.object_hash
 
 
+def test_unplace_object_from_ranges_on_audio_space(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
+    audio_space_1 = label_row.get_space_by_id("audio-1-uuid", type_=AudioSpace)
+
+    new_object = label_row.create_space_object(ontology_class=audio_obj_ontology_item)
+    audio_space_1.place_object(
+        object=new_object,
+        ranges=[Range(start=0, end=500)],
+    )
+
+    annotations_before_removing = audio_space_1.get_object_annotations()
+    annotation_to_be_removed = annotations_before_removing[0]
+
+    assert len(annotations_before_removing) == 1
+
+    # Act
+    audio_space_1.unplace_object(object=new_object, ranges=[Range(start=300, end=400)])
+
+    # Assert
+    annotations_after_removing = audio_space_1.get_object_annotations()
+    assert len(annotations_after_removing) == 1
+    assert annotation_to_be_removed.ranges == [Range(start=0, end=299), Range(start=401, end=500)]
+
+
 def test_remove_object_from_audio_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
@@ -264,6 +290,32 @@ def test_add_classification_to_audio_space(ontology):
         expected_dict,
         exclude_regex_paths=[r".*\['createdAt'\]", r".*\['lastEditedAt'\]"],
     )
+
+
+def test_unplace_classification_from_ranges_on_audio_space(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
+    audio_space_1 = label_row.get_space_by_id("audio-1-uuid", type_=AudioSpace)
+
+    new_classification = label_row.create_space_classification(ontology_class=text_classification)
+    audio_space_1.place_classification(
+        classification=new_classification,
+        ranges=[Range(start=0, end=500)],
+    )
+
+    annotations_before_removing = audio_space_1.get_classification_annotations()
+    annotation_to_be_removed = annotations_before_removing[0]
+
+    assert len(annotations_before_removing) == 1
+
+    # Act
+    audio_space_1.unplace_classification(classification=new_classification, ranges=[Range(start=300, end=400)])
+
+    # Assert
+    annotations_after_removing = audio_space_1.get_classification_annotations()
+    assert len(annotations_after_removing) == 1
+    assert annotation_to_be_removed.ranges == [Range(start=0, end=299), Range(start=401, end=500)]
 
 
 def test_remove_classification_from_audio_space(ontology):
