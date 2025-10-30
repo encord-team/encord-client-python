@@ -15,6 +15,7 @@ import mimetypes
 import os
 import time
 from datetime import datetime
+from io import BufferedReader
 from math import ceil
 from pathlib import Path
 from typing import Any, Collection, Dict, Iterable, List, Literal, Optional, Sequence, TextIO, Union
@@ -706,7 +707,7 @@ class StorageFolder:
     def upload_text(
         self,
         file_path: Optional[Union[Path, str]] = None,
-        text_contents: Optional[Union[str, bytes]] = None,
+        text_contents: Optional[Union[str, bytes, BufferedReader]] = None,
         title: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
         text_metadata: Optional[orm_storage.CustomerProvidedTextMetadata] = None,
@@ -716,7 +717,7 @@ class StorageFolder:
 
         Args:
             file_path: File path of the text file. For example: '/home/user/data/report.txt'
-            text_contents: Text contents to be uploaded. For example: 'The quick brown fox jumps over the lazy dog'
+            text_contents: Text contents to be uploaded. Can pass str,bytes, or file-like object directly
             title: The item title. If unspecified, the file name is used as the title.
             client_metadata: Optional custom metadata to be associated with the text file. Should be a dictionary that is JSON-serializable.
             text_metadata: Optional media metadata for a text file. The Encord platform uses the specified values instead of scanning the files.
@@ -1386,7 +1387,7 @@ class StorageFolder:
         self,
         title: Optional[str],
         file_path: Optional[Union[Path, str]],
-        text_contents: Optional[Union[str, bytes]] = None,
+        text_contents: Optional[Union[str, bytes, BufferedReader]] = None,
     ) -> str:
         if title:
             return title
@@ -1400,6 +1401,8 @@ class StorageFolder:
             return file_path.name
         else:
             assert text_contents
+            if isinstance(text_contents, BufferedReader):
+                return str(text_contents.peek(10))  # Ensure we **peek** as BufferedReader is stateful
             return str(text_contents[:10])
 
     def _get_content_type(self, file_path: Path, item_type: StorageItemType) -> str:
@@ -1430,7 +1433,7 @@ class StorageFolder:
 
     def _upload_local_file(
         self,
-        data: Union[Path, str, bytes],
+        data: Union[Path, str, bytes, BufferedReader],
         title: str,
         item_type: StorageItemType,
         signed_url: str,
