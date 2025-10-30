@@ -688,6 +688,12 @@ class LabelRowV2:
 
         return res
 
+    def list_space_objects(self) -> list[SpaceObject]:
+        return list(self._space_objects_map.values())
+
+    def list_space_classifications(self) -> list[SpaceClassification]:
+        return list(self._space_classifications_map.values())
+
     def create_space_object(self, ontology_class: Object, entity_hash: Optional[str] = None) -> SpaceObject:
         new_instance = ObjectInstance(ontology_object=ontology_class, object_hash=entity_hash)
         new_entity = SpaceObject(label_row=self, object_instance=new_instance)
@@ -1811,7 +1817,7 @@ class LabelRowV2:
 
         for entity in self._space_objects_map.values():
             # Case where we've removed the entity from all spaces
-            if len(entity._space_ids) == 0:
+            if len(entity._space_map.keys()) == 0:
                 continue
 
             entity_instance = entity._object_instance

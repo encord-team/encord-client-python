@@ -1,5 +1,3 @@
-import json
-from datetime import datetime, timezone
 from unittest.mock import Mock
 
 import pytest
@@ -47,8 +45,13 @@ def test_add_object_to_audio_space(ontology):
     audio_space_1.place_object(object=new_object, ranges=[Range(start=400, end=1000)])
 
     # Assert
-    entities = audio_space_1.get_objects()
-    assert len(entities) == 1
+    space_objects_on_label_row = label_row.list_space_objects()
+    assert len(space_objects_on_label_row) == 1
+
+    space_objects = audio_space_1.get_objects()
+    space_object = space_objects[0]
+    assert len(space_objects) == 1
+    assert space_object.spaces == {audio_space_1.space_id: audio_space_1}
 
     annotations = audio_space_1.get_object_annotations()
     assert len(annotations) == 1
@@ -70,8 +73,8 @@ def test_remove_object_from_audio_space(ontology):
         ranges=[Range(start=0, end=500)],
     )
 
-    entities = audio_space_1.get_objects()
-    assert len(entities) == 1
+    space_objects = audio_space_1.get_objects()
+    assert len(space_objects) == 1
 
     annotations = audio_space_1.get_object_annotations()
     assert len(annotations) == 1
@@ -82,6 +85,15 @@ def test_remove_object_from_audio_space(ontology):
     audio_space_1.remove_space_object(new_object.object_hash)
 
     # Assert
+    space_objects_on_label_row = label_row.list_space_objects()
+    space_object_on_label_row = space_objects_on_label_row[0]
+
+    assert len(space_objects_on_label_row) == 1
+    assert space_object_on_label_row.spaces == {}
+
+    space_objects = audio_space_1.get_objects()
+    assert len(space_objects) == 0
+
     annotations = audio_space_1.get_object_annotations()
     assert len(annotations) == 0
     with pytest.raises(LabelRowError):

@@ -47,14 +47,18 @@ def test_add_object_to_text_space(ontology):
     text_space_1.place_object(object=new_object, ranges=[Range(start=400, end=1000)])
 
     # Assert
-    entities = text_space_1.get_objects()
-    assert len(entities) == 1
+    space_objects_on_label_row = label_row.list_space_objects()
+    assert len(space_objects_on_label_row) == 1
+
+    space_objects = text_space_1.get_objects()
+    space_object = space_objects[0]
+    assert len(space_objects) == 1
+    assert space_object.spaces == {text_space_1.space_id: text_space_1}
 
     annotations = text_space_1.get_object_annotations()
     assert len(annotations) == 1
 
     first_annotation = annotations[0]
-
     assert first_annotation.ranges == [Range(start=0, end=1000)]
     assert first_annotation.object_hash == new_object.object_hash
 
@@ -70,8 +74,8 @@ def test_remove_object_from_text_space(ontology):
         ranges=[Range(start=0, end=500)],
     )
 
-    entities = text_space_1.get_objects()
-    assert len(entities) == 1
+    space_objects = text_space_1.get_objects()
+    assert len(space_objects) == 1
 
     annotations = text_space_1.get_object_annotations()
     assert len(annotations) == 1
@@ -82,6 +86,15 @@ def test_remove_object_from_text_space(ontology):
     text_space_1.remove_space_object(new_object.object_hash)
 
     # Assert
+    space_objects_on_label_row = label_row.list_space_objects()
+    space_object_on_label_row = space_objects_on_label_row[0]
+
+    assert len(space_objects_on_label_row) == 1
+    assert space_object_on_label_row.spaces == {}
+
+    space_objects = text_space_1.get_objects()
+    assert len(space_objects) == 0
+
     annotations = text_space_1.get_object_annotations()
     assert len(annotations) == 0
     with pytest.raises(LabelRowError):

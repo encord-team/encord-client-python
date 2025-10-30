@@ -10,13 +10,18 @@ from encord.objects.ontology_object_instance import AnswersForFrames
 
 if TYPE_CHECKING:
     from encord.objects import LabelRowV2, ObjectInstance, Option
+    from encord.objects.spaces.base_space import Space
 
 
 class SpaceObject:
     def __init__(self, label_row: LabelRowV2, object_instance: ObjectInstance):
         self._object_instance = object_instance
         self._label_row = label_row
-        self._space_ids: set[str] = set()
+        self._space_map: dict[str, Space] = dict()
+
+    @property
+    def spaces(self) -> dict[str, Space]:
+        return self._space_map
 
     @property
     def object_hash(self) -> str:
@@ -46,6 +51,12 @@ class SpaceObject:
             filter_frame=filter_frame,
             is_dynamic=is_dynamic,
         )
+
+    def _add_to_space(self, space: Space) -> None:
+        self._space_map.update({space.space_id: space})
+
+    def _remove_from_space(self, space: Space) -> None:
+        self._space_map.pop(space.space_id)
 
 
 class SpaceClassification:

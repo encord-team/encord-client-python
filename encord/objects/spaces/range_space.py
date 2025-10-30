@@ -86,7 +86,7 @@ class RangeBasedSpace(Space, ABC):
         is_deleted: Optional[bool] = None,
     ) -> None:
         self._objects_map[object.object_hash] = object
-        object._space_ids.add(self.space_id)
+        object._add_to_space(self)
 
         if isinstance(ranges, Range):
             ranges = [ranges]
@@ -191,6 +191,7 @@ class RangeBasedSpace(Space, ABC):
     def remove_space_object(self, object_hash: str) -> Optional[SpaceObject]:
         obj_entity = self._objects_map.pop(object_hash, None)
         self._object_hash_to_annotation_data.pop(object_hash)
+        obj_entity._remove_from_space(self)
 
         return obj_entity
 

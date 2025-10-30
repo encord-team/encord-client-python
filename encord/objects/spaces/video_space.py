@@ -67,7 +67,7 @@ class VideoSpace(Space):
     ) -> None:
         frame_list = frames_class_to_frames_list(frames)
         self._objects_map[object.object_hash] = object
-        object._space_ids.add(self.space_id)
+        object._add_to_space(self)
 
         # TODO: Check overwrites
 
@@ -177,6 +177,7 @@ class VideoSpace(Space):
 
     def remove_space_object(self, object_hash: str) -> Optional[SpaceObject]:
         obj_entity = self._objects_map.pop(object_hash, None)
+        obj_entity._remove_from_space(self)
         for frame, obj in self._frames_to_object_hash_to_annotation_data.items():
             if object_hash in obj:
                 obj.pop(object_hash)

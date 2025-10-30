@@ -51,8 +51,13 @@ def test_add_object_to_video_space(ontology):
     )
 
     # Assert
-    entities = video_space_1.get_objects()
-    assert len(entities) == 1
+    space_objects_on_label_row = label_row.list_space_objects()
+    assert len(space_objects_on_label_row) == 1
+
+    space_objects = video_space_1.get_objects()
+    space_object = space_objects[0]
+    assert len(space_objects) == 1
+    assert space_object.spaces == {video_space_1.space_id: video_space_1}
 
     annotations = video_space_1.get_object_annotations()
     assert len(annotations) == 4
@@ -75,8 +80,8 @@ def test_remove_object_from_video_space(ontology):
         coordinates=BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5),
     )
 
-    entities = video_space_1.get_objects()
-    assert len(entities) == 1
+    space_objects = video_space_1.get_objects()
+    assert len(space_objects) == 1
 
     annotations = video_space_1.get_object_annotations()
     assert len(annotations) == 3
@@ -87,6 +92,15 @@ def test_remove_object_from_video_space(ontology):
     video_space_1.remove_space_object(new_object.object_hash)
 
     # Assert
+    space_objects_on_label_row = label_row.list_space_objects()
+    space_object_on_label_row = space_objects_on_label_row[0]
+
+    assert len(space_objects_on_label_row) == 1
+    assert space_object_on_label_row.spaces == {}
+
+    space_objects = video_space_1.get_objects()
+    assert len(space_objects) == 0
+
     annotations = video_space_1.get_object_annotations()
     assert len(annotations) == 0
     with pytest.raises(LabelRowError):
@@ -194,8 +208,8 @@ def test_add_classification_to_video_space(ontology):
     new_classification.set_answer(answer=text_answer)
 
     # Assert
-    entities = video_space_1.get_classifications()
-    assert len(entities) == 1
+    space_classifications = video_space_1.get_classifications()
+    assert len(space_classifications) == 1
 
     annotations = video_space_1.get_classification_annotations()
     assert len(annotations) == 4
