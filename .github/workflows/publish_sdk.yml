@@ -24,7 +24,6 @@ jobs:
         uses: ./.github/actions/setup-uv-environment
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          with-dev-dependencies: false
 
       - name: uv Version Bump
         run: uv version ${{ github.ref_name }}
