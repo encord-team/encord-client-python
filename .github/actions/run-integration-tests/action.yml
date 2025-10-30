@@ -51,7 +51,6 @@ runs:
       uses: ./.github/actions/setup-uv-environment
       with:
         python-version: ${{ inputs.python-version }}
-        with-dev-dependencies: true
 
     - name: Setup FFMPEG
       uses: FedericoCarboni/setup-ffmpeg@v2
