@@ -9,15 +9,16 @@ category: "64e481b57b6027003f20aaa0"
 ---
 """
 
+from __future__ import annotations
+
 import logging
 import mimetypes
 import os.path
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Type, Union
 
-from requests.sessions import _Data
 from tqdm import tqdm
 
 from encord.configs import BaseConfig
@@ -34,6 +35,9 @@ from encord.orm.dataset import (
     Video,
 )
 from encord.orm.storage import StorageItemType, UploadSignedUrl
+
+if TYPE_CHECKING:
+    from requests.sessions import _Data
 
 PROGRESS_BAR_FILE_FACTOR = 100
 CACHE_DURATION_IN_SECONDS = 24 * 60 * 60  # 1 day
