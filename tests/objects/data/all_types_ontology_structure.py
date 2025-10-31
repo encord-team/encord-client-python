@@ -206,7 +206,15 @@ all_types_structure = OntologyStructure(
             color="#A4FF00",
             shape=Shape.AUDIO,
             feature_node_hash="KVfzNkFy",
-            attributes=[],
+            attributes=[
+                TextAttribute(
+                    uid=[8, 1],
+                    feature_node_hash="transcriptFeatureHash",
+                    name="Transcript",
+                    required=False,
+                    dynamic=False,
+                ),
+            ],
         ),
         Object(
             uid=9,
@@ -214,6 +222,22 @@ all_types_structure = OntologyStructure(
             color="#A4FF00",
             shape=Shape.TEXT,
             feature_node_hash="textFeatureNodeHash",
+            attributes=[
+                TextAttribute(
+                    uid=[9, 1],
+                    feature_node_hash="definitionFeatureHash",
+                    name="Definition",
+                    required=False,
+                    dynamic=False,
+                ),
+            ],
+        ),
+        Object(
+            uid=10,
+            name="segmentation object",
+            color="#4904a5",
+            shape=Shape.SEGMENTATION,
+            feature_node_hash="segmentationFeatureNodeHash",
             attributes=[],
         ),
     ],
