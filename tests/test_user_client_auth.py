@@ -19,7 +19,7 @@ from encord.orm.project import Project as OrmProject
 from encord.orm.project import ProjectDTO, ProjectStatus, ProjectType
 from encord.user_client import EncordUserClient
 from encord.utilities.ontology_user import OntologyUserRole, OntologyWithUserRole
-from tests.fixtures import PRIVATE_KEY_PEM
+from tests.conftest import PRIVATE_KEY_PEM
 
 PROJECT_HASH = str(uuid.uuid4())
 DATASET_HASH = str(uuid.uuid4())

@@ -7,7 +7,7 @@ from requests import Response, Session
 from encord.configs import ENCORD_DOMAIN, SshConfig
 from encord.exceptions import EncordException, SshKeyNotFound
 from encord.http.querier import HEADER_CLOUD_TRACE_CONTEXT, Querier
-from tests.fixtures import PRIVATE_KEY
+from tests.conftest import PRIVATE_KEY
 
 
 @pytest.fixture

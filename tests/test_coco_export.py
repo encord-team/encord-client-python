@@ -1,7 +1,4 @@
 from typing import Any, Dict
-from unittest.mock import patch
-
-import pytest
 
 from encord.objects.ontology_structure import OntologyStructure
 from tests.objects.data.data_1 import labels as BASE_LABEL_DICT

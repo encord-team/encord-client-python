@@ -5,10 +5,7 @@ from encord import Project
 from encord.client import EncordClientProject
 from encord.http.querier import Querier, RequestContext
 from encord.orm.label_row import LabelRowMetadata
-from tests.fixtures import ontology, project, user_client
 from tests.test_data.label_rows_metadata_blurb import LABEL_ROW_METADATA_BLURB
-
-assert user_client and project and ontology
 
 
 @patch.object(Querier, "_execute")

@@ -7,7 +7,7 @@ from encord.configs import SshConfig
 from encord.exceptions import EncordException
 from encord.http.v2.api_client import ApiClient
 from encord.orm.analytics import CollaboratorTimer
-from tests.fixtures import PRIVATE_KEY
+from tests.conftest import PRIVATE_KEY
 
 
 @pytest.fixture
