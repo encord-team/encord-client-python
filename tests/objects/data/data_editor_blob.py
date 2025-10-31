@@ -7,6 +7,7 @@ EDITOR_BLOB = {
             "shape": "bounding_box",
             "featureNodeHash": "a55abbeb",
             "required": False,
+            "archived": False,
         },
         {
             "id": "2",
@@ -15,6 +16,7 @@ EDITOR_BLOB = {
             "shape": "polygon",
             "featureNodeHash": "86648f32",
             "required": False,
+            "archived": False,
             "attributes": [
                 {
                     "id": "2.1",
@@ -22,6 +24,7 @@ EDITOR_BLOB = {
                     "type": "checklist",
                     "featureNodeHash": "1e3e5cad",
                     "required": True,
+                    "archived": False,
                     "dynamic": False,
                     "options": [
                         {
@@ -29,12 +32,14 @@ EDITOR_BLOB = {
                             "label": "Is it a cute nose?",
                             "value": "is_it_a_cute_nose?",
                             "featureNodeHash": "2bc17c88",
+                            "archived": False,
                         },
                         {
                             "id": "2.1.2",
                             "label": "Is it a wet nose? ",
                             "value": "is_it_a_wet_nose?_",
                             "featureNodeHash": "86eaa4f2",
+                            "archived": False,
                         },
                     ],
                 }
@@ -47,6 +52,7 @@ EDITOR_BLOB = {
             "shape": "polyline",
             "featureNodeHash": "6eeba59b",
             "required": False,
+            "archived": False,
             "attributes": [
                 {
                     "id": "4.1",
@@ -54,6 +60,7 @@ EDITOR_BLOB = {
                     "type": "radio",
                     "featureNodeHash": "cabfedb5",
                     "required": False,
+                    "archived": False,
                     "dynamic": False,
                     "options": [
                         {
@@ -61,6 +68,7 @@ EDITOR_BLOB = {
                             "label": "Nested Option",
                             "value": "nested_option",
                             "featureNodeHash": "5d102ce6",
+                            "archived": False,
                             "options": [
                                 {
                                     "id": "4.1.1.1",
@@ -68,6 +76,7 @@ EDITOR_BLOB = {
                                     "type": "radio",
                                     "featureNodeHash": "59204845",
                                     "required": False,
+                                    "archived": False,
                                     "dynamic": False,
                                 }
                             ],
@@ -88,10 +97,17 @@ EDITOR_BLOB = {
                     "type": "radio",
                     "featureNodeHash": "a6136d14",
                     "required": True,
+                    "archived": False,
                     "dynamic": False,
                     "options": [
-                        {"id": "1.1.1", "label": "Yes", "value": "yes", "featureNodeHash": "a3aeb48d"},
-                        {"id": "1.1.2", "label": "No", "value": "no", "featureNodeHash": "d0a4b373"},
+                        {
+                            "id": "1.1.1",
+                            "label": "Yes",
+                            "value": "yes",
+                            "featureNodeHash": "a3aeb48d",
+                            "archived": False,
+                        },
+                        {"id": "1.1.2", "label": "No", "value": "no", "featureNodeHash": "d0a4b373", "archived": False},
                     ],
                 }
             ],
