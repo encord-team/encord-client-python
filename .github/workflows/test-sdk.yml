@@ -62,6 +62,8 @@ jobs:
           private-key: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
           private-key-service-account: ${{ secrets.SDK_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT }}
           private-key-non-org: ${{ secrets.SDK_TESTS_PRIVATE_KEY_NON_ORG }}
+          robot-account-email: ${{ secrets.ROBOT_ACCOUNT_EMAIL }}
+          robot-account-password: ${{ secrets.ROBOT_ACCOUNT_PASSWORD }}
           sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}
 
 

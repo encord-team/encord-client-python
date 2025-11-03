@@ -250,10 +250,13 @@ def test_project_get_editor_logs_multiple_types():
         classification_hash="classification_hash_123",
     )
 
+    editor_logs_types_tuple = EditorLog.__args__
+    # python3.9 cannot do isinstance with Union types directly
+
     # All should be valid EditorLog types
-    assert isinstance(general_log, EditorLog)
-    assert isinstance(object_log, EditorLog)
-    assert isinstance(classification_log, EditorLog)
+    assert isinstance(general_log, editor_logs_types_tuple)
+    assert isinstance(object_log, editor_logs_types_tuple)
+    assert isinstance(classification_log, editor_logs_types_tuple)
 
     # Create a mock API client
     mock_api_client = MagicMock()
@@ -272,4 +275,4 @@ def test_project_get_editor_logs_multiple_types():
     for item in result:
         results.append(item)
     assert len(results) == 3
-    assert all(isinstance(log, EditorLog) for log in results)
+    assert all(isinstance(log, editor_logs_types_tuple) for log in results)
