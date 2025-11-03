@@ -54,7 +54,6 @@ class EditorLogCommon(BaseDTO):
     label_id: str
     workflow_stage_type: ActionableWorkflowNodeType | Literal[""]
     workflow_stage_title: str
-    event_information: dict[str, Any]
 
 
 class LabelAttributes(BaseDTO):

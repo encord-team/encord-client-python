@@ -57,7 +57,6 @@ def test_project_get_editor_logs_basic():
         label_id="label123",
         workflow_stage_type=ActionableWorkflowNodeType.ANNOTATION,
         workflow_stage_title="Annotation Stage",
-        event_information={"key": "value"},
     )
 
     # Create a mock API client
@@ -182,7 +181,6 @@ def test_project_get_editor_logs_multiple_types():
         label_id="label123",
         workflow_stage_type=ActionableWorkflowNodeType.ANNOTATION,
         workflow_stage_title="Annotation Stage",
-        event_information={"key": "value"},
     )
 
     # Test EditorLogObject
@@ -211,7 +209,6 @@ def test_project_get_editor_logs_multiple_types():
         label_id="label123",
         workflow_stage_type=ActionableWorkflowNodeType.ANNOTATION,
         workflow_stage_title="Annotation Stage",
-        event_information={"key": "value"},
         label_name="Test Label",
         feature_id="feature123",
         label_ranges=[(0, 10)],
@@ -247,7 +244,6 @@ def test_project_get_editor_logs_multiple_types():
         label_id="label123",
         workflow_stage_type=ActionableWorkflowNodeType.ANNOTATION,
         workflow_stage_title="Annotation Stage",
-        event_information={"key": "value"},
         label_name="Test Classification",
         feature_id="feature123",
         label_ranges=[(0, 10)],
