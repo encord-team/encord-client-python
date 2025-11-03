@@ -2247,16 +2247,17 @@ class LabelRowV2:
         classification_answers = label_row_dict["classification_answers"]
         object_answers = label_row_dict["object_answers"]
 
+        self._add_classification_instances_from_classifications_without_frames(classification_answers)
+
         for data_unit in label_row_dict["data_units"].values():
             data_type = DataType(label_row_dict["data_type"])
-
-            self._add_classification_instances_from_classifications_without_frames(classification_answers)
+            labels = data_unit.get("labels", {})
 
             if data_type == DataType.IMG_GROUP or data_type == DataType.IMAGE:
                 frame = int(data_unit["data_sequence"])
-                self._add_object_instances_from_objects(data_unit["labels"].get("objects", []), frame)
+                self._add_object_instances_from_objects(labels.get("objects", []), frame)
                 self._add_classification_instances_from_classifications(
-                    data_unit["labels"].get("classifications", []),
+                    labels.get("classifications", []),
                     classification_answers,
                     frame,
                 )
@@ -2269,7 +2270,7 @@ class LabelRowV2:
                 or data_type == DataType.PDF
                 or data_type == DataType.SCENE
             ):
-                for frame, frame_data in data_unit["labels"].items():
+                for frame, frame_data in labels.items():
                     frame_num = int(frame)
                     self._add_object_instances_from_objects(frame_data["objects"], frame_num)
                     self._add_classification_instances_from_classifications(
@@ -2279,7 +2280,7 @@ class LabelRowV2:
                 self._add_objects_answers(object_answers)
 
             elif data_type == DataType.GROUP:
-                for frame, frame_data in data_unit["labels"].items():
+                for frame, frame_data in labels.items():
                     frame_num = int(frame)
                     self._add_classification_instances_from_classifications(
                         frame_data["classifications"], classification_answers, frame_num

@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from unittest.mock import MagicMock, Mock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from cryptography.hazmat.primitives import serialization
@@ -11,6 +11,7 @@ from encord.client import EncordClientProject
 from encord.ontology import Ontology
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import ProjectDTO, ProjectStatus, ProjectType
+from encord.utilities.ontology_user import OntologyUserRole
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.test_data.ontology_blurb import ONTOLOGY_BLURB
 
@@ -29,10 +30,18 @@ def ontology() -> Ontology:
 
 
 @pytest.fixture
-def all_types_ontology():
-    ontology_structure = PropertyMock(return_value=all_types_structure)
-    ontology = Mock(structure=ontology_structure)
-    yield ontology
+def all_types_ontology() -> Ontology:
+    orm_ontology = OrmOntology(
+        title="All Types ontology",
+        structure=all_types_structure,
+        ontology_hash="all-types-ontology-hash",
+        created_at=datetime(2020, 5, 17),
+        last_edited_at=datetime(2020, 5, 17),
+        description="All Types ontology fixture for testing",
+        user_role=OntologyUserRole.ADMIN,
+    )
+
+    return Ontology(orm_ontology, MagicMock())
 
 
 @pytest.fixture

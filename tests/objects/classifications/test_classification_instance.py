@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from encord.objects import ClassificationInstance, LabelRowV2
+from encord.objects import ClassificationInstance
 from tests.objects.test_label_structure import checklist_classification, text_classification
 
 
