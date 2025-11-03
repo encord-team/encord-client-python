@@ -985,9 +985,13 @@ class LabelRowV2:
             )
 
             if is_present and not force:
+                location_msg = (
+                    "globally"
+                    if classification_instance.is_global()
+                    else f"and has overlapping frames on the ranges {already_present_ranges}"
+                )
                 raise LabelRowError(
-                    f"A ClassificationInstance '{classification_hash}' was already added and has overlapping frames. "
-                    f"Overlapping frames that were found are `{already_present_ranges}`. "
+                    f"A ClassificationInstance '{classification_hash}' was already added {location_msg}."
                     f"Make sure that you only add classifications which are on frames where the same type of "
                     f"classification does not yet exist."
                 )
@@ -1013,9 +1017,13 @@ class LabelRowV2:
         )
 
         if is_present and not force:
+            location_msg = (
+                "globally"
+                if classification_instance.is_global()
+                else f"and has overlapping frames on the ranges {already_present_ranges}"
+            )
             raise LabelRowError(
-                f"A ClassificationInstance '{classification_hash}' was already added and has overlapping frames. "
-                f"Overlapping frames that were found are `{already_present_ranges}`. "
+                f"A ClassificationInstance '{classification_hash}' was already added {location_msg}."
                 f"Make sure that you only add classifications which are on frames where the same type of "
                 f"classification does not yet exist."
             )

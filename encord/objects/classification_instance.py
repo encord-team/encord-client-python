@@ -192,9 +192,10 @@ class ClassificationInstance:
 
         is_present, conflicting_ranges = self._is_classification_present_on_frames(ranges_to_add)
         if is_present and not overwrite:
+            location_msg = "globally" if self.is_global() else f"on the ranges {conflicting_ranges}"
             raise LabelRowError(
                 f"The classification '{self.classification_hash}' already exists "
-                f"on the ranges {conflicting_ranges}. "
+                f"{location_msg}."
                 f"Set 'overwrite' parameter to True to override."
             )
         else:
@@ -250,9 +251,10 @@ class ClassificationInstance:
 
             conflicting_frames_list = set(frames_class_to_frames_list(conflicting_ranges))
             if is_present and not overwrite:
+                location_msg = "globally" if self.is_global() else f"on the ranges {conflicting_ranges}. "
                 raise LabelRowError(
                     f"The classification '{self.classification_hash}' already exists "
-                    f"on the frames {conflicting_ranges}. "
+                    f"{location_msg}"
                     f"Set 'overwrite' parameter to True to override."
                 )
 
