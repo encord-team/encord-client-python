@@ -2,7 +2,7 @@
 
 import json
 from dataclasses import asdict
-from typing import Any, Dict, List, Union
+from typing import Dict, List, Union
 from unittest.mock import Mock
 
 import pytest

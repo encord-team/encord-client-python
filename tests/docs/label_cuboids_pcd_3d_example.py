@@ -5,7 +5,6 @@ Code Block Name: Cuboids
 # Import dependencies
 from encord import EncordUserClient, Project
 from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute
-from encord.objects.attributes import NumericAttribute
 from encord.objects.coordinates import CuboidCoordinates
 
 # User input

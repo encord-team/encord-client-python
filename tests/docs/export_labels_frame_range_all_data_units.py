@@ -4,12 +4,10 @@ Code Block Name: Frame range for all tasks
 
 # Import dependencies
 import json
-from collections.abc import Iterable
 
 from encord import EncordUserClient
 from encord.objects import ObjectInstance
 from encord.objects.attributes import Attribute
-from encord.objects.ontology_element import OntologyElement
 
 # User input
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"

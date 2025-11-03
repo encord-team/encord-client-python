@@ -3,12 +3,10 @@ Code Block Name: Polylines PCD
 """
 
 # Import dependencies
-from pathlib import Path
 
 from encord import EncordUserClient, Project
 from encord.objects import (
     ChecklistAttribute,
-    NumberAttribute,
     Object,
     ObjectInstance,
     Option,

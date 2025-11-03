@@ -3,7 +3,6 @@ Code Block Name: Keypoints PCD
 """
 
 # Import dependencies
-from pathlib import Path
 
 from encord import EncordUserClient, Project
 from encord.objects import ChecklistAttribute, Object, ObjectInstance, Option, RadioAttribute, TextAttribute

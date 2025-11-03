@@ -3,7 +3,6 @@ Code Block Name: Split Projects
 """
 
 # import dependencies
-from pathlib import Path
 from typing import List
 
 from encord import EncordUserClient, Project

@@ -3,7 +3,7 @@ Code Block Name: Move tasks to the next stage
 """
 
 # Import dependencies
-from encord import EncordUserClient, Project
+from encord import EncordUserClient
 from encord.workflow import AnnotationStage
 
 # User input

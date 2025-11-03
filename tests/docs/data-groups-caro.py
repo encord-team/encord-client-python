@@ -1,4 +1,3 @@
-from typing import List
 from uuid import UUID
 
 from encord.constants.enums import DataType

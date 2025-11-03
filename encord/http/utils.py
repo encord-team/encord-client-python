@@ -210,7 +210,7 @@ def upload_to_signed_url_list(
                 "signed_url": x.signed_url,
             }
             for x in api_client.get(
-                f"presigned-urls",
+                "presigned-urls",
                 params=UploadPresignedUrlsGetParams(
                     count=len(file_names_batch),
                     upload_item_type=upload_item_type,

@@ -3,7 +3,6 @@ Code Block Name: Classifications
 """
 
 # Import dependencies
-from pathlib import Path
 
 from encord import EncordUserClient
 from encord.objects import Classification, Option
