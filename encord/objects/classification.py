@@ -12,8 +12,8 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum, StrEnum
-from typing import Any, Dict, List, Optional, Sequence, Type, TypeVar
+from enum import Enum
+from typing import Any, Dict, List, Optional, Sequence, Type
 
 from encord.objects.attributes import (
     Attribute,
@@ -25,7 +25,7 @@ from encord.objects.attributes import (
 from encord.objects.ontology_element import OntologyElement
 
 
-class OntologyClassificationLevel(StrEnum):
+class OntologyClassificationLevel(Enum):
     GLOBAL = "global"
 
     @classmethod
