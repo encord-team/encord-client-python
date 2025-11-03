@@ -25,6 +25,7 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    Tuple,
     Union,
 )
 
@@ -180,7 +181,7 @@ class ClassificationInstance:
         return self._range_only or (self._parent is not None and not is_geometric(self._parent.data_type))
 
     def is_global(self) -> bool:
-        return self._ontology_classification.level == OntologyClassificationLevel.GLOBAL
+        return self._ontology_classification.is_global
 
     def is_assigned_to_label_row(self) -> bool:
         return self._parent is not None
@@ -189,8 +190,8 @@ class ClassificationInstance:
         new_range_manager = RangeManager(frame_class=frames)
         ranges_to_add = new_range_manager.get_ranges()
 
-        conflicting_ranges = self._is_classification_already_present(ranges_to_add)
-        if conflicting_ranges and not overwrite:
+        is_present, conflicting_ranges = self._is_classification_present_on_frames(ranges_to_add)
+        if is_present and not overwrite:
             raise LabelRowError(
                 f"The classification '{self.classification_hash}' already exists "
                 f"on the ranges {conflicting_ranges}. "
@@ -245,10 +246,10 @@ class ClassificationInstance:
         if not self.is_range_only():
             frames_list = frames_class_to_frames_list(frames)
 
-            conflicting_ranges = self._is_classification_already_present(frames)
+            is_present, conflicting_ranges = self._is_classification_present_on_frames(frames)
 
             conflicting_frames_list = set(frames_class_to_frames_list(conflicting_ranges))
-            if conflicting_frames_list and not overwrite:
+            if is_present and not overwrite:
                 raise LabelRowError(
                     f"The classification '{self.classification_hash}' already exists "
                     f"on the frames {conflicting_ranges}. "
@@ -685,10 +686,11 @@ class ClassificationInstance:
                 f"the entire file has only 1 frame."
             )
 
-    def _is_classification_already_present(self, frames: Frames) -> Ranges:
+    def _is_classification_present_on_frames(self, frames: Frames) -> Tuple[bool, Ranges]:
         if self._parent is None:
-            return []
-        return self._parent._is_classification_already_present(self.ontology_item, frames)
+            return False, []
+        else:
+            return self._parent._is_classification_present_on_frames(self.ontology_item, frames)
 
     def __repr__(self):
         return (

@@ -70,6 +70,15 @@ class Classification(OntologyElement):
         """
         return self.attributes
 
+    @property
+    def is_global(self) -> bool:
+        """Check if the classification is global.
+
+        Returns:
+            bool: True if the classification level is global, False otherwise.
+        """
+        return self.level == OntologyClassificationLevel.GLOBAL
+
     def create_instance(self, range_only: bool = False) -> ClassificationInstance:
         """Create a ClassificationInstance to be used with a label row.
 
