@@ -979,15 +979,15 @@ class LabelRowV2:
 
         if is_geometric(self.data_type) and not classification_instance.is_range_only():
             frames = set(_frame_views_to_frame_numbers(classification_instance.get_annotations()))
-            already_present_frames = self._is_classification_already_present_on_frames(
+            already_present_ranges = self._is_classification_already_present(
                 classification_instance.ontology_item,
                 frames,
             )
 
-            if already_present_frames and not force:
+            if already_present_ranges and not force:
                 raise LabelRowError(
                     f"A ClassificationInstance '{classification_hash}' was already added and has overlapping frames. "
-                    f"Overlapping frames that were found are `{frames_to_ranges(already_present_frames)}`. "
+                    f"Overlapping frames that were found are `{already_present_ranges}`. "
                     f"Make sure that you only add classifications which are on frames where the same type of "
                     f"classification does not yet exist."
                 )
@@ -1014,7 +1014,7 @@ class LabelRowV2:
         classification_hash = classification_instance.classification_hash
         ranges_to_add = classification_instance.range_list
 
-        already_present_ranges = self._is_classification_already_present_on_ranges(
+        already_present_ranges = self._is_classification_already_present(
             classification_instance.ontology_item, ranges_to_add
         )
 
@@ -2021,20 +2021,9 @@ class LabelRowV2:
 
         return ret
 
-    def _is_classification_already_present_on_frames(
-        self, classification: Classification, frames: Iterable[int]
-    ) -> Set[int]:
-        present_frames = self._classifications_to_frames.get(classification, set())
-
-        return present_frames.intersection(frames)
-
-    def _is_classification_already_present_on_ranges(
-        self,
-        classification: Classification,
-        ranges: Ranges,
-    ) -> Ranges:
+    def _is_classification_already_present(self, classification: Classification, frames: Frames) -> Ranges:
         range_manager = self._classifications_to_ranges.get(classification, RangeManager())
-        return range_manager.intersection(ranges)
+        return range_manager.intersection(frames)
 
     def _add_frames_to_classification(self, classification_instance: ClassificationInstance, frames: Frames) -> None:
         classification = classification_instance.ontology_item

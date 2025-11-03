@@ -6,13 +6,13 @@ from encord.objects.frames import Frames, Range, Ranges
 class RangeManager:
     """Range Manager class to hold a list of frame ranges, and operate on them."""
 
-    def __init__(self, frame_class: Optional[Frames] = None):
+    def __init__(self, frame_class: Optional[Frames | Iterable[int]] = None):
         self.ranges: Ranges = []
         if isinstance(frame_class, int):
             self.add_range(Range(start=frame_class, end=frame_class))
         elif isinstance(frame_class, Range):
             self.add_range(frame_class)
-        elif isinstance(frame_class, list):
+        elif isinstance(frame_class, (list, set)):
             if all(isinstance(x, int) for x in frame_class):
                 for frame in frame_class:
                     self.add_range(Range(start=cast(int, frame), end=cast(int, frame)))

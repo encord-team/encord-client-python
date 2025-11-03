@@ -189,7 +189,7 @@ class ClassificationInstance:
         new_range_manager = RangeManager(frame_class=frames)
         ranges_to_add = new_range_manager.get_ranges()
 
-        conflicting_ranges = self._is_classification_already_present_on_range(ranges_to_add)
+        conflicting_ranges = self._is_classification_already_present(ranges_to_add)
         if conflicting_ranges and not overwrite:
             raise LabelRowError(
                 f"The classification '{self.classification_hash}' already exists "
@@ -245,11 +245,13 @@ class ClassificationInstance:
         if not self.is_range_only():
             frames_list = frames_class_to_frames_list(frames)
 
-            conflicting_frames_list = self._is_classification_already_present(frames_list)
+            conflicting_ranges = self._is_classification_already_present(frames)
+
+            conflicting_frames_list = set(frames_class_to_frames_list(conflicting_ranges))
             if conflicting_frames_list and not overwrite:
                 raise LabelRowError(
                     f"The classification '{self.classification_hash}' already exists "
-                    f"on the frames {frames_to_ranges(conflicting_frames_list)}. "
+                    f"on the frames {conflicting_ranges}. "
                     f"Set 'overwrite' parameter to True to override."
                 )
 
@@ -683,15 +685,10 @@ class ClassificationInstance:
                 f"the entire file has only 1 frame."
             )
 
-    def _is_classification_already_present(self, frames: Iterable[int]) -> Set[int]:
-        if self._parent is None:
-            return set()
-        return self._parent._is_classification_already_present_on_frames(self.ontology_item, frames)
-
-    def _is_classification_already_present_on_range(self, ranges: Ranges) -> Ranges:
+    def _is_classification_already_present(self, frames: Frames) -> Ranges:
         if self._parent is None:
             return []
-        return self._parent._is_classification_already_present_on_ranges(self.ontology_item, ranges)
+        return self._parent._is_classification_already_present(self.ontology_item, frames)
 
     def __repr__(self):
         return (
