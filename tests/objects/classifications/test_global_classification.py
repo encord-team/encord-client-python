@@ -19,9 +19,10 @@ def test_global_ontology_serde() -> None:
     assert Classification.from_dict(global_classification_dict) == GLOBAL_CLASSIFICATION
 
 
-def test_global_classification_can_be_added_edited_and_removed(ontology) -> None:
+def test_global_classification_image_group(ontology) -> None:
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
-    label_row_metadata_dict["number_of_frames"] = 100
+    label_row_metadata_dict["frames_per_second"] = None  # not a thing in image groups
+    label_row_metadata_dict["duration"] = None  # not a thing in image groups
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
     label_row = LabelRowV2(label_row_metadata, Mock(), ontology)
@@ -42,5 +43,17 @@ def test_global_classification_can_be_added_edited_and_removed(ontology) -> None
     label_row.add_classification_instance(classification_instance)
     assert len(label_row.get_classification_instances()) == 1, "A global classification can be added without frames"
 
+    # Assert on serialised data
+    encord_dict_with_classification = label_row.to_encord_dict()
+    for _, data_unit in encord_dict_with_classification["data_units"].items():
+        assert data_unit["labels"]["classifications"] == [], f"{data_unit=} frame classifications are empty"
+
+    serialised_answers = encord_dict_with_classification["classification_answers"]
+    assert len(serialised_answers) == 1, "We have the answer we expect"
+
     label_row.remove_classification(classification_instance)
+
     assert len(label_row.get_classification_instances()) == 0, "A global classification can be removed"
+    assert label_row.to_encord_dict() == empty_image_group_labels, (
+        "The serialised dict should be the same as the original"
+    )

@@ -977,7 +977,7 @@ class LabelRowV2:
                 f"Pass 'force=True' to override it."
             )
 
-        if not classification_instance.is_range_only():
+        if is_geometric(self.data_type) and not classification_instance.is_range_only():
             frames = set(_frame_views_to_frame_numbers(classification_instance.get_annotations()))
             already_present_frames = self._is_classification_already_present_on_frames(
                 classification_instance.ontology_item,
@@ -1742,7 +1742,7 @@ class LabelRowV2:
             }
 
             # At some point, we also want to add these to the other modalities
-            if classification.is_range_only():
+            if classification.is_range_only() or not is_geometric(self.data_type):
                 # For non-geometric data, classifications apply to whole file
                 ret[classification.classification_hash]["range"] = []
                 ret[classification.classification_hash]["createdBy"] = classification.created_by

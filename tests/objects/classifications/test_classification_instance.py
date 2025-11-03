@@ -4,12 +4,7 @@ from encord.objects import ClassificationInstance, LabelRowV2
 from tests.objects.test_label_structure import checklist_classification, text_classification
 
 
-def test_classification_instance_data_api(
-    ontology,
-    empty_video_label_row: LabelRowV2,
-    empty_audio_label_row: LabelRowV2,
-    empty_plain_text_label_row: LabelRowV2,
-) -> None:
+def test_classification_instance_data_api() -> None:
     """Test that ClassificationInstance properties match annotation properties for video, audio, and text."""
     now = datetime.now()
     test_confidence = 0.75

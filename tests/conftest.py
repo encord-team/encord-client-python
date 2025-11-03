@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
 from cryptography.hazmat.primitives import serialization
@@ -11,6 +11,7 @@ from encord.client import EncordClientProject
 from encord.ontology import Ontology
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import ProjectDTO, ProjectStatus, ProjectType
+from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.test_data.ontology_blurb import ONTOLOGY_BLURB
 
 PRIVATE_KEY = Ed25519PrivateKey.generate()
@@ -25,6 +26,13 @@ PRIVATE_KEY_PEM = PRIVATE_KEY.private_bytes(
 @pytest.fixture
 def ontology() -> Ontology:
     return Ontology(OrmOntology.from_dict(ONTOLOGY_BLURB), MagicMock())
+
+
+@pytest.fixture
+def all_types_ontology():
+    ontology_structure = PropertyMock(return_value=all_types_structure)
+    ontology = Mock(structure=ontology_structure)
+    yield ontology
 
 
 @pytest.fixture
