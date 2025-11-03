@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterable as IterableABC
 from typing import TYPE_CHECKING, Iterable, Optional, Sequence, Union
 
 from encord.objects import ClassificationInstance
@@ -10,6 +11,7 @@ from encord.objects.ontology_object_instance import AnswersForFrames
 
 if TYPE_CHECKING:
     from encord.objects import LabelRowV2, ObjectInstance, Option
+    from encord.objects.spaces.annotation.base_annotation import ObjectAnnotation
     from encord.objects.spaces.base_space import Space
 
 
@@ -51,6 +53,54 @@ class SpaceObject:
             filter_frame=filter_frame,
             is_dynamic=is_dynamic,
         )
+
+    def get_annotations(
+        self, spaces: Optional[Union["Space", Iterable["Space"]]] = None
+    ) -> list["ObjectAnnotation"]:
+        """Get all annotations for this SpaceObject across the spaces it has been placed in.
+
+        Args:
+            spaces: Optional filter to limit results to specific space(s). Can be:
+                - None: Get annotations from all spaces where this object is placed
+                - A single Space instance: Get annotations only from that space
+                - An iterable of Space instances: Get annotations only from those spaces
+
+        Returns:
+            A list of ObjectAnnotation instances representing all annotations for this object
+            in the specified spaces. The annotation types may vary depending on the space type
+            (e.g., TwoDimensionalObjectAnnotation, TwoDimensionalFrameObjectAnnotation, RangeObjectAnnotation).
+        """
+        # Determine which spaces to query
+        spaces_to_query: Iterable["Space"]
+        if spaces is None:
+            # Get annotations from all spaces where this object is placed
+            spaces_to_query = self._space_map.values()
+        elif isinstance(spaces, IterableABC):
+            # Iterable of spaces provided (list, tuple, set, etc.)
+            # Strings are iterable but not what we want - treat as invalid
+            if isinstance(spaces, str):
+                raise TypeError(f"Expected Space or iterable of Spaces, got string: {spaces}")
+            spaces_to_query = spaces
+        else:
+            # Not None and not iterable - must be a single Space instance
+            spaces_to_query = [spaces]
+
+        # Collect all annotations for this object from the specified spaces
+        annotations: list["ObjectAnnotation"] = []
+        for space in spaces_to_query:
+            # Only query spaces where this object is actually placed
+            if space.space_id not in self._space_map:
+                continue
+
+            # Get all object annotations from this space
+            space_annotations = space.get_object_annotations()
+
+            # Filter to only include annotations for this object
+            for annotation in space_annotations:
+                if annotation.object_hash == self.object_hash:
+                    annotations.append(annotation)
+
+        return annotations
 
     def _add_to_space(self, space: Space) -> None:
         self._space_map.update({space.space_id: space})
