@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Tuple
+from typing import List, Literal, Optional, Tuple
 from uuid import UUID
 
 from typing_extensions import Union
@@ -54,7 +53,6 @@ class EditorLogCommon(BaseDTO):
     label_id: str
     workflow_stage_type: Union[ActionableWorkflowNodeType, Literal[""]]
     workflow_stage_title: str
-    event_information: Dict[str, Any]
 
 
 class LabelAttributes(BaseDTO):
