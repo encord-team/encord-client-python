@@ -31,8 +31,8 @@ class ClassificationAnswer(TypedDict):
     lastEditedBy: Union[str, None]
     manualAnnotation: Union[bool, None]
 
-    # Deprecated
     reviews: Union[List, None]
+    """The reviews field is deprecated and soon to be removed"""
 
 
 def is_containing_metadata(answer: ClassificationAnswer) -> bool:

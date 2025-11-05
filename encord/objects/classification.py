@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional, Sequence, Type
 
+from encord.common.enum import StringEnum
 from encord.objects.attributes import (
     Attribute,
     AttributeType,
@@ -25,15 +26,8 @@ from encord.objects.attributes import (
 from encord.objects.ontology_element import OntologyElement
 
 
-class OntologyClassificationLevel(Enum):
+class OntologyClassificationLevel(StringEnum):
     GLOBAL = "global"
-
-    @classmethod
-    def from_value(cls: Type[OntologyClassificationLevel], value: Any) -> Optional[OntologyClassificationLevel]:
-        try:
-            return cls(value)
-        except ValueError:
-            return None
 
 
 @dataclass
@@ -98,7 +92,7 @@ class Classification(OntologyElement):
             Classification: An instance of Classification.
         """
         attributes_ret: List[Attribute] = [attribute_from_dict(attribute_dict) for attribute_dict in d["attributes"]]
-        level = OntologyClassificationLevel.from_value(d.get("level"))
+        level = OntologyClassificationLevel.from_string(str(d.get("level")))
 
         return Classification(
             uid=int(d["id"]),
