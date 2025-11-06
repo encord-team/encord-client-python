@@ -568,6 +568,7 @@ class LabelRowV2:
         include_object_feature_hashes: Optional[Set[str]] = None,
         include_classification_feature_hashes: Optional[Set[str]] = None,
         include_reviews: bool = False,
+        include_archived: bool = False,
         overwrite: bool = False,
         bundle: Optional[Bundle] = None,
         *,
@@ -592,6 +593,7 @@ class LabelRowV2:
                 WARNING: Use this filter only for reading labels. Saving a filtered subset will
                 delete all other classification instances stored in the Encord platform.
             include_reviews: Whether to request read-only information about the reviews of the label row.
+            include_archived: Whether to include labels whose ontology features are archived
             overwrite: If `True`, overwrite current labels with those stored in the Encord server.
                 If `False` and the label row is already initialized, this function will raise an error.
             bundle: If not provided, initialization is performed independently. If provided,
@@ -629,6 +631,7 @@ class LabelRowV2:
                     include_object_feature_hashes=include_object_feature_hashes,
                     include_classification_feature_hashes=include_classification_feature_hashes,
                     include_reviews=include_reviews,
+                    include_archived=include_archived,
                 ),
                 result_mapper=BundleResultMapper[OrmLabelRow](
                     result_mapping_predicate=lambda r: r["label_hash"],
