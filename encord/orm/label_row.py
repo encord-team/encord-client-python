@@ -40,11 +40,11 @@ class LabelRow(base_orm.BaseORM):
       action) pairs.
     * ``label_status`` is a string indicating label status. It can take the values
       enumerated in :class:`encord.orm.label_row.LabelStatus`. *Note* that this does
-      *not* reflect thes status shown in the Projects->Labels section on the web-app.
+      *not* reflect the status shown in the Projects->Labels section on the web-app.
 
     A data unit, mentioned for the dictionary entry ``data_units`` above, has in the
     form::
-
+    ```
         label_row = {  # The label row
             # ...
             "data_units": {
@@ -64,7 +64,7 @@ class LabelRow(base_orm.BaseORM):
                 # ...,
             }
         }
-
+    ```
     A data unit can have any number of vector labels (e.g. bounding box, polygon, keypoint) and classifications.
 
     **Objects and classifications**
@@ -82,7 +82,7 @@ class LabelRow(base_orm.BaseORM):
     (i.e. attributes that describe the object or classification). This is to avoid
     storing the information at every frame in the blurb, of particular importance for
     videos.
-
+    ```
     A labels dictionary for video is in the form::
 
         label_row["data_units"]["<data_hash>"]["labels"] = {
@@ -99,9 +99,9 @@ class LabelRow(base_orm.BaseORM):
                 ],
             }
         }
-
+    ```
     A labels dictionary for an img_group data unit is in the form::
-
+    ```
         label_row["data_units"]["<data_hash>"]["labels"] = {
             "objects": [
                 # { object 1 },
@@ -114,9 +114,9 @@ class LabelRow(base_orm.BaseORM):
                 # ...
             ],
         }
-
+    ```
     The object answers dictionary is in the form::
-
+    ```
         label_row["object_answers"] = {
             "<object_hash>": {
                 "objectHash": "<object_hash>",
@@ -128,9 +128,9 @@ class LabelRow(base_orm.BaseORM):
             },
             # ...
         }
-
+    ```
     The classification answers dictionary is in the form::
-
+    ```
         label_row["classification_answers"] = {
             "<classification_hash>": {
                 "classificationHash": "<classification_hash>",
@@ -142,9 +142,9 @@ class LabelRow(base_orm.BaseORM):
             },
             # ...
         }
-
+    ```
     The object actions dictionary is in the form::
-
+    ```
         label_row["object_actions"] = {
             "<object_hash>": {
                 "objectHash": "<object_hash>",
@@ -156,7 +156,7 @@ class LabelRow(base_orm.BaseORM):
             },
             # ...
         }
-
+    ```
     """
 
     DB_FIELDS = OrderedDict(

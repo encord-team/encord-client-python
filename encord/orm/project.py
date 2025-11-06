@@ -27,7 +27,7 @@ class Project(base_orm.BaseORM):
     * editor_ontology,
     * ontology_hash,
     * datasets::
-
+    ```
         [
            {
                 dataset_hash (uid),
@@ -37,8 +37,9 @@ class Project(base_orm.BaseORM):
            },
            ...
         ],
+    ```
     * label_rows::
-
+    ```
         [
             {
                 label_hash (uid),
@@ -51,6 +52,7 @@ class Project(base_orm.BaseORM):
             },
             ...
         ]
+    ```
     * annotation_task_status
 
     """
@@ -78,7 +80,7 @@ class Project(base_orm.BaseORM):
         a `None` value is appended. This can be useful for working with fetching additional label row data via
         :meth:`encord.project.Project.get_label_rows` for example.
 
-        .. code::
+        ```
 
                 project = client_instance.get_project(<project_hash>)
                 project_orm = project.get_project()
@@ -90,6 +92,7 @@ class Project(base_orm.BaseORM):
                         created_labels_list.append(label)
 
                 label_rows = project.get_label_rows(created_labels_list, get_signed_url=False)
+        ```
         """
         labels = self.label_rows() or []
         return [label.get("label_hash") for label in labels]

@@ -364,7 +364,7 @@ class DataRow(dict, Formatter):
     @deprecated("0.1.98", ".is_image_sequence")
     def is_optimised_image_group(self) -> Optional[bool]:
         """If the data type is an :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
-        returns whether this is a performance optimised image group. Returns `None` for other data types.
+        returns whether this is a performance optimized image group. Returns `None` for other data types.
 
         DEPRECATED: This method is deprecated and will be removed in the upcoming library version.
         Please use :meth:`.is_image_sequence` instead
