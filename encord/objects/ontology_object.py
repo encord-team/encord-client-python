@@ -69,7 +69,7 @@ class Object(OntologyElement):
         """
         shape_opt = Shape.from_string(d["shape"])
         if shape_opt is None:
-            raise TypeError(f"The shape '{d['shape']}' of the object '{d}' is not recognised")
+            raise TypeError(f"The shape '{d['shape']}' of the object '{d}' is not recognized")
 
         attributes_ret: List[Attribute] = [
             attribute_from_dict(attribute_dict) for attribute_dict in d.get("attributes", [])
