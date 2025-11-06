@@ -4,7 +4,6 @@ Code Block Name: Export labels to JSON
 
 # Import dependencies
 import json
-import os
 
 from encord import EncordUserClient
 

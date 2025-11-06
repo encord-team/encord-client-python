@@ -4,8 +4,6 @@ Code Block Name: Automatic Interpolation
 
 # Import dependencies
 from encord import EncordUserClient
-from encord.objects import LabelRowV2
-from encord.objects.coordinates import PointCoordinate, PolygonCoordinates
 
 # User input
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"

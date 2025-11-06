@@ -7,8 +7,6 @@ import time
 from pathlib import Path
 from typing import Dict, List, cast
 
-import cv2
-import numpy as np
 from tqdm import tqdm, trange
 
 from encord import EncordUserClient, Project

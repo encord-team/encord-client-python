@@ -3,7 +3,6 @@ Code Block Name: Manual QA to Workflow - US
 """
 
 # Import dependencies
-import argparse
 import logging
 import time
 from typing import List, Optional

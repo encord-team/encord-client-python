@@ -3,7 +3,7 @@ Code Block Name: Add users to Project
 """
 
 # Import dependencies
-from encord import EncordUserClient, Project
+from encord import EncordUserClient
 from encord.utilities.project_user import ProjectUserRole
 
 # User input

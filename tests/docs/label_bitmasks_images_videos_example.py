@@ -3,7 +3,6 @@ Code Block Name: Bitmasks Images/Videos
 """
 
 # Import dependencies
-import os
 
 import numpy as np
 

@@ -4,7 +4,6 @@ Code Block Name: All labels Data Groups
 
 # Import dependencies
 import json
-import os
 
 from encord import EncordUserClient
 

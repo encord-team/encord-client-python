@@ -4,7 +4,6 @@ Code Block Name: Radio buttons
 
 # Import dependencies
 import json
-import os
 
 from encord import EncordUserClient
 from encord.objects import ObjectInstance

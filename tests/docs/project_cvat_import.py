@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import prettyprinter as pp
 
 from encord import EncordUserClient

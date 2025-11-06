@@ -23,7 +23,7 @@ def create_target_project(user_client, project_hashes_to_merge):
         p = user_client.get_project(p_hash)
         new_dataset_hashes = {x["dataset_hash"] for x in p.datasets}
         if new_dataset_hashes.intersection(dataset_hashes):
-            raise Exception(f"Source projects should not share datasets!")
+            raise Exception("Source projects should not share datasets!")
         dataset_hashes.update(new_dataset_hashes)
 
         if not ontology_hash:

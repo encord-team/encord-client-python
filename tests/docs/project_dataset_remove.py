@@ -2,7 +2,7 @@
 Code Block Name: Remove Datasets from Project
 """
 
-from encord import EncordUserClient, Project
+from encord import EncordUserClient
 
 # User input
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"
