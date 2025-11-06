@@ -29,3 +29,10 @@ repos:
         entry: uv run mypy
         language: system
         files: ^encord/.*py$
+  - repo: local
+    hooks:
+      - id: mypy-docs
+        name: mypy-docs
+        entry: uv run mypy
+        language: system
+        files: ^tests/docs/.*py$

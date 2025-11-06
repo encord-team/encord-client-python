@@ -29,7 +29,7 @@ time_entries = list(project.list_time_spent(start=start_date, end=end_date))
 
 # Filters for task time
 
-task_time = defaultdict(int)
+task_time: dict[str, int] = defaultdict(int)
 for entry in time_entries:
     task_time[str(entry.workflow_task_uuid)] += entry.time_spent_seconds
 

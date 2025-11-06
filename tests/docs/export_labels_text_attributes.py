@@ -56,7 +56,7 @@ results = []
 # Iterate through all object instances and collect text attribute data
 for label_row in label_rows:
     object_instances = label_row.get_object_instances()
-    assert object_instances, f"No object instances found in label row {label_row.uid}"
+    assert object_instances, f"No object instances found in label row {label_row.label_hash}"
 
     for object_instance in object_instances:
         annotations = object_instance.get_annotations()
