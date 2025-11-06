@@ -1058,10 +1058,18 @@ class LabelRowV2:
         ranges_to_remove = classification_instance.range_list
         range_manager.remove_ranges(ranges_to_remove)
 
+        if len(range_manager.ranges) == 0:
+            del self._classifications_to_ranges[classification_instance.ontology_item]
+
         all_frames = self._classifications_to_frames[classification_instance.ontology_item]
         actual_frames = _frame_views_to_frame_numbers(classification_instance.get_annotations())
         for actual_frame in actual_frames:
             all_frames.remove(actual_frame)
+        if len(all_frames) == 0:
+            del self._classifications_to_frames[classification_instance.ontology_item]
+
+        # The instance no longer has a parent
+        classification_instance._parent = None
 
     def add_to_single_frame_to_hashes_map(
         self, label_item: Union[ObjectInstance, ClassificationInstance], frame: int

@@ -89,6 +89,13 @@ def test_global_classification_override(all_types_ontology) -> None:
     assert len(label_row.get_classification_instances()) == 1, "We've got the same number of classifications"
     assert label_row.get_classification_instances()[0] == classification_instance_1, "And it's the same one"
 
-    label_row.add_classification_instance(classification_instance_2, force=True)
+    label_row.remove_classification(classification_instance_1)
+    assert len(label_row.get_classification_instances()) == 0, "We've removed the classification"
+
+    label_row.add_classification_instance(classification_instance_2)
+    assert len(label_row.get_classification_instances()) == 1, "We've got the same number of classifications"
+    assert label_row.get_classification_instances()[0] == classification_instance_2, "And it's the same one"
+
+    label_row.add_classification_instance(classification_instance_1, force=True)
     assert len(label_row.get_classification_instances()) == 1, "After force overwriting, we should be left with one"
-    assert label_row.get_classification_instances()[0] == classification_instance_2, "It should be the second"
+    assert label_row.get_classification_instances()[0] == classification_instance_1, "It should be the second"
