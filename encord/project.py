@@ -161,7 +161,7 @@ class Project:
 
     @property
     @deprecated(version="0.1.104", alternative=".list_label_rows_v2")
-    def label_rows(self) -> dict:
+    def label_rows(self) -> Dict:
         """Get the label rows.
         DEPRECATED: Prefer using :meth:`list_label_rows_v2()` method and :meth:`LabelRowV2` class to work with the data.
 
@@ -594,8 +594,7 @@ class Project:
     ) -> Iterator[EditorLog]:
         """Get editor logs, represents the actions taken in the Editor UI.
 
-        The limit has a default and maximum value of 500.
-        The start_time and end_time parameters are required.
+        The start_time and end_time parameters are required. The maximum time range is 30 days.
 
         Args:
            action: Filter the editor logs by action.
