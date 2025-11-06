@@ -25,7 +25,6 @@ jobs:
         uses: ./.github/actions/setup-uv-environment
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          with-dev-dependencies: true
 
       - name: Run linting, type checking and testing
         uses: pre-commit/action@v3.0.1
@@ -39,11 +38,11 @@ jobs:
       fail-fast: false
       matrix:
         python:
-          - { version: '3.8.18',  major_minor: '3.8', major_minor_test_report: '3_8' }
+          - { version: '3.9.24',  major_minor: '3.9', major_minor_test_report: '3_9' }
 
         pydantic:
-          - { version: '1.10.22', suffix: 'p1' }
-          - { version: '2.10.6', suffix: 'p2' } # Latest Pydantic v2x that supports Python 3.8
+          - { version: '1.10.22', suffix: 'p1' } # TODO: Look to drop Pydantic v1 support
+          - { version: '2.12.3', suffix: 'p2' }
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -76,4 +75,6 @@ jobs:
           private-key: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
           private-key-service-account: ${{ secrets.SDK_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT }}
           private-key-non-org: ${{ secrets.SDK_TESTS_PRIVATE_KEY_NON_ORG }}
+          robot-account-email: ${{ secrets.ROBOT_ACCOUNT_EMAIL }}
+          robot-account-password: ${{ secrets.ROBOT_ACCOUNT_PASSWORD }}
           sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}

@@ -25,6 +25,7 @@ import requests
 import encord
 import encord.orm.storage as orm_storage
 from encord.client import LONG_POLLING_RESPONSE_RETRY_N, LONG_POLLING_SLEEP_ON_FAILURE_SECONDS
+from encord.common.deprecated import deprecated
 from encord.exceptions import EncordException
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS
@@ -1704,8 +1705,9 @@ class StorageItem:
         return self._orm_item.name
 
     @property
+    @deprecated(version="0.1.177")
     def description(self) -> str:
-        """str: The description of the storage item."""
+        """str: This is always an empty string; descriptions on individual items are not supported."""
         return self._orm_item.description
 
     @property

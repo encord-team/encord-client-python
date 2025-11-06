@@ -1,6 +1,6 @@
 [project]
 name = "encord"
-version = "0.1.177"
+version = "0.1.180"
 description = "Encord Python SDK Client"
 authors = [
     { name = "Cord Technologies Limited", email = "hello@encord.com" },
@@ -28,16 +28,10 @@ dependencies = [
 repository = "https://github.com/encord-team/encord-client-python"
 documentation = "https://python.docs.encord.com/"
 
-[project.optional-dependencies]
-coco = [
-    "pycocotools>=2.0.7,<3.0.0",
-    "shapely>=2.0.4,<3.0.0",
-    "opencv-python>=4.11.0.86,<5.0.0.0",
-    "numpy>=1.24,<2.0.0; python_version < \"3.12\"",
-    "numpy>=1.26,<2.0.0; python_version >= \"3.12\"",
-]
 
-dev = [
+
+[dependency-groups]
+dev = [ # 'dev' group is synced by default in uv (no explicit configuration needed)
     "pytest>=7.4.1,<8.0.0",
     "pre-commit>=3.5.0,<4.0.0",
     "deepdiff>=8.6.1,<9.0.0",
@@ -55,19 +49,34 @@ dev = [
 ]
 
 
+
+[project.optional-dependencies]
+coco = [
+    "pycocotools>=2.0.7,<3.0.0",
+    "shapely>=2.0.4,<3.0.0",
+    "opencv-python>=4.11.0.86,<5.0.0.0",
+    "numpy>=1.24,<2.0.0; python_version < \"3.12\"",
+    "numpy>=1.26,<2.0.0; python_version >= \"3.12\"",
+]
+
+
 [build-system]
-requires = ["hatchling", "pip"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.9.6,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "encord"
+module-root = ""
 
 [tool.mypy]
 ignore_missing_imports = true
 
 [tool.ruff]
-target-version = "py38"
+target-version = "py39"
 line-length = 120
 
 [tool.ruff.lint]
-select = ["W", "Q", "I", "D417"]
+select = ["W", "Q", "I", "D417", "RUF022"]
 
 [tool.ruff.lint.pydocstyle]
 ignore-var-parameters = true

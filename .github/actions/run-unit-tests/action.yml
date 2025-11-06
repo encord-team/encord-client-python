@@ -20,7 +20,6 @@ runs:
         uses: ./.github/actions/setup-uv-environment
         with:
           python-version: ${{ inputs.python-version }}
-          with-dev-dependencies: true
 
       - name: Override pydantic version
         if: ${{ inputs.pydantic-version }}

@@ -33,6 +33,7 @@ class Option(OntologyNestedElement):
 
     label: str
     value: str
+    archived: bool
 
     @property
     def title(self) -> str:
@@ -53,6 +54,7 @@ class Option(OntologyNestedElement):
         ret["label"] = self.label
         ret["value"] = self.value
         ret["featureNodeHash"] = self.feature_node_hash
+        ret["archived"] = self.archived
 
         if nested_options := self._encode_nested_options():
             ret["options"] = nested_options
@@ -60,7 +62,7 @@ class Option(OntologyNestedElement):
         return ret
 
     @abstractmethod
-    def _encode_nested_options(self) -> list:
+    def _encode_nested_options(self) -> List:
         pass
 
     @staticmethod
@@ -70,6 +72,7 @@ class Option(OntologyNestedElement):
             "label": option_dict["label"],
             "value": option_dict["value"],
             "feature_node_hash": option_dict["featureNodeHash"],
+            "archived": bool(option_dict.get("archived", False)),
         }
 
 
@@ -86,7 +89,7 @@ class FlatOption(Option):
     def from_dict(cls, d: dict) -> FlatOption:
         return FlatOption(**cls._decode_common_option_fields(d))
 
-    def _encode_nested_options(self) -> list:
+    def _encode_nested_options(self) -> List:
         return []
 
 
@@ -108,7 +111,7 @@ class NestableOption(Option):
     def children(self) -> Sequence[OntologyElement]:
         return self.nested_options
 
-    def _encode_nested_options(self) -> list:
+    def _encode_nested_options(self) -> List:
         return attributes_to_list_dict(self.nested_options)
 
     @classmethod
@@ -181,7 +184,9 @@ def _add_option(
     local_uid, feature_node_hash = _build_identifiers(options, local_uid, feature_node_hash)
     if not value:
         value = re.sub(r"\s", "_", label).lower()
-    option = cls(uid=parent_uid + [local_uid], feature_node_hash=feature_node_hash, label=label, value=value)
+    option = cls(
+        uid=parent_uid + [local_uid], feature_node_hash=feature_node_hash, label=label, value=value, archived=False
+    )
     options.append(option)
     return option
 

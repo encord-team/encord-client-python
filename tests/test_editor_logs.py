@@ -57,7 +57,6 @@ def test_project_get_editor_logs_basic():
         label_id="label123",
         workflow_stage_type=ActionableWorkflowNodeType.ANNOTATION,
         workflow_stage_title="Annotation Stage",
-        event_information={"key": "value"},
     )
 
     # Create a mock API client
@@ -182,7 +181,6 @@ def test_project_get_editor_logs_multiple_types():
         label_id="label123",
         workflow_stage_type=ActionableWorkflowNodeType.ANNOTATION,
         workflow_stage_title="Annotation Stage",
-        event_information={"key": "value"},
     )
 
     # Test EditorLogObject
@@ -211,7 +209,6 @@ def test_project_get_editor_logs_multiple_types():
         label_id="label123",
         workflow_stage_type=ActionableWorkflowNodeType.ANNOTATION,
         workflow_stage_title="Annotation Stage",
-        event_information={"key": "value"},
         label_name="Test Label",
         feature_id="feature123",
         label_ranges=[(0, 10)],
@@ -247,17 +244,19 @@ def test_project_get_editor_logs_multiple_types():
         label_id="label123",
         workflow_stage_type=ActionableWorkflowNodeType.ANNOTATION,
         workflow_stage_title="Annotation Stage",
-        event_information={"key": "value"},
         label_name="Test Classification",
         feature_id="feature123",
         label_ranges=[(0, 10)],
         classification_hash="classification_hash_123",
     )
 
+    editor_logs_types_tuple = EditorLog.__args__
+    # python3.9 cannot do isinstance with Union types directly
+
     # All should be valid EditorLog types
-    assert isinstance(general_log, (EditorLogGeneralAction, EditorLogObject, EditorLogClassification))
-    assert isinstance(object_log, (EditorLogGeneralAction, EditorLogObject, EditorLogClassification))
-    assert isinstance(classification_log, (EditorLogGeneralAction, EditorLogObject, EditorLogClassification))
+    assert isinstance(general_log, editor_logs_types_tuple)
+    assert isinstance(object_log, editor_logs_types_tuple)
+    assert isinstance(classification_log, editor_logs_types_tuple)
 
     # Create a mock API client
     mock_api_client = MagicMock()
@@ -276,5 +275,4 @@ def test_project_get_editor_logs_multiple_types():
     for item in result:
         results.append(item)
     assert len(results) == 3
-    for log in result:
-        assert isinstance(log, (EditorLogGeneralAction, EditorLogObject, EditorLogClassification))
+    assert all(isinstance(log, editor_logs_types_tuple) for log in results)

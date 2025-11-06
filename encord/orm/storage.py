@@ -72,7 +72,7 @@ class StorageItem(BaseDTO):
     parent: UUID
     item_type: StorageItemType
     name: str
-    description: str
+    description: str = ""
     client_metadata: str
     owner: str
     created_at: datetime
