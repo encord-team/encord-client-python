@@ -15,6 +15,7 @@ from typing import Iterable, List, Literal, Optional, Union
 from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
+from encord.http.bundle import Bundle
 from encord.orm.base_dto import Field
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import TasksQueryParams, WorkflowStageBase, WorkflowTask
@@ -73,6 +74,9 @@ class ConsensusAnnotationStage(WorkflowStageBase):
             for subtask in task.subtasks:
                 subtask._stage_uuid = self.uuid
                 subtask._workflow_client = self._workflow_client
+
+            task._stage_uuid = self.uuid
+            task._workflow_client = self._workflow_client
             yield task
 
 
@@ -84,8 +88,32 @@ class ConsensusAnnotationTask(WorkflowTask):
     - `data_hash` (UUID): Unique ID for the data unit.
     - `data_title` (str): Name of the data unit.
     - `subtasks` (List[AnnotationTask]): List of tasks from individual annotators in a Consensus Project.
+
+    **Allowed actions**
+
+    - `move`: Moves the consensus annotation task to another stage in the workflow.
     """
 
     data_hash: UUID
     data_title: str
     subtasks: List[AnnotationTask] = Field(default_factory=list)
+
+    def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
+        """Moves the consensus annotation task from its current stage to another stage.
+
+        **Parameters**
+
+        - `destination_stage_uuid` (UUID): Unique identifier of the stage to move the task to.
+        - `bundle` (Optional[Bundle]): Optional bundle to be included with the move.
+
+        **Returns**
+
+        None
+        """
+        workflow_client, stage_uuid = self._get_client_data()
+        workflow_client.move(
+            origin_stage_uuid=stage_uuid,
+            destination_stage_uuid=destination_stage_uuid,
+            task_uuids=[self.uuid],
+            bundle=bundle,
+        )

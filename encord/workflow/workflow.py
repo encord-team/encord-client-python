@@ -71,7 +71,7 @@ WorkflowStageT = TypeVar(
 )
 
 
-def _ensure_uuid(v: str | UUID) -> UUID:
+def _ensure_uuid(v: Union[str, UUID]) -> UUID:
     if isinstance(v, UUID):
         return v
     else:
@@ -94,7 +94,7 @@ class Workflow:
         self,
         *,
         name: Optional[str] = None,
-        uuid: Optional[UUID | str] = None,
+        uuid: Optional[Union[UUID, str]] = None,
         type_: Optional[Type[WorkflowStageT]] = None,
     ) -> WorkflowStageT:
         """**Params**

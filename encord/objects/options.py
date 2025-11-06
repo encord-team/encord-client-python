@@ -62,7 +62,7 @@ class Option(OntologyNestedElement):
         return ret
 
     @abstractmethod
-    def _encode_nested_options(self) -> list:
+    def _encode_nested_options(self) -> List:
         pass
 
     @staticmethod
@@ -89,7 +89,7 @@ class FlatOption(Option):
     def from_dict(cls, d: dict) -> FlatOption:
         return FlatOption(**cls._decode_common_option_fields(d))
 
-    def _encode_nested_options(self) -> list:
+    def _encode_nested_options(self) -> List:
         return []
 
 
@@ -111,7 +111,7 @@ class NestableOption(Option):
     def children(self) -> Sequence[OntologyElement]:
         return self.nested_options
 
-    def _encode_nested_options(self) -> list:
+    def _encode_nested_options(self) -> List:
         return attributes_to_list_dict(self.nested_options)
 
     @classmethod

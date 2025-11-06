@@ -33,6 +33,7 @@ from encord.orm.analytics import (
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.collection import ProjectCollectionType
 from encord.orm.dataset import Image, Video
+from encord.orm.editor_log import EditorLog, EditorLogParams
 from encord.orm.filter_preset import ActiveFilterPresetDefinition
 from encord.orm.group import ProjectGroup
 from encord.orm.label_log import LabelLog
@@ -40,7 +41,6 @@ from encord.orm.label_row import (
     AnnotationTaskStatus,
     LabelRow,
     LabelRowMetadata,
-    LabelStatus,
     ShadowDataState,
 )
 from encord.orm.project import (
@@ -161,7 +161,7 @@ class Project:
 
     @property
     @deprecated(version="0.1.104", alternative=".list_label_rows_v2")
-    def label_rows(self) -> dict:
+    def label_rows(self) -> Dict:
         """Get the label rows.
         DEPRECATED: Prefer using :meth:`list_label_rows_v2()` method and :meth:`LabelRowV2` class to work with the data.
 
@@ -582,6 +582,49 @@ class Project:
             before,
             user_email,
         )
+
+    def get_editor_logs(
+        self,
+        start_time: datetime.datetime,
+        end_time: datetime.datetime,
+        action: Optional[str] = None,
+        actor_user_email: Optional[str] = None,
+        workflow_stage_id: Optional[UUID] = None,
+        data_unit_id: Optional[UUID] = None,
+    ) -> Iterator[EditorLog]:
+        """Get editor logs, represents the actions taken in the Editor UI.
+
+        The start_time and end_time parameters are required. The maximum time range is 30 days.
+
+        Args:
+           action: Filter the editor logs by action.
+           actor_user_email: Filter the editor logs by the user email.
+           data_unit_id: Filter the editor logs by the data id (data_hash).
+           workflow_stage_id: Filter the editor logs by the workflow stage id.
+           end_time: Filter the editor logs to only include logs before the specified time.
+           start_time: Filter the editor logs to only include logs after the specified time.
+
+        Returns:
+           An iterator on the editor logs.
+        """
+
+        # we don't put the limit in the parameters anymore because it works as a batch size in the iterator.
+        # it is ok to have it set as the default limit value in the backend.
+        params = EditorLogParams(
+            start_time=start_time,
+            end_time=end_time,
+            action=action,
+            actor_user_email=actor_user_email,
+            workflow_stage_id=workflow_stage_id,
+            data_unit_id=data_unit_id,
+        )
+
+        editor_logs_response: Iterator[EditorLog] = self._api_client.get_paged_iterator(
+            f"projects/{self.project_hash}/editor-logs",
+            params=params,
+            result_type=EditorLog,  # type: ignore[arg-type] # EditorLog is a union of BaseDTO classes
+        )
+        return editor_logs_response
 
     @deprecated(version="0.1.154", alternative="EncordUserClient.get_cloud_integrations")
     def get_cloud_integrations(self) -> List[CloudIntegration]:

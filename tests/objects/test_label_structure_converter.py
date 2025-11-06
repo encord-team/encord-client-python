@@ -355,10 +355,10 @@ def test_skeleton_template_coordinates():
     ontology = ontology_from_dict(skeleton_coordinates.ontology)
     label_row = LabelRowV2(label_row_metadata, Mock(), ontology=ontology)
     assert ontology.structure.skeleton_templates
-    skeleton_template = ontology.structure.skeleton_templates["Triangle"]
+    skeleton_template = ontology.structure.skeleton_templates["Square"]
     assert isinstance(skeleton_template, SkeletonTemplate)
     assert skeleton_template.skeleton_edges
-    assert len(skeleton_template.skeleton_edges) == 3
+    assert len(skeleton_template.skeleton_edges) == 4
 
     assert skeleton_template.to_dict() == skeleton_coordinates.ontology["skeleton_templates"][0]["template"]
     label_row.from_labels_dict(skeleton_coordinates.labels)

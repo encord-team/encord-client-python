@@ -40,7 +40,8 @@ class AgentTask(WorkflowTask):
 
     **Allowed actions**
 
-    ...
+    - `proceed`: Advance the task along a specific pathway from the current stage.
+    - `move`: Move the task directly to another stage in the workflow.
     """
 
     status: AgentTaskStatus
@@ -57,6 +58,19 @@ class AgentTask(WorkflowTask):
         *,
         bundle: Optional[Bundle] = None,
     ) -> None:
+        """Advances the task along a pathway from the current stage.
+
+        Exactly one of `pathway_name` or `pathway_uuid` must be provided to
+        specify the pathway to take.
+
+        **Parameters**
+            pathway_name (Optional[str]): Name of the pathway to follow.
+            pathway_uuid (Optional[Union[UUID, str]]): Unique identifier of the pathway to follow.
+            bundle (Optional[Bundle]): Optional bundle to associate with the action.
+
+        **Raises**
+            ValueError: If neither `pathway_name` nor `pathway_uuid` is provided.
+        """
         if not pathway_name and not pathway_uuid:
             raise ValueError("Either `pathway_name` or `pathway_uuid` parameter must be provided.")
 
@@ -68,6 +82,25 @@ class AgentTask(WorkflowTask):
                 pathway_name=pathway_name,
                 pathway_uuid=pathway_uuid,
             ),
+            bundle=bundle,
+        )
+
+    def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
+        """Moves the task from its current stage to another stage.
+
+        **Parameters**
+            destination_stage_uuid (UUID): Unique identifier of the stage to move the task to.
+            bundle (Optional[Bundle]): Optional bundle to associate with the move action.
+
+        **Returns**
+
+        None
+        """
+        workflow_client, stage_uuid = self._get_client_data()
+        workflow_client.move(
+            origin_stage_uuid=stage_uuid,
+            destination_stage_uuid=destination_stage_uuid,
+            task_uuids=[self.uuid],
             bundle=bundle,
         )
 
@@ -89,7 +122,7 @@ class AgentPathway:
 
 @dataclass(frozen=True)
 class AgentStage(WorkflowStageBase):
-    pathways: list[AgentPathway]
+    pathways: List[AgentPathway]
     stage_type: Literal[WorkflowStageType.AGENT] = WorkflowStageType.AGENT
 
     """
@@ -103,7 +136,7 @@ class AgentStage(WorkflowStageBase):
         data_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         data_title: Optional[str] = None,
-        status: Optional[AgentTaskStatus | List[AgentTaskStatus]] = None,
+        status: Optional[Union[AgentTaskStatus, List[AgentTaskStatus]]] = None,
     ) -> Iterable[AgentTask]:
         """Retrieves tasks for the AgentStage.
 

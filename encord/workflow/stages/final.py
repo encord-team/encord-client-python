@@ -15,6 +15,7 @@ from typing import Iterable, List, Literal, Optional, Union
 from uuid import UUID
 
 from encord.common.utils import ensure_uuid_list
+from encord.http.bundle import Bundle
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import TasksQueryParams, WorkflowStageBase, WorkflowTask
 
@@ -61,18 +62,45 @@ class FinalStage(WorkflowStageBase):
             data_title_contains=data_title,
         )
 
-        yield from self._workflow_client.get_tasks(self.uuid, params, type_=FinalStageTask)
+        for task in self._workflow_client.get_tasks(self.uuid, params, type_=FinalStageTask):
+            task._stage_uuid = self.uuid
+            task._workflow_client = self._workflow_client
+            yield task
 
 
 class FinalStageTask(WorkflowTask):
-    data_hash: UUID
-    data_title: str
-
-    """
-    Represents tasks in a FinalStage, which can only be queried. No actions can be taken on the task.
+    """Represents tasks in a FinalStage, which are read-only and cannot be acted upon
+    except for being moved programmatically.
 
     **Attributes**
 
     - `data_hash` (UUID): Unique ID for the data unit.
     - `data_title` (str): Name of the data unit.
+
+    **Allowed actions**
+
+    - `move`: Moves the task to another stage in the workflow.
     """
+
+    data_hash: UUID
+    data_title: str
+
+    def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
+        """Moves the final stage task from its current stage to another stage.
+
+        **Parameters**
+
+        - `destination_stage_uuid` (UUID): Unique identifier of the stage to move the task to.
+        - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the move.
+
+        **Returns**
+
+        None
+        """
+        workflow_client, stage_uuid = self._get_client_data()
+        workflow_client.move(
+            origin_stage_uuid=stage_uuid,
+            destination_stage_uuid=destination_stage_uuid,
+            task_uuids=[self.uuid],
+            bundle=bundle,
+        )

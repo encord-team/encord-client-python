@@ -1354,6 +1354,7 @@ class EncordUserClient:
             ),
         )
 
+    @deprecated("0.1.180", alternative="EncordUserClient.get_storage_items")
     def find_storage_items(
         self,
         *,

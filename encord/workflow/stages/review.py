@@ -211,13 +211,7 @@ class _ActionRelease(WorkflowAction):
 
 
 class ReviewTask(WorkflowTask):
-    status: ReviewTaskStatus
-    data_hash: UUID
-    data_title: str
-    assignee: Optional[str]
-
-    """
-    Tasks in non-Consensus Review stages.
+    """Represents tasks in non-Consensus Review stages.
 
     **Attributes**
 
@@ -232,7 +226,13 @@ class ReviewTask(WorkflowTask):
     - `reject`: Rejects a task.
     - `assign`: Assigns a task to a user.
     - `release`: Releases a task from the current user.
+    - `move`: Moves the review task to another stage in the workflow.
     """
+
+    status: ReviewTaskStatus
+    data_hash: UUID
+    data_title: str
+    assignee: Optional[str]
 
     def approve(
         self,
@@ -248,6 +248,10 @@ class ReviewTask(WorkflowTask):
         - `assignee` (Optional[str]): User email to be assigned to the task whilst approving the task.
         - `retain_assignee` (bool): Retains the current assignee whilst approving the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
         - `bundle` (Optional[Bundle]): Optional bundle parameter.
+
+        **Returns**
+
+        None
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -270,6 +274,10 @@ class ReviewTask(WorkflowTask):
         - `assignee` (Optional[str]): User email to be assigned to the task whilst rejecting the task.
         - `retain_assignee` (bool): Retains the current assignee whilst rejecting the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
         - `bundle` (Optional[Bundle]): Optional bundle parameter.
+
+        **Returns**
+
+        None
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -285,9 +293,17 @@ class ReviewTask(WorkflowTask):
 
         - `assignee` (str): The user to assign the task to.
         - `bundle` (Optional[Bundle]): Optional bundle parameter.
+
+        **Returns**
+
+        None
         """
         workflow_client, stage_uuid = self._get_client_data()
-        workflow_client.action(stage_uuid, _ActionAssign(task_uuid=self.uuid, assignee=assignee), bundle=bundle)
+        workflow_client.action(
+            stage_uuid,
+            _ActionAssign(task_uuid=self.uuid, assignee=assignee),
+            bundle=bundle,
+        )
 
     def release(self, *, bundle: Optional[Bundle] = None) -> None:
         """Releases the task from the current user.
@@ -295,9 +311,37 @@ class ReviewTask(WorkflowTask):
         **Parameters**
 
         - `bundle` (Optional[Bundle]): Optional bundle parameter.
+
+        **Returns**
+
+        None
         """
         workflow_client, stage_uuid = self._get_client_data()
-        workflow_client.action(stage_uuid, _ActionRelease(task_uuid=self.uuid), bundle=bundle)
+        workflow_client.action(
+            stage_uuid,
+            _ActionRelease(task_uuid=self.uuid),
+            bundle=bundle,
+        )
+
+    def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
+        """Moves the review task from its current stage to another stage.
+
+        **Parameters**
+
+        - `destination_stage_uuid` (UUID): Unique identifier of the stage to move the task to.
+        - `bundle` (Optional[Bundle]): Optional bundle parameter.
+
+        **Returns**
+
+        None
+        """
+        workflow_client, stage_uuid = self._get_client_data()
+        workflow_client.move(
+            origin_stage_uuid=stage_uuid,
+            destination_stage_uuid=destination_stage_uuid,
+            task_uuids=[self.uuid],
+            bundle=bundle,
+        )
 
     def get_label_reviews(
         self, status: Union[ReviewTaskStatus, List[ReviewTaskStatus], None] = None

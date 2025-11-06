@@ -44,7 +44,7 @@ class BoundingBoxCoordinates:
     top_left_y: float
 
     @staticmethod
-    def from_dict(d: dict) -> BoundingBoxCoordinates:
+    def from_dict(d: Dict) -> BoundingBoxCoordinates:
         """Create a BoundingBoxCoordinates instance from a dictionary.
 
         Args:
@@ -61,7 +61,7 @@ class BoundingBoxCoordinates:
             top_left_y=bounding_box_dict["y"],
         )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict:
         """Convert the BoundingBoxCoordinates instance to a dictionary.
 
         Returns:
@@ -94,7 +94,7 @@ class RotatableBoundingBoxCoordinates:
     theta: float  # angle of rotation originating at center of box
 
     @staticmethod
-    def from_dict(d: dict) -> RotatableBoundingBoxCoordinates:
+    def from_dict(d: Dict) -> RotatableBoundingBoxCoordinates:
         """Create a RotatableBoundingBoxCoordinates instance from a dictionary.
 
         Args:
@@ -112,7 +112,7 @@ class RotatableBoundingBoxCoordinates:
             theta=rotatable_bounding_box_dict["theta"],
         )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict:
         """Convert the RotatableBoundingBoxCoordinates instance to a dictionary.
 
         Returns:
@@ -142,7 +142,7 @@ class CuboidCoordinates:
     size: tuple[float, float, float]
 
     @staticmethod
-    def from_dict(d: dict) -> CuboidCoordinates:
+    def from_dict(d: Dict) -> CuboidCoordinates:
         cuboid_dict = d["cuboid"]
         return CuboidCoordinates(
             position=cuboid_dict["position"],
@@ -150,7 +150,7 @@ class CuboidCoordinates:
             size=cuboid_dict["size"],
         )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict:
         return {
             "position": self.position,
             "orientation": self.orientation,
@@ -171,7 +171,7 @@ class PointCoordinate:
     y: float
 
     @staticmethod
-    def from_dict(d: dict) -> PointCoordinate:
+    def from_dict(d: Dict) -> PointCoordinate:
         """Create a PointCoordinate instance from a dictionary.
 
         Args:
@@ -186,7 +186,7 @@ class PointCoordinate:
             y=first_item["y"],
         )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict:
         """Convert the PointCoordinate instance to a dictionary.
 
         Returns:
@@ -210,7 +210,7 @@ class PointCoordinate3D:
     z: float
 
     @staticmethod
-    def from_dict(d: dict) -> PointCoordinate3D:
+    def from_dict(d: Dict) -> PointCoordinate3D:
         """Create a PointCoordinate3D instance from a dictionary.
 
         Args:
@@ -222,7 +222,7 @@ class PointCoordinate3D:
         first_item = d["point"]["0"]
         return PointCoordinate3D(x=first_item["x"], y=first_item["y"], z=first_item["z"])
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict:
         """Convert the PointCoordinate instance to a dictionary.
 
         Returns:
@@ -240,7 +240,9 @@ class PolygonCoordinates:
     """Represents polygon coordinates"""
 
     def __init__(
-        self, values: list[PointCoordinate] | None = None, polygons: list[list[list[PointCoordinate]]] | None = None
+        self,
+        values: Optional[List[PointCoordinate]] = None,
+        polygons: Optional[List[List[List[PointCoordinate]]]] = None,
     ):
         """
         Args:
@@ -265,31 +267,64 @@ class PolygonCoordinates:
                 self._polygons = polygons
 
     @property
-    def values(self) -> list[PointCoordinate]:
+    def values(self) -> List[PointCoordinate]:
         return self._values
 
     @property
-    def polygons(self) -> list[list[list[PointCoordinate]]]:
+    def polygons(self) -> List[List[List[PointCoordinate]]]:
         return self._polygons
 
     @staticmethod
-    def from_dict(d: dict) -> "PolygonCoordinates":
+    def from_dict(d: Dict) -> "PolygonCoordinates":
         """Create a PolygonCoordinates instance from a dictionary.
 
-        Supports both legacy format (single polygon with one contour) and new complex format.
+        Supports both legacy format (single polygon with one contour) and the new complex format (multiple polygons and contours).
 
         Args:
-            d (dict): A dictionary containing polygon coordinates information.
-                Legacy format: {"polygon": {str(idx): {"x": x, "y": y}} or {"polygon": [{"x": x, "y": y}]}
-                New format: {"polygons": [[[{"x": x, "y": y}]]]}
+        d (dict): Dictionary containing polygon coordinates information.
 
         Returns:
-            PolygonCoordinates: An instance of PolygonCoordinates.
+        PolygonCoordinates: A PolygonCoordinates instance.
+
+        Examples:
+        Legacy format (mapping of index -> point):
+        ```json
+        {
+          "polygon": {
+            "0": {"x": 12.3, "y": 45.6},
+            "1": {"x": 78.9, "y": 12.3}
+          }
+        }
+        ```
+
+        Legacy format (list of points):
+        ```json
+        {
+          "polygon": [
+            {"x": 12.3, "y": 45.6},
+            {"x": 78.9, "y": 12.3}
+          ]
+        }
+        ```
+
+        New format (polygons -> contours -> points):
+        ```json
+        {
+          "polygons": [
+            [
+              [
+                {"x": 12.3, "y": 45.6},
+                {"x": 78.9, "y": 12.3}
+              ]
+            ]
+          ]
+        }
+        ```
         """
         polygon_dict = d.get("polygon")
         values: List[PointCoordinate] = []
 
-        if isinstance(polygon_dict, dict):
+        if isinstance(polygon_dict, Dict):
             sorted_dict_value_tuples = sorted((int(key), value) for key, value in polygon_dict.items())
             sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
         elif isinstance(polygon_dict, list):
@@ -315,10 +350,10 @@ class PolygonCoordinates:
         return PolygonCoordinates(values=values, polygons=polygons)
 
     @staticmethod
-    def from_polygons_list(flat_polygons: list[list[list[float]]]) -> "PolygonCoordinates":
-        polygons: list[list[list[PointCoordinate]]] = []
+    def from_polygons_list(flat_polygons: List[List[List[float]]]) -> "PolygonCoordinates":
+        polygons: List[List[List[PointCoordinate]]] = []
         for polygon in flat_polygons:
-            contours: list[list[PointCoordinate]] = []
+            contours: List[List[PointCoordinate]] = []
             for contour in polygon:
                 contours.append(flat_to_pnt_coordinates(contour))
             polygons.append(contours)
@@ -326,8 +361,8 @@ class PolygonCoordinates:
         return PolygonCoordinates(polygons=polygons)
 
     def to_dict(
-        self, kind: PolygonCoordsToDict | str = PolygonCoordsToDict.single_polygon
-    ) -> dict | list[list[list[float]]]:
+        self, kind: Union[PolygonCoordsToDict, str] = PolygonCoordsToDict.single_polygon
+    ) -> Union[Dict, List[List[List[float]]]]:
         """Convert the PolygonCoordinates instance to a dictionary.
 
         Returns:
@@ -341,11 +376,11 @@ class PolygonCoordinates:
             raise LabelRowError(f"Invalid argument: {kind}")
 
 
-def flat_to_pnt_coordinates(ring: list[float]) -> list[PointCoordinate]:
+def flat_to_pnt_coordinates(ring: List[float]) -> List[PointCoordinate]:
     return [PointCoordinate(x=ring[idx], y=ring[idx + 1]) for idx in range(0, len(ring), 2)]
 
 
-def pnt_coordinates_to_flat(coordinates: list[PointCoordinate]) -> list[float]:
+def pnt_coordinates_to_flat(coordinates: List[PointCoordinate]) -> List[float]:
     return [coord for point in coordinates for coord in [point.x, point.y]]
 
 
@@ -360,7 +395,7 @@ class PolylineCoordinates:
     values: Union[List[PointCoordinate], List[PointCoordinate3D]]
 
     @staticmethod
-    def from_dict(d: dict) -> PolylineCoordinates:
+    def from_dict(d: Dict) -> PolylineCoordinates:
         """Create a PolylineCoordinates instance from a dictionary.
 
         Args:
@@ -371,7 +406,7 @@ class PolylineCoordinates:
         """
         polyline = d["polyline"]
 
-        if isinstance(polyline, dict):
+        if isinstance(polyline, Dict):
             sorted_dict_value_tuples = sorted((int(key), value) for key, value in polyline.items())
             sorted_dict_values = [item[1] for item in sorted_dict_value_tuples]
         elif isinstance(polyline, list):
@@ -391,7 +426,7 @@ class PolylineCoordinates:
 
         return PolylineCoordinates(values=values)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict:
         """Convert the PolylineCoordinates instance to a dictionary.
 
         Returns:
@@ -413,11 +448,13 @@ class Visibility(CamelStrEnum):
         VISIBLE: The item is visible within the frame.
         INVISIBLE: The item is outside the frame and thus invisible.
         OCCLUDED: The item is within the frame but occluded by something else.
+        SELF_OCCLUDED: The item is occluded by itself.
     """
 
     VISIBLE = auto()
     INVISIBLE = auto()
     OCCLUDED = auto()
+    SELF_OCCLUDED = auto()
 
 
 class SkeletonCoordinate(BaseDTO):
