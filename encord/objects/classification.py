@@ -12,8 +12,10 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Sequence, Type, TypeVar
+from enum import Enum
+from typing import Any, Dict, List, Optional, Sequence, Type
 
+from encord.common.enum import StringEnum
 from encord.objects.attributes import (
     Attribute,
     AttributeType,
@@ -22,6 +24,10 @@ from encord.objects.attributes import (
     attributes_to_list_dict,
 )
 from encord.objects.ontology_element import OntologyElement
+
+
+class OntologyClassificationLevel(StringEnum):
+    GLOBAL = "global"
 
 
 @dataclass
@@ -38,6 +44,7 @@ class Classification(OntologyElement):
     uid: int
     feature_node_hash: str
     attributes: List[Attribute]
+    level: OntologyClassificationLevel | None = None
 
     @property
     def title(self) -> str:
@@ -56,6 +63,15 @@ class Classification(OntologyElement):
             Sequence[OntologyElement]: The attributes of the classification.
         """
         return self.attributes
+
+    @property
+    def is_global(self) -> bool:
+        """Check if the classification is global.
+
+        Returns:
+            bool: True if the classification level is global, False otherwise.
+        """
+        return self.level == OntologyClassificationLevel.GLOBAL
 
     def create_instance(self, range_only: bool = False) -> ClassificationInstance:
         """Create a ClassificationInstance to be used with a label row.
@@ -76,10 +92,13 @@ class Classification(OntologyElement):
             Classification: An instance of Classification.
         """
         attributes_ret: List[Attribute] = [attribute_from_dict(attribute_dict) for attribute_dict in d["attributes"]]
+        level = OntologyClassificationLevel.from_string(str(d.get("level")))
+
         return Classification(
             uid=int(d["id"]),
             feature_node_hash=d["featureNodeHash"],
             attributes=attributes_ret,
+            level=level,
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -95,6 +114,9 @@ class Classification(OntologyElement):
             "id": str(self.uid),
             "featureNodeHash": self.feature_node_hash,
         }
+
+        if self.level is not None:
+            ret["level"] = self.level.value
         if attributes_list := attributes_to_list_dict(self.attributes):
             ret["attributes"] = attributes_list
         else:

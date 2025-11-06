@@ -12,7 +12,7 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Collection, List, Union, cast
+from typing import Collection, List, Set, Union, cast
 
 
 @dataclass
@@ -45,7 +45,8 @@ class Range:
 
 Ranges = List[Range]
 FramesList = List[int]
-Frames = Union[int, FramesList, Range, Ranges]
+FramesSet = Set[int]
+Frames = Union[int, FramesList, Range, Ranges, FramesSet]
 
 
 def frame_to_range(frame: int) -> Range:

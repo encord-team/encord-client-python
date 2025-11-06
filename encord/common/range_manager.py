@@ -12,7 +12,7 @@ class RangeManager:
             self.add_range(Range(start=frame_class, end=frame_class))
         elif isinstance(frame_class, Range):
             self.add_range(frame_class)
-        elif isinstance(frame_class, list):
+        elif isinstance(frame_class, (list, set)):
             if all(isinstance(x, int) for x in frame_class):
                 for frame in frame_class:
                     self.add_range(Range(start=cast(int, frame), end=cast(int, frame)))
@@ -21,7 +21,7 @@ class RangeManager:
         elif frame_class is None:
             self.ranges = []
         else:
-            raise RuntimeError("Unexpected type for frames.")
+            raise RuntimeError(f"Unexpected type for frames {type(frame_class)}.")
 
     def add_range(self, new_range: Range) -> None:
         """Add a range, merging any overlapping ranges."""

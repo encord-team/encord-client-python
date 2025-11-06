@@ -9,7 +9,7 @@ from deepdiff import DeepDiff
 from encord.common.time_parser import parse_datetime
 from encord.http.querier import Querier, RequestContext
 from encord.project import Project
-from tests.fixtures import ontology, project, user_client
+from tests.conftest import ontology, project, user_client
 
 assert project and user_client and ontology  # Need to import all fixtures
 

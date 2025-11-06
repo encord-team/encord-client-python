@@ -10,7 +10,7 @@ from encord.configs import SshConfig
 from encord.http.constants import RequestsSettings
 from encord.http.v2.api_client import ApiClient
 from encord.user_client import EncordUserClient
-from tests.fixtures import PRIVATE_KEY, PRIVATE_KEY_PEM
+from tests.conftest import PRIVATE_KEY, PRIVATE_KEY_PEM
 
 PROJECT_HASH = uuid4().hex
 ONTOLOGY_HASH = uuid4().hex
