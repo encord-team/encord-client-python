@@ -684,7 +684,7 @@ def test_add_and_get_classification_instances_to_audio_label_row(ontology):
     overlapping_classification_instance = ClassificationInstance(text_classification, range_only=True)
     overlapping_classification_instance.set_for_frames(0)
 
-    with pytest.raises(LabelRowError, match=rf"{overlapping_classification_instance.classification_hash}.*[\(0:0\)]"):
+    with pytest.raises(LabelRowError, match=rf".*and has overlapping frames on the ranges.*[\(0:0\)]"):
         label_row.add_classification_instance(overlapping_classification_instance)
 
     # Do not raise if overwrite flag is passed
