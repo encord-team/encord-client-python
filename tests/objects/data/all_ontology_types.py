@@ -10,18 +10,21 @@ global_classification_dict = {  # should match GLOBAL_CLASSIFICATION.to_dict()
             "featureNodeHash": "2mwWr3Of",
             "required": False,
             "dynamic": False,
+            "archived": False,
             "options": [
                 {
                     "id": "4.1.1",
                     "label": "Global Answer 1",
                     "value": "global_answer_1",
                     "featureNodeHash": "3vLjF0q1",
+                    "archived": False,
                 },
                 {
                     "id": "4.1.2",
                     "label": "Global Answer 2",
                     "value": "checklist_classification_answer_2",
                     "featureNodeHash": "74r7nK9e",
+                    "archived": False,
                 },
             ],
         }
