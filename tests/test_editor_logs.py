@@ -255,9 +255,9 @@ def test_project_get_editor_logs_multiple_types():
     )
 
     # All should be valid EditorLog types
-    assert isinstance(general_log, EditorLog)
-    assert isinstance(object_log, EditorLog)
-    assert isinstance(classification_log, EditorLog)
+    assert isinstance(general_log, (EditorLogGeneralAction, EditorLogObject, EditorLogClassification))
+    assert isinstance(object_log, (EditorLogGeneralAction, EditorLogObject, EditorLogClassification))
+    assert isinstance(classification_log, (EditorLogGeneralAction, EditorLogObject, EditorLogClassification))
 
     # Create a mock API client
     mock_api_client = MagicMock()
@@ -276,4 +276,5 @@ def test_project_get_editor_logs_multiple_types():
     for item in result:
         results.append(item)
     assert len(results) == 3
-    assert all(isinstance(log, EditorLog) for log in results)
+    for log in result:
+        assert isinstance(log, (EditorLogGeneralAction, EditorLogObject, EditorLogClassification))

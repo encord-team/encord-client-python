@@ -52,7 +52,7 @@ class EditorLogCommon(BaseDTO):
     data_unit_dataset_title: str
     ontology_id: UUID
     label_id: str
-    workflow_stage_type: ActionableWorkflowNodeType | Literal[""]
+    workflow_stage_type: Union[ActionableWorkflowNodeType, Literal[""]]
     workflow_stage_title: str
     event_information: dict[str, Any]
 
@@ -65,9 +65,9 @@ class LabelAttributes(BaseDTO):
 
 class ObjectAttributes(LabelAttributes, BaseDTO):
     object_shape: str
-    object_current_frame: int | None = None
+    object_current_frame: Union[int, None] = None
     object_hash: str
-    object_id: int | None = None
+    object_id: Union[int, None] = None
 
 
 class ClassificationAttributes(LabelAttributes, BaseDTO):
@@ -96,7 +96,7 @@ EditorLog = Union[EditorLogGeneralAction, EditorLogObject, EditorLogClassificati
 class EditorLogParams(BaseDTO):
     start_time: datetime
     end_time: datetime
-    action: str | None = None
-    actor_user_email: str | None = None
-    workflow_stage_id: UUID | None = None
-    data_unit_id: UUID | None = None
+    action: Union[str, None] = None
+    actor_user_email: Union[str, None] = None
+    workflow_stage_id: Union[UUID, None] = None
+    data_unit_id: Union[UUID, None] = None
