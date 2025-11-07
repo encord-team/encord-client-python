@@ -35,6 +35,7 @@ class OntologyClassificationLevel(StringEnum):
             classification that applies to the entire data unit rather than
             to a specific object or region.
     """
+
     GLOBAL = "global"
 
 
@@ -67,11 +68,12 @@ class Classification(OntologyElement):
         ... )
     ```
     """
+
     uid: int
     feature_node_hash: str
     attributes: List[Attribute]
     level: OntologyClassificationLevel | None = None
-    
+
     @property
     def title(self) -> str:
         """Returns the title of the classification, which is the name of the first attribute.
