@@ -25,8 +25,13 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: uv Version Bump
-        run: uv version ${{ github.ref_name }}
+      - name: Validate version matches release tag
+        run: |
+          TOML_VERSION=$(grep '^version = ' pyproject.toml | awk -F'"' '{print $2}')
+          if [ "$TOML_VERSION" != "${{ github.ref_name }}" ]; then
+            echo "Version mismatch: pyproject.toml=$TOML_VERSION, release=${{ github.ref_name }}"
+            exit 1
+          fi
 
       - name: Build SDK
         run: uv build --sdist --wheel
