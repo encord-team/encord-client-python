@@ -32,13 +32,13 @@ jobs:
             echo "Version mismatch: uv version=$TOML_VERSION, release=${{ github.ref_name }}"
             exit 1
           fi
+        shell: bash
 
       - name: Build SDK
         run: uv build --sdist --wheel
 
       - name: Publish SDK
         run: |
-          uv pip install twine
           uv publish --token ${{ env.PYPI_TOKEN }}
         shell: bash
 
@@ -51,7 +51,7 @@ jobs:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Get workflow status
         uses: technote-space/workflow-conclusion-action@v2
