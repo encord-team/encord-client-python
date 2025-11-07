@@ -59,7 +59,7 @@ class DataClientMetadata:
 
 
 class ImageData:
-    """Information about individual images within a single :class:`~encord.orm.dataset.DataRow` of type
+    """Information about individual images within a single :class:`<encord.orm.dataset.DataRow` of type
     :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`. Get this information
     via the :meth:`DataRow.images <encord.orm.dataset.DataRow.images>` property.
     """
@@ -300,9 +300,9 @@ class DataRow(dict, Formatter):
     def width(self) -> Optional[int]:
         """An actual width of the data asset. This is `None` for data types of
         :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>` where
-        :meth:`is_image_sequence <encord.data.DataRow.is_image_sequence>` is `False`, because
-        each image in this group can have a different dimension. Inspect the
-        :meth:`images <encord.data.DataRow.images>` to get the height of individual images.
+        :meth:`is_image_sequence <encord.orm.dataset.DataRow.is_image_sequence>` is `False`, because
+        each image in this group can have a different dimension. Inspect the :meth:`DataRow.images <encord.orm.dataset.DataRow.images>`
+        to get the height of individual images.
         """
         return self["width"]
 
@@ -310,9 +310,9 @@ class DataRow(dict, Formatter):
     def height(self) -> Optional[int]:
         """An actual height of the data asset. This is `None` for data types of
         :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>` where
-        :meth:`is_image_sequence <encord.data.DataRow.is_image_sequence>` is `False`, because
+        :meth:`is_image_sequence <encord.orm.dataset.DataRow.is_image_sequence>` is `False`, because
         each image in this group can have a different dimension. Inspect the
-        :meth:`images <encord.data.DataRow.images>` to get the height of individual images.
+        :meth:`images <encord.orm.dataset.DataRow.images>` to get the height of individual images.
         """
         return self["height"]
 
@@ -353,8 +353,8 @@ class DataRow(dict, Formatter):
 
     @property
     def images_data(self) -> Optional[List[ImageData]]:
-        """A list of the cached :class:`~encord.orm.dataset.ImageData` objects for the given data asset.
-        Fetch the images with appropriate settings in the :meth:`~encord.orm.dataset.DataRow.refetch_data()` function.
+        """A list of the cached :class:`<encord.orm.dataset.ImageData` objects for the given data asset.
+        Fetch the images with appropriate settings in the :meth:`<encord.orm.dataset.DataRow.refetch_data()` function.
         If the data type is not :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`
         then this returns None.
         """
