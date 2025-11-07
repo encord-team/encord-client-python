@@ -27,18 +27,46 @@ from encord.objects.ontology_element import OntologyElement
 
 
 class OntologyClassificationLevel(StringEnum):
+    """Enumeration representing the hierarchical level of a classification
+    within an ontology.
+
+    Attributes:
+        GLOBAL (OntologyClassificationLevel): Indicates a global, whole-image
+            classification that applies to the entire data unit rather than
+            to a specific object or region.
+    """
+
     GLOBAL = "global"
 
 
 @dataclass
 class Classification(OntologyElement):
-    """Represents a whole-image classification as part of the Ontology structure. Wraps a single Attribute that describes
-    the image in general rather than an individual object.
+    """Represents a whole-image classification as part of an Ontology structure.
+
+    This class encapsulates an image-level classification that describes the
+    entire data unit rather than individual labeled objects. Each classification
+    wraps a single `Attribute` (or multiple, if applicable) that defines metadata
+    or semantic context for the image, such as scene type, lighting condition,
+    or general content category.
 
     Attributes:
-        uid (int): The unique identifier for the classification.
-        feature_node_hash (str): A unique hash identifying the feature node.
-        attributes (List[Attribute]): A list of attributes associated with this classification.
+        uid (int): Unique identifier for the classification.
+        feature_node_hash (str): Unique hash value identifying the feature node
+            in the ontology tree corresponding to this classification.
+        attributes (List[Attribute]): List of `Attribute` instances that define
+            the semantic meaning or properties associated with the classification.
+        level (OntologyClassificationLevel | None): The hierarchical level of
+            this classification (for example: `GLOBAL`). Optional: defaults to None.
+
+    Example:
+    ```
+        >>> classification = Classification(
+        ...     uid=1,
+        ...     feature_node_hash="abc123",
+        ...     attributes=[Attribute(name="Scene Type", value="Indoor")],
+        ...     level=OntologyClassificationLevel.GLOBAL,
+        ... )
+    ```
     """
 
     uid: int
