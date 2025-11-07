@@ -2,7 +2,7 @@ name: Publish SDK
 
 on:
   release:
-    types: [ published ]
+    types: [published]
 
 env:
   PYTHON_VERSION: 3.9
@@ -25,28 +25,33 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: uv Version Bump
-        run: uv version ${{ github.ref_name }}
+      - name: Validate version matches release tag
+        run: |
+          TOML_VERSION=$(uv version --short)
+          if [ "$TOML_VERSION" != "${{ github.ref_name }}" ]; then
+            echo "Version mismatch: uv version=$TOML_VERSION, release=${{ github.ref_name }}"
+            exit 1
+          fi
+        shell: bash
 
       - name: Build SDK
         run: uv build --sdist --wheel
 
       - name: Publish SDK
         run: |
-          uv pip install twine
           uv publish --token ${{ env.PYPI_TOKEN }}
         shell: bash
 
   send-slack-notification:
     name: Send notification
     runs-on: ubuntu-24.04
-    needs: [ publish-sdk ]
+    needs: [publish-sdk]
     if: always()
     env:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Get workflow status
         uses: technote-space/workflow-conclusion-action@v2
