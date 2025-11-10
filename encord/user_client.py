@@ -406,6 +406,7 @@ class EncordUserClient:
         querier = Querier(user_config)
         return EncordUserClient(user_config, querier)
 
+    @deprecated("0.1.98", ".list_projects()")
     def get_projects(
         self,
         title_eq: Optional[str] = None,
@@ -449,6 +450,7 @@ class EncordUserClient:
         edited_before: Optional[Union[str, datetime]] = None,
         edited_after: Optional[Union[str, datetime]] = None,
         include_org_access: bool = False,
+        tags_anyof: Optional[List[str]] = None,
     ) -> Iterable[Project]:
         """List either all (if called with no arguments) or matching projects the user has access to.
 
@@ -463,6 +465,7 @@ class EncordUserClient:
             edited_after: optional last modification date filter, 'greater'
             include_org_access: if set to true and the calling user is the organization admin, the
               method will return all projects in the organization.
+            tags_anyof: optional tags filter; matches projects having at least one of the tags.
 
         Returns:
             list of Projects matching filter conditions, as :class:`~encord.project.Project` instances.

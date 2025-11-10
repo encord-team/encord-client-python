@@ -391,6 +391,7 @@ class ProjectFilterParams(BaseDTO):
     edited_before: Optional[Union[str, datetime.datetime]] = None
     edited_after: Optional[Union[str, datetime.datetime]] = None
     include_org_access: bool = False
+    tags_anyof: Optional[List[str]] = None
 
 
 class SetProjectStatusPayload(BaseDTO):
