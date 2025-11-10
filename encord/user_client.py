@@ -406,7 +406,7 @@ class EncordUserClient:
         querier = Querier(user_config)
         return EncordUserClient(user_config, querier)
 
-    @deprecated("0.1.98", ".list_projects()")
+    @deprecated("0.1.181", ".list_projects()")
     def get_projects(
         self,
         title_eq: Optional[str] = None,
