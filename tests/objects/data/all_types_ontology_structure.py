@@ -14,7 +14,7 @@ from encord.objects.ontology_labels_impl import Classification
 GLOBAL_CLASSIFICATION = Classification(
     uid=4,
     feature_node_hash="3DuQbFx4",
-    level=OntologyClassificationLevel.GLOBAL,
+    _level=OntologyClassificationLevel.GLOBAL,
     attributes=[
         ChecklistAttribute(
             uid=[4, 1],

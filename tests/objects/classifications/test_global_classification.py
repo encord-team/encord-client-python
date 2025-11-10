@@ -1,3 +1,4 @@
+import dataclasses
 from dataclasses import asdict
 from unittest.mock import Mock
 
@@ -18,6 +19,22 @@ global_classification = all_types_structure.get_child_by_hash(GLOBAL_CLASSIFICAT
 def test_global_ontology_serde() -> None:
     assert GLOBAL_CLASSIFICATION.to_dict() == global_classification_dict
     assert Classification.from_dict(global_classification_dict) == GLOBAL_CLASSIFICATION
+
+
+def test_ontology_level_serde() -> None:
+    classification_without_level = dataclasses.replace(GLOBAL_CLASSIFICATION, _level=None)
+
+    classification_dict_without_level_key = GLOBAL_CLASSIFICATION.to_dict()
+    del classification_dict_without_level_key["level"]
+    assert Classification.from_dict(classification_dict_without_level_key) == classification_without_level
+
+    classification_dict_with_level_none = GLOBAL_CLASSIFICATION.to_dict()
+    classification_dict_with_level_none["level"] = None
+    assert Classification.from_dict(classification_dict_with_level_none) == classification_without_level
+
+    classification_dict_with_invalid_level = GLOBAL_CLASSIFICATION.to_dict()
+    classification_dict_with_invalid_level["level"] = "not-a-real-level"
+    assert Classification.from_dict(classification_dict_with_invalid_level) == classification_without_level
 
 
 def test_global_classification_image_group(all_types_ontology) -> None:
