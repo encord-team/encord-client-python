@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional, Type, cast
 from uuid import uuid4
 
 from encord.exceptions import OntologyError
-from encord.objects.classification import Classification
+from encord.objects.classification import Classification, OntologyClassificationLevel
 from encord.objects.common import Shape
 from encord.objects.constants import AVAILABLE_COLORS
 from encord.objects.ontology_element import (
@@ -230,12 +230,14 @@ class OntologyStructure:
         self,
         uid: Optional[int] = None,
         feature_node_hash: Optional[str] = None,
+        level: Optional[OntologyClassificationLevel] = None,
     ) -> Classification:
         """Adds a classification definition to the ontology.
 
         Args:
             uid: Integer identifier of the object. Normally auto-generated; omit this unless the aim is to create an exact clone of existing structure.
             feature_node_hash: Global identifier of the object. Normally auto-generated; omit this unless the aim is to create an exact clone of existing structure.
+            level: The level at which this classification applies. See :py:class:`encord.objects.classification.OntologyClassificationLevel` enum for possible values.
 
         Returns:
             Classification: The created classification node. Note that classification attribute should be further specified by calling its `add_attribute()` method.
@@ -258,7 +260,7 @@ class OntologyStructure:
         if any([cls.feature_node_hash == feature_node_hash for cls in self.classifications]):
             raise ValueError(f"Duplicate feature_node_hash '{feature_node_hash}'")
 
-        cls = Classification(uid=uid, feature_node_hash=feature_node_hash, attributes=list())
+        cls = Classification(uid=uid, feature_node_hash=feature_node_hash, attributes=list(), _level=level)
         self.classifications.append(cls)
         return cls
 

@@ -72,7 +72,7 @@ class Classification(OntologyElement):
     uid: int
     feature_node_hash: str
     attributes: List[Attribute]
-    level: OntologyClassificationLevel | None = None
+    _level: OntologyClassificationLevel | None = None
 
     @property
     def title(self) -> str:
@@ -82,6 +82,15 @@ class Classification(OntologyElement):
             str: The title of the classification.
         """
         return self.attributes[0].name
+
+    @property
+    def level(self) -> OntologyClassificationLevel | None:
+        """Get the level of the classification.
+
+        Returns:
+            OntologyClassificationLevel | None: The level of the classification.
+        """
+        return self._level
 
     @property
     def children(self) -> Sequence[OntologyElement]:
@@ -126,7 +135,7 @@ class Classification(OntologyElement):
             uid=int(d["id"]),
             feature_node_hash=d["featureNodeHash"],
             attributes=attributes_ret,
-            level=level,
+            _level=level,
         )
 
     def to_dict(self) -> Dict[str, Any]:
