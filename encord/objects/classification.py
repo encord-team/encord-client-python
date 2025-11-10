@@ -55,7 +55,7 @@ class Classification(OntologyElement):
             in the ontology tree corresponding to this classification.
         attributes (List[Attribute]): List of `Attribute` instances that define
             the semantic meaning or properties associated with the classification.
-        level (OntologyClassificationLevel | None): The hierarchical level of
+        _level (OntologyClassificationLevel | None): The hierarchical level of
             this classification (for example: `GLOBAL`). Optional: defaults to None.
 
     Example:
