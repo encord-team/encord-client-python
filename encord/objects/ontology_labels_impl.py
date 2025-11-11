@@ -105,7 +105,7 @@ class LabelRowV2:
     the labels for that data row.
 
     You can access many metadata fields with this class directly. To read or write labels, you need to call
-    :meth:`.initialise_labels()` first. To upload your added labels, call :meth:`.save()`.
+    :meth:`encord.objects.ontology_labels_impl.LabelRowV2.initialise_labels` first. To upload your added labels, call :meth:`encord.objects.ontology_labels_impl.LabelRowV2.save`.
     """
 
     def __init__(
@@ -344,7 +344,7 @@ class LabelRowV2:
         for DICOM series or image groups created without performance optimizations, as there is no single underlying
         file for these data types.
 
-        This property will contain a signed URL if :meth:`.initialise_labels` was called with `include_signed_url=True`.
+        This property will contain a signed URL if :meth:`encord.objects.ontology_labels_impl.LabelRowV2.initialise_labels` was called with `include_signed_url=True`.
 
         Returns:
             Optional[str]: The data link or None if not applicable.
@@ -477,7 +477,7 @@ class LabelRowV2:
         If it is `False`, then loading the labels via `LabelRowV2` will raise an error, and the label editor
         will not be able to load the labels.
 
-        You can call :meth:`.get_validation_errors` to get the validation error messages.
+        You can call :meth:`encord.objects.ontology_labels_impl.LabelRowV2.get_validation_errors` to get the validation error messages.
 
         Returns:
             bool: True if the labels are valid, False otherwise.
@@ -496,7 +496,7 @@ class LabelRowV2:
         Returns:
             bool: `True` if labelling is initialized, `False` otherwise.
 
-        If this is `False`, call the :meth:`.initialise_labels` method to read or write specific
+        If this is `False`, call the :meth:`encord.objects.ontology_labels_impl.LabelRowV2.initialise_labels` method to read or write specific
         ObjectInstances or ClassificationInstances.
         """
         return self._is_labelling_initialised
@@ -1149,7 +1149,7 @@ class LabelRowV2:
         """Convert the label row to a dictionary in Encord format.
 
         This is an internal helper function. Likely this should not be used by a user. To upload labels use the
-        :meth:`.save()` function.
+        :meth:`encord.objects.ontology_labels_impl.LabelRowV2.save` function.
 
         Returns:
             Dict[str, Any]: A dictionary representing the label row in Encord format.
@@ -1200,7 +1200,7 @@ class LabelRowV2:
     def workflow_complete(self, bundle: Optional[Bundle] = None) -> None:
         """Move a label row to the final workflow node, marking it as 'Complete'.
 
-        This method can be called only for labels for which :meth:`.initialise_labels()` was called at least once, and
+        This method can be called only for labels for which :meth:`encord.objects.ontology_labels_impl.LabelRowV2.initialise_labels()` was called at least once, and
         consequentially the "label_hash" field is not `None`. Labels need not be initialized every time the
         workflow_complete() method is called.
 

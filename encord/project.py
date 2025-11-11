@@ -148,7 +148,7 @@ class Project:
     @property
     @deprecated(version="0.1.117", alternative=".list_datasets")
     def datasets(self) -> List[Dict[str, Any]]:
-        """DEPRECATED: Prefer using the :meth:`encord.project.list_datasets` class to work with the data.
+        """DEPRECATED: Prefer using the :meth:`encord.project.Projects.list_datasets` class to work with the data.
 
         Get the info about datasets associated with this project.
         """
@@ -163,7 +163,7 @@ class Project:
     @deprecated(version="0.1.104", alternative=".list_label_rows_v2")
     def label_rows(self) -> Dict:
         """Get the label rows.
-        DEPRECATED: Prefer using :meth:`list_label_rows_v2()` method and :meth:`LabelRowV2` class to work with the data.
+        DEPRECATED: Prefer using :meth:`encord.project.Project.list_label_rows_v2` method and :meth:`encord.objects.ontology_labels_impl.LabelRowV2` class to work with the data.
 
         .. code::
 
