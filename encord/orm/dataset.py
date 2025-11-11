@@ -250,7 +250,7 @@ class DataRow(dict, Formatter):
     def data_type(self) -> DataType:
         return DataType.from_upper_case_string(self["data_type"])
 
-    @deprecated()
+    @deprecated(version="0.1.181")
     @data_type.setter
     def data_type(self, value: DataType) -> None:
         """DEPRECATED. Do not this function as it will never update the created_at in the server."""
@@ -260,7 +260,7 @@ class DataRow(dict, Formatter):
     def created_at(self) -> datetime:
         return parse_datetime(self["created_at"])
 
-    @deprecated()
+    @deprecated(version="0.1.181")
     @created_at.setter
     def created_at(self, value: datetime) -> None:
         """DEPRECATED. Do not this function as it will never update the created_at in the server."""
