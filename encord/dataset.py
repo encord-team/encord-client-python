@@ -98,10 +98,10 @@ class Dataset:
         Part of the response of this function can be configured by the
         :meth:`encord.dataset.Dataset.set_access_settings` method.
 
-        .. code::
-
+        ```
             dataset.set_access_settings(DatasetAccessSettings(fetch_client_metadata=True))
             print(dataset.data_rows)
+        ```
 
         Returns:
             List[DataRow]: A list of DataRow objects.
@@ -259,7 +259,7 @@ class Dataset:
     ) -> List[ImageGroup]:
         """Create an image group in Encord storage.
 
-        Choose this type of image upload for sequential images. Else, you can choose the :meth:`.Dataset.upload_image` function.
+        Choose this type of image upload for sequential images. Else, you can choose the :meth:`encord.dataset.Dataset.upload_image` function.
 
         Args:
             file_paths: A list of paths to images, e.g., ['/home/user/data/img1.png', '/home/user/data/img2.png'].
@@ -321,7 +321,7 @@ class Dataset:
         folder: Optional[Union[UUID, StorageFolder]] = None,
     ) -> Image:
         """Upload a single image to Encord storage. For sequential images, consider creating an image group
-        using the :meth:`.Dataset.create_image_group` function.
+        using the :meth:`encord.dataset.Dataset.create_image_group` function.
 
         Args:
             file_path: The file path to the image.
@@ -399,7 +399,7 @@ class Dataset:
         while the job continues uninterrupted.
 
         You can check upload job status at any point using
-        the :meth:`add_private_data_to_dataset_get_result` method.
+        the :meth:`encord.dataset.Dataset.add_private_data_to_dataset_get_result` method.
         This can be done in a separate Python session to the one
         where the upload was initialized.
 
@@ -436,7 +436,7 @@ class Dataset:
 
     def update_data_item(self, data_hash: str, new_title: str) -> bool:
         """DEPRECATED: Use the individual setter properties of the respective :class:`encord.orm.dataset.DataRow`
-        instance instead. These can be retrieved via the :meth:`.Dataset.data_rows` function.
+        instance instead. These can be retrieved via the :meth:`encord.dataset.Dataset.data_rows` function.
 
         Update a data item.
 

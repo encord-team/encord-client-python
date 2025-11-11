@@ -531,7 +531,7 @@ class EncordUserClient:
         dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
         **kwargs,
     ) -> EncordClientDataset:
-        """DEPRECATED - prefer using :meth:`get_dataset()` instead."""
+        """DEPRECATED - prefer using :meth:`encord.user_client.EncordUserClient.get_dataset` instead."""
         if isinstance(dataset_hash, UUID):
             dataset_hash = str(dataset_hash)
 
@@ -552,7 +552,7 @@ class EncordUserClient:
         project_hash: str,
         **kwargs,
     ) -> EncordClientProject:
-        """DEPRECATED - prefer using :meth:`get_project()` instead."""
+        """DEPRECATED - prefer using :meth:`encord.user_client.EncordUserClient.get_project` instead."""
         if isinstance(project_hash, UUID):
             project_hash = str(project_hash)
 

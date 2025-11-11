@@ -430,8 +430,8 @@ class StorageFolder:
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> UUID:
         """Creates an image group in Encord storage. Choose this type of image upload for non-sequential images that are
-        logically connected (e.g., multiple views of the same object). See also :meth:`.Folder.create_image_sequence`
-        and :meth:`.Folder.upload_image`.
+        logically connected (for example, multiple views of the same object). See also :meth:`encord.storage.StorageFolder.create_image_sequence`
+        and :meth:`encord.storage.StorageFolder.upload_image`.
 
         Args:
             file_paths (Collection[Union[Path, str]]): A list of paths to images, e.g.,
@@ -468,7 +468,7 @@ class StorageFolder:
         """Creates an image sequence in Encord storage. Choose this type of image upload for sequential images (a timelapse
         or similar). A compressed video will be created from the images.
 
-        See also :meth:`.Folder.create_image_group` and :meth:`.Folder.upload_image`.
+        See also :meth:`encord.storage.StorageFolder.create_image_group` and :meth:`encord.storage.StorageFolder.upload_image`.
 
         Args:
             file_paths (Collection[Union[Path, str]]): A list of paths to images, e.g.,
