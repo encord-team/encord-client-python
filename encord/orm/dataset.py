@@ -237,7 +237,7 @@ class DataRow(dict, Formatter):
         """The data title.
 
         The setter updates the custom client metadata. This queues a request for the backend which will be
-        executed on a call of :meth:`.DataRow.upload`.
+        executed on a call of :meth:`~encord.orm.dataset.DataRow.save()`.
         """
         return self["data_title"]
 
@@ -250,6 +250,7 @@ class DataRow(dict, Formatter):
     def data_type(self) -> DataType:
         return DataType.from_upper_case_string(self["data_type"])
 
+    @deprecated()
     @data_type.setter
     def data_type(self, value: DataType) -> None:
         """DEPRECATED. Do not this function as it will never update the created_at in the server."""
@@ -259,6 +260,7 @@ class DataRow(dict, Formatter):
     def created_at(self) -> datetime:
         return parse_datetime(self["created_at"])
 
+    @deprecated()
     @created_at.setter
     def created_at(self, value: datetime) -> None:
         """DEPRECATED. Do not this function as it will never update the created_at in the server."""
@@ -287,7 +289,7 @@ class DataRow(dict, Formatter):
         :meth:`~encord.orm.dataset.DataRow.refetch_data()` function.
 
         The setter updates the custom client metadata. This queues a request for the backend which will
-        be executed on a call of :meth:`.DataRow.upload`.
+        be executed on a call of :meth:`~encord.orm.dataset.DataRow.save()`.
         """
         return MappingProxyType(self["client_metadata"]) if self["client_metadata"] is not None else None
 
