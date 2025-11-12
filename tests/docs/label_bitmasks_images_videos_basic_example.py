@@ -2,14 +2,15 @@
 Code Block Name: Bitmasks Images/Videos - Basic
 """
 
+import numpy as np
+
 from encord import EncordUserClient, Project
 from encord.objects import Object, ObjectInstance
 from encord.objects.coordinates import BitmaskCoordinates
-import numpy as np
 
 # User input
 SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"  # Replace with your SSH private key
-PROJECT_ID = "00000000-0000-0000-0000-000000000000"   # Replace with your Project ID
+PROJECT_ID = "00000000-0000-0000-0000-000000000000"  # Replace with your Project ID
 BUNDLE_SIZE = 10
 
 # Data unit titles in your Project
@@ -56,11 +57,11 @@ mask_a_arr = np.ones((FRAME_H, FRAME_W), dtype=bool)
 assert mask_a_arr.shape == (FRAME_H, FRAME_W), "Mask dimensions must match 1080x1920"
 
 mask_b_arr = np.zeros((FRAME_H, FRAME_W), dtype=bool)
-mask_b_arr[0:FRAME_H//3, 0:FRAME_W//3] = True
+mask_b_arr[0 : FRAME_H // 3, 0 : FRAME_W // 3] = True
 assert mask_b_arr.shape == (FRAME_H, FRAME_W), "Mask dimensions must match 1080x1920"
 
 mask_c_arr = np.zeros((FRAME_H, FRAME_W), dtype=bool)
-mask_c_arr[FRAME_H//4:FRAME_H//2, FRAME_W//4:FRAME_W//2] = True
+mask_c_arr[FRAME_H // 4 : FRAME_H // 2, FRAME_W // 4 : FRAME_W // 2] = True
 assert mask_c_arr.shape == (FRAME_H, FRAME_W), "Mask dimensions must match 1080x1920"
 
 mask_a = BitmaskCoordinates(mask_a_arr)

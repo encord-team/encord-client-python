@@ -4,7 +4,7 @@ Code Block Name: Polylines Images/Videos
 
 from encord import EncordUserClient, Project
 from encord.objects import Object, ObjectInstance
-from encord.objects.coordinates import PolylineCoordinates, PointCoordinate
+from encord.objects.coordinates import PointCoordinate, PolylineCoordinates
 
 # User input
 SSH_PATH = "/path/to/your/ssh-private-key.txt"
@@ -51,13 +51,15 @@ with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
         label_rows[title] = lr
 
 # Polyline coordinates: A simple bent line with 5 vertices
-pline = PolylineCoordinates([
-    PointCoordinate(0.10, 0.80),
-    PointCoordinate(0.20, 0.60),
-    PointCoordinate(0.40, 0.55),
-    PointCoordinate(0.65, 0.40),
-    PointCoordinate(0.85, 0.35),
-])
+pline = PolylineCoordinates(
+    [
+        PointCoordinate(0.10, 0.80),
+        PointCoordinate(0.20, 0.60),
+        PointCoordinate(0.40, 0.55),
+        PointCoordinate(0.65, 0.40),
+        PointCoordinate(0.85, 0.35),
+    ]
+)
 
 # Create instances and attach to frames
 label_rows_to_save = []

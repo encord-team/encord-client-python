@@ -4,9 +4,9 @@ Code Block Name: Text Regions - Text Files
 
 from encord import EncordUserClient, Project
 from encord.objects import Object, ObjectInstance
+from encord.objects.attributes import Option, RadioAttribute, TextAttribute
 from encord.objects.coordinates import TextCoordinates
 from encord.objects.frames import Range
-from encord.objects.attributes import RadioAttribute, TextAttribute, Option
 
 # User input
 # User input
@@ -32,14 +32,10 @@ assert ontology_structure is not None, "Ontology structure not found in the proj
 text_object: Object = ontology_structure.get_child_by_title(title="Edit", type_=Object)
 assert text_object is not None, "Ontology object for 'Edit' not found."
 
-correction_radio_attribute = ontology_structure.get_child_by_title(
-    type_=RadioAttribute, title="Corrections"
-)
+correction_radio_attribute = ontology_structure.get_child_by_title(type_=RadioAttribute, title="Corrections")
 assert correction_radio_attribute is not None, "Radio attribute 'Corrections' not found."
 
-english_correction_option = correction_radio_attribute.get_child_by_title(
-    type_=Option, title="English corrections"
-)
+english_correction_option = correction_radio_attribute.get_child_by_title(type_=Option, title="English corrections")
 assert english_correction_option is not None, "Option 'English corrections' not found under 'Corrections'."
 
 english_correction_text_attribute = english_correction_option.get_child_by_title(

@@ -105,4 +105,6 @@ with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
         lr.save(bundle=bundle)
         print(f"Saved label row for {lr.data_title}")
 
-print("Done: placed a minimal 'Strawberries' skeleton (Triangle) on image, image group, image sequence, and 3 video frames.")
+print(
+    "Done: placed a minimal 'Strawberries' skeleton (Triangle) on image, image group, image sequence, and 3 video frames."
+)

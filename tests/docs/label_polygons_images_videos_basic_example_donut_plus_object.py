@@ -68,7 +68,7 @@ inner_hole = [
 ]
 
 # Object: a ring fully inside the hole
-inner_object= [
+inner_object = [
     PointCoordinate(0.39, 0.46),
     PointCoordinate(0.41, 0.46),
     PointCoordinate(0.42, 0.48),
@@ -121,4 +121,6 @@ with project.create_bundle(bundle_size=BUNDLE_SIZE) as bundle:
         lr.save(bundle=bundle)
         print(f"Saved label row for {lr.data_title}")
 
-print("Done: created ONE annotation (single ObjectInstance) that is a donut-with-object geometry on image, image group, image sequence, and 3 video frames.")
+print(
+    "Done: created ONE annotation (single ObjectInstance) that is a donut-with-object geometry on image, image group, image sequence, and 3 video frames."
+)
