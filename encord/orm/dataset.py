@@ -59,7 +59,7 @@ class DataClientMetadata:
 
 
 class ImageData:
-    """Information about individual images within a single :class:`<encord.orm.dataset.DataRow` of type
+    """Information about individual images within a single :class:`~encord.orm.dataset.DataRow` of type
     :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`. Get this information
     via the :meth:`DataRow.images <encord.orm.dataset.DataRow.images>` property.
     """
