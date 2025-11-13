@@ -465,7 +465,7 @@ class EncordUserClient:
             edited_after: optional last modification date filter, 'greater'
             include_org_access: if set to true and the calling user is the organization admin, the
               method will return all projects in the organization.
-            tags_anyof: optional tags filter; matches projects having at least one of the tags.
+            tags_anyof: optional tag names filter; matches projects having at least one of the tag names.
 
         Returns:
             list of Projects matching filter conditions, as :class:`~encord.project.Project` instances.
