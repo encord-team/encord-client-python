@@ -148,7 +148,7 @@ class Project:
     @property
     @deprecated(version="0.1.117", alternative=".list_datasets")
     def datasets(self) -> List[Dict[str, Any]]:
-        """DEPRECATED: Prefer using the :meth:`encord.project.Projects.list_datasets` class to work with the data.
+        """DEPRECATED: Prefer using the :meth:`encord.project.Project.list_datasets` method to work with the data.
 
         Get the info about datasets associated with this project.
         """
