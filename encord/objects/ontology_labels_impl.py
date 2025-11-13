@@ -1200,7 +1200,7 @@ class LabelRowV2:
     def workflow_complete(self, bundle: Optional[Bundle] = None) -> None:
         """Move a label row to the final workflow node, marking it as 'Complete'.
 
-        This method can be called only for labels for which :meth:`encord.objects.ontology_labels_impl.LabelRowV2.initialise_labels()` was called at least once, and
+        This method can be called only for labels for which :meth:`encord.objects.ontology_labels_impl.LabelRowV2.initialise_labels` was called at least once, and
         consequentially the "label_hash" field is not `None`. Labels need not be initialized every time the
         workflow_complete() method is called.
 
