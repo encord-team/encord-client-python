@@ -353,8 +353,8 @@ class DataRow(dict, Formatter):
 
     @property
     def images_data(self) -> Optional[List[ImageData]]:
-        """A list of the cached :class:`<encord.orm.dataset.ImageData` objects for the given data asset.
-        Fetch the images with appropriate settings in the :meth:`<encord.orm.dataset.DataRow.refetch_data()` function.
+        """A list of the cached :class:`~encord.orm.dataset.ImageData` objects for the given data asset.
+        Fetch the images with appropriate settings in the :meth:`~encord.orm.dataset.DataRow.refetch_data()` function.
         If the data type is not :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`
         then this returns None.
         """
