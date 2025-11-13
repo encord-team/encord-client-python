@@ -12,16 +12,6 @@ SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"  # Replace with the file pa
 PROJECT_ID = "00000000-0000-0000-0000-000000000000"  # Replace with the unique ID for the Project
 BUNDLE_SIZE = 100
 
-# Import dependencies
-from encord import EncordUserClient, Project
-from encord.objects import Object
-from encord.objects.coordinates import PointCoordinate3D
-
-# User input
-SSH_PATH = "/Users/chris-encord/ssh-private-key.txt"  # Replace with the file path to your SSH private key
-PROJECT_ID = "00000000-0000-0000-0000-000000000000"  # Replace with the unique ID for the Project
-BUNDLE_SIZE = 100
-
 # Create user client using ssh key
 user_client: EncordUserClient = EncordUserClient.create_with_ssh_private_key(
     ssh_private_key_path=SSH_PATH,
