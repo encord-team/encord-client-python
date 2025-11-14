@@ -122,6 +122,39 @@ log = logging.getLogger(__name__)
 
 
 class EncordUserClient:
+    """
+    High–level entrypoint to the Encord SDK for an authenticated user.
+
+    `EncordUserClient`` is the primary interface for interacting with
+    Encord resources such as Projects, Datasets, Collections, Workflows, and
+    Storage Items. It manages authentication, request signing, and low-level
+    communication on behalf of the user.
+
+    Typical usage involves creating a client using constructors
+    (for example, ``EncordUserClient.create_with_ssh_private_key`` or
+    ``EncordUserClient.create_with_service_account``), then calling methods:
+
+    - Listing or retrieving projects and datasets
+    - Accessing project configuration, ontology, and workflows
+    - Managing storage and data units
+    - Running analytics queries
+    - Interacting with collections and Index
+
+    Parameters
+    ----------
+    config : UserConfig
+        The user configuration containing authentication credentials
+        and client options.
+    querier : Querier
+        Internal HTTP/query executor used to communicate with the Encord API.
+        Users do not normally construct this directly.
+
+    Notes
+    -----
+    Instances of this class should generally be created using the provided
+    ``create_*`` methods rather than by calling the constructor
+    directly.
+    """
     def __init__(self, config: UserConfig, querier: Querier):
         self._config = config
         self._querier = querier

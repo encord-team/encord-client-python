@@ -21,16 +21,34 @@ from encord.utilities.common import _get_dict_without_none_keys
 
 
 class DatasetUserRole(IntEnum):
+    """Legacy dataset user roles.
+
+    This enum represents the role a user has on a dataset (for example
+    admin or standard user). Prefer :class:`DatasetUserRoleV2` for
+    new integrations.
+    """
     ADMIN = 0
     USER = 1
 
 
-class DatasetUserRoleV2(CamelStrEnum):
+class DatasetUserRoleV2(str, Enum):
+    """String-based dataset user roles used by the current API.
+
+    This enum mirrors :class:`DatasetUserRole` but uses string values
+    and is the preferred representation for new code.
+    """
     ADMIN = auto()
     USER = auto()
 
 
 def dataset_user_role_str_enum_to_int_enum(str_enum: DatasetUserRoleV2) -> DatasetUserRole:
+    """Convert a string-based dataset user role to the legacy integer enum.
+
+    This helper maps :class:`DatasetUserRoleV2` values to the
+    corresponding :class:`DatasetUserRole` values so that existing code
+    which still relies on the integer-based representation continues to
+    work with the newer API.
+    """
     return {
         DatasetUserRoleV2.ADMIN: DatasetUserRole.ADMIN,
         DatasetUserRoleV2.USER: DatasetUserRole.USER,
@@ -38,6 +56,16 @@ def dataset_user_role_str_enum_to_int_enum(str_enum: DatasetUserRoleV2) -> Datas
 
 
 class DatasetUser(BaseDTO):
+    """Dataset user membership.
+
+    Attributes:
+        user_email:
+            Email address of the user who has access to the dataset.
+        user_role:
+            Role of the user on the dataset.
+        dataset_hash:
+            Identifier of the dataset the user has access to.
+    """
     user_email: str
     user_role: DatasetUserRole
     dataset_hash: str
@@ -48,6 +76,15 @@ class DatasetUsers:
 
 
 class DataLinkDuplicatesBehavior(Enum):
+    """Behaviour when linking data that already exists in a dataset.
+
+    DUPLICATE
+        Allow duplicates and create a new link for each request.
+    FAIL
+        Fail the operation if a duplicate link would be created.
+    SKIP
+        Skip data that is already linked and continue with the rest.
+    """
     DUPLICATE = "DUPLICATE"
     FAIL = "FAIL"
     SKIP = "SKIP"
@@ -55,6 +92,16 @@ class DataLinkDuplicatesBehavior(Enum):
 
 @dataclasses.dataclass(frozen=True)
 class DataClientMetadata:
+    """Metadata attached to a data item by the client.
+
+    This wrapper is used to pass arbitrary metadata through to the
+    backend, for example custom tags or identifiers maintained by
+    the client application.
+
+    Attributes:
+        payload:
+            Arbitrary JSON-serialisable metadata provided by the client.
+    """
     payload: dict
 
 
@@ -623,6 +670,16 @@ class Dataset(dict, Formatter):
 
 
 class DatasetDataInfo(BaseDTO):
+    """Minimal information about a single data item in a dataset.
+
+    Attributes:
+        data_hash:
+            Internal identifier of the data item.
+        title:
+            Human-readable title applied to the data item.
+        backing_item_uuid:
+            UUID of the storage item that backs this dataset data.
+    """
     data_hash: str
     title: str
     backing_item_uuid: UUID
@@ -723,6 +780,27 @@ class CreateDatasetResponse(dict, Formatter):
 
 
 class StorageLocation(IntEnum):
+    """Storage backends supported for datasets and data items.
+
+    The enum values indicate where the underlying media is stored, such
+    as Encord-managed storage or an external cloud provider. Some values
+    are legacy and may only appear for existing datasets.
+
+    CORD_STORAGE
+        Encord-managed storage.
+    AWS
+        AWS S3 bucket.
+    GCP
+        Google Cloud Storage.
+    AZURE
+        Azure Blob Storage.
+    S3_COMPATIBLE
+        S3-compatible storage.
+
+    NEW_STORAGE
+        This is a placeholder for a new storage location that is not yet supported by your SDK version.
+        Please update your SDK to the latest version.
+    """
     CORD_STORAGE = (0,)
     AWS = (1,)
     GCP = (2,)
@@ -730,10 +808,6 @@ class StorageLocation(IntEnum):
     S3_COMPATIBLE = 4
 
     NEW_STORAGE = -99
-    """
-    This is a placeholder for a new storage location that is not yet supported by your SDK version.
-    Please update your SDK to the latest version.
-    """
 
     @staticmethod
     def from_str(string_location: str) -> StorageLocation:
@@ -882,22 +956,58 @@ class Images:
 
 @dataclasses.dataclass(frozen=True)
 class DicomSeries:
+    """Minimal information about a DICOM series belonging to a dataset.
+
+    Attributes:
+        data_hash:
+            Internal identifier of the DICOM series.
+        title:
+            Human-readable name or description of the series.
+    """
     data_hash: str
     title: str
 
 
 @dataclasses.dataclass(frozen=True)
 class DicomDeidentifyTask:
+    """Task describing how to de-identify DICOM data in a dataset.
+
+    Attributes:
+        dicom_urls:
+            List of DICOM object URLs to be de-identified.
+        integration_hash:
+            Identifier of the integration or configuration used to carry
+            out the de-identification.
+    """
     dicom_urls: List[str]
     integration_hash: str
 
 
 @dataclasses.dataclass(frozen=True)
 class ImageGroupOCR:
+    """OCR results extracted from an image group.
+
+    Attributes:
+        processed_texts:
+            Mapping of identifiers to recognised text blocks produced by
+            the OCR pipeline.
+    """
     processed_texts: Dict
 
 
 class ReEncodeVideoTaskResult(BaseDTO):
+    """Result of a video re-encoding task.
+
+    Attributes:
+        data_hash:
+            Identifier of the data item that was re-encoded.
+        signed_url:
+            Optional signed URL for downloading the re-encoded video. Only
+            present when using :class:`StorageLocation.CORD_STORAGE`.
+        bucket_path:
+            Path inside the storage bucket where the re-encoded video is
+            stored.
+    """
     data_hash: str
     # The signed url is only present when using StorageLocation.CORD_STORAGE
     signed_url: Optional[str]
@@ -926,55 +1036,77 @@ DEFAULT_DATASET_ACCESS_SETTINGS = DatasetAccessSettings(
 
 @dataclasses.dataclass
 class ImagesDataFetchOptions:
-    fetch_signed_urls: bool = False
-    """
-    Whether to fetch signed urls for each individual image. Only set this to true if you need to download the
+    """Whether to fetch signed urls for each individual image. 
+    Only set this to ``True`` if you need to download the
     images.
+
+    Attributes:
+        fetch_signed_urls:
+            If ``True``, include signed URLs for image data so that the
+            media can be downloaded directly from storage.
     """
+    fetch_signed_urls: bool = False
 
 
 class LongPollingStatus(str, Enum):
-    PENDING = "PENDING"
-    """Job will automatically start soon (waiting in queue) or already started processing."""
+    """Represents the lifecycle status of a long-polling job submitted through the
+    Encord SDK or UI. These statuses are returned by asynchronous job endpoints
+    (for example: data upload, private dataset ingestion) to indicate the current state
+    of job execution.
 
-    DONE = "DONE"
-    """
+    This enum is stable and lists all possible job statuses returned
+    by the long-polling API. Client code should use these values to determine
+    whether a job is still running, has completed successfully, completed with
+    errors, or was explicitly cancelled.
+    
+    PENDING
+    -------
+    Job will automatically start soon (waiting in queue) or already started processing.
+
+    DONE
+    ----
     Job has finished successfully (possibly with errors if `ignore_errors=True`).
 
-    If `ignore_errors=False` was specified in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start,
+    If `ignore_errors=False` was specified in
+    :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start`,
     the job will only have the status `DONE` if there were no errors.
 
-    If `ignore_errors=True` was specified in :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start`,
-    the job will always show the status `DONE` once complete and will never show `ERROR`
-    status if this flag was set to `True`. There could be errors that were ignored.
+    If `ignore_errors=True` was specified in
+    :meth:`encord.dataset.Dataset.add_private_data_to_dataset_start`,
+    the job will always show the status `DONE` once complete and will never show
+    `ERROR` status if this flag was set to `True`. There could be errors that were
+    ignored.
 
     Information about number of errors and stringified exceptions is available in the
     `units_error_count: int` and `errors: List[str]` attributes.
-    """
 
-    ERROR = "ERROR"
-    """
-    Job has completed with errors. This can only happen if `ignore_errors` was set to `False`.
-    Information about errors is available in the `units_error_count: int` and `errors: List[str]` attributes.
-    """
+    ERROR
+    -----
+    Job has completed with errors. This can only happen if `ignore_errors` was set to
+    `False`. Information about errors is available in the `units_error_count: int`
+    and `errors: List[str]` attributes.
 
-    CANCELLED = "CANCELLED"
-    """
-    Job was cancelled explicitly by the user through the Encord UI or via the Encord SDK using the
-    `add_data_to_folder_job_cancel` method.
+    CANCELLED
+    ---------
+    Job was cancelled explicitly by the user through the Encord UI or via the Encord
+    SDK using the `add_data_to_folder_job_cancel` method.
 
     In the context of this status:
-    - The job may have been partially processed, but it was explicitly interrupted before completion
-      by a user action.
-    - Cancellation can occur either manually through the Encord UI or programmatically using the SDK
-      method `add_data_to_folder_job_cancel`.
-    - Once a job is cancelled, no further processing will occur, and any processed data before the
-      cancellation will be available.
-    - The presence of cancelled data units (`units_cancelled_count`) indicates that some data upload
-      units were interrupted and cancelled before completion.
-    - If `ignore_errors` was set to `True`, the job may continue despite errors, and cancellation will
-      only apply to the unprocessed units.
+    - The job may have been partially processed, but it was explicitly interrupted
+      before completion by a user action.
+    - Cancellation can occur either manually through the Encord UI or programmatically
+      using the SDK method `add_data_to_folder_job_cancel`.
+    - Once a job is cancelled, no further processing will occur, and any processed
+      data before the cancellation will be available.
+    - The presence of cancelled data units (`units_cancelled_count`) indicates that
+      some data upload units were interrupted and cancelled before completion.
+    - If `ignore_errors` was set to `True`, the job may continue despite errors, and
+      cancellation will only apply to the unprocessed units.
     """
+    PENDING = "PENDING"
+    DONE = "DONE"
+    ERROR = "ERROR"
+    CANCELLED = "CANCELLED"
 
 
 class DataUnitError(BaseDTO):
@@ -1027,10 +1159,34 @@ class DatasetDataLongPolling(BaseDTO):
 
 @dataclasses.dataclass(frozen=True)
 class DatasetLinkItems:
+    """
+    Mapping between a dataset and its underlying storage items.
+
+    Attributes:
+        items:
+            List of storage item identifiers linked to the dataset.
+    """
     pass
 
 
 class CreateDatasetPayload(BaseDTO):
+    """
+    Payload for creating a new dataset.
+
+    Attributes:
+        title:
+            Title of the dataset to create.
+        description:
+            Optional description of the dataset and its intended use.
+        create_backing_folder:
+            If ``True``, create a legacy “mirror” dataset together with a
+            backing storage folder in a single operation. This behaviour
+            is retained for backwards compatibility.
+        legacy_call:
+            Internal flag used for analytics to detect usage of legacy
+            dataset creation flows. This field will be removed in a
+            future version and should not be set manually.
+    """
     title: str
     description: Optional[str]
 
@@ -1043,11 +1199,46 @@ class CreateDatasetPayload(BaseDTO):
 
 
 class CreateDatasetResponseV2(BaseDTO):
+    """Response returned when creating a dataset (current format).
+
+    Attributes:
+        dataset_uuid:
+            UUID of the newly created dataset.
+        backing_folder_uuid:
+            Optional UUID of the backing folder created alongside the
+            dataset, if applicable. 
+            A 'not None' indicates a legacy "mirror" dataset was created.
+    """
     dataset_uuid: UUID
     backing_folder_uuid: Optional[UUID] = None  # a 'not None' indicates a legacy "mirror" dataset was created
 
 
 class DatasetsWithUserRolesListParams(BaseDTO):
+    """Filter parameters for listing datasets together with user roles.
+
+    Attributes:
+        title_eq:
+            Optional filter to return only datasets whose title exactly
+            matches the given string.
+        title_cont:
+            Optional filter to return only datasets whose title contains
+            the given substring.
+        created_before:
+            If set, only datasets created before this timestamp are
+            returned.
+        created_after:
+            If set, only datasets created on or after this timestamp are
+            returned.
+        edited_before:
+            If set, only datasets last edited before this timestamp are
+            returned.
+        edited_after:
+            If set, only datasets last edited on or after this timestamp
+            are returned.
+        include_org_access:
+            If ``True``, include datasets that are visible through
+            organisation-level access in addition to user-level sharing.
+    """
     title_eq: Optional[str]
     title_like: Optional[str]
     description_eq: Optional[str]
@@ -1060,6 +1251,27 @@ class DatasetsWithUserRolesListParams(BaseDTO):
 
 
 class DatasetWithUserRole(BaseDTO):
+    """Dataset with the role of the current user attached.
+
+    Attributes:
+        dataset_uuid:
+            UUID of the dataset.
+        title:
+            Title of the dataset.
+        description:
+            Description of the dataset.
+        created_at:
+            Timestamp when the dataset was created.
+        last_edited_at:
+            Timestamp when the dataset was last modified.
+        user_role:
+            Role of the requesting user on this dataset, if any.
+        storage_location:
+            Storage location of the dataset’s underlying data, if known.
+        backing_folder_uuid:
+            UUID of the legacy backing folder if this dataset was created
+            as a “mirror” dataset.
+    """
     dataset_uuid: UUID
     title: str
     description: str
@@ -1072,4 +1284,10 @@ class DatasetWithUserRole(BaseDTO):
 
 
 class DatasetsWithUserRolesListResponse(BaseDTO):
+    """Response payload for listing datasets with user roles.
+
+    Attributes:
+        result:
+            List of datasets together with the role of the current user.
+    """
     result: List[DatasetWithUserRole]
