@@ -122,6 +122,37 @@ log = logging.getLogger(__name__)
 
 
 class EncordUserClient:
+    """
+    High–level entrypoint to the Encord SDK for an authenticated user.
+
+    `EncordUserClient`` is the primary interface for interacting with
+    Encord resources such as Projects, Datasets, Collections, Workflows, and
+    Storage Items. It manages authentication, request signing, and low-level
+    communication on behalf of the user.
+
+    Typical usage involves creating a client using constructors
+    (for example, ``EncordUserClient.create_with_ssh_private_key`` or
+    ``EncordUserClient.create_with_service_account``), then calling methods:
+
+    - Listing or retrieving projects and datasets
+    - Accessing project configuration, ontology, and workflows
+    - Managing storage and data units
+    - Running analytics queries
+    - Interacting with collections and Index
+
+    Args:
+    config : UserConfig The user configuration containing authentication credentials
+        and client options.
+    querier : Querier Internal HTTP/query executor used to communicate with the Encord API.
+        Users do not normally construct this directly.
+
+    **Notes**
+
+    Instances of this class should generally be created using the provided
+    ``create_*`` methods rather than by calling the constructor
+    directly.
+    """
+
     def __init__(self, config: UserConfig, querier: Querier):
         self._config = config
         self._querier = querier
@@ -129,8 +160,7 @@ class EncordUserClient:
 
     @property
     def ml_models(self) -> MlModelsClient:
-        """
-        Access Encord ML Models functionality.
+        """Access Encord ML Models functionality.
 
         Returns:
             MlModelsClient: Client for interacting with Encord's ML models
@@ -165,6 +195,7 @@ class EncordUserClient:
         Args:
             dataset_hash: The Dataset ID
             dataset_access_settings: Set the dataset_access_settings if you would like to change the defaults.
+
         Returns:
             Returns all Dataset information (title, dataset_hash, dataset_type, and more) and all data rows (including all data row information for each data unit).
         """
@@ -266,14 +297,10 @@ class EncordUserClient:
     ) -> CreateDatasetResponse:
         """
         Args:
-            dataset_title (str):
-                Title of the dataset.
-            dataset_type (StorageLocation):
-                Type of storage location where the data will be stored.
-            dataset_description (Optional[str]):
-                Optional description of the dataset.
-            create_backing_folder (bool):
-                Whether to create a mirrored backing Folder. If True (default),
+            dataset_title (str): Title of the dataset.
+            dataset_type (StorageLocation): Type of storage location where the data will be stored.
+            dataset_description (Optional[str]): Optional description of the dataset.
+            create_backing_folder (bool): Whether to create a mirrored backing Folder. If True (default),
                 the Folder and Dataset are synced. Recommended to set False for complex
                 or large-scale projects.
 
@@ -1373,7 +1400,7 @@ class EncordUserClient:
     ) -> Iterable[StorageItem]:
         """Recursively search for storage items, starting from the root level.
 
-        Warning: This method is slow. We recommend using `storage_folder.list_items` instead.
+        **Warning:** This method is slow. We recommend using `storage_folder.list_items` instead.
 
         Args:
             search: Search string to filter items by name.
