@@ -155,6 +155,7 @@ class EncordUserClient:
     ``create_*`` methods rather than by calling the constructor
     directly.
     """
+
     def __init__(self, config: UserConfig, querier: Querier):
         self._config = config
         self._querier = querier

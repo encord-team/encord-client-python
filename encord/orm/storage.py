@@ -45,6 +45,7 @@ class StorageItemType(CamelStrEnum):
     SCENE
         A scene (for example, a composition of multiple assets like videos and point cloud data files).
     """
+
     VIDEO = auto()
     IMAGE = auto()
     GROUP = auto()
@@ -67,6 +68,7 @@ class StorageUserRole(CamelStrEnum):
     ADMIN
         User with administrative privileges on the item.
     """
+
     USER = auto()
     ADMIN = auto()
 
@@ -89,6 +91,7 @@ class StorageLocationName(CamelStrEnum):
     S3_COMPATIBLE
         Generic S3-compatible storage backend.
     """
+
     ENCORD = auto()
     GCP = auto()
     S3 = auto()
@@ -111,6 +114,7 @@ class PathElement(BaseDTO):
         synced_dataset_hash:
             UUID of the dataset that is synced with this folder, if any.
     """
+
     uuid: UUID
     parent_uuid: Optional[UUID]
     name: str
@@ -145,6 +149,7 @@ class StorageFolder(BaseDTO):
             Path from this folder to the root, represented as a list
             of :class:`PathElement` instances.
     """
+
     uuid: UUID
     parent: Optional[UUID]
     name: str
@@ -224,6 +229,7 @@ class StorageItem(BaseDTO):
         audio_num_channels:
             Number of audio channels, if known.
     """
+
     uuid: UUID
     parent: UUID
     item_type: StorageItemType
@@ -263,6 +269,7 @@ class StorageItemInaccessible(BaseDTO):
         uuid:
             UUID of the item that cannot be accessed.
     """
+
     uuid: UUID
 
 
@@ -316,6 +323,7 @@ class CreateStorageFolderPayload(BaseDTO):
             Optional configuration for creating a cloud-synced folder
             that is linked to an external storage location.
     """
+
     name: str
     description: Optional[str]
     parent: Optional[UUID]
@@ -332,6 +340,7 @@ class LayoutPayload(BaseDTO):
             (``"default-grid"`` or ``"default-list"``) or a custom
             layout dictionary.
     """
+
     layout: Union[Literal["default-grid"], Literal["default-list"], Dict]
 
 
@@ -346,6 +355,7 @@ class DataGroupGrid(BaseDTO):
         name:
             Optional name of the data group.
     """
+
     layout_type: Literal["default-grid"] = "default-grid"
     layout_contents: List[UUID]
     name: Optional[str] = None
@@ -362,6 +372,7 @@ class DataGroupList(BaseDTO):
         name:
             Optional name of the data group.
     """
+
     layout_type: Literal["default-list"] = "default-list"
     layout_contents: List[UUID]
     name: Optional[str] = None
@@ -382,6 +393,7 @@ class DataGroupCustom(BaseDTO):
         settings:
             Optional extra settings for the layout.
     """
+
     layout_type: Literal["custom"] = "custom"
     name: Optional[str] = None
     layout_contents: Dict[str, UUID]
@@ -401,6 +413,7 @@ class CreateDataGroupPayload(BaseDTO):
         params:
             Layout and configuration for the data group.
     """
+
     item_type: Literal["GROUP"] = "GROUP"
     params: DataGroupInput
 
@@ -416,6 +429,7 @@ class UploadSignedUrlsPayload(BaseDTO):
         frames_subfolder_name:
             Optional subfolder name to use for frame-based uploads.
     """
+
     item_type: StorageItemType
     count: int
     frames_subfolder_name: Optional[str]
@@ -432,6 +446,7 @@ class UploadSignedUrl(BaseDTO):
         signed_url:
             Signed URL that can be used to upload the content.
     """
+
     item_uuid: UUID
     object_key: str
     signed_url: str
@@ -446,6 +461,7 @@ class StorageItemWithName(BaseDTO):
         name:
             Display name of the item.
     """
+
     item_uuid: UUID
     name: str
 
@@ -741,12 +757,14 @@ class DataUploadText(BaseDTO):
         placeholder_item_uuid:
             For system use only.
     """
+
     object_url: str
     title: Optional[str] = None
     client_metadata: dict = Field(default_factory=dict)
     external_file_type: Literal["PLAIN_TEXT"] = "PLAIN_TEXT"
     text_metadata: Optional[CustomerProvidedTextMetadata] = None
     placeholder_item_uuid: Optional[UUID] = None
+
 
 class DataUploadPDF(BaseDTO):
     """Data about a PDF file to be registered with Encord service.
@@ -765,6 +783,7 @@ class DataUploadPDF(BaseDTO):
         placeholder_item_uuid:
             For system use only.
     """
+
     object_url: str
     title: Optional[str] = None
     client_metadata: dict = Field(default_factory=dict)
@@ -772,11 +791,12 @@ class DataUploadPDF(BaseDTO):
     external_file_type: Literal["PDF"] = "PDF"
     placeholder_item_uuid: Optional[UUID] = None
 
+
 class DataUploadAudio(BaseDTO):
     """Data about an audio item to be registered with Encord service.
-    
+
     Attributes:
-        object_url: 
+        object_url:
             URL of the audio file to be registered.
         title:
             Title of the audio item (derived from the URL if omitted).
@@ -796,6 +816,7 @@ class DataUploadAudio(BaseDTO):
     audio_metadata: Optional[CustomerProvidedAudioMetadata] = None
     external_file_type: Literal["AUDIO"] = "AUDIO"
     placeholder_item_uuid: Optional[UUID] = None
+
 
 class DataUploadItems(BaseDTO):
     """A collection of items to be registered with Encord service.
@@ -859,6 +880,7 @@ class DatasetDataLongPollingParams(BaseDTO):
         file_name:
             Optional name of the manifest file associated with the job.
     """
+
     data_items: Optional[DataUploadItems]
     files: Optional[dict]
     integration_id: Optional[UUID]
@@ -883,6 +905,7 @@ class PostUploadJobParams(BaseDTO):
         file_name:
             Optional name of the manifest file associated with the job.
     """
+
     data_items: Optional[DataUploadItems] = None
     external_files: Optional[dict] = None
     integration_hash: Optional[UUID] = None
@@ -898,6 +921,7 @@ class GetUploadJobParams(BaseDTO):
             Maximum number of seconds to wait before returning the
             current job status.
     """
+
     timeout_seconds: int = 60
 
 
@@ -909,6 +933,7 @@ class FoldersSortBy(CamelStrEnum):
     CREATED_AT
         Sort by creation time.
     """
+
     NAME = auto()
     CREATED_AT = auto()
 
@@ -940,6 +965,7 @@ class ListItemsParams(BaseDTO):
             If ``True``, include signed URLs for the items in the
             response.
     """
+
     search: Optional[str]
     is_recursive: Optional[bool] = False
     is_in_dataset: Optional[bool]
@@ -975,6 +1001,7 @@ class ListFoldersParams(BaseDTO):
         page_size:
             Maximum number of folders to return (defaults to 100).
     """
+
     search: Optional[str] = None
     is_recursive: Optional[bool] = False
     dataset_synced: Optional[bool] = None
@@ -996,6 +1023,7 @@ class PatchItemPayload(BaseDTO):
         client_metadata:
             New custom metadata to merge or overwrite, depending on API semantics.
     """
+
     name: Optional[str] = None
     description: Optional[str] = None
     client_metadata: Optional[dict] = None
@@ -1012,6 +1040,7 @@ class PatchFolderPayload(BaseDTO):
         client_metadata:
             New custom metadata to merge or overwrite, depending on API semantics.
     """
+
     name: Optional[str] = None
     description: Optional[str] = None
     client_metadata: Optional[dict] = None
@@ -1025,6 +1054,7 @@ class PatchFoldersBulkPayload(BaseDTO):
             Mapping from folder UUID (as string) to patch payload to
             apply to that folder.
     """
+
     folder_patches: Dict[str, PatchFolderPayload]
 
 
@@ -1063,6 +1093,7 @@ class StorageFolderSummary(BaseDTO):
         total_size:
             Approximate total size of all items in bytes.
     """
+
     files: int
     folders: int
     videos: int
@@ -1095,6 +1126,7 @@ class ItemShortInfo(BaseDTO):
         item_type:
             Type of the item.
     """
+
     uuid: UUID
     name: str
     parent_uuid: UUID
@@ -1117,6 +1149,7 @@ class DatasetShortInfo(BaseDTO):
         data_units_created_at:
             Timestamp when the data units were created.
     """
+
     dataset_hash: str
     backing_folder_uuid: Optional[UUID]
     title: str
@@ -1147,6 +1180,7 @@ class DeleteItemsParams(BaseDTO):
             If ``True``, also remove frames that are no longer used by
             any group items after deletion.
     """
+
     remove_unused_frames: bool
 
 
@@ -1160,6 +1194,7 @@ class DeleteItemsPayload(BaseDTO):
             If ``True``, also remove frames that are no longer referenced
             after deletion.
     """
+
     child_uuids: List[UUID]
     remove_unused_frames: bool
 
@@ -1173,6 +1208,7 @@ class DeleteItemsResponse(BaseDTO):
         removed_folders_count:
             Number of folders removed.
     """
+
     removed_items_count: int
     removed_folders_count: int
 
@@ -1189,6 +1225,7 @@ class MoveItemsPayload(BaseDTO):
             If ``True``, allow moving items that are linked to synced
             datasets.
     """
+
     item_uuids: List[UUID]
     new_parent_uuid: UUID
     allow_synced_dataset_move: bool = False
@@ -1203,6 +1240,7 @@ class MoveFoldersPayload(BaseDTO):
         new_parent_uuid:
             UUID of the destination folder, or ``None`` to move to root.
     """
+
     folder_uuids: List[UUID]
     new_parent_uuid: Optional[UUID]
 
@@ -1215,6 +1253,7 @@ class GetItemParams(BaseDTO):
             If ``True``, include a signed URL for temporary access to the
             item in the response.
     """
+
     sign_url: bool
 
 
@@ -1226,6 +1265,7 @@ class GetChildItemsParams(BaseDTO):
             If ``True``, include signed URLs for the items in the
             response.
     """
+
     sign_urls: bool = False
 
 
@@ -1239,6 +1279,7 @@ class GetItemsBulkPayload(BaseDTO):
             If ``True``, include signed URLs for the items in the
             response.
     """
+
     item_uuids: List[UUID]
     sign_urls: bool = False
 
@@ -1251,6 +1292,7 @@ class PatchItemsBulkPayload(BaseDTO):
             Mapping from item UUID (as string) to patch payload to apply
             to that item.
     """
+
     item_patches: Dict[str, PatchItemPayload]
 
 
@@ -1263,6 +1305,7 @@ class BundledPatchItemPayload:
             Mapping from item UUID (as string) to patch payload to apply
             to that item.
     """
+
     item_patches: Dict[str, PatchItemPayload]
 
     def add(self, other: BundledPatchItemPayload) -> BundledPatchItemPayload:
@@ -1279,6 +1322,7 @@ class BundledPatchFolderPayload:
             Mapping from folder UUID (as string) to patch payload to
             apply to that folder.
     """
+
     folder_patches: Dict[str, PatchFolderPayload]
 
     def add(self, other: BundledPatchFolderPayload) -> BundledPatchFolderPayload:
@@ -1298,6 +1342,7 @@ class ReencodeVideoItemsRequest(BaseDTO):
             If ``True``, force re-encoding even if a compatible version
             already exists.
     """
+
     storage_items: List[UUID]
     process_title: str
     force_full_reencoding: bool
@@ -1313,6 +1358,7 @@ class JobStatus(CamelStrEnum):
     ERROR
         Job has failed.
     """
+
     SUBMITTED = auto()
     DONE = auto()
     ERROR = auto()
@@ -1325,9 +1371,10 @@ class ReencodeVideoItemsResponse(BaseDTO):
         status:
             Current status of the re-encode job.
         result:
-            Optional result payload, for example a list or dict 
+            Optional result payload, for example a list or dict
             with additional information about the re-encoded items.
-     """   
+    """
+
     status: JobStatus
     result: Optional[Union[list, dict]]
 
@@ -1353,6 +1400,7 @@ class StorageItemsMigratePayload(BaseDTO):
             If ``True``, skip items that cannot be found instead of
             failing the entire migration.
     """
+
     urls_map: Optional[Dict[str, Optional[str]]]
     items_map: Optional[Dict[UUID, Optional[str]]]
     from_integration_hash: Optional[UUID] = None
@@ -1368,6 +1416,7 @@ class AddDataToFolderJobCancelResponse(BaseDTO):
         units_cancelled_count:
             Number of individual job units that were cancelled.
     """
+
     units_cancelled_count: int
 
 
@@ -1379,6 +1428,7 @@ class SyncPrivateDataWithCloudSyncedFolderGetResultParams(BaseDTO):
             Maximum number of seconds to wait before returning the
             current synchronization status.
     """
+
     timeout_seconds: int
 
 

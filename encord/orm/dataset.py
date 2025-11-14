@@ -27,6 +27,7 @@ class DatasetUserRole(IntEnum):
     admin or standard user). Prefer :class:`DatasetUserRoleV2` for
     new integrations.
     """
+
     ADMIN = 0
     USER = 1
 
@@ -37,6 +38,7 @@ class DatasetUserRoleV2(str, Enum):
     This enum mirrors :class:`DatasetUserRole` but uses string values
     and is the preferred representation for new code.
     """
+
     ADMIN = auto()
     USER = auto()
 
@@ -66,6 +68,7 @@ class DatasetUser(BaseDTO):
         dataset_hash:
             Identifier of the dataset the user has access to.
     """
+
     user_email: str
     user_role: DatasetUserRole
     dataset_hash: str
@@ -85,6 +88,7 @@ class DataLinkDuplicatesBehavior(Enum):
     SKIP
         Skip data that is already linked and continue with the rest.
     """
+
     DUPLICATE = "DUPLICATE"
     FAIL = "FAIL"
     SKIP = "SKIP"
@@ -102,6 +106,7 @@ class DataClientMetadata:
         payload:
             Arbitrary JSON-serialisable metadata provided by the client.
     """
+
     payload: dict
 
 
@@ -680,6 +685,7 @@ class DatasetDataInfo(BaseDTO):
         backing_item_uuid:
             UUID of the storage item that backs this dataset data.
     """
+
     data_hash: str
     title: str
     backing_item_uuid: UUID
@@ -801,6 +807,7 @@ class StorageLocation(IntEnum):
         This is a placeholder for a new storage location that is not yet supported by your SDK version.
         Please update your SDK to the latest version.
     """
+
     CORD_STORAGE = (0,)
     AWS = (1,)
     GCP = (2,)
@@ -964,6 +971,7 @@ class DicomSeries:
         title:
             Human-readable name or description of the series.
     """
+
     data_hash: str
     title: str
 
@@ -979,6 +987,7 @@ class DicomDeidentifyTask:
             Identifier of the integration or configuration used to carry
             out the de-identification.
     """
+
     dicom_urls: List[str]
     integration_hash: str
 
@@ -992,6 +1001,7 @@ class ImageGroupOCR:
             Mapping of identifiers to recognised text blocks produced by
             the OCR pipeline.
     """
+
     processed_texts: Dict
 
 
@@ -1008,6 +1018,7 @@ class ReEncodeVideoTaskResult(BaseDTO):
             Path inside the storage bucket where the re-encoded video is
             stored.
     """
+
     data_hash: str
     # The signed url is only present when using StorageLocation.CORD_STORAGE
     signed_url: Optional[str]
@@ -1036,7 +1047,7 @@ DEFAULT_DATASET_ACCESS_SETTINGS = DatasetAccessSettings(
 
 @dataclasses.dataclass
 class ImagesDataFetchOptions:
-    """Whether to fetch signed urls for each individual image. 
+    """Whether to fetch signed urls for each individual image.
     Only set this to ``True`` if you need to download the
     images.
 
@@ -1045,6 +1056,7 @@ class ImagesDataFetchOptions:
             If ``True``, include signed URLs for image data so that the
             media can be downloaded directly from storage.
     """
+
     fetch_signed_urls: bool = False
 
 
@@ -1058,7 +1070,7 @@ class LongPollingStatus(str, Enum):
     by the long-polling API. Client code should use these values to determine
     whether a job is still running, has completed successfully, completed with
     errors, or was explicitly cancelled.
-    
+
     PENDING
     -------
     Job will automatically start soon (waiting in queue) or already started processing.
@@ -1103,6 +1115,7 @@ class LongPollingStatus(str, Enum):
     - If `ignore_errors` was set to `True`, the job may continue despite errors, and
       cancellation will only apply to the unprocessed units.
     """
+
     PENDING = "PENDING"
     DONE = "DONE"
     ERROR = "ERROR"
@@ -1166,6 +1179,7 @@ class DatasetLinkItems:
         items:
             List of storage item identifiers linked to the dataset.
     """
+
     pass
 
 
@@ -1187,6 +1201,7 @@ class CreateDatasetPayload(BaseDTO):
             dataset creation flows. This field will be removed in a
             future version and should not be set manually.
     """
+
     title: str
     description: Optional[str]
 
@@ -1206,9 +1221,10 @@ class CreateDatasetResponseV2(BaseDTO):
             UUID of the newly created dataset.
         backing_folder_uuid:
             Optional UUID of the backing folder created alongside the
-            dataset, if applicable. 
+            dataset, if applicable.
             A 'not None' indicates a legacy "mirror" dataset was created.
     """
+
     dataset_uuid: UUID
     backing_folder_uuid: Optional[UUID] = None  # a 'not None' indicates a legacy "mirror" dataset was created
 
@@ -1239,6 +1255,7 @@ class DatasetsWithUserRolesListParams(BaseDTO):
             If ``True``, include datasets that are visible through
             organisation-level access in addition to user-level sharing.
     """
+
     title_eq: Optional[str]
     title_like: Optional[str]
     description_eq: Optional[str]
@@ -1272,6 +1289,7 @@ class DatasetWithUserRole(BaseDTO):
             UUID of the legacy backing folder if this dataset was created
             as a “mirror” dataset.
     """
+
     dataset_uuid: UUID
     title: str
     description: str
@@ -1290,4 +1308,5 @@ class DatasetsWithUserRolesListResponse(BaseDTO):
         result:
             List of datasets together with the role of the current user.
     """
+
     result: List[DatasetWithUserRole]

@@ -44,7 +44,7 @@ class LabelRow(base_orm.BaseORM):
 
     A data unit, mentioned for the dictionary entry ``data_units`` above, has in the
     form::
-    
+
     ```
         label_row = {  # The label row
             # ...
@@ -208,6 +208,7 @@ class AnnotationTaskStatus(Enum):
         The task has been completed and no further action is
         required.
     """
+
     QUEUED = "QUEUED"
     ASSIGNED = "ASSIGNED"
     IN_REVIEW = "IN_REVIEW"
@@ -255,6 +256,7 @@ class WorkflowGraphNode:
         title:
             Human-readable title of the workflow stage.
     """
+
     uuid: str
     title: str
 
@@ -413,6 +415,7 @@ class LabelValidationState(BaseDTO):
         errors:
             List of validation error messages, if any.
     """
+
     label_hash: str
     branch_name: str
     version: int
@@ -429,6 +432,7 @@ class WorkflowGraphNodeDTO(BaseDTO):
         title:
             Human-readable title of the workflow stage.
     """
+
     uuid: str
     title: str
 

@@ -23,6 +23,7 @@ class CollaboratorTimersGroupBy(CamelStrEnum):
     PROJECT
         Group time spent at the project level.
     """
+
     DATA_UNIT = auto()
     PROJECT = auto()
 
@@ -46,6 +47,7 @@ class CollaboratorTimerParams(BaseDTO):
             Pagination token returned from a previous response, used to
             fetch the next page of results.
     """
+
     project_hash: str
     after: datetime
     before: Optional[datetime] = None
@@ -68,6 +70,7 @@ class CollaboratorTimer(BaseDTO):
         time_seconds:
             Total time spent (in seconds) matching the query filters.
     """
+
     user_email: str
     user_role: ProjectUserRole
     data_title: Optional[str] = None
@@ -88,6 +91,7 @@ class TimeSpentParams(BaseDTO):
         data_title: Optional fuzzy match string on data title.
         page_token: Pagination token from a previous response.
     """
+
     project_uuid: str
     after: datetime
     before: Optional[datetime] = None
@@ -115,6 +119,7 @@ class TimeSpent(BaseDTO):
         workflow_task_uuid: Optional workflow task identifier.
         workflow_stage: Optional workflow stage object associated with this row.
     """
+
     period_start_time: datetime
     period_end_time: datetime
     time_spent_seconds: int
