@@ -472,6 +472,7 @@ class EncordUserClient:
         """
         properties_filter = ProjectFilterParams.from_dict(self.__validate_filter(locals()))
         properties_filter.include_org_access = include_org_access
+        properties_filter.tags_anyof = tags_anyof
         page = self._api_client.get("projects", params=properties_filter, result_type=Page[ProjectDTO])
 
         for row in page.results:
