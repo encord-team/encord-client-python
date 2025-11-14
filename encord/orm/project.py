@@ -164,6 +164,7 @@ class ProjectDataset(BaseDTO):
         description:
             Description of the dataset.
     """
+
     dataset_hash: UUID
     title: str
     description: str
@@ -181,6 +182,7 @@ class ProjectType(str, Enum):
     MANUAL_QA - DEPRECATED
         Project configured for manual QA only.
     """
+
     WORKFLOW = "workflow"
     MANUAL_QA = "manual_qa"
 
@@ -201,6 +203,7 @@ class ProjectStatus(str, Enum):
     ARCHIVED
         The project is archived and no further work is expected.
     """
+
     NOT_STARTED = "notStarted"
     IN_PROGRESS = "inProgress"
     PAUSED = "paused"
@@ -221,6 +224,7 @@ class ProjectCopyOptions(str, Enum):
     LABELS
         Copy labels associated with the project.
     """
+
     COLLABORATORS = "collaborators"
     DATASETS = "datasets"
     MODELS = "models"
@@ -241,6 +245,7 @@ class ReviewApprovalState(str, Enum):
     NOT_SELECTED_FOR_REVIEW
         Label was not selected for review.
     """
+
     APPROVED = "APPROVED"
     PENDING = "PENDING"
     REJECTED = "REJECTED"
@@ -258,6 +263,7 @@ class CopyDatasetAction(str, Enum):
         Clone data units into a new dataset and attach that dataset to
         the copied project.
     """
+
     ATTACH = "ATTACH"
     CLONE = "CLONE"
 
@@ -321,6 +327,7 @@ class ProjectWorkflowType(Enum):
         Benchmark QA workflow, where annotators are presented with
         benchmark or honeypot data.
     """
+
     MANUAL_QA = "manual"
     BENCHMARK_QA = "benchmark"
 
@@ -378,6 +385,7 @@ class CvatExportType(str, Enum):
     TASK
         Export annotations at the task level.
     """
+
     PROJECT = "project"
     TASK = "task"
 
@@ -391,6 +399,7 @@ class TaskPriorityParams(BaseDTO):
             identifies the task and ``priority`` is a floating-point
             priority value to assign.
     """
+
     priorities: List[Tuple[str, float]]
 
 
@@ -427,6 +436,7 @@ class ProjectDTO(BaseDTO):
         workflow:
             Workflow definition for the project, if available.
     """
+
     project_hash: UUID
     project_type: ProjectType
     status: ProjectStatus
@@ -470,6 +480,7 @@ class CvatImportDataItem(BaseDTO):
         title:
             Human-readable title to use for the imported data item.
     """
+
     data_path: str
     data_link: str
     title: str
@@ -490,6 +501,7 @@ class CvatImportStartPayload(BaseDTO):
         transform_bounding_boxes_to_polygons:
             If ``True``, convert CVAT bounding boxes to polygons on import.
     """
+
     annotations_base64: str
     dataset_uuid: UUID
     review_mode: CvatReviewMode
@@ -505,6 +517,7 @@ class CvatImportGetResultParams(BaseDTO):
             Maximum number of seconds to wait for the import to complete
             before returning the current status.
     """
+
     timeout_seconds: int
 
 
@@ -518,6 +531,7 @@ class CvatImportGetResultLongPollingStatus(str, Enum):
     PENDING
         The import is still in progress.
     """
+
     DONE = "DONE"
     ERROR = "ERROR"
     PENDING = "PENDING"
@@ -559,6 +573,7 @@ class SetProjectStatusPayload(BaseDTO):
         status:
             New status to set for the project.
     """
+
     status: ProjectStatus
 
 
@@ -570,6 +585,7 @@ class GetProjectUsersPayload(BaseDTO):
             Optional token for fetching the next page of users from a
             previous call.
     """
+
     page_token: Optional[str] = None
 
 

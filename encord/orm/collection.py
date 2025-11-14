@@ -25,6 +25,7 @@ class GetCollectionParams(BaseDTO):
         page_size:
             Maximum number of Collections to return in a single page.
     """
+
     top_level_folder_uuid: Optional[UUID] = Field(default=None, alias="topLevelFolderUuid")
     collection_uuids: Optional[List[UUID]] = Field(default=[], alias="uuids")
     page_token: Optional[str] = Field(default=None, alias="pageToken")
@@ -41,6 +42,7 @@ class CreateCollectionParams(BaseDTO):
             Collection. If omitted, the default folder for the user or
             Project context may be used.
     """
+
     top_level_folder_uuid: Optional[UUID] = Field(default=None, alias="topLevelFolderUuid")
 
 
@@ -55,6 +57,7 @@ class GetCollectionItemsParams(BaseDTO):
         page_size:
             Maximum number of items to return in a single page.
     """
+
     page_token: Optional[str] = Field(default=None, alias="pageToken")
     page_size: Optional[int] = Field(default=None, alias="pageSize")
 
@@ -70,6 +73,7 @@ class CreateCollectionPayload(BaseDTO):
             Optional free-text description of the Collection and its
             intended use.
     """
+
     name: str
     description: Optional[str] = ""
 
@@ -88,6 +92,7 @@ class UpdateCollectionPayload(BaseDTO):
             New description for the Collection. If omitted or ``None``,
             the description is not updated.
     """
+
     name: Optional[str] = None
     description: Optional[str] = None
 
@@ -96,7 +101,7 @@ class Collection(BaseDTO):
     """
     Represents a top-level Collection of items in Index.
 
-    Collections are logical groupings of storage items 
+    Collections are logical groupings of storage items
     that can be used for data curation and downstream
     workflows.
 
@@ -114,6 +119,7 @@ class Collection(BaseDTO):
         last_edited_at:
             Timestamp when the Collection was last modified.
     """
+
     uuid: uuid.UUID
     top_level_folder_uuid: UUID = Field(alias="topLevelFolderUuid")
     name: str
@@ -130,6 +136,7 @@ class GetCollectionsResponse(BaseDTO):
         results:
             List of Collections matching the query parameters.
     """
+
     results: List[Collection]
 
 
@@ -142,6 +149,7 @@ class CollectionBulkItemRequest(BaseDTO):
             UUIDs of items to include in the bulk operation. For example,
             to add or remove them from a Collection).
     """
+
     item_uuids: List[uuid.UUID]
 
 
@@ -153,6 +161,7 @@ class CollectionBulkItemResponse(BaseDTO):
         failed_items:
             UUIDs of items for which the bulk operation failed.
     """
+
     failed_items: List[uuid.UUID]
 
 
@@ -164,6 +173,7 @@ class CollectionBulkPresetRequest(BaseDTO):
         preset_uuid:
             UUID of the preset to apply to the Collection.
     """
+
     preset_uuid: uuid.UUID
 
 
@@ -176,6 +186,7 @@ class ProjectCollectionType(Enum):
     LABEL
         The Collection groups labels or annotations.
     """
+
     FRAME = "FRAME"
     LABEL = "LABEL"
 
@@ -195,6 +206,7 @@ class GetProjectCollectionParams(BaseDTO):
         page_size:
             Maximum number of project Collections to return in a single page.
     """
+
     project_hash: Optional[uuid.UUID] = Field(default=None, alias="projectHash")
     collection_uuids: Optional[List[uuid.UUID]] = Field(default=[], alias="uuids")
     page_token: Optional[str] = Field(default=None, alias="pageToken")
@@ -209,6 +221,7 @@ class CreateProjectCollectionParams(BaseDTO):
         project_hash:
             UUID of the Project in which to create the Collection.
     """
+
     project_hash: Optional[uuid.UUID] = Field(default=None, alias="projectHash")
 
 
@@ -223,6 +236,7 @@ class CreateProjectCollectionPayload(CreateCollectionPayload):
         collection_type:
             Type of the Project Collection (frame-based or label-based).
     """
+
     collection_type: ProjectCollectionType
 
 
@@ -250,6 +264,7 @@ class ProjectCollection(BaseDTO):
         collection_type:
             Type of the project Collection (frame-based or label-based).
     """
+
     collection_uuid: UUID
     name: str
     description: Optional[str]
@@ -267,6 +282,7 @@ class GetProjectCollectionsResponse(BaseDTO):
         results:
             List of Project Collections matching the query parameters.
     """
+
     results: List[ProjectCollection]
 
 
@@ -278,6 +294,7 @@ class ProjectDataCollectionInstance(BaseDTO):
         frame:
             Frame index within the data item that is part of the Collection.
     """
+
     frame: int
 
 
@@ -292,6 +309,7 @@ class ProjectLabelCollectionInstance(BaseDTO):
         annotation_id:
             Identifier of the annotation included in the Collection.
     """
+
     frame: int
     annotation_id: str
 
@@ -306,6 +324,7 @@ class ProjectDataCollectionItemResponse(BaseDTO):
         instances:
             List of frame instances that are part of the Collection.
     """
+
     label_row_metadata: LabelRowMetadataDTO
     instances: List[ProjectDataCollectionInstance]
 
@@ -320,6 +339,7 @@ class ProjectLabelCollectionItemResponse(BaseDTO):
         instances:
             List of label instances that are part of the Collection.
     """
+
     label_row_metadata: LabelRowMetadataDTO
     instances: List[ProjectLabelCollectionInstance]
 
@@ -334,6 +354,7 @@ class ProjectDataCollectionItemRequest(BaseDTO):
         frame:
             Frame index within the data item to include in the Collection.
     """
+
     data_uuid: Union[str, UUID]
     frame: int
 
@@ -351,6 +372,7 @@ class ProjectLabelCollectionItemRequest(BaseDTO):
         annotation_id:
             Identifier of the annotation to include in the Collection.
     """
+
     data_uuid: Union[str, UUID]
     frame: int
     annotation_id: str
@@ -365,6 +387,7 @@ class ProjectCollectionBulkItemRequest(BaseDTO):
             List of data or label Collection item requests to include in
             the bulk operation.
     """
+
     items: List[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]
 
 
@@ -377,4 +400,5 @@ class ProjectCollectionBulkItemResponse(BaseDTO):
             Items for which the bulk operation failed. Each entry contains
             the original request that could not be processed successfully.
     """
+
     failed_items: List[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]

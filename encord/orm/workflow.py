@@ -15,6 +15,7 @@ class WorkflowAction(str, Enum):
     COMPLETE
         Mark a task as completed at a given stage.
     """
+
     REOPEN = "reopen"
     COMPLETE = "complete"
 
@@ -39,6 +40,7 @@ class WorkflowStageType(str, Enum):
     AGENT
         Agent stage where tasks are handled by an automated agent.
     """
+
     ANNOTATION = "ANNOTATION"
     REVIEW = "REVIEW"
     USER_ROUTER = "USER_ROUTER"
@@ -66,6 +68,7 @@ class LabelWorkflowGraphNodePayload(BaseDTO):
             Workflow action to apply to the node (for example, reopen
             or complete).
     """
+
     action: WorkflowAction
 
 
@@ -80,6 +83,7 @@ class BaseWorkflowNode(BaseDTO):
         title:
             Human-readable title of the stage.
     """
+
     stage_type: WorkflowStageType
     uuid: UUID
     title: str
@@ -93,6 +97,7 @@ class WorkflowNode(BaseWorkflowNode):
     represented by :class:`WorkflowAgentNode` instead and are validated
     separately.
     """
+
     @dto_validator(mode="before")
     def check_stage_type_not_agent(cls, v: Any) -> Any:
         # Handle creation of Object from dictionary or from cls() call
@@ -114,6 +119,7 @@ class AgentNodePathway(BaseDTO):
             UUID of the destination workflow stage that this pathway
             leads to.
     """
+
     uuid: UUID
     title: str
     destination_uuid: UUID
@@ -126,6 +132,7 @@ class WorkflowAgentNode(BaseWorkflowNode):
     have multiple outgoing pathways defined by
     :class:`AgentNodePathway` objects.
     """
+
     @dto_validator(mode="before")
     def check_stage_type_agent(cls, v: Any) -> Any:
         # Handle creation of Object from dictionary or from cls() call
@@ -145,4 +152,5 @@ class WorkflowDTO(BaseDTO):
             List of workflow stages in the project workflow graph. This
             can include both standard workflow nodes and agent nodes.
     """
+
     stages: List[Union[WorkflowAgentNode, WorkflowNode]]
