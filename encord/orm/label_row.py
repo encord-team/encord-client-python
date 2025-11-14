@@ -194,18 +194,15 @@ class LabelRow(base_orm.BaseORM):
 class AnnotationTaskStatus(Enum):
     """Status of an annotation task in a project workflow.
 
-    QUEUED
-        The task has been created and is waiting to be assigned.
-    ASSIGNED
-        The task has been assigned to an annotator but work has not
+    **Values:**
+
+    - **QUEUED:** The task has been created and is waiting to be assigned.
+    - **ASSIGNED:** The task has been assigned to an annotator but work has not
         necessarily started yet.
-    IN_REVIEW
-        The task has been completed by the annotator and is currently
+    - **IN_REVIEW:** The task has been completed by the annotator and is currently
         in review.
-    RETURNED
-        The reviewer has returned the task to the annotator for changes.
-    COMPLETED
-        The task has been completed and no further action is
+    - **RETURNED:** The reviewer has returned the task to the annotator for changes.
+    - **COMPLETED:** The task has been completed and no further action is
         required.
     """
 
@@ -250,11 +247,9 @@ class LabelStatus(Enum):
 class WorkflowGraphNode:
     """Lightweight representation of a workflow graph node.
 
-    Attributes:
-        uuid:
-            UUID of the workflow stage as a string.
-        title:
-            Human-readable title of the workflow stage.
+    Args:
+        uuid: UUID of the workflow stage as a string.
+        title: Human-readable title of the workflow stage.
     """
 
     uuid: str
@@ -402,18 +397,13 @@ class LabelRowMetadata(Formatter):
 class LabelValidationState(BaseDTO):
     """Result of validating a label row.
 
-    Attributes:
-        label_hash:
-            Identifier of the label row that was validated.
-        branch_name:
-            Name of the branch on which the label row resides.
-        version:
-            Version number of the label row that was validated.
-        is_valid:
-            ``True`` if the label row is considered valid, otherwise
+    Args:
+        label_hash: Identifier of the label row that was validated.
+        branch_name: Name of the branch on which the label row resides.
+        version: Version number of the label row that was validated.
+        is_valid: ``True`` if the label row is considered valid, otherwise
             ``False``.
-        errors:
-            List of validation error messages, if any.
+        errors: List of validation error messages, if any.
     """
 
     label_hash: str
@@ -426,11 +416,9 @@ class LabelValidationState(BaseDTO):
 class WorkflowGraphNodeDTO(BaseDTO):
     """Data transfer object representing a workflow graph node.
 
-    Attributes:
-        uuid:
-            UUID of the workflow stage as a string.
-        title:
-            Human-readable title of the workflow stage.
+    Args:
+        uuid: UUID of the workflow stage as a string.
+        title: Human-readable title of the workflow stage.
     """
 
     uuid: str
@@ -502,15 +490,13 @@ def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRo
     but you prefer the richer, formatter-enabled
     :class:`LabelRowMetadata` representation in your application code.
 
-    Parameters
-    ----------
-    label_row_metadata_dto:
-        Metadata DTO returned from the API.
+    Args:
 
-    Returns
-    -------
-    LabelRowMetadata
-        Equivalent dataclass instance with the same fields populated.
+    label_row_metadata_dto: Metadata DTO returned from the API.
+
+    Returns:
+
+    LabelRowMetadata: Equivalent dataclass instance with the same fields populated.
     """
     return LabelRowMetadata(
         label_hash=label_row_metadata_dto.label_hash,

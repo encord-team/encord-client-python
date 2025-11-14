@@ -27,7 +27,7 @@ class Project(base_orm.BaseORM):
     * editor_ontology,
     * ontology_hash,
     * datasets::
-
+    ```
         [
            {
                 dataset_hash (uid),
@@ -37,8 +37,9 @@ class Project(base_orm.BaseORM):
            },
            ...
         ],
+    ```
     * label_rows::
-
+    ```
         [
             {
                 label_hash (uid),
@@ -51,6 +52,7 @@ class Project(base_orm.BaseORM):
             },
             ...
         ]
+    ```
     * annotation_task_status
 
     """
@@ -78,7 +80,7 @@ class Project(base_orm.BaseORM):
         a `None` value is appended. This can be useful for working with fetching additional label row data via
         :meth:`encord.project.Project.get_label_rows` for example.
 
-        .. code::
+        ```
 
                 project = client_instance.get_project(<project_hash>)
                 project_orm = project.get_project()
@@ -90,6 +92,7 @@ class Project(base_orm.BaseORM):
                         created_labels_list.append(label)
 
                 label_rows = project.get_label_rows(created_labels_list, get_signed_url=False)
+        ```
         """
         labels = self.label_rows() or []
         return [label.get("label_hash") for label in labels]
@@ -156,13 +159,10 @@ class ProjectUsers:
 class ProjectDataset(BaseDTO):
     """Minimal information about a dataset attached to a project.
 
-    Attributes:
-        dataset_hash:
-            UUID of the dataset attached to the project.
-        title:
-            Human-readable title of the dataset.
-        description:
-            Description of the dataset.
+    Args:
+        dataset_hash: UUID of the dataset attached to the project.
+        title: Human-readable title of the dataset.
+        description: Description of the dataset.
     """
 
     dataset_hash: UUID
@@ -177,10 +177,10 @@ class ProjectDataset(BaseDTO):
 class ProjectType(str, Enum):
     """Type of Project.
 
-    WORKFLOW
-        Standard workflow Project with stages such as ANNOTATE and REVIEW.
-    MANUAL_QA - DEPRECATED
-        Project configured for manual QA only.
+    **Values**:
+
+    - **WORKFLOW:** Standard workflow Project with stages such as ANNOTATE and REVIEW.
+    - **MANUAL_QA:** Project configured for manual QA only.
     """
 
     WORKFLOW = "workflow"
@@ -190,18 +190,14 @@ class ProjectType(str, Enum):
 class ProjectStatus(str, Enum):
     """Lifecycle status of a Project.
 
-    NOT_STARTED
-        The project has been created but no work has begun.
-    IN_PROGRESS
-        The project is active and annotation/review work is ongoing.
-    PAUSED
-        The project is temporarily paused.
-    COMPLETED
-        All work on the project has been completed.
-    CANCELLED
-        The project has been cancelled before completion.
-    ARCHIVED
-        The project is archived and no further work is expected.
+     **Values**:
+
+     - **NOT_STARTED:** The project has been created but no work has begun.
+     - **IN_PROGRESS:** The project is active and annotation/review work is ongoing.
+     - **PAUSED:** The project is temporarily paused.
+     - **COMPLETED:** All work on the project has been completed.
+     - **CANCELLED:** The project has been cancelled before completion.
+    - **ARCHIVED:** The project is archived and no further work is expected.
     """
 
     NOT_STARTED = "notStarted"
@@ -215,14 +211,12 @@ class ProjectStatus(str, Enum):
 class ProjectCopyOptions(str, Enum):
     """Options controlling what is copied when duplicating a project.
 
-    COLLABORATORS
-        Copy project collaborators to the new project.
-    DATASETS
-        Copy or attach datasets to the new project.
-    MODELS
-        Copy model configuration and attachments.
-    LABELS
-        Copy labels associated with the project.
+    **Values:**
+
+    - **COLLABORATORS:** Copy project collaborators to the new project.
+    - **DATASETS:** Copy or attach datasets to the new project.
+    - **MODELS:** Copy model configuration and attachments.
+    - **LABELS:** Copy labels associated with the project.
     """
 
     COLLABORATORS = "collaborators"
@@ -234,16 +228,13 @@ class ProjectCopyOptions(str, Enum):
 class ReviewApprovalState(str, Enum):
     """Approval state of a label in review.
 
-    APPROVED
-        Label has been reviewed and approved.
-    PENDING
-        Label is pending review or decision.
-    REJECTED
-        Label has been reviewed and rejected.
-    DELETED
-        Label has been removed.
-    NOT_SELECTED_FOR_REVIEW
-        Label was not selected for review.
+    **Values**:
+
+    - **APPROVED:** Label has been reviewed and approved.
+    - **PENDING:** Label is pending review or decision.
+    - **REJECTED:** Label has been reviewed and rejected.
+    - **DELETED:** Label has been removed.
+    - **NOT_SELECTED_FOR_REVIEW:** Label was not selected for review.
     """
 
     APPROVED = "APPROVED"
@@ -256,11 +247,11 @@ class ReviewApprovalState(str, Enum):
 class CopyDatasetAction(str, Enum):
     """Strategy for handling datasets when copying a project.
 
-    ATTACH
-        Attach the existing datasets from the original project to the
+    **Values**:
+
+    - **ATTACH:** Attach the existing datasets from the original project to the
         copied project.
-    CLONE
-        Clone data units into a new dataset and attach that dataset to
+    - **CLONE:** Clone data units into a new dataset and attach that dataset to
         the copied project.
     """
 
@@ -321,10 +312,10 @@ class CopyProjectPayload:
 class ProjectWorkflowType(Enum):
     """Workflow type for a project.
 
-    MANUAL_QA
-        Manual QA workflow, where reviews are performed explicitly.
-    BENCHMARK_QA
-        Benchmark QA workflow, where annotators are presented with
+    **Values**:
+
+    - **MANUAL_QA:** Manual QA workflow, where reviews are performed explicitly.
+    - **BENCHMARK_QA:** Benchmark QA workflow, where annotators are presented with
         benchmark or honeypot data.
     """
 
@@ -361,14 +352,13 @@ Currently one of:
 
 
 class ReviewMode(str, Enum):
-    """UNLABELLED:
-        The labels are added to the images. However, the one person must still go over
+    """**Values**:
+
+    - **UNLABELLED:** The labels are added to the images. However, the one person must still go over
             all of the labels before submitting them for review.
-    LABELLED:
-        The labels are added to the images and are marked as labelled. A reviewer will
+    - **LABELLED:** The labels are added to the images and are marked as labelled. A reviewer will
             still need to approve those.
-    REVIEWED:
-        The labels are added to the images and considered reviewed. No more action is
+    - **REVIEWED:** The labels are added to the images and considered reviewed. No more action is
             required from the labeler or reviewer.
     """
 
@@ -380,10 +370,10 @@ class ReviewMode(str, Enum):
 class CvatExportType(str, Enum):
     """Type of CVAT export to generate.
 
-    PROJECT
-        Export annotations at the project level.
-    TASK
-        Export annotations at the task level.
+    **Values**:
+
+    - **PROJECT:** Export annotations at the project level.
+    - **TASK:** Export annotations at the task level.
     """
 
     PROJECT = "project"
@@ -393,9 +383,8 @@ class CvatExportType(str, Enum):
 class TaskPriorityParams(BaseDTO):
     """Parameters for updating task priorities in bulk.
 
-    Attributes:
-        priorities:
-            List of ``(task_hash, priority)`` tuples where ``task_hash``
+    Args:
+        priorities: List of ``(task_hash, priority)`` tuples where ``task_hash``
             identifies the task and ``priority`` is a floating-point
             priority value to assign.
     """
@@ -406,35 +395,22 @@ class TaskPriorityParams(BaseDTO):
 class ProjectDTO(BaseDTO):
     """Data transfer object representing a project.
 
-    Attributes:
-        project_hash:
-            UUID of the project.
-        project_type:
-            Type of the project (workflow, manual QA, etc.).
-        status:
-            Current lifecycle status of the project.
-        title:
-            Human-readable title of the project.
-        description:
-            Description of the project.
-        created_at:
-            Timestamp when the project was created.
-        last_edited_at:
-            Timestamp when the project was last modified.
-        ontology_hash:
-            Identifier of the ontology associated with the project.
-        editor_ontology:
-            Full ontology definition used by the project editor.
-        user_role:
-            Role of the current user on this project, if known.
-        source_projects:
-            Optional list of project identifiers that this project was
+    Args:
+        project_hash: UUID of the project.
+        project_type: Type of the project (workflow, manual QA, etc.).
+        status: Current lifecycle status of the project.
+        title: Human-readable title of the project.
+        description: Description of the project.
+        created_at: Timestamp when the project was created.
+        last_edited_at: Timestamp when the project was last modified.
+        ontology_hash: Identifier of the ontology associated with the project.
+        editor_ontology: Full ontology definition used by the project editor.
+        user_role: Role of the current user on this project, if known.
+        source_projects: Optional list of project identifiers that this project was
             derived from (for example, benchmark sources).
-        workflow_manager_uuid:
-            UUID of the workflow manager associated with this project,
+        workflow_manager_uuid: UUID of the workflow manager associated with this project,
             if the project uses the workflow system.
-        workflow:
-            Workflow definition for the project, if available.
+        workflow: Workflow definition for the project, if available.
     """
 
     project_hash: UUID
@@ -453,14 +429,13 @@ class ProjectDTO(BaseDTO):
 
 
 class CvatReviewMode(CamelStrEnum):
-    """UNLABELLED:
-        The labels are added to the images. However, the one person must still go over
+    """**Values**:
+
+    - **UNLABELLED:** The labels are added to the images. However, the one person must still go over
             all the labels before submitting them for review.
-    LABELLED:
-        The labels are added to the images and are marked as labelled. A reviewer will
+    - **LABELLED:** The labels are added to the images and are marked as labelled. A reviewer will
             still need to approve those.
-    REVIEWED:
-        The labels are added to the images and considered reviewed. No more action is
+    - **REVIEWED:** The labels are added to the images and considered reviewed. No more action is
             required from the labeler or reviewer.
     """
 
@@ -472,13 +447,10 @@ class CvatReviewMode(CamelStrEnum):
 class CvatImportDataItem(BaseDTO):
     """Single data item entry in a CVAT import.
 
-    Attributes:
-        data_path:
-            Path to the data item in the original CVAT export.
-        data_link:
-            URL or storage link to the data item accessible by Encord.
-        title:
-            Human-readable title to use for the imported data item.
+    Args:
+        data_path: Path to the data item in the original CVAT export.
+        data_link: URL or storage link to the data item accessible by Encord.
+        title: Human-readable title to use for the imported data item.
     """
 
     data_path: str
@@ -489,17 +461,12 @@ class CvatImportDataItem(BaseDTO):
 class CvatImportStartPayload(BaseDTO):
     """Payload for starting a CVAT import operation.
 
-    Attributes:
-        annotations_base64:
-            Base64-encoded CVAT annotations file contents.
-        dataset_uuid:
-            UUID of the target dataset to import annotations into.
-        review_mode:
-            Review mode to apply to imported annotations.
-        data:
-            List of data items to be imported from the CVAT export.
-        transform_bounding_boxes_to_polygons:
-            If ``True``, convert CVAT bounding boxes to polygons on import.
+    Args:
+        annotations_base64: Base64-encoded CVAT annotations file contents.
+        dataset_uuid: UUID of the target dataset to import annotations into.
+        review_mode: Review mode to apply to imported annotations.
+        data: List of data items to be imported from the CVAT export.
+        transform_bounding_boxes_to_polygons: If ``True``, convert CVAT bounding boxes to polygons on import.
     """
 
     annotations_base64: str
@@ -512,9 +479,8 @@ class CvatImportStartPayload(BaseDTO):
 class CvatImportGetResultParams(BaseDTO):
     """Parameters for polling the result of a CVAT import operation.
 
-    Attributes:
-        timeout_seconds:
-            Maximum number of seconds to wait for the import to complete
+    Args:
+        timeout_seconds: Maximum number of seconds to wait for the import to complete
             before returning the current status.
     """
 
@@ -524,12 +490,11 @@ class CvatImportGetResultParams(BaseDTO):
 class CvatImportGetResultLongPollingStatus(str, Enum):
     """Status of a long-polling request for a CVAT import operation.
 
-    DONE
-        The import has completed successfully.
-    ERROR
-        The import has failed. See the issues field in the response.
-    PENDING
-        The import is still in progress.
+    **Values**:
+
+    - **DONE:** The import has completed successfully.
+    - **ERROR:** The import has failed. See the issues field in the response.
+    - **PENDING:** The import is still in progress.
     """
 
     DONE = "DONE"
@@ -540,7 +505,7 @@ class CvatImportGetResultLongPollingStatus(str, Enum):
 class CvatImportGetResultResponse(BaseDTO):
     """Response model for CVAT import operation status.
 
-    Attributes:
+    Args:
         status (CvatImportGetResultLongPollingStatus): Import status ("DONE", "ERROR", "PENDING")
         project_uuid (Optional[UUID]): Created project ID. Only present when status="DONE"
         issues (Optional[Dict]): Import issues. Present for "DONE" (warnings) or "ERROR" (failures)
@@ -569,9 +534,8 @@ class ProjectFilterParams(BaseDTO):
 class SetProjectStatusPayload(BaseDTO):
     """Payload for updating the status of a project.
 
-    Attributes:
-        status:
-            New status to set for the project.
+    Args:
+        status:New status to set for the project.
     """
 
     status: ProjectStatus
@@ -580,9 +544,8 @@ class SetProjectStatusPayload(BaseDTO):
 class GetProjectUsersPayload(BaseDTO):
     """Parameters for listing users on a project.
 
-    Attributes:
-        page_token:
-            Optional token for fetching the next page of users from a
+    Args:
+        page_token: Optional token for fetching the next page of users from a
             previous call.
     """
 

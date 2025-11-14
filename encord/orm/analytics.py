@@ -18,10 +18,10 @@ class CamelStrEnum(str, Enum):
 class CollaboratorTimersGroupBy(CamelStrEnum):
     """Grouping mode for collaborator time tracking analytics.
 
-    DATA_UNIT
-        Group time spent per individual data unit.
-    PROJECT
-        Group time spent at the project level.
+    **Values**:
+
+    - **DATA_UNIT:** Group time spent per individual data unit.
+    - **PROJECT:** Group time spent at the project level.
     """
 
     DATA_UNIT = auto()
@@ -31,21 +31,13 @@ class CollaboratorTimersGroupBy(CamelStrEnum):
 class CollaboratorTimerParams(BaseDTO):
     """Parameters for fetching collaborator timer analytics.
 
-    Attributes:
-        project_hash:
-            Identifier of the project to query.
-        after:
-            Start of the time window (inclusive).
-        before:
-            Optional end of the time window (exclusive). If omitted, the
-            server will typically use the current time.
-        group_by:
-            How to group results, for example by data unit or by project.
-        page_size:
-            Maximum number of records to return in a single page.
-        page_token:
-            Pagination token returned from a previous response, used to
-            fetch the next page of results.
+    Args:
+        project_hash: Identifier of the project to query.
+        after: Start of the time window (inclusive).
+        before: Optional end of the time window (exclusive). If omitted, the server will typically use the current time.
+        group_by: How to group results, for example by data unit or by project.
+        page_size: Maximum number of records to return in a single page.
+        page_token: Pagination token returned from a previous response, used to fetch the next page of results.
     """
 
     project_hash: str
@@ -59,16 +51,11 @@ class CollaboratorTimerParams(BaseDTO):
 class CollaboratorTimer(BaseDTO):
     """Time spent by a single collaborator within the requested window.
 
-    Attributes:
-        user_email:
-            Email address of the collaborator.
-        user_role:
-            Role of the user in the project (for example, annotator or reviewer).
-        data_title:
-            Optional title of the data item this timer row refers to.
-            May be ``None`` when grouped at the project level.
-        time_seconds:
-            Total time spent (in seconds) matching the query filters.
+    Args:
+        user_email: Email address of the collaborator.
+        user_role: Role of the user in the project (for example, annotator or reviewer).
+        data_title: Optional title of the data item this timer row refers to. May be ``None`` when grouped at the project level.
+        time_seconds: Total time spent (in seconds) matching the query filters.
     """
 
     user_email: str
@@ -80,7 +67,7 @@ class CollaboratorTimer(BaseDTO):
 class TimeSpentParams(BaseDTO):
     """Filter parameters for fetching aggregated time spent analytics.
 
-    Attributes:
+    Args:
         project_uuid: Unique identifier of the project to query.
         after: Start of the time window (inclusive).
         before: Optional end of the time window (exclusive). If omitted, uses current time.
@@ -106,7 +93,7 @@ class TimeSpentParams(BaseDTO):
 class TimeSpent(BaseDTO):
     """Aggregated time spent for a user or stage within a time bucket.
 
-    Attributes:
+    Args:
         period_start_time: Beginning of the aggregation period.
         period_end_time: End of the aggregation period.
         time_spent_seconds: Total time spent (in seconds) in this period.

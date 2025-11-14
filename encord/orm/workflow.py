@@ -10,10 +10,10 @@ from encord.orm.base_dto import BaseDTO, dto_validator
 class WorkflowAction(str, Enum):
     """Actions that can be applied to a workflow stage for a task.
 
-    REOPEN
-        Reopen a task at a given stage.
-    COMPLETE
-        Mark a task as completed at a given stage.
+    **Values**:
+
+    **REOPEN:** Reopen a task at a given stage.
+    **COMPLETE:** Mark a task as completed at a given stage.
     """
 
     REOPEN = "reopen"
@@ -23,22 +23,16 @@ class WorkflowAction(str, Enum):
 class WorkflowStageType(str, Enum):
     """Type of a workflow stage in a project workflow.
 
-    ANNOTATION
-        Annotation stage where labelers create or edit labels.
-    REVIEW
-        Review stage where labels are reviewed and approved/rejected.
-    USER_ROUTER
-        Router stage that routes tasks based on user assignment rules.
-    PERCENTAGE_ROUTER
-        Router stage that routes tasks based on percentage splits.
-    CONSENSUS_ANNOTATION
-        Annotation stage with consensus logic applied across annotators.
-    CONSENSUS_REVIEW
-        Review stage with consensus logic applied across reviewers.
-    DONE
-        Terminal stage indicating that workflow processing is complete.
-    AGENT
-        Agent stage where tasks are handled by an automated agent.
+    **Values**:
+
+    **ANNOTATION:** Annotation stage where labelers create or edit labels.
+    **REVIEW:** Review stage where labels are reviewed and approved/rejected.
+    **USER_ROUTER:** Router stage that routes tasks based on user assignment rules.
+    **PERCENTAGE_ROUTER:** Router stage that routes tasks based on percentage splits.
+    **CONSENSUS_ANNOTATION:** Annotation stage with consensus logic applied across annotators.
+    **CONSENSUS_REVIEW:** Review stage with consensus logic applied across reviewers.
+    **DONE:** Terminal stage indicating that workflow processing is complete.
+    **AGENT:** Agent stage where tasks are handled by an automated agent.
     """
 
     ANNOTATION = "ANNOTATION"
@@ -63,10 +57,8 @@ class LabelWorkflowGraphNode:
 class LabelWorkflowGraphNodePayload(BaseDTO):
     """Payload describing an action to perform on a label workflow node.
 
-    Attributes:
-        action:
-            Workflow action to apply to the node (for example, reopen
-            or complete).
+    Args:
+        action: Workflow action to apply to the node (for example, reopen or complete).
     """
 
     action: WorkflowAction
@@ -75,13 +67,10 @@ class LabelWorkflowGraphNodePayload(BaseDTO):
 class BaseWorkflowNode(BaseDTO):
     """Base class for workflow nodes in a project workflow graph.
 
-    Attributes:
-        stage_type:
-            Type of the workflow stage (annotation, review, router, etc.).
-        uuid:
-            UUID of the workflow stage.
-        title:
-            Human-readable title of the stage.
+    Args:
+        stage_type: Type of the workflow stage (annotation, review, router, etc.).
+        uuid: UUID of the workflow stage.
+        title: Human-readable title of the stage.
     """
 
     stage_type: WorkflowStageType
@@ -110,14 +99,10 @@ class WorkflowNode(BaseWorkflowNode):
 class AgentNodePathway(BaseDTO):
     """Outgoing pathway from an agent workflow node.
 
-    Attributes:
-        uuid:
-            UUID of the pathway itself.
-        title:
-            Human-readable title or label for the pathway.
-        destination_uuid:
-            UUID of the destination workflow stage that this pathway
-            leads to.
+    Args:
+        uuid: UUID of the pathway itself.
+        title:  Human-readable title or label for the pathway.
+        destination_uuid: UUID of the destination workflow stage that this pathway leads to.
     """
 
     uuid: UUID
@@ -147,10 +132,9 @@ class WorkflowAgentNode(BaseWorkflowNode):
 class WorkflowDTO(BaseDTO):
     """Full workflow definition for a project.
 
-    Attributes:
-        stages:
-            List of workflow stages in the project workflow graph. This
-            can include both standard workflow nodes and agent nodes.
+    Args:
+        stages: List of workflow stages in the project workflow graph.
+        This can include both standard workflow nodes and agent nodes.
     """
 
     stages: List[Union[WorkflowAgentNode, WorkflowNode]]

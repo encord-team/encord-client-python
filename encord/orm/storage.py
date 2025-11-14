@@ -20,30 +20,20 @@ class StorageItemType(CamelStrEnum):
     """
     Type of item stored in Encord storage.
 
-    VIDEO
-        A video file.
-    IMAGE
-        A single image.
-    GROUP
-        A generic grouped item.
-    IMAGE_GROUP
-        A group of images treated as a single item.
-    IMAGE_SEQUENCE
-        An image sequence backed by a video or ordered frames.
-    DICOM_FILE
-        A single DICOM file.
-    DICOM_SERIES
-        A DICOM series composed of multiple DICOM files.
-    AUDIO
-        An audio file.
-    NIFTI
-        A NIFTI volume.
-    PLAIN_TEXT
-        A text file (for example TXT, HTML, JSON).
-    PDF
-        A PDF document.
-    SCENE
-        A scene (for example, a composition of multiple assets like videos and point cloud data files).
+    **Values:**
+
+    - **VIDEO:** A video file.
+    - **IMAGE:** A single image.
+    - **GROUP:** A generic grouped item.
+    - **IMAGE_GROUP:** A group of images treated as a single item.
+    - **IMAGE_SEQUENCE:** An image sequence backed by a video or ordered frames.
+    - **DICOM_FILE:** A single DICOM file.
+    - **DICOM_SERIES:** A DICOM series composed of multiple DICOM files.
+    - **AUDIO:** An audio file.
+    - NIFTI:** A NIFTI volume.
+    - **PLAIN_TEXT:** A text file (for example TXT, HTML, JSON).
+    - **PDF:** A PDF document.
+    - **SCENE:** A scene. For example, a single point cloud data file or a composition of multiple assets like videos and point cloud data files.
     """
 
     VIDEO = auto()
@@ -63,10 +53,10 @@ class StorageItemType(CamelStrEnum):
 class StorageUserRole(CamelStrEnum):
     """Role of a user in the context of a storage folder or item.
 
-    USER
-        Standard user with access to the item.
-    ADMIN
-        User with administrative privileges on the item.
+    **Values:**
+
+    - **USER:** Standard user with access to the item.
+    - **ADMIN:** User with administrative privileges on the item.
     """
 
     USER = auto()
@@ -76,20 +66,15 @@ class StorageUserRole(CamelStrEnum):
 class StorageLocationName(CamelStrEnum):
     """Storage backends supported by Encord.
 
-    ENCORD
-        Encord-managed storage.
-    GCP
-        Google Cloud Storage.
-    S3
-        Amazon S3.
-    AZURE
-        Azure Blob Storage.
-    OPEN_TELEKOM
-        Open Telekom Cloud (legacy alias, superseded by S3_COMPATIBLE).
-    DIRECT_ACCESS
-        Direct-access storage.
-    S3_COMPATIBLE
-        Generic S3-compatible storage backend.
+    **Values:**
+
+    - **ENCORD:** Encord-managed storage.
+    - **GCP:** Google Cloud Storage.
+    - **S3:** Amazon S3.
+    - **AZURE:** Azure Blob Storage.
+    - **OPEN_TELEKOM:** Open Telekom Cloud (legacy alias, superseded by S3_COMPATIBLE).
+    - **DIRECT_ACCESS:** Direct-access storage.
+    - **S3_COMPATIBLE:** Generic S3-compatible storage backend.
     """
 
     ENCORD = auto()
@@ -104,15 +89,11 @@ class StorageLocationName(CamelStrEnum):
 class PathElement(BaseDTO):
     """Single step in the path from a storage folder to the root.
 
-    Attributes:
-        uuid:
-            UUID of this path element (folder).
-        parent_uuid:
-            UUID of the parent path element, if any.
-        name:
-            Name of the folder.
-        synced_dataset_hash:
-            UUID of the dataset that is synced with this folder, if any.
+    Args:
+        uuid: UUID of this path element (folder).
+        parent_uuid: UUID of the parent path element, if any.
+        name: Name of the folder.
+        synced_dataset_hash: UUID of the dataset that is synced with this folder, if any.
     """
 
     uuid: UUID
@@ -124,29 +105,18 @@ class PathElement(BaseDTO):
 class StorageFolder(BaseDTO):
     """Folder in Encord storage.
 
-    Attributes:
-        uuid:
-            UUID of the folder.
-        parent:
-            UUID of the parent folder, if any.
-        name:
-            Name of the folder.
-        description:
-            Optional description of the folder.
-        client_metadata:
-            Optional client-defined metadata associated with the folder.
-        owner:
-            Email or identifier of the folder owner.
-        created_at:
-            Timestamp when the folder was created.
-        last_edited_at:
-            Timestamp when the folder was last modified.
-        user_role:
-            Role of the current user in this folder.
-        synced_dataset_hash:
-            UUID of the dataset synced with this folder, if any.
-        path_to_root:
-            Path from this folder to the root, represented as a list
+    Args:
+        uuid:  UUID of the folder.
+        parent: UUID of the parent folder, if any.
+        name: Name of the folder.
+        description: Optional description of the folder.
+        client_metadata: Optional custom metadata associated with the folder.
+        owner: Email or identifier of the folder owner.
+        created_at: Timestamp when the folder was created.
+        last_edited_at: Timestamp when the folder was last modified.
+        user_role: Role of the current user in this folder.
+        synced_dataset_hash: UUID of the dataset synced with this folder, if any.
+        path_to_root: Path from this folder to the root, represented as a list
             of :class:`PathElement` instances.
     """
 
@@ -166,68 +136,38 @@ class StorageFolder(BaseDTO):
 class StorageItem(BaseDTO):
     """Item in Encord storage (file, group, DICOM series, etc.).
 
-    Attributes:
-        uuid:
-            UUID of the storage item.
-        parent:
-            UUID of the parent folder containing this item.
-        item_type:
-            Type of the storage item (video, image, group, etc.).
-        name:
-            Name of the item.
-        description:
-            Optional description of the item.
-        client_metadata:
-            Optional client-defined metadata associated with the item.
-        owner:
-            Email or identifier of the item owner.
-        created_at:
-            Timestamp when the item was created.
-        last_edited_at:
-            Timestamp when the item was last modified.
-        is_tombstone:
-            This item has been deleted but the link is retained for consistency reasons.
-    Mostly for items in the 'cloud linked folders' that are referenced but aren't present after a re-sync.
-        is_placeholder:
-            This item has been added to the folder but isn't fully processed yet.
-        backed_data_units_count:
-            Number of data units backed by this storage item.
-        storage_location:
-            Storage backend where the item resides.
-        integration_hash:
-            UUID of the integration used for this item, if any.
-        url:
-            Raw URL of the storage object, if available.
-        signed_url:
-            Signed URL for temporary access to the storage object.
-        file_size:
-            Size of the file in bytes, if known.
-        mime_type:
-            MIME type of the file, if known.
-        duration:
-            Duration in seconds (for temporal media), if known.
-        fps:
-            Frame rate value (for video), if known.
-        height:
-            Height in pixels (for image/video), if known.
-        width:
-            Width in pixels (for image/video), if known.
-        dicom_instance_uid:
-            DICOM instance UID, if applicable.
-        dicom_study_uid:
-            DICOM study UID, if applicable.
-        dicom_series_uid:
-            DICOM series UID, if applicable.
-        frame_count:
-            Number of frames for multi-frame media, if known.
-        audio_sample_rate:
-            Sample rate of the audio track in Hz, if known.
-        audio_bit_depth:
-            Bit depth of the audio track, if known.
-        audio_codec:
-            Codec name of the audio track, if known.
-        audio_num_channels:
-            Number of audio channels, if known.
+    Args:
+        uuid: UUID of the storage item.
+        parent:  UUID of the parent folder containing this item.
+        item_type: Type of the storage item (video, image, group, etc.).
+        name: Name of the item.
+        description: Optional description of the item.
+        client_metadata: Optional custom metadata associated with the item.
+        owner: Email or identifier of the item owner.
+        created_at: Timestamp when the item was created.
+        last_edited_at: Timestamp when the item was last modified.
+        is_tombstone: This item has been deleted but the link is retained for consistency reasons.
+        Mostly for items in the 'cloud linked folders' that are referenced but aren't present after a re-sync.
+        is_placeholder: This item has been added to the folder but isn't fully processed yet.
+        backed_data_units_count:  Number of data units backed by this storage item.
+        storage_location: Storage backend where the item resides.
+        integration_hash: UUID of the integration used for this item, if any.
+        url: Raw URL of the storage object, if available.
+        signed_url:  Signed URL for temporary access to the storage object.
+        file_size:  Size of the file in bytes, if known.
+        mime_type: MIME type of the file, if known.
+        duration:  Duration in seconds (for temporal media), if known.
+        fps:  Frame rate value (for video), if known.
+        height: Height in pixels (for image/video), if known.
+        width: Width in pixels (for image/video), if known.
+        dicom_instance_uid:  DICOM instance UID, if applicable.
+        dicom_study_uid: DICOM study UID, if applicable.
+        dicom_series_uid: DICOM series UID, if applicable.
+        frame_count: Number of frames for multi-frame media, if known.
+        audio_sample_rate: Sample rate of the audio track in Hz, if known.
+        audio_bit_depth: Bit depth of the audio track, if known.
+        audio_codec: Codec name of the audio track, if known.
+        audio_num_channels: Number of audio channels, if known.
     """
 
     uuid: UUID
@@ -265,7 +205,7 @@ class StorageItem(BaseDTO):
 class StorageItemInaccessible(BaseDTO):
     """Stub object used when a storage item is inaccessible.
 
-    Attributes:
+    Args:
         uuid:
             UUID of the item that cannot be accessed.
     """
@@ -310,17 +250,12 @@ class CloudSyncedFolderParams(BaseDTO):
 class CreateStorageFolderPayload(BaseDTO):
     """Payload for creating a storage folder.
 
-    Attributes:
-        name:
-            Name of the new folder.
-        description:
-            Optional description of the folder.
-        parent:
-            UUID of the parent folder under which to create this folder.
-        client_metadata:
-            Optional custom metadata associated with the folder.
-        cloud_synced_folder_params:
-            Optional configuration for creating a cloud-synced folder
+    Args:
+        name: Name of the new folder.
+        description: Optional description of the folder.
+        parent:  UUID of the parent folder under which to create this folder.
+        client_metadata: Optional custom metadata associated with the folder.
+        cloud_synced_folder_params: Optional configuration for creating a cloud-synced folder
             that is linked to an external storage location.
     """
 
@@ -334,9 +269,8 @@ class CreateStorageFolderPayload(BaseDTO):
 class LayoutPayload(BaseDTO):
     """Layout configuration for a group or view.
 
-    Attributes:
-        layout:
-            Layout specification. Can be a built-in layout identifier
+    Args:
+        layout: Layout specification. Can be a built-in layout identifier
             (``"default-grid"`` or ``"default-list"``) or a custom
             layout dictionary.
     """
@@ -347,13 +281,10 @@ class LayoutPayload(BaseDTO):
 class DataGroupGrid(BaseDTO):
     """Grid-based layout for a data group.
 
-    Attributes:
-        layout_type:
-            Fixed value ``"default-grid"`` identifying grid layout.
-        layout_contents:
-            Ordered list of item UUIDs to display in the grid.
-        name:
-            Optional name of the data group.
+    Args:
+        layout_type: Fixed value ``"default-grid"`` identifying grid layout.
+        layout_contents:  Ordered list of item UUIDs to display in the grid.
+        name: Optional name of the data group.
     """
 
     layout_type: Literal["default-grid"] = "default-grid"
@@ -364,13 +295,10 @@ class DataGroupGrid(BaseDTO):
 class DataGroupList(BaseDTO):
     """Carousel layout for a data group.
 
-    Attributes:
-        layout_type:
-            Fixed value ``"default-list"`` identifying list layout.
-        layout_contents:
-            Ordered list of item UUIDs to display in the list.
-        name:
-            Optional name of the data group.
+    Args:
+        layout_type:   Fixed value ``"default-list"`` identifying list layout.
+        layout_contents:  Ordered list of item UUIDs to display in the list.
+        name:  Optional name of the data group.
     """
 
     layout_type: Literal["default-list"] = "default-list"
@@ -381,17 +309,12 @@ class DataGroupList(BaseDTO):
 class DataGroupCustom(BaseDTO):
     """Custom layout for a data group.
 
-    Attributes:
-        layout_type:
-            Fixed value ``"custom"`` identifying custom layout.
-        name:
-            Optional name of the data group.
-        layout_contents:
-            Mapping from arbitrary keys to item UUIDs.
-        layout:
-            Arbitrary layout configuration structure.
-        settings:
-            Optional extra settings for the layout.
+    Args:
+        layout_type: Fixed value ``"custom"`` identifying custom layout.
+        name: Optional name of the data group.
+        layout_contents: Mapping from arbitrary keys to item UUIDs.
+        layout: Arbitrary layout configuration structure.
+        settings: Optional extra settings for the layout.
     """
 
     layout_type: Literal["custom"] = "custom"
@@ -407,11 +330,9 @@ DataGroupInput = Union[DataGroupGrid, DataGroupList, DataGroupCustom]
 class CreateDataGroupPayload(BaseDTO):
     """Payload for creating a data group in a folder.
 
-    Attributes:
-        item_type:
-            Item type of the group. Must be ``"GROUP"``.
-        params:
-            Layout and configuration for the data group.
+    Args:
+        item_type: Item type of the group. Must be ``"GROUP"``.
+        params: Layout and configuration for the data group.
     """
 
     item_type: Literal["GROUP"] = "GROUP"
@@ -421,13 +342,10 @@ class CreateDataGroupPayload(BaseDTO):
 class UploadSignedUrlsPayload(BaseDTO):
     """Request payload for generating signed URLs for uploads.
 
-    Attributes:
-        item_type:
-            Type of storage item that will be uploaded.
-        count:
-            Number of signed URLs to generate.
-        frames_subfolder_name:
-            Optional subfolder name to use for frame-based uploads.
+    Args:
+        item_type: Type of storage item that will be uploaded.
+        count: Number of signed URLs to generate.
+        frames_subfolder_name: Optional subfolder name to use for frame-based uploads.
     """
 
     item_type: StorageItemType
@@ -438,13 +356,10 @@ class UploadSignedUrlsPayload(BaseDTO):
 class UploadSignedUrl(BaseDTO):
     """Single signed URL returned for an upload.
 
-    Attributes:
-        item_uuid:
-            UUID of the placeholder storage item to be filled.
-        object_key:
-            Object key or path in the underlying storage backend.
-        signed_url:
-            Signed URL that can be used to upload the content.
+    Args:
+        item_uuid: UUID of the placeholder storage item to be filled.
+        object_key: Object key or path in the underlying storage backend.
+        signed_url: Signed URL that can be used to upload the content.
     """
 
     item_uuid: UUID
@@ -455,11 +370,9 @@ class UploadSignedUrl(BaseDTO):
 class StorageItemWithName(BaseDTO):
     """Storage item reference with a resolved name.
 
-    Attributes:
-        item_uuid:
-            UUID of the storage item.
-        name:
-            Display name of the item.
+    Args:
+        item_uuid: UUID of the storage item.
+        name: Display name of the item.
     """
 
     item_uuid: UUID
@@ -743,19 +656,13 @@ class DataUploadDicomSeries(BaseDTO):
 class DataUploadText(BaseDTO):
     """Data about a text file to be registered with Encord service.
 
-    Attributes:
-        object_url:
-            URL of the text (TXT, HTML, etc.) file to be registered.
-        title:
-            Title of the file (derived from the URL if omitted).
-        client_metadata:
-            Custom metadata to be associated with the file.
-        external_file_type:
-            Type of the external file, always ``"PLAIN_TEXT"``.
-        text_metadata:
-            Optional media metadata of the text file. See :class:`CustomerProvidedTextMetadata` for more details.
-        placeholder_item_uuid:
-            For system use only.
+    Args:
+        object_url: URL of the text (TXT, HTML, etc.) file to be registered.
+        title: Title of the file (derived from the URL if omitted).
+        client_metadata: Custom metadata to be associated with the file.
+        external_file_type: Type of the external file, always ``"PLAIN_TEXT"``.
+        text_metadata: Optional media metadata of the text file. See :class:`CustomerProvidedTextMetadata` for more details.
+        placeholder_item_uuid: For system use only.
     """
 
     object_url: str
@@ -769,19 +676,13 @@ class DataUploadText(BaseDTO):
 class DataUploadPDF(BaseDTO):
     """Data about a PDF file to be registered with Encord service.
 
-    Attributes:
-        object_url:
-            URL of the PDF file to be registered.
-        title:
-            Title of the PDF file (derived from the URL if omitted).
-        client_metadata:
-            Custom metadata to be associated with the file.
-        pdf_metadata:
-            Optional media metadata of the PDF file. See :class:`CustomerProvidedPdfMetadata` for more information.
-        external_file_type:
-            Type of the external file, always ``"PDF"``.
-        placeholder_item_uuid:
-            For system use only.
+    Args:
+        object_url: URL of the PDF file to be registered.
+        title: Title of the PDF file (derived from the URL if omitted).
+        client_metadata: Custom metadata to be associated with the file.
+        pdf_metadata: Optional media metadata of the PDF file. See :class:`CustomerProvidedPdfMetadata` for more information.
+        external_file_type: Type of the external file, always ``"PDF"``.
+        placeholder_item_uuid: For system use only.
     """
 
     object_url: str
@@ -795,19 +696,13 @@ class DataUploadPDF(BaseDTO):
 class DataUploadAudio(BaseDTO):
     """Data about an audio item to be registered with Encord service.
 
-    Attributes:
-        object_url:
-            URL of the audio file to be registered.
-        title:
-            Title of the audio item (derived from the URL if omitted).
-        client_metadata:
-            Custom metadata to be associated with the audio item.
-        audio_metadata:
-            Optional media metadata of the audio file (if provided). See :class:`CustomerProvidedAudioMetadata` for more details.
-        external_file_type:
-            Type of the external file, always ``"AUDIO"``.
-        placeholder_item_uuid:
-            For system use only.
+    Args:
+        object_url: URL of the audio file to be registered.
+        title: Title of the audio item (derived from the URL if omitted).
+        client_metadata: Custom metadata to be associated with the audio item.
+        audio_metadata: Optional media metadata of the audio file (if provided). See :class:`CustomerProvidedAudioMetadata` for more details.
+        external_file_type: Type of the external file, always ``"AUDIO"``.
+        placeholder_item_uuid: For system use only.
     """
 
     object_url: str
@@ -864,21 +759,15 @@ class DataUploadItems(BaseDTO):
 class DatasetDataLongPollingParams(BaseDTO):
     """Parameters for long-polling dataset data upload or import.
 
-    Attributes:
-        data_items:
-            Structured items to be uploaded as part of the job.
-        files:
-            Optional mapping of filenames to file contents (for file-based
+    Args:
+        data_items: Structured items to be uploaded as part of the job.
+        files: Optional mapping of filenames to file contents (for file-based
             imports such as JSON manifests).
-        integration_id:
-            UUID of the integration used to access external storage.
-        ignore_errors:
-            If ``True``, continue processing other items even if some
+        integration_id: UUID of the integration used to access external storage.
+        ignore_errors: If ``True``, continue processing other items even if some
             fail.
-        folder_uuid:
-            UUID of the storage folder where data should be registered.
-        file_name:
-            Optional name of the manifest file associated with the job.
+        folder_uuid: UUID of the storage folder where data should be registered.
+        file_name: Optional name of the manifest file associated with the job.
     """
 
     data_items: Optional[DataUploadItems]
@@ -892,18 +781,13 @@ class DatasetDataLongPollingParams(BaseDTO):
 class PostUploadJobParams(BaseDTO):
     """Parameters for starting an upload job.
 
-    Attributes:
-        data_items:
-            Structured items to be uploaded as part of the job.
-        external_files:
-            Mapping of filenames to file contents for file-based imports.
-        integration_hash:
-            UUID of the integration used to access external storage.
-        ignore_errors:
-            If ``True``, continue processing other items even if some
+    Args:
+        data_items: Structured items to be uploaded as part of the job.
+        external_files: Mapping of filenames to file contents for file-based imports.
+        integration_hash: UUID of the integration used to access external storage.
+        ignore_errors: If ``True``, continue processing other items even if some
             fail.
-        file_name:
-            Optional name of the manifest file associated with the job.
+        file_name: Optional name of the manifest file associated with the job.
     """
 
     data_items: Optional[DataUploadItems] = None
@@ -916,9 +800,8 @@ class PostUploadJobParams(BaseDTO):
 class GetUploadJobParams(BaseDTO):
     """Parameters for polling the status of an upload job.
 
-    Attributes:
-        timeout_seconds:
-            Maximum number of seconds to wait before returning the
+    Args:
+        timeout_seconds: Maximum number of seconds to wait before returning the
             current job status.
     """
 
@@ -928,10 +811,10 @@ class GetUploadJobParams(BaseDTO):
 class FoldersSortBy(CamelStrEnum):
     """Sorting options for listing items or folders.
 
-    NAME
-        Sort by name.
-    CREATED_AT
-        Sort by creation time.
+    **Values:**
+
+     - **NAME:** Sort by name.
+     - **CREATED_AT:** Sort by creation time.
     """
 
     NAME = auto()
@@ -941,28 +824,18 @@ class FoldersSortBy(CamelStrEnum):
 class ListItemsParams(BaseDTO):
     """Parameters for listing storage items in a folder.
 
-    Attributes:
-        search:
-            Optional free-text search string to filter items.
-        is_recursive:
-            If ``True``, include items in nested subfolders.
-        is_in_dataset:
-            If set, filter items that are (or are not) linked to datasets.
-        item_types:
-            List of item types to include in the response.
-        include_org_access:
-            If ``True``, include items accessible via organisation-level
+    Args:
+        search: Optional free-text search string to filter items.
+        is_recursive: If ``True``, include items in nested subfolders.
+        is_in_dataset: If set, filter items that are (or are not) linked to datasets.
+        item_types: List of item types to include in the response.
+        include_org_access: If ``True``, include items accessible via organisation-level
             access.
-        order:
-            Sort order for the results.
-        desc:
-            If ``True``, sort in descending order.
-        page_token:
-            Token for fetching the next page of results.
-        page_size:
-            Maximum number of items to return.
-        sign_urls:
-            If ``True``, include signed URLs for the items in the
+        order: Sort order for the results.
+        desc: If ``True``, sort in descending order.
+        page_token: Token for fetching the next page of results.
+        page_size: Maximum number of items to return.
+        sign_urls: If ``True``, include signed URLs for the items in the
             response.
     """
 
@@ -981,25 +854,17 @@ class ListItemsParams(BaseDTO):
 class ListFoldersParams(BaseDTO):
     """Parameters for listing folders in Encord storage.
 
-    Attributes:
-        search:
-            Optional free-text search string to filter folders.
-        is_recursive:
-            If ``True``, include nested subfolders in the listing.
-        dataset_synced:
-            If set, filter folders that are (or are not) synced with a
+    Args:
+        search: Optional free-text search string to filter folders.
+        is_recursive: If ``True``, include nested subfolders in the listing.
+        dataset_synced: If set, filter folders that are (or are not) synced with a
             dataset.
-        include_org_access:
-            If ``True``, include folders accessible via organisation-level
+        include_org_access: If ``True``, include folders accessible via organisation-level
             access.
-        order:
-            Field to sort folders by.
-        desc:
-            If ``True``, sort in descending order.
-        page_token:
-            Token for fetching the next page of results.
-        page_size:
-            Maximum number of folders to return (defaults to 100).
+        order: Field to sort folders by.
+        desc: If ``True``, sort in descending order.
+        page_token: Token for fetching the next page of results.
+        page_size: Maximum number of folders to return (defaults to 100).
     """
 
     search: Optional[str] = None
@@ -1015,13 +880,10 @@ class ListFoldersParams(BaseDTO):
 class PatchItemPayload(BaseDTO):
     """Payload for partially updating a storage item.
 
-    Attributes:
-        name:
-            New name for the item, if updating.
-        description:
-            New description for the item, if updating.
-        client_metadata:
-            New custom metadata to merge or overwrite, depending on API semantics.
+    Args:
+        name: New name for the item, if updating.
+        description: New description for the item, if updating.
+        client_metadata: New custom metadata to merge or overwrite, depending on API semantics.
     """
 
     name: Optional[str] = None
@@ -1032,13 +894,10 @@ class PatchItemPayload(BaseDTO):
 class PatchFolderPayload(BaseDTO):
     """Payload for partially updating a storage folder.
 
-    Attributes:
-        name:
-            New name for the folder, if updating.
-        description:
-            New description for the folder, if updating.
-        client_metadata:
-            New custom metadata to merge or overwrite, depending on API semantics.
+    Args:
+        name: New name for the folder, if updating.
+        description: New description for the folder, if updating.
+        client_metadata: New custom metadata to merge or overwrite, depending on API semantics.
     """
 
     name: Optional[str] = None
@@ -1049,9 +908,8 @@ class PatchFolderPayload(BaseDTO):
 class PatchFoldersBulkPayload(BaseDTO):
     """Payload for applying partial updates to multiple folders.
 
-    Attributes:
-        folder_patches:
-            Mapping from folder UUID (as string) to patch payload to
+    Args:
+        folder_patches: Mapping from folder UUID (as string) to patch payload to
             apply to that folder.
     """
 
@@ -1061,37 +919,22 @@ class PatchFoldersBulkPayload(BaseDTO):
 class StorageFolderSummary(BaseDTO):
     """Summary statistics for a storage folder.
 
-    Attributes:
-        files:
-            Total number of files in the folder.
-        folders:
-            Total number of subfolders.
-        videos:
-            Number of video items.
-        images:
-            Number of image items.
-        image_groups:
-            Number of image group items.
-        image_sequences:
-            Number of image sequence items.
-        dicom_files:
-            Number of DICOM file items.
-        dicom_series:
-            Number of DICOM series items.
-        niftis:
-            Number of NIFTI items.
-        audios:
-            Number of audio items.
-        pdfs:
-            Number of PDF items.
-        plain_texts:
-            Number of plain text items.
-        tombstones:
-            Number of tombstone items.
-        upload_jobs:
-            Number of upload jobs associated with this folder.
-        total_size:
-            Approximate total size of all items in bytes.
+    Args:
+        files: Total number of files in the folder.
+        folders: Total number of subfolders.
+        videos: Number of video items.
+        images: Number of image items.
+        image_groups: Number of image group items.
+        image_sequences: Number of image sequence items.
+        dicom_files: Number of DICOM file items.
+        dicom_series: Number of DICOM series items.
+        niftis: Number of NIFTI items.
+        audios: Number of audio items.
+        pdfs: Number of PDF items.
+        plain_texts: Number of plain text items.
+        tombstones: Number of tombstone items.
+        upload_jobs: Number of upload jobs associated with this folder.
+        total_size: Approximate total size of all items in bytes.
     """
 
     files: int
@@ -1114,17 +957,12 @@ class StorageFolderSummary(BaseDTO):
 class ItemShortInfo(BaseDTO):
     """Short information about a storage item, typically used in summaries.
 
-    Attributes:
-        uuid:
-            UUID of the item.
-        name:
-            Name of the item.
-        parent_uuid:
-            UUID of the parent folder.
-        parent_name:
-            Name of the parent folder.
-        item_type:
-            Type of the item.
+    Args:
+        uuid: UUID of the item.
+        name: Name of the item.
+        parent_uuid: UUID of the parent folder.
+        parent_name: Name of the parent folder.
+        item_type: Type of the item.
     """
 
     uuid: UUID
@@ -1137,17 +975,12 @@ class ItemShortInfo(BaseDTO):
 class DatasetShortInfo(BaseDTO):
     """Short information about a dataset that uses a storage item.
 
-    Attributes:
-        dataset_hash:
-            Identifier of the dataset.
-        backing_folder_uuid:
-            UUID of the backing folder for the dataset, if any.
-        title:
-            Title of the dataset.
-        data_hashes:
-            List of data unit identifiers linked to the dataset.
-        data_units_created_at:
-            Timestamp when the data units were created.
+    Args:
+        dataset_hash: Identifier of the dataset.
+        backing_folder_uuid: UUID of the backing folder for the dataset, if any.
+        title: Title of the dataset.
+        data_hashes: List of data unit identifiers linked to the dataset.
+        data_units_created_at: Timestamp when the data units were created.
     """
 
     dataset_hash: str
@@ -1175,9 +1008,8 @@ class StorageItemSummary(BaseDTO):
 class DeleteItemsParams(BaseDTO):
     """Parameters controlling how storage items are deleted.
 
-    Attributes:
-        remove_unused_frames:
-            If ``True``, also remove frames that are no longer used by
+    Args:
+        remove_unused_frames: If ``True``, also remove frames that are no longer used by
             any group items after deletion.
     """
 
@@ -1187,11 +1019,9 @@ class DeleteItemsParams(BaseDTO):
 class DeleteItemsPayload(BaseDTO):
     """Payload for deleting storage items.
 
-    Attributes:
-        child_uuids:
-            UUIDs of the child items to delete.
-        remove_unused_frames:
-            If ``True``, also remove frames that are no longer referenced
+    Args:
+        child_uuids: UUIDs of the child items to delete.
+        remove_unused_frames: If ``True``, also remove frames that are no longer referenced
             after deletion.
     """
 
@@ -1202,11 +1032,9 @@ class DeleteItemsPayload(BaseDTO):
 class DeleteItemsResponse(BaseDTO):
     """Response returned after deleting storage items.
 
-    Attributes:
-        removed_items_count:
-            Number of storage items removed.
-        removed_folders_count:
-            Number of folders removed.
+    Args:
+        removed_items_count: Number of storage items removed.
+        removed_folders_count: Number of folders removed.
     """
 
     removed_items_count: int
@@ -1216,13 +1044,10 @@ class DeleteItemsResponse(BaseDTO):
 class MoveItemsPayload(BaseDTO):
     """Payload for moving storage items to a new folder.
 
-    Attributes:
-        item_uuids:
-            UUIDs of the items to move.
-        new_parent_uuid:
-            UUID of the destination folder.
-        allow_synced_dataset_move:
-            If ``True``, allow moving items that are linked to synced
+    Args:
+        item_uuids: UUIDs of the items to move.
+        new_parent_uuid: UUID of the destination folder.
+        allow_synced_dataset_move: If ``True``, allow moving items that are linked to synced
             datasets.
     """
 
@@ -1234,11 +1059,9 @@ class MoveItemsPayload(BaseDTO):
 class MoveFoldersPayload(BaseDTO):
     """Payload for moving folders to a new parent folder.
 
-    Attributes:
-        folder_uuids:
-            UUIDs of the folders to move.
-        new_parent_uuid:
-            UUID of the destination folder, or ``None`` to move to root.
+    Args:
+        folder_uuids: UUIDs of the folders to move.
+        new_parent_uuid: UUID of the destination folder, or ``None`` to move to root.
     """
 
     folder_uuids: List[UUID]
@@ -1248,9 +1071,8 @@ class MoveFoldersPayload(BaseDTO):
 class GetItemParams(BaseDTO):
     """Parameters for fetching detailed information about a storage item.
 
-    Attributes:
-        sign_url:
-            If ``True``, include a signed URL for temporary access to the
+    Args:
+        sign_url: If ``True``, include a signed URL for temporary access to the
             item in the response.
     """
 
@@ -1260,9 +1082,8 @@ class GetItemParams(BaseDTO):
 class GetChildItemsParams(BaseDTO):
     """Parameters for listing direct children of a storage folder.
 
-    Attributes:
-        sign_urls:
-            If ``True``, include signed URLs for the items in the
+    Args:
+        sign_urls: If ``True``, include signed URLs for the items in the
             response.
     """
 
@@ -1272,11 +1093,9 @@ class GetChildItemsParams(BaseDTO):
 class GetItemsBulkPayload(BaseDTO):
     """Payload for fetching multiple storage items at once.
 
-    Attributes:
-        item_uuids:
-            UUIDs of the items to fetch.
-        sign_urls:
-            If ``True``, include signed URLs for the items in the
+    Args:
+        item_uuids: UUIDs of the items to fetch.
+        sign_urls: If ``True``, include signed URLs for the items in the
             response.
     """
 
@@ -1287,9 +1106,8 @@ class GetItemsBulkPayload(BaseDTO):
 class PatchItemsBulkPayload(BaseDTO):
     """Payload for applying partial updates to multiple storage items.
 
-    Attributes:
-        item_patches:
-            Mapping from item UUID (as string) to patch payload to apply
+    Args:
+        item_patches: Mapping from item UUID (as string) to patch payload to apply
             to that item.
     """
 
@@ -1300,9 +1118,8 @@ class PatchItemsBulkPayload(BaseDTO):
 class BundledPatchItemPayload:
     """Accumulator for batched item patch operations.
 
-    Attributes:
-        item_patches:
-            Mapping from item UUID (as string) to patch payload to apply
+    Args:
+        item_patches: Mapping from item UUID (as string) to patch payload to apply
             to that item.
     """
 
@@ -1317,9 +1134,8 @@ class BundledPatchItemPayload:
 class BundledPatchFolderPayload:
     """Accumulator for batched folder patch operations.
 
-    Attributes:
-        folder_patches:
-            Mapping from folder UUID (as string) to patch payload to
+    Args:
+        folder_patches: Mapping from folder UUID (as string) to patch payload to
             apply to that folder.
     """
 
@@ -1333,13 +1149,10 @@ class BundledPatchFolderPayload:
 class ReencodeVideoItemsRequest(BaseDTO):
     """Request to re-encode a set of video storage items.
 
-    Attributes:
-        storage_items:
-            UUIDs of the storage items (videos) to re-encode.
-        process_title:
-            Human-readable title for the re-encode job.
-        force_full_reencoding:
-            If ``True``, force re-encoding even if a compatible version
+    Args:
+        storage_items: UUIDs of the storage items (videos) to re-encode.
+        process_title: Human-readable title for the re-encode job.
+        force_full_reencoding: If ``True``, force re-encoding even if a compatible version
             already exists.
     """
 
@@ -1351,12 +1164,11 @@ class ReencodeVideoItemsRequest(BaseDTO):
 class JobStatus(CamelStrEnum):
     """Status of a background job.
 
-    SUBMITTED
-        Job has been submitted and is waiting to start.
-    DONE
-        Job has completed successfully.
-    ERROR
-        Job has failed.
+    **Values**:
+
+    - **SUBMITTED:** Job has been submitted and is waiting to start.
+    - **DONE:** Job has completed successfully.
+    - **ERROR:** Job has failed.
     """
 
     SUBMITTED = auto()
@@ -1367,11 +1179,9 @@ class JobStatus(CamelStrEnum):
 class ReencodeVideoItemsResponse(BaseDTO):
     """Response returned after starting or querying a re-encode job.
 
-    Attributes:
-        status:
-            Current status of the re-encode job.
-        result:
-            Optional result payload, for example a list or dict
+    Args:
+        status: Current status of the re-encode job.
+        result: Optional result payload, for example a list or dict
             with additional information about the re-encoded items.
     """
 
@@ -1382,22 +1192,16 @@ class ReencodeVideoItemsResponse(BaseDTO):
 class StorageItemsMigratePayload(BaseDTO):
     """Payload for migrating storage items between integrations.
 
-    Attributes:
-        urls_map:
-            Optional mapping from source URLs to target URLs. If the value
+    Args:
+        urls_map: Optional mapping from source URLs to target URLs. If the value
             is ``None``, the item for that URL will be skipped.
-        items_map:
-            Optional mapping from item UUIDs to new URLs. If the value
+        items_map: Optional mapping from item UUIDs to new URLs. If the value
             is ``None``, the item will be skipped.
-        from_integration_hash:
-            UUID of the source integration to migrate from.
-        to_integration_hash:
-            UUID of the target integration to migrate to.
-        validate_access:
-            If ``True``, validate that the SDK has access to the target
+        from_integration_hash: UUID of the source integration to migrate from.
+        to_integration_hash: UUID of the target integration to migrate to.
+        validate_access: If ``True``, validate that the SDK has access to the target
             integration before migrating.
-        skip_missing:
-            If ``True``, skip items that cannot be found instead of
+        skip_missing: If ``True``, skip items that cannot be found instead of
             failing the entire migration.
     """
 
@@ -1412,9 +1216,8 @@ class StorageItemsMigratePayload(BaseDTO):
 class AddDataToFolderJobCancelResponse(BaseDTO):
     """Response returned after cancelling an add-data-to-folder job.
 
-    Attributes:
-        units_cancelled_count:
-            Number of individual job units that were cancelled.
+    Arg:
+        units_cancelled_count: Number of individual job units that were cancelled.
     """
 
     units_cancelled_count: int
@@ -1423,9 +1226,8 @@ class AddDataToFolderJobCancelResponse(BaseDTO):
 class SyncPrivateDataWithCloudSyncedFolderGetResultParams(BaseDTO):
     """Parameters for polling the status of a cloud-synced folder sync job.
 
-    Attributes:
-        timeout_seconds:
-            Maximum number of seconds to wait before returning the
+    Args:
+        timeout_seconds: Maximum number of seconds to wait before returning the
             current synchronization status.
     """
 

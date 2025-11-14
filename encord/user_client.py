@@ -140,8 +140,7 @@ class EncordUserClient:
     - Running analytics queries
     - Interacting with collections and Index
 
-    Parameters
-    ----------
+    Args:
     config : UserConfig
         The user configuration containing authentication credentials
         and client options.
@@ -149,8 +148,8 @@ class EncordUserClient:
         Internal HTTP/query executor used to communicate with the Encord API.
         Users do not normally construct this directly.
 
-    Notes
-    -----
+    **Notes**
+
     Instances of this class should generally be created using the provided
     ``create_*`` methods rather than by calling the constructor
     directly.
@@ -163,8 +162,7 @@ class EncordUserClient:
 
     @property
     def ml_models(self) -> MlModelsClient:
-        """
-        Access Encord ML Models functionality.
+        """Access Encord ML Models functionality.
 
         Returns:
             MlModelsClient: Client for interacting with Encord's ML models
@@ -199,6 +197,7 @@ class EncordUserClient:
         Args:
             dataset_hash: The Dataset ID
             dataset_access_settings: Set the dataset_access_settings if you would like to change the defaults.
+
         Returns:
             Returns all Dataset information (title, dataset_hash, dataset_type, and more) and all data rows (including all data row information for each data unit).
         """
@@ -1406,7 +1405,7 @@ class EncordUserClient:
     ) -> Iterable[StorageItem]:
         """Recursively search for storage items, starting from the root level.
 
-        Warning: This method is slow. We recommend using `storage_folder.list_items` instead.
+        **Warning:** This method is slow. We recommend using `storage_folder.list_items` instead.
 
         Args:
             search: Search string to filter items by name.
