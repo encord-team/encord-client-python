@@ -14,6 +14,7 @@ from encord.orm.base_dto import BaseDTO, PrivateAttr
 
 class TasksQueryParams(BaseDTO):
     page_token: Optional[str] = None
+    page_size: int = 100
 
 
 @dataclass(frozen=True)
