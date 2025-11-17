@@ -58,10 +58,13 @@ from encord.objects.internal_helpers import (
 )
 from encord.objects.ontology_object import Object
 from encord.objects.options import Option
+
 from encord.objects.utils import check_email, short_uuid_str
 
 if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
+    from encord.objects.spaces.base_space import Space
+    from encord.objects.spaces.video_space import VideoSpace
 
 
 class ObjectInstance:
@@ -71,6 +74,7 @@ class ObjectInstance:
         self._ontology_object = ontology_object
         self._object_hash = object_hash or short_uuid_str()
         self._parent: Optional[LabelRowV2] = None
+        self._spaces: dict[str, Space] = dict()
 
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_object.attributes)
         # feature_node_hash of attribute to the answer.
@@ -82,13 +86,17 @@ class ObjectInstance:
 
         self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = {}
 
+    def _add_to_space(self, space: Space) -> None:
+        self._spaces[space.space_id] = space
+
     def is_assigned_to_label_row(self) -> Optional[LabelRowV2]:
         """Checks if the object instance is assigned to a label row.
 
         Returns:
             The LabelRowV2 instance if assigned, otherwise None.
         """
-        return self._parent
+        return self._spaces.get("root") is not None
+        # return self._parent
 
     @property
     def object_hash(self) -> str:
@@ -477,39 +485,60 @@ class ObjectInstance:
 
         frames_list = frames_class_to_frames_list(frames)
 
-        for frame in frames_list:
-            existing_frame_data = self._frames_to_instance_data.get(frame)
-
-            if overwrite is False and existing_frame_data is not None:
-                raise LabelRowError(
-                    "Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite."
-                )
-
-            check_coordinate_type(coordinates, self._ontology_object, self._parent)
-
-            if isinstance(coordinates, (TextCoordinates, AudioCoordinates)):
-                for non_geometric_range in coordinates.range:
-                    self.check_within_range(non_geometric_range.end)
+        if self.is_assigned_to_label_row():
+            root_space = self._spaces.get("root")
+            if root_space is None:
+                raise LabelRowError("Attempting to set frames on a non-root space. Please use Space.place_object instead.")
             else:
-                self.check_within_range(frame)
-
-            if existing_frame_data is None:
-                existing_frame_data = ObjectInstance.FrameData(
-                    coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
+                root_space._place_object(
+                    object=self,
+                    coordinates=coordinates,
+                    frames=frames,
+                    overwrite=overwrite,
+                    created_at=created_at,
+                    created_by=created_by,
+                    last_edited_at=last_edited_at,
+                    last_edited_by=last_edited_by,
+                    confidence=confidence,
+                    manual_annotation=manual_annotation,
+                    reviews=reviews,
+                    is_deleted=is_deleted,
                 )
-                self._frames_to_instance_data[frame] = existing_frame_data
+        else:
+            for frame in frames_list:
+                existing_frame_data = self._frames_to_instance_data.get(frame)
 
-            existing_frame_data.object_frame_instance_info.update_from_optional_fields(
-                created_at=created_at,
-                created_by=created_by,
-                last_edited_at=last_edited_at,
-                last_edited_by=last_edited_by,
-                confidence=confidence,
-                manual_annotation=manual_annotation,
-                reviews=reviews,
-                is_deleted=is_deleted,
-            )
-            existing_frame_data.coordinates = coordinates
+                if overwrite is False and existing_frame_data is not None:
+                    raise LabelRowError(
+                        "Cannot overwrite existing data for a frame. Set `overwrite` to `True` to overwrite."
+                    )
+
+                check_coordinate_type(coordinates, self._ontology_object, self._parent)
+
+                if isinstance(coordinates, (TextCoordinates, AudioCoordinates)):
+                    for non_geometric_range in coordinates.range:
+                        self.check_within_range(non_geometric_range.end)
+                else:
+                    self.check_within_range(frame)
+
+                if existing_frame_data is None:
+                    existing_frame_data = ObjectInstance.FrameData(
+                        coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
+                    )
+                    self._frames_to_instance_data[frame] = existing_frame_data
+
+                existing_frame_data.object_frame_instance_info.update_from_optional_fields(
+                    created_at=created_at,
+                    created_by=created_by,
+                    last_edited_at=last_edited_at,
+                    last_edited_by=last_edited_by,
+                    confidence=confidence,
+                    manual_annotation=manual_annotation,
+                    reviews=reviews,
+                    is_deleted=is_deleted,
+                )
+                existing_frame_data.coordinates = coordinates
+
 
             if self._parent:
                 self._parent.add_to_single_frame_to_hashes_map(self, frame)
@@ -574,6 +603,13 @@ class ObjectInstance:
         Returns:
             List[Annotation]: A list of `ObjectInstance.Annotation` in order of available frames.
         """
+        from encord.objects.spaces.video_space import VideoSpace
+        if self.is_assigned_to_label_row():
+            ret = []
+            for space in self._spaces.values():
+                if isinstance(space, VideoSpace):
+                    ret.extend(space.get_object_annotations(filter_objects=[self.object_hash]))
+            return ret
         return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_instance_data.keys())]
 
     def get_annotation_frames(self) -> set[int]:
@@ -741,7 +777,18 @@ class ObjectInstance:
             return self._get_object_frame_instance_data().object_frame_instance_info.is_deleted
 
         def _get_object_frame_instance_data(self) -> ObjectInstance.FrameData:
-            return self._object_instance._frames_to_instance_data[self._frame]
+            from encord.objects.spaces.video_space import VideoSpace
+            if self._object_instance.is_assigned_to_label_row():
+                root_space = self._object_instance._spaces.get("root")
+
+                if root_space is None:
+                    raise LabelRowError("Object instance does not exist on root space.")
+
+                if isinstance(root_space, VideoSpace):
+                    frame_annotation = root_space._get_frame_object_annotation_data(object_hash=self._object_instance.object_hash, frame=self._frame)
+                    return frame_annotation
+            else:
+                return self._object_instance._frames_to_instance_data[self._frame]
 
         def _check_if_frame_view_is_valid(self) -> None:
             if self._frame not in self._object_instance._frames_to_instance_data:

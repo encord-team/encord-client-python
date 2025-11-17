@@ -22,7 +22,7 @@ from encord.objects.spaces.annotation.two_dimensional_annotation import (
     TwoDimensionalObjectAnnotation,
 )
 from encord.objects.spaces.base_space import Space
-from encord.objects.spaces.space_entity import SpaceClassification, SpaceObject
+from encord.objects.spaces.space_entity import ObjectInstance, SpaceClassification
 from encord.objects.spaces.types import FrameClassificationIndex, FrameObjectIndex
 from encord.orm.label_space import ImageSpaceInfo, LabelBlob, SpaceInfo
 
@@ -38,7 +38,7 @@ class ImageSpace(Space):
 
     def __init__(self, space_id: str, title: str, parent: LabelRowV2, width: int, height: int):
         super().__init__(space_id, title, SpaceType.IMAGE, parent)
-        self._objects_map: dict[str, SpaceObject] = dict()
+        self._objects_map: dict[str, ObjectInstance] = dict()
         self._classifications_map: dict[str, SpaceClassification] = dict()
         self._object_hash_to_annotation_data: dict[str, TwoDimensionalAnnotationData] = dict()
         self._classification_hash_to_annotation_data: dict[str, AnnotationData] = dict()
@@ -48,7 +48,7 @@ class ImageSpace(Space):
 
     def place_object(
         self,
-        object: SpaceObject,
+        object: ObjectInstance,
         coordinates: TwoDimensionalCoordinates,
         *,
         overwrite: bool = False,
@@ -148,13 +148,13 @@ class ImageSpace(Space):
 
         return res
 
-    def get_objects(self) -> list[SpaceObject]:
+    def get_objects(self) -> list[ObjectInstance]:
         return list(self._objects_map.values())
 
     def get_classifications(self) -> list[SpaceClassification]:
         return list(self._classifications_map.values())
 
-    def remove_space_object(self, object_hash: str) -> Optional[SpaceObject]:
+    def remove_space_object(self, object_hash: str) -> Optional[ObjectInstance]:
         obj_entity = self._objects_map.pop(object_hash, None)
         self._object_hash_to_annotation_data.pop(object_hash)
         obj_entity._remove_from_space(self)
@@ -170,7 +170,7 @@ class ImageSpace(Space):
 
     """INTERNAL METHODS FOR DESERDE"""
 
-    def _create_new_space_object_from_frame_label_dict(self, frame_object_label: dict) -> SpaceObject:
+    def _create_new_space_object_from_frame_label_dict(self, frame_object_label: dict) -> ObjectInstance:
         from encord.objects.ontology_object import Object
 
         ontology = self.parent._ontology.structure
@@ -204,7 +204,7 @@ class ImageSpace(Space):
 
     def _to_encord_object(
         self,
-        object_entity: SpaceObject,
+        object_entity: ObjectInstance,
         frame_object_annotation_data: TwoDimensionalAnnotationData,
     ) -> Dict[str, Any]:
         from encord.objects.ontology_object import Object

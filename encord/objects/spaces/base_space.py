@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Optional, TypeVar
 
 from encord.constants.enums import SpaceType
 from encord.objects.coordinates import Coordinates
-from encord.objects.spaces.space_entity import SpaceClassification, SpaceObject
+from encord.objects.spaces.space_entity import ObjectInstance, SpaceClassification
 from encord.orm.label_space import LabelBlob, SpaceInfo
 
 if TYPE_CHECKING:
@@ -26,11 +26,12 @@ class Space(ABC):
         self.title = title
         self.space_type = space_type
         self.parent = parent
+        self._objects_map: dict[str, ObjectInstance] = dict()
 
     @abstractmethod
     def get_objects(
         self,
-    ) -> list[SpaceObject]:
+    ) -> list[ObjectInstance]:
         pass
 
     @abstractmethod
@@ -40,7 +41,7 @@ class Space(ABC):
         pass
 
     @abstractmethod
-    def place_object(self, object: SpaceObject, coordinates: Coordinates, **kwargs: Any):
+    def place_object(self, object: ObjectInstance, coordinates: Coordinates, **kwargs: Any):
         pass
 
     @abstractmethod
@@ -48,7 +49,7 @@ class Space(ABC):
         pass
 
     @abstractmethod
-    def remove_space_object(self, object_hash: str) -> Optional[SpaceObject]:
+    def remove_space_object(self, object_hash: str) -> Optional[ObjectInstance]:
         pass
 
     @abstractmethod

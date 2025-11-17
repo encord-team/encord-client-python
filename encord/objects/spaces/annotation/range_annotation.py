@@ -11,7 +11,7 @@ from encord.objects.spaces.annotation.base_annotation import (
     ClassificationAnnotation,
     ObjectAnnotation,
 )
-from encord.objects.spaces.space_entity import SpaceClassification, SpaceObject
+from encord.objects.spaces.space_entity import ObjectInstance, SpaceClassification
 
 if TYPE_CHECKING:
     from encord.objects.spaces.range_space import RangeBasedSpace
@@ -27,7 +27,7 @@ class RangeAnnotationData(AnnotationData):
 class RangeObjectAnnotation(ObjectAnnotation):
     """Annotations for 1D objects (e.g. Audio and Text)."""
 
-    def __init__(self, space: RangeBasedSpace, object_instance: SpaceObject):
+    def __init__(self, space: RangeBasedSpace, object_instance: ObjectInstance):
         super().__init__(space, object_instance)
         self._space = space
 
@@ -35,8 +35,6 @@ class RangeObjectAnnotation(ObjectAnnotation):
     def ranges(self) -> Ranges:
         self._check_if_annotation_is_valid()
         return self._get_annotation_data().range_manager.get_ranges()
-
-    # TODO: Should we allow setting of ranges?
 
     def _get_annotation_data(self) -> RangeAnnotationData:
         return self._space._object_hash_to_annotation_data[self._object_instance.object_hash]

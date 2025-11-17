@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from encord.common.time_parser import parse_datetime
 from encord.exceptions import LabelRowError
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
-from encord.objects.spaces.space_entity import SpaceClassification, SpaceObject
+from encord.objects.spaces.space_entity import ObjectInstance, SpaceClassification
 from encord.objects.utils import check_email
 
 if TYPE_CHECKING:
@@ -254,7 +254,7 @@ class ObjectAnnotation(Annotation):
     Provides access to annotation metadata for a SpaceObject.
     """
 
-    def __init__(self, space: Space, object_instance: SpaceObject):
+    def __init__(self, space: Space, object_instance: ObjectInstance):
         self._space = space
         self._object_instance = object_instance
 

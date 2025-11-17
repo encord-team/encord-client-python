@@ -34,7 +34,7 @@ def test_deserialise_payload_ok_on_correct_payload(send: MagicMock, api_client: 
     {
         "user_email": "noone@nowhere.com",
         "user_role": 0,
-        "data_title": "some title",
+        "data_title": "some title"  ,
         "time_seconds": 123.456
     }
     """

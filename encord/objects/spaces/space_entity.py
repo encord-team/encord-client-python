@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from encord.objects.spaces.base_space import Space
 
 
-class SpaceObject:
+class ObjectInstance:
     def __init__(self, label_row: LabelRowV2, object_instance: ObjectInstance):
         self._object_instance = object_instance
         self._label_row = label_row

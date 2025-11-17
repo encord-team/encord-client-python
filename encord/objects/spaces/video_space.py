@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
 from encord.constants.enums import SpaceType
+from encord.exceptions import LabelRowError
 from encord.objects import Classification
 from encord.objects.coordinates import (
     TwoDimensionalCoordinates,
@@ -20,7 +21,7 @@ from encord.objects.spaces.annotation.two_dimensional_annotation import (
     TwoDimensionalFrameObjectAnnotation,
 )
 from encord.objects.spaces.base_space import Space
-from encord.objects.spaces.space_entity import SpaceClassification, SpaceObject
+from encord.objects.spaces.space_entity import SpaceClassification
 from encord.objects.spaces.types import FrameClassificationIndex, FrameObjectIndex
 from encord.orm.label_space import LabelBlob, SpaceInfo, VideoSpaceInfo
 
@@ -28,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
-    from encord.objects.ontology_object import Object
+    from encord.objects.ontology_object import Object, ObjectInstance
 
 
 class VideoSpace(Space):
@@ -46,12 +47,12 @@ class VideoSpace(Space):
         self._frames_to_classification_hash_to_annotation_data: defaultdict[int, dict[str, AnnotationData]] = (
             defaultdict(dict)
         )
-        self._objects_map: dict[str, SpaceObject] = dict()
+        self._objects_map: dict[str, ObjectInstance] = dict()
         self._classification_map: dict[str, SpaceClassification] = dict()
 
-    def place_object(
+    def _place_object(
         self,
-        object: SpaceObject,
+        object: ObjectInstance,
         frames: Frames,
         coordinates: TwoDimensionalCoordinates,
         *,
@@ -67,6 +68,7 @@ class VideoSpace(Space):
     ) -> None:
         frame_list = frames_class_to_frames_list(frames)
         self._objects_map[object.object_hash] = object
+        self.parent._objects_map[object.object_hash] = object
         object._add_to_space(self)
 
         # TODO: Check overwrites
@@ -96,9 +98,47 @@ class VideoSpace(Space):
                 is_deleted=is_deleted,
             )
 
+    def place_object(
+        self,
+        object: ObjectInstance,
+        frames: Frames,
+        coordinates: TwoDimensionalCoordinates,
+        *,
+        overwrite: bool = False,
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        confidence: Optional[float] = None,
+        manual_annotation: Optional[bool] = None,
+        reviews: Optional[List[dict]] = None,
+        is_deleted: Optional[bool] = None,
+    ) -> None:
+        if len(object._frames_to_instance_data) > 0:
+            # Objects has set frames on it
+            raise LabelRowError(
+                "Object instance contains frames data. "
+                "Ensure ObjectInstance.set_for_frames was not used before calling this method. "
+            )
+
+        self._place_object(
+            object=object,
+            frames=frames,
+            coordinates=coordinates,
+            overwrite=overwrite,
+            created_at=created_at,
+            created_by=created_by,
+            last_edited_at=last_edited_at,
+            last_edited_by=last_edited_by,
+            confidence=confidence,
+            manual_annotation=manual_annotation,
+            reviews=reviews,
+            is_deleted=is_deleted,
+        )
+
     def unplace_object(
         self,
-        object: SpaceObject,
+        object: ObjectInstance,
         frames: Frames,
     ):
         frame_list = frames_class_to_frames_list(frames)
@@ -161,18 +201,22 @@ class VideoSpace(Space):
         for frame in frame_list:
             self._frames_to_classification_hash_to_annotation_data[frame].pop(classification.classification_hash)
 
-    def get_object_annotations(self) -> list[TwoDimensionalFrameObjectAnnotation]:
+    def get_object_annotations(self, filter_objects: Optional[list[str]] = None) -> list[TwoDimensionalFrameObjectAnnotation]:
         res: list[TwoDimensionalFrameObjectAnnotation] = []
 
         for frame, obj in dict(sorted(self._frames_to_object_hash_to_annotation_data.items())).items():
             for obj_hash, annotation in obj.items():
-                res.append(
-                    TwoDimensionalFrameObjectAnnotation(
-                        space=self, object_instance=self._objects_map[obj_hash], frame=frame
+                if filter_objects is None or obj_hash in filter_objects:
+                    res.append(
+                        self.get_object_frame_annotation(object_hash=obj_hash, frame=frame)
                     )
-                )
 
         return res
+
+    def get_object_frame_annotation(self, object_hash: str, frame: int = 0) -> TwoDimensionalFrameObjectAnnotation:
+        return TwoDimensionalFrameObjectAnnotation(
+            space=self, object_instance=self._objects_map[object_hash], frame=frame
+        )
 
     def get_classification_annotations(self) -> list[FrameClassificationAnnotation]:
         res: list[FrameClassificationAnnotation] = []
@@ -189,13 +233,13 @@ class VideoSpace(Space):
 
         return res
 
-    def get_objects(self) -> list[SpaceObject]:
+    def get_objects(self) -> list[ObjectInstance]:
         return list(self._objects_map.values())
 
     def get_classifications(self) -> list[SpaceClassification]:
         return list(self._classification_map.values())
 
-    def remove_space_object(self, object_hash: str) -> Optional[SpaceObject]:
+    def remove_space_object(self, object_hash: str) -> Optional[ObjectInstance]:
         obj_entity = self._objects_map.pop(object_hash, None)
         obj_entity._remove_from_space(self)
         for frame, obj in self._frames_to_object_hash_to_annotation_data.items():
@@ -215,7 +259,7 @@ class VideoSpace(Space):
 
     """INTERNAL METHODS FOR DESERDE"""
 
-    def _create_new_space_object_from_frame_label_dict(self, frame_object_label: dict) -> SpaceObject:
+    def _create_new_space_object_from_frame_label_dict(self, frame_object_label: dict) -> ObjectInstance:
         from encord.objects.ontology_object import Object
 
         ontology = self.parent._ontology.structure
@@ -265,7 +309,7 @@ class VideoSpace(Space):
 
     def _to_encord_object(
         self,
-        space_object: SpaceObject,
+        space_object: ObjectInstance,
         frame_object_annotation_data: TwoDimensionalAnnotationData,
     ) -> Dict[str, Any]:
         from encord.objects.ontology_object import Object

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from encord.exceptions import LabelRowError
 from encord.objects.coordinates import Coordinates
 from encord.objects.spaces.annotation.base_annotation import AnnotationData, ClassificationAnnotation, ObjectAnnotation
-from encord.objects.spaces.space_entity import SpaceClassification, SpaceObject
+from encord.objects.spaces.space_entity import ObjectInstance, SpaceClassification
 
 if TYPE_CHECKING:
     from encord.objects.spaces.image_space import ImageSpace
@@ -23,7 +23,7 @@ class TwoDimensionalAnnotationData(AnnotationData):
 class TwoDimensionalObjectAnnotation(ObjectAnnotation):
     """Annotations for single-frame 2D objects."""
 
-    def __init__(self, space: ImageSpace, object_instance: SpaceObject):
+    def __init__(self, space: ImageSpace, object_instance: ObjectInstance):
         super().__init__(space, object_instance)
         self._space = space
 
@@ -50,7 +50,7 @@ class TwoDimensionalObjectAnnotation(ObjectAnnotation):
 class TwoDimensionalFrameObjectAnnotation(ObjectAnnotation):
     """Annotations for multi-frame 2D object labels (e.g. Video)."""
 
-    def __init__(self, space: VideoSpace, object_instance: SpaceObject, frame: int):
+    def __init__(self, space: VideoSpace, object_instance: ObjectInstance, frame: int):
         super().__init__(space, object_instance)
         self._space = space
         self._frame = frame
@@ -81,6 +81,7 @@ class TwoDimensionalFrameObjectAnnotation(ObjectAnnotation):
             raise LabelRowError(
                 "Trying to use an ObjectInstance.FrameAnnotation for a VideoObjectInstance that is not on the frame"
             )
+
 
 
 class FrameClassificationAnnotation(ClassificationAnnotation):

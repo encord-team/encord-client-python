@@ -18,7 +18,7 @@ from encord.objects.spaces.annotation.range_annotation import (
     RangeObjectAnnotation,
 )
 from encord.objects.spaces.base_space import Space
-from encord.objects.spaces.space_entity import SpaceClassification, SpaceObject
+from encord.objects.spaces.space_entity import ObjectInstance, SpaceClassification
 from encord.objects.utils import _lower_snake_case
 from encord.orm.label_space import AudioSpaceInfo, BaseSpaceInfo, LabelBlob, SpaceInfo, TextSpaceInfo
 
@@ -62,7 +62,7 @@ class RangeBasedSpace(Space, ABC):
 
     def __init__(self, space_id: str, title: str, space_type: SpaceType, parent: LabelRowV2):
         super().__init__(space_id, title, space_type, parent)
-        self._objects_map: dict[str, SpaceObject] = dict()
+        self._objects_map: dict[str, ObjectInstance] = dict()
         self._classifications_map: dict[str, SpaceClassification] = dict()
         self._object_hash_to_annotation_data: dict[str, RangeAnnotationData] = dict()
         self._classification_hash_to_annotation_data: dict[str, RangeAnnotationData] = dict()
@@ -72,7 +72,7 @@ class RangeBasedSpace(Space, ABC):
     # but here, we overwrite the annotation_info for everytime you do place
     def place_object(
         self,
-        object: SpaceObject,
+        object: ObjectInstance,
         ranges: Ranges | Range,
         *,
         overwrite: bool = False,
@@ -115,7 +115,7 @@ class RangeBasedSpace(Space, ABC):
 
         existing_annotation_data.range_manager.add_ranges(ranges)
 
-    def unplace_object(self, object: SpaceObject, ranges: Ranges | Range) -> None:
+    def unplace_object(self, object: ObjectInstance, ranges: Ranges | Range) -> None:
         self._object_hash_to_annotation_data[object.object_hash].range_manager.remove_ranges(ranges)
 
     def place_classification(
@@ -188,13 +188,13 @@ class RangeBasedSpace(Space, ABC):
 
         return res
 
-    def get_objects(self) -> list[SpaceObject]:
+    def get_objects(self) -> list[ObjectInstance]:
         return list(self._objects_map.values())
 
     def get_classifications(self) -> list[SpaceClassification]:
         return list(self._classifications_map.values())
 
-    def remove_space_object(self, object_hash: str) -> Optional[SpaceObject]:
+    def remove_space_object(self, object_hash: str) -> Optional[ObjectInstance]:
         obj_entity = self._objects_map.pop(object_hash, None)
         self._object_hash_to_annotation_data.pop(object_hash)
         obj_entity._remove_from_space(self)
@@ -249,7 +249,7 @@ class RangeBasedSpace(Space, ABC):
                 object_instance = self.parent._create_new_object_instance_with_ranges(
                     object_answer, ranges, DataType.PLAIN_TEXT
                 )
-                space_object = SpaceObject(label_row=self.parent, object_instance=object_instance)
+                space_object = ObjectInstance(label_row=self.parent, object_instance=object_instance)
                 frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
                 frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
                 object_frame_instance_info = AnnotationInfo.from_dict(frame_info_dict)
@@ -270,7 +270,7 @@ class RangeBasedSpace(Space, ABC):
                 object_instance = self.parent._create_new_object_instance_with_ranges(
                     object_answer, ranges, DataType.AUDIO
                 )
-                space_object = SpaceObject(label_row=self.parent, object_instance=object_instance)
+                space_object = ObjectInstance(label_row=self.parent, object_instance=object_instance)
                 frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
                 frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
                 object_frame_instance_info = AnnotationInfo.from_dict(frame_info_dict)
