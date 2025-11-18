@@ -184,6 +184,8 @@ class DynamicAttributeObjectRequired(AttributeDict):
 class DynamicAttributeObject(DynamicAttributeObjectRequired, total=False):
     """All fields for dynamic attribute object in object_actions."""
 
+    spaceId: str
+
 
 class ClassificationAnswerRequired(TypedDict):
     classificationHash: str

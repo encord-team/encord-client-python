@@ -12,9 +12,19 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Collection, List, Union, cast
+from typing import Collection, List, TypedDict, Union, cast
 
 from encord.orm.base_dto import BaseDTO
+
+
+class HtmlNodeDict(TypedDict):
+    xpath: str
+    offset: int
+
+
+class HtmlRangeDict(TypedDict):
+    start: HtmlNodeDict
+    end: HtmlNodeDict
 
 
 class HtmlNode(BaseDTO):

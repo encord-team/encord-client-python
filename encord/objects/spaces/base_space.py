@@ -1,0 +1,124 @@
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    Optional,
+    Sequence,
+    TypeVar,
+)
+
+from encord.constants.enums import SpaceType
+from encord.exceptions import LabelRowError
+from encord.objects.coordinates import GeometricCoordinates
+from encord.objects.frames import Frames
+from encord.objects.spaces.annotation.base_annotation import ClassificationAnnotation, ObjectAnnotation
+from encord.objects.spaces.types import SpaceInfo
+from encord.objects.types import ClassificationAnswer, ObjectAnswer
+
+if TYPE_CHECKING:
+    from encord.objects import ClassificationInstance, ObjectInstance
+    from encord.objects.ontology_labels_impl import LabelRowV2
+
+SpaceT = TypeVar("SpaceT", bound="Space")
+
+
+@dataclass
+class FramePlacement:
+    frames: Frames
+    coordinates: GeometricCoordinates
+
+
+class Space(ABC):
+    """
+    Manages the objects on a space within LabelRowV2.
+    Users should not instantiate this class directly, but must obtain these instances via LabelRow.list_spaces().
+    """
+
+    space_id: str
+    parent: LabelRowV2
+    space_type: SpaceType
+    _objects_map: dict[str, ObjectInstance]
+    _classifications_map: dict[str, ClassificationInstance]
+
+    def __init__(self, space_id: str, space_type: SpaceType, parent: LabelRowV2):
+        self.space_id = space_id
+        self.space_type = space_type
+        self.parent = parent
+        self._objects_map: dict[str, ObjectInstance] = dict()
+        self._classifications_map: dict[str, ClassificationInstance] = dict()
+
+    @abstractmethod
+    def get_objects(
+        self,
+    ) -> list[ObjectInstance]:
+        pass
+
+    @abstractmethod
+    def get_classifications(
+        self,
+    ) -> list[ClassificationInstance]:
+        pass
+
+    def remove_object(self, object_hash: str) -> Optional[ObjectInstance]:
+        pass
+
+    def remove_classification(self, classification_hash: str) -> Optional[ClassificationInstance]:
+        pass
+
+    @abstractmethod
+    def get_object_annotations(self, filter_objects: Optional[list[str]] = None) -> Sequence[ObjectAnnotation]:
+        pass
+
+    @abstractmethod
+    def get_classification_annotations(
+        self, filter_classifications: Optional[list[str]] = None
+    ) -> Sequence[ClassificationAnnotation]:
+        pass
+
+    @abstractmethod
+    def _parse_space_dict(
+        self,
+        space_info: SpaceInfo,
+        object_answers: dict[str, ObjectAnswer],
+        classification_answers: dict[str, ClassificationAnswer],
+    ) -> None:
+        pass
+
+    @abstractmethod
+    def _to_space_dict(self) -> SpaceInfo:
+        pass
+
+    @abstractmethod
+    def _to_object_answers(self) -> Dict[str, ObjectAnswer]:
+        pass
+
+    @abstractmethod
+    def _to_classification_answers(self) -> Dict[str, ClassificationAnswer]:
+        pass
+
+    @staticmethod
+    def _method_not_supported_for_object_instance_with_frames(object_instance: ObjectInstance):
+        if len(object_instance._frames_to_instance_data) > 0:
+            raise LabelRowError(
+                "Object instance contains frames data. "
+                "Ensure ObjectInstance.set_for_frames was not used before calling this method. "
+            )
+
+    @staticmethod
+    def _method_not_supported_for_object_instance_with_dynamic_attributes(object_instance: ObjectInstance):
+        if len(object_instance._get_all_dynamic_answers()) > 0:
+            raise LabelRowError(
+                "Object instance contains dynamic attributes. "
+                "Please ensure no dynamic attributes were set on this ObjectInstance. "
+            )
+
+    @staticmethod
+    def _method_not_supported_for_classification_instance_with_frames(classification_instance: ClassificationInstance):
+        if len(classification_instance._frames_to_data) > 0:
+            raise LabelRowError(
+                "Classification instance contains frames data. "
+                "Ensure ClassificationInstance.set_for_frames was not used before calling this method. "
+            )

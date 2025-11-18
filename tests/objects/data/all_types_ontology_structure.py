@@ -94,7 +94,16 @@ AUDIO_OBJECT_1 = Object(
     shape=Shape.AUDIO,
     feature_node_hash="KVfzNkFy",
     archived=False,
-    attributes=[],
+    attributes=[
+        TextAttribute(
+            uid=[8, 1],
+            feature_node_hash="transcriptFeatureHash",
+            name="Transcript",
+            required=False,
+            dynamic=False,
+            archived=False,
+        ),
+    ],
 )
 AUDIO_OBJECT_2 = dataclasses.replace(AUDIO_OBJECT_1, uid=9, name="audio object 2", feature_node_hash="bjvtzFgi")
 AUDIO_OBJECT_3 = dataclasses.replace(AUDIO_OBJECT_1, uid=10, name="audio object 3", feature_node_hash="9dt+r+op")
@@ -105,7 +114,16 @@ TEXT_OBJECT = Object(
     shape=Shape.TEXT,
     feature_node_hash="textFeatureNodeHash",
     archived=False,
-    attributes=[],
+    attributes=[
+        TextAttribute(
+            uid=[9, 1],
+            feature_node_hash="definitionFeatureHash",
+            name="Definition",
+            required=False,
+            dynamic=False,
+            archived=False,
+        ),
+    ],
 )
 all_types_structure = OntologyStructure(
     objects=[
