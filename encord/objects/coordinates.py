@@ -41,6 +41,13 @@ from encord.orm.base_dto import BaseDTO
 logger = logging.getLogger(__name__)
 
 
+class BoundingBoxDict(TypedDict):
+    h: float
+    w: float
+    x: float
+    y: float
+
+
 @dataclass(frozen=True)
 class BoundingBoxCoordinates:
     """Represents bounding box coordinates, where all values are percentages relative to the total image size.
@@ -88,6 +95,10 @@ class BoundingBoxCoordinates:
             "x": self.top_left_x,
             "y": self.top_left_y,
         }
+
+
+class RotatableBoundingBoxDict(BoundingBoxDict):
+    theta: float
 
 
 @dataclass(frozen=True)
@@ -173,6 +184,11 @@ class CuboidCoordinates:
         }
 
 
+class PointDict(TypedDict):
+    x: float
+    y: float
+
+
 @dataclass(frozen=True)
 class PointCoordinate:
     """Represents a point coordinate, where all coordinates are a percentage relative to the total image size.
@@ -208,6 +224,10 @@ class PointCoordinate:
             dict: A dictionary representation of the point coordinate.
         """
         return {"0": {"x": self.x, "y": self.y}}
+
+
+class PointDict3D(PointDict):
+    z: float
 
 
 @dataclass(frozen=True)
@@ -249,6 +269,10 @@ class PointCoordinate3D:
 class PolygonCoordsToDict(str, Enum):
     single_polygon = "single_polygon"
     multiple_polygons = "multiple_polygons"
+
+
+LegacyPolygonDict = Union[Dict[str, PointDict], list[PointDict]]
+PolygonDict = List[List[List[float]]]
 
 
 class PolygonCoordinates:
@@ -399,6 +423,9 @@ def flat_to_pnt_coordinates(ring: List[float]) -> List[PointCoordinate]:
 
 def pnt_coordinates_to_flat(coordinates: List[PointCoordinate]) -> List[float]:
     return [coord for point in coordinates for coord in [point.x, point.y]]
+
+
+PolylineDict = Union[Dict[str, PointDict], list[PointDict], Dict[str, PointDict3D], list[PointDict3D]]
 
 
 @dataclass(frozen=True)
