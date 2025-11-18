@@ -312,7 +312,16 @@ all_types_structure = OntologyStructure(
             shape=Shape.AUDIO,
             feature_node_hash="KVfzNkFy",
             archived=False,
-            attributes=[],
+            attributes=[
+                TextAttribute(
+                    uid=[8, 1],
+                    feature_node_hash="transcriptFeatureHash",
+                    name="Transcript",
+                    required=False,
+                    dynamic=False,
+                    archived=False,
+                ),
+            ],
         ),
         Object(
             uid=9,
@@ -321,7 +330,16 @@ all_types_structure = OntologyStructure(
             shape=Shape.TEXT,
             feature_node_hash="textFeatureNodeHash",
             archived=False,
-            attributes=[],
+            attributes=[
+                TextAttribute(
+                    uid=[9, 1],
+                    feature_node_hash="definitionFeatureHash",
+                    name="Definition",
+                    required=False,
+                    dynamic=False,
+                    archived=False,
+                ),
+            ],
         ),
     ],
     classifications=[

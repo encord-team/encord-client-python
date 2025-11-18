@@ -23,6 +23,7 @@ from typing import (
     List,
     NoReturn,
     Optional,
+    Protocol,
     Sequence,
     Set,
     Tuple,
@@ -51,11 +52,13 @@ from encord.objects.internal_helpers import (
     _search_child_attributes,
 )
 from encord.objects.options import Option, _get_option_by_hash
+from encord.objects.spaces.annotation.base_annotation import ClassificationAnnotation
 from encord.objects.types import AttributeDict, ClassificationAnswer, FrameClassification
 from encord.objects.utils import check_email, short_uuid_str
 
 if TYPE_CHECKING:
     from encord.objects import LabelRowV2
+    from encord.objects.spaces.base_space import Space
 
 
 class ClassificationInstance:
@@ -81,6 +84,8 @@ class ClassificationInstance:
 
         # Only used for frame entities
         self._frames_to_data: Dict[int, ClassificationInstance.FrameData] = defaultdict(self.FrameData)
+
+        self._spaces: dict[str, Space] = dict()
 
     @property
     def classification_hash(self) -> str:
@@ -114,6 +119,12 @@ class ClassificationInstance:
             return 1
         else:
             return self._parent.number_of_frames
+
+    def _operation_not_allowed_for_classifications_on_space(self, extended_message: Optional[str] = None) -> None:
+        base_message = "This operation is not allowed for classifications that exist on a space."
+        error_message = base_message + extended_message if extended_message is not None else base_message
+        if self._is_assigned_to_space():
+            raise LabelRowError(error_message)
 
     @property
     def range_list(self) -> Ranges:
@@ -173,7 +184,7 @@ class ClassificationInstance:
     def manual_annotation(self, manual_annotation: bool) -> None:
         self._instance_data.manual_annotation = manual_annotation
 
-    def is_on_frame(self, frame: int) -> bool:
+    def is_on_frame(self, frame: Frames) -> bool:
         intersection = self._range_manager.intersection(frame)
         return len(intersection) > 0
 
@@ -183,6 +194,15 @@ class ClassificationInstance:
 
     def is_global(self) -> bool:
         return self._ontology_classification.is_global
+
+    def _is_assigned_to_space(self) -> bool:
+        return bool(self._spaces)
+
+    def _add_to_space(self, space: Space) -> None:
+        self._spaces[space.space_id] = space
+
+    def _remove_from_space(self, space_id: str) -> None:
+        self._spaces.pop(space_id)
 
     def is_assigned_to_label_row(self) -> bool:
         return self._parent is not None
@@ -237,6 +257,10 @@ class ClassificationInstance:
             manual_annotation: Optionally specify whether the classification instance on this frame was manually annotated. Defaults to `True`.
             reviews: Should only be set by internal functions.
         """
+        self._operation_not_allowed_for_classifications_on_space(
+            extended_message="For adding the classification to different frames on a space, use Space.place_classification."
+        )
+
         if created_at is None:
             created_at = datetime.now()
 
@@ -295,6 +319,8 @@ class ClassificationInstance:
         frame: Either the frame number or the image hash if the data type is an image or image group.
             Defaults to the first frame.
         """
+        self._operation_not_allowed_for_classifications_on_space()
+
         if self.is_global():
             raise LabelRowError("Cannot get annotation for a global classification instance.")
         elif isinstance(frame, str):
@@ -314,6 +340,10 @@ class ClassificationInstance:
         return self.Annotation(self, frame_num)
 
     def remove_from_frames(self, frames: Frames) -> None:
+        self._operation_not_allowed_for_classifications_on_space(
+            extended_message="For removing the classification from different frames on a space, use Space.unplace_classification."
+        )
+
         range_manager = RangeManager(frame_class=frames)
         ranges_to_remove = range_manager.get_ranges()
 
@@ -326,11 +356,18 @@ class ClassificationInstance:
         if self._parent:
             self._parent._remove_frames_from_classification(self, frames)
 
-    def get_annotations(self) -> List[Annotation]:
+    # TODO: Need to deprecate this old Annotation
+    def get_annotations(self) -> Union[List[Annotation], List[ClassificationAnnotation]]:
         """Returns:
         A list of `ClassificationInstance.Annotation` in order of available frames.
         """
-        return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_data.keys())]
+        if self._is_assigned_to_space():
+            res: List[ClassificationAnnotation] = []
+            for space in self._spaces.values():
+                res.extend(space.get_classification_annotations(filter_classifications=[self.classification_hash]))
+            return res
+        else:
+            return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_data.keys())]
 
     def is_valid(self) -> None:
         if not len(self._frames_to_data) > 0 and not self.is_range_only():
@@ -587,6 +624,7 @@ class ClassificationInstance:
         manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
         last_edited_at: datetime = field(default_factory=datetime.now)
         last_edited_by: Optional[str] = None
+        """ This field is deprecated. It will always be None """
         reviews: Optional[List[dict]] = None
 
         @staticmethod
@@ -615,7 +653,7 @@ class ClassificationInstance:
                 manual_annotation=manual_annotation,
                 last_edited_at=last_edited_at,
                 last_edited_by=d.get("lastEditedBy"),
-                reviews=d.get("reviews"),
+                reviews=None,
             )
 
         def update_from_optional_fields(
