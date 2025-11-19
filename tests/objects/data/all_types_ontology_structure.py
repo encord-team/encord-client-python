@@ -12,7 +12,7 @@ from encord.objects.common import Shape
 from encord.objects.ontology_labels_impl import Classification
 
 GLOBAL_CLASSIFICATION = Classification(
-    uid=4,
+    _uid=4,
     feature_node_hash="3DuQbFx4",
     _level=OntologyClassificationLevel.GLOBAL,
     attributes=[
@@ -25,14 +25,14 @@ GLOBAL_CLASSIFICATION = Classification(
             archived=False,
             options=[
                 FlatOption(
-                    uid=[4, 1, 1],
+                    _uid=[4, 1, 1],
                     feature_node_hash="3vLjF0q1",
                     label="Global Answer 1",
                     value="global_answer_1",
                     archived=False,
                 ),
                 FlatOption(
-                    uid=[4, 1, 2],
+                    _uid=[4, 1, 2],
                     feature_node_hash="74r7nK9e",
                     label="Global Answer 2",
                     value="checklist_classification_answer_2",
@@ -46,7 +46,7 @@ GLOBAL_CLASSIFICATION = Classification(
 all_types_structure = OntologyStructure(
     objects=[
         Object(
-            uid=1,
+            _uid=1,
             name="Box",
             color="#D33115",
             shape=Shape.BOUNDING_BOX,
@@ -55,7 +55,7 @@ all_types_structure = OntologyStructure(
             attributes=[],
         ),
         Object(
-            uid=2,
+            _uid=2,
             name="Polygon",
             color="#E27300",
             shape=Shape.POLYGON,
@@ -64,7 +64,7 @@ all_types_structure = OntologyStructure(
             attributes=[],
         ),
         Object(
-            uid=3,
+            _uid=3,
             name="Polyline",
             color="#16406C",
             shape=Shape.POLYLINE,
@@ -73,7 +73,7 @@ all_types_structure = OntologyStructure(
             attributes=[],
         ),
         Object(
-            uid=4,
+            _uid=4,
             name="Keypoint Dynamic Answers",
             color="#FE9200",
             shape=Shape.POINT,
@@ -97,10 +97,10 @@ all_types_structure = OntologyStructure(
                     dynamic=True,
                     options=[
                         FlatOption(
-                            uid=[5, 2, 1], feature_node_hash="MTE5MjQ3", label="Angry", value="angry", archived=False
+                            _uid=[5, 2, 1], feature_node_hash="MTE5MjQ3", label="Angry", value="angry", archived=False
                         ),
                         FlatOption(
-                            uid=[5, 2, 2], feature_node_hash="Nzg3MDE3", label="Sad", value="sad", archived=False
+                            _uid=[5, 2, 2], feature_node_hash="Nzg3MDE3", label="Sad", value="sad", archived=False
                         ),
                     ],
                 ),
@@ -113,7 +113,7 @@ all_types_structure = OntologyStructure(
                     dynamic=True,
                     options=[
                         NestableOption(
-                            uid=[6, 1, 1],
+                            _uid=[6, 1, 1],
                             feature_node_hash="MT9xNDQ5",
                             label="1 option 1",
                             value="1_option_1",
@@ -130,7 +130,7 @@ all_types_structure = OntologyStructure(
                             ],
                         ),
                         NestableOption(
-                            uid=[6, 1, 2],
+                            _uid=[6, 1, 2],
                             feature_node_hash="9TcxMjAy",
                             label="1 option 2",
                             value="1_option_2",
@@ -145,7 +145,7 @@ all_types_structure = OntologyStructure(
                                     dynamic=False,
                                     options=[
                                         NestableOption(
-                                            uid=[6, 1, 2, 1, 1],
+                                            _uid=[6, 1, 2, 1, 1],
                                             feature_node_hash="MTY0M9U2",
                                             label="1 2 1 option 1",
                                             value="1_2_1_option_1",
@@ -153,7 +153,7 @@ all_types_structure = OntologyStructure(
                                             nested_options=[],
                                         ),
                                         NestableOption(
-                                            uid=[6, 1, 2, 1, 2],
+                                            _uid=[6, 1, 2, 1, 2],
                                             feature_node_hash="MTI49jQy",
                                             label="1 2 1 option ",
                                             value="1_2_1_option_",
@@ -169,7 +169,7 @@ all_types_structure = OntologyStructure(
             ],
         ),
         Object(
-            uid=5,
+            _uid=5,
             name="Nested Box",
             color="#FCDC00",
             shape=Shape.BOUNDING_BOX,
@@ -193,17 +193,17 @@ all_types_structure = OntologyStructure(
                     dynamic=False,
                     options=[
                         FlatOption(
-                            uid=[5, 2, 1], feature_node_hash="MTE5MjQ3", label="Angry", value="angry", archived=False
+                            _uid=[5, 2, 1], feature_node_hash="MTE5MjQ3", label="Angry", value="angry", archived=False
                         ),
                         FlatOption(
-                            uid=[5, 2, 2], feature_node_hash="Nzg3MDE3", label="Sad", value="sad", archived=False
+                            _uid=[5, 2, 2], feature_node_hash="Nzg3MDE3", label="Sad", value="sad", archived=False
                         ),
                     ],
                 ),
             ],
         ),
         Object(
-            uid=6,
+            _uid=6,
             name="Deeply Nested Polygon",
             color="#DBDF00",
             shape=Shape.POLYGON,
@@ -227,10 +227,10 @@ all_types_structure = OntologyStructure(
                     dynamic=False,
                     options=[
                         FlatOption(
-                            uid=[5, 2, 1], feature_node_hash="MT5555Q3", label="Angry", value="angry", archived=False
+                            _uid=[5, 2, 1], feature_node_hash="MT5555Q3", label="Angry", value="angry", archived=False
                         ),
                         FlatOption(
-                            uid=[5, 2, 2], feature_node_hash="Nzg5555E3", label="Sad", value="sad", archived=False
+                            _uid=[5, 2, 2], feature_node_hash="Nzg5555E3", label="Sad", value="sad", archived=False
                         ),
                     ],
                 ),
@@ -243,7 +243,7 @@ all_types_structure = OntologyStructure(
                     dynamic=False,
                     options=[
                         NestableOption(
-                            uid=[6, 1, 1],
+                            _uid=[6, 1, 1],
                             feature_node_hash="MTExNDQ5",
                             label="1 option 1",
                             value="1_option_1",
@@ -260,7 +260,7 @@ all_types_structure = OntologyStructure(
                             ],
                         ),
                         NestableOption(
-                            uid=[6, 1, 2],
+                            _uid=[6, 1, 2],
                             feature_node_hash="MTcxMjAy",
                             label="1 option 2",
                             value="1_option_2",
@@ -275,14 +275,14 @@ all_types_structure = OntologyStructure(
                                     dynamic=False,
                                     options=[
                                         FlatOption(
-                                            uid=[5, 2, 1],
+                                            _uid=[5, 2, 1],
                                             feature_node_hash="MT66665Q3",
                                             label="Angry",
                                             value="angry",
                                             archived=False,
                                         ),
                                         FlatOption(
-                                            uid=[5, 2, 2],
+                                            _uid=[5, 2, 2],
                                             feature_node_hash="Nzg66665E3",
                                             label="Sad",
                                             value="sad",
@@ -297,7 +297,7 @@ all_types_structure = OntologyStructure(
             ],
         ),
         Object(
-            uid=7,
+            _uid=7,
             name="cone object",
             color="#A4DD00",
             shape=Shape.SKELETON,
@@ -306,7 +306,7 @@ all_types_structure = OntologyStructure(
             attributes=[],
         ),
         Object(
-            uid=8,
+            _uid=8,
             name="audio object",
             color="#A4FF00",
             shape=Shape.AUDIO,
@@ -315,7 +315,7 @@ all_types_structure = OntologyStructure(
             attributes=[],
         ),
         Object(
-            uid=9,
+            _uid=9,
             name="text object",
             color="#A4FF00",
             shape=Shape.TEXT,
@@ -326,7 +326,7 @@ all_types_structure = OntologyStructure(
     ],
     classifications=[
         Classification(
-            uid=1,
+            _uid=1,
             feature_node_hash="NzIxNTU1",
             attributes=[
                 RadioAttribute(
@@ -338,7 +338,7 @@ all_types_structure = OntologyStructure(
                     dynamic=False,
                     options=[
                         NestableOption(
-                            uid=[1, 1, 1],
+                            _uid=[1, 1, 1],
                             feature_node_hash="MTcwMjM5",
                             label="cl 1 option 1",
                             value="cl_1_option_1",
@@ -346,7 +346,7 @@ all_types_structure = OntologyStructure(
                             nested_options=[],
                         ),
                         NestableOption(
-                            uid=[1, 1, 2],
+                            _uid=[1, 1, 2],
                             feature_node_hash="MjUzMTg1",
                             label="cl 1 option 2",
                             value="cl_1_option_2",
@@ -367,7 +367,7 @@ all_types_structure = OntologyStructure(
             ],
         ),
         Classification(
-            uid=2,
+            _uid=2,
             feature_node_hash="jPOcEsbw",
             attributes=[
                 TextAttribute(
@@ -381,7 +381,7 @@ all_types_structure = OntologyStructure(
             ],
         ),
         Classification(
-            uid=3,
+            _uid=3,
             feature_node_hash="3DuQbFxo",
             attributes=[
                 ChecklistAttribute(
@@ -393,14 +393,14 @@ all_types_structure = OntologyStructure(
                     dynamic=False,
                     options=[
                         FlatOption(
-                            uid=[3, 1, 1],
+                            _uid=[3, 1, 1],
                             feature_node_hash="fvLjF0qZ",
                             label="Checklist classification answer 1",
                             value="checklist_classification_answer_1",
                             archived=False,
                         ),
                         FlatOption(
-                            uid=[3, 1, 2],
+                            _uid=[3, 1, 2],
                             feature_node_hash="a4r7nK9i",
                             label="Checklist classification answer 2",
                             value="checklist_classification_answer_2",
