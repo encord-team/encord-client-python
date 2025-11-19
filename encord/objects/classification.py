@@ -15,8 +15,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional, Sequence, Type
 
-from encord.common.enum import StringEnum
 from encord.common.deprecated import deprecated
+from encord.common.enum import StringEnum
 from encord.objects.attributes import (
     Attribute,
     AttributeType,
