@@ -41,7 +41,7 @@ class Attribute(OntologyNestedElement, Generic[OptionType]):
     """
 
     def __init__(self, uid: NestedID, feature_node_hash: str, name: str, required: bool, archived: bool, dynamic: bool):
-        super().__init__(uid=uid, feature_node_hash=feature_node_hash)
+        super().__init__(_uid=uid, feature_node_hash=feature_node_hash)
         self.name = name
         self.required = required
         self.archived = archived
@@ -105,7 +105,7 @@ class Attribute(OntologyNestedElement, Generic[OptionType]):
 
     def _encode_base(self) -> Dict[str, Any]:
         ret: Dict[str, Any] = dict()
-        ret["id"] = _decode_nested_uid(self.uid)
+        ret["id"] = _decode_nested_uid(self._uid)
         ret["name"] = self.name
         ret["type"] = self.get_property_type().value
         ret["featureNodeHash"] = self.feature_node_hash
@@ -128,7 +128,9 @@ class Attribute(OntologyNestedElement, Generic[OptionType]):
 
     def __eq__(self, other: object):
         return (
-            isinstance(other, Attribute) and self.uid == other.uid and self.feature_node_hash == other.feature_node_hash
+            isinstance(other, Attribute)
+            and self._uid == other._uid
+            and self.feature_node_hash == other.feature_node_hash
         )
 
 
@@ -190,7 +192,7 @@ class RadioAttribute(Attribute["NestableOption"]):
         Returns:
             a `NestableOption` instance attached to the attribute. This can be further specified by adding nested attributes.
         """
-        return _add_option(self._options, NestableOption, label, self.uid, local_uid, feature_node_hash, value)
+        return _add_option(self._options, NestableOption, label, self._uid, local_uid, feature_node_hash, value)
 
 
 class ChecklistAttribute(Attribute["FlatOption"]):
@@ -250,7 +252,7 @@ class ChecklistAttribute(Attribute["FlatOption"]):
         Returns:
             a `FlatOption` instance attached to the attribute.
         """
-        return _add_option(self._options, FlatOption, label, self.uid, local_uid, feature_node_hash, value)
+        return _add_option(self._options, FlatOption, label, self._uid, local_uid, feature_node_hash, value)
 
 
 class TextAttribute(Attribute["FlatOption"]):

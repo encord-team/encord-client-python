@@ -16,6 +16,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Sequence, Type
 
 from encord.common.enum import StringEnum
+from encord.common.deprecated import deprecated
 from encord.objects.attributes import (
     Attribute,
     AttributeType,
@@ -69,10 +70,19 @@ class Classification(OntologyElement):
     ```
     """
 
-    uid: int
+    _uid: int
     feature_node_hash: str
     attributes: List[Attribute]
     _level: OntologyClassificationLevel | None = None
+
+    @property
+    @deprecated(version="0.1.181", alternative="feature_node_hash")
+    def uid(self) -> int:
+        """
+        This field is deprecated and will be removed in future versions.
+        Please use :attr:`feature_node_hash` instead for unique identification.
+        """
+        return self._uid
 
     @property
     def title(self) -> str:
@@ -132,7 +142,7 @@ class Classification(OntologyElement):
         level = OntologyClassificationLevel.from_string(str(d.get("level")))
 
         return Classification(
-            uid=int(d["id"]),
+            _uid=int(d["id"]),
             feature_node_hash=d["featureNodeHash"],
             attributes=attributes_ret,
             _level=level,
@@ -148,7 +158,7 @@ class Classification(OntologyElement):
             ValueError: If the classification does not have any attributes.
         """
         ret: Dict[str, Any] = {
-            "id": str(self.uid),
+            "id": str(self._uid),
             "featureNodeHash": self.feature_node_hash,
         }
 
@@ -157,7 +167,7 @@ class Classification(OntologyElement):
         if attributes_list := attributes_to_list_dict(self.attributes):
             ret["attributes"] = attributes_list
         else:
-            raise ValueError(f"Classification {str(self.uid)} requires attribute before use")
+            raise ValueError(f"Classification {str(self._uid)} requires attribute before use")
 
         return ret
 
@@ -188,7 +198,7 @@ class Classification(OntologyElement):
         """
         if self.attributes:
             raise ValueError("Classification should have exactly one root attribute")
-        return _add_attribute(self.attributes, cls, name, [self.uid], local_uid, feature_node_hash, required)
+        return _add_attribute(self.attributes, cls, name, [self._uid], local_uid, feature_node_hash, required)
 
     def __hash__(self):
         return hash(self.feature_node_hash)

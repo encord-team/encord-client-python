@@ -14,6 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Type
 
+from encord.common.deprecated import deprecated
 from encord.objects.attributes import (
     Attribute,
     AttributeType,
@@ -27,7 +28,7 @@ from encord.objects.ontology_element import OntologyElement
 
 @dataclass
 class Object(OntologyElement):
-    uid: int
+    _uid: int
     name: str
     color: str
     shape: Shape
@@ -35,6 +36,15 @@ class Object(OntologyElement):
     required: bool = False
     archived: bool = False
     attributes: List[Attribute] = field(default_factory=list)
+
+    @property
+    @deprecated(version="0.1.181", alternative="feature_node_hash")
+    def uid(self) -> int:
+        """
+        This field is deprecated and will be removed in future versions.
+        Please use :attr:`feature_node_hash` instead for unique identification.
+        """
+        return self._uid
 
     @property
     def title(self) -> str:
@@ -75,7 +85,7 @@ class Object(OntologyElement):
             attribute_from_dict(attribute_dict) for attribute_dict in d.get("attributes", [])
         ]
         return Object(
-            uid=int(d["id"]),
+            _uid=int(d["id"]),
             name=d["name"],
             color=d["color"],
             shape=shape_opt,
@@ -92,7 +102,7 @@ class Object(OntologyElement):
             Dict[str, Any]: The dictionary representation of the object.
         """
         ret: Dict[str, Any] = {
-            "id": str(self.uid),
+            "id": str(self._uid),
             "name": self.name,
             "color": self.color,
             "shape": self.shape.value,
@@ -132,7 +142,7 @@ class Object(OntologyElement):
         Raises:
             ValueError: If the specified `local_uid` or `feature_node_hash` violate uniqueness constraints.
         """
-        return _add_attribute(self.attributes, cls, name, [self.uid], local_uid, feature_node_hash, required, dynamic)
+        return _add_attribute(self.attributes, cls, name, [self._uid], local_uid, feature_node_hash, required, dynamic)
 
 
 from encord.objects.ontology_object_instance import ObjectInstance

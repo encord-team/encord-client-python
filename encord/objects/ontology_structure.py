@@ -198,11 +198,11 @@ class OntologyStructure:
         """
         if uid is None:
             if self.objects:
-                uid = max([obj.uid for obj in self.objects]) + 1
+                uid = max([obj._uid for obj in self.objects]) + 1
             else:
                 uid = 1
         else:
-            if any([obj.uid == uid for obj in self.objects]):
+            if any([obj._uid == uid for obj in self.objects]):
                 raise ValueError(f"Duplicate uid '{uid}'")
 
         if color is None:
@@ -222,7 +222,7 @@ class OntologyStructure:
         if any([obj.feature_node_hash == feature_node_hash for obj in self.objects]):
             raise ValueError(f"Duplicate feature_node_hash '{feature_node_hash}'")
 
-        obj = Object(uid=uid, name=name, color=color, shape=shape, feature_node_hash=feature_node_hash)
+        obj = Object(_uid=uid, name=name, color=color, shape=shape, feature_node_hash=feature_node_hash)
         self.objects.append(obj)
         return obj
 
@@ -247,11 +247,11 @@ class OntologyStructure:
         """
         if uid is None:
             if self.classifications:
-                uid = max([cls.uid for cls in self.classifications]) + 1
+                uid = max([cls._uid for cls in self.classifications]) + 1
             else:
                 uid = 1
         else:
-            if any([cls.uid == uid for cls in self.classifications]):
+            if any([cls._uid == uid for cls in self.classifications]):
                 raise ValueError(f"Duplicate uid '{uid}'")
 
         if feature_node_hash is None:
@@ -260,7 +260,7 @@ class OntologyStructure:
         if any([cls.feature_node_hash == feature_node_hash for cls in self.classifications]):
             raise ValueError(f"Duplicate feature_node_hash '{feature_node_hash}'")
 
-        cls = Classification(uid=uid, feature_node_hash=feature_node_hash, attributes=list(), _level=level)
+        cls = Classification(_uid=uid, feature_node_hash=feature_node_hash, attributes=list(), _level=level)
         self.classifications.append(cls)
         return cls
 

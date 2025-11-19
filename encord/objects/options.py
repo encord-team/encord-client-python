@@ -50,7 +50,7 @@ class Option(OntologyNestedElement):
 
     def to_dict(self) -> Dict[str, Any]:
         ret: Dict[str, Any] = dict()
-        ret["id"] = _decode_nested_uid(self.uid)
+        ret["id"] = _decode_nested_uid(self._uid)
         ret["label"] = self.label
         ret["value"] = self.value
         ret["featureNodeHash"] = self.feature_node_hash
@@ -68,7 +68,7 @@ class Option(OntologyNestedElement):
     @staticmethod
     def _decode_common_option_fields(option_dict: Dict[str, Any]) -> Dict[str, Any]:
         return {
-            "uid": _nested_id_from_json_str(option_dict["id"]),
+            "_uid": _nested_id_from_json_str(option_dict["id"]),
             "label": option_dict["label"],
             "value": option_dict["value"],
             "feature_node_hash": option_dict["featureNodeHash"],
@@ -163,7 +163,7 @@ class NestableOption(Option):
         Raises:
             ValueError: if specified `local_uid` or `feature_node_hash` violate uniqueness constraints
         """
-        return _add_attribute(self.nested_options, cls, name, self.uid, local_uid, feature_node_hash, required)
+        return _add_attribute(self.nested_options, cls, name, self._uid, local_uid, feature_node_hash, required)
 
     def __hash__(self):
         return hash(self.feature_node_hash)
@@ -185,7 +185,7 @@ def _add_option(
     if not value:
         value = re.sub(r"\s", "_", label).lower()
     option = cls(
-        uid=parent_uid + [local_uid], feature_node_hash=feature_node_hash, label=label, value=value, archived=False
+        _uid=parent_uid + [local_uid], feature_node_hash=feature_node_hash, label=label, value=value, archived=False
     )
     options.append(option)
     return option

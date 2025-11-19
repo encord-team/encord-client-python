@@ -15,6 +15,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Iterable, List, Optional, Sequence, Tuple, Type, TypeVar, cast
 
+from encord.common.deprecated import deprecated
 from encord.exceptions import OntologyError
 from encord.objects.utils import (
     check_type,
@@ -111,7 +112,16 @@ class OntologyElement(ABC):
 
 @dataclass
 class OntologyNestedElement(OntologyElement):
-    uid: NestedID
+    _uid: NestedID
+
+    @property
+    @deprecated(version="0.1.181", alternative="feature_node_hash")
+    def uid(self) -> NestedID:
+        """
+        This field is deprecated and will be removed in future versions.
+        Please use :attr:`feature_node_hash` instead for unique identification.
+        """
+        return self._uid
 
 
 def _assert_singular_result_list(
@@ -169,11 +179,11 @@ def _build_identifiers(
 ) -> Tuple[int, str]:
     if local_uid is None:
         if existent_items:
-            local_uid = max([item.uid[-1] for item in existent_items]) + 1
+            local_uid = max([item._uid[-1] for item in existent_items]) + 1
         else:
             local_uid = 1
     else:
-        if any([item.uid[-1] == local_uid for item in existent_items]):
+        if any([item._uid[-1] == local_uid for item in existent_items]):
             raise ValueError(f"Duplicate uid '{local_uid}'")
 
     if feature_node_hash is None:
