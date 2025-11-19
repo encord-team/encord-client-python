@@ -18,7 +18,7 @@ log.setLevel(logging.INFO)
 
 # intentionally using a different import for backwards compatibility check
 OBJECT_1 = encord.objects.Object(
-    uid=1,
+    _uid=1,
     name="Eye",
     color="#D33115",
     shape=encord.objects.Shape.BOUNDING_BOX,
@@ -27,7 +27,7 @@ OBJECT_1 = encord.objects.Object(
 )
 
 FLAT_OPTION_1 = encord.objects.FlatOption(
-    uid=[2, 1, 1],
+    _uid=[2, 1, 1],
     feature_node_hash="2bc17c88",
     label="Is it a cute nose?",
     value="is_it_a_cute_nose?",
@@ -35,7 +35,7 @@ FLAT_OPTION_1 = encord.objects.FlatOption(
 )
 
 FLAT_OPTION_2 = encord.objects.FlatOption(
-    uid=[2, 1, 2],
+    _uid=[2, 1, 2],
     feature_node_hash="86eaa4f2",
     label="Is it a wet nose? ",
     value="is_it_a_wet_nose?_",
@@ -54,7 +54,7 @@ CHECKLIST_ATTRIBUTE = encord.objects.ChecklistAttribute(
 
 
 OBJECT_2 = encord.objects.Object(
-    uid=2,
+    _uid=2,
     name="Nose",
     color="#E27300",
     shape=encord.objects.Shape.POLYGON,
@@ -74,7 +74,7 @@ RADIO_ATTRIBUTE_1 = encord.objects.RadioAttribute(
 )
 
 NESTABLE_OPTION_3 = encord.objects.NestableOption(
-    uid=[4, 1, 1],
+    _uid=[4, 1, 1],
     feature_node_hash="5d102ce6",
     label="Nested Option",
     value="nested_option",
@@ -92,7 +92,7 @@ RADIO_ATTRIBUTE_2 = encord.objects.RadioAttribute(
     archived=False,
 )
 OBJECT_3 = encord.objects.Object(
-    uid=3,
+    _uid=3,
     name="Example",
     color="#FE9200",
     shape=encord.objects.Shape.POLYLINE,
@@ -102,7 +102,7 @@ OBJECT_3 = encord.objects.Object(
 )
 
 NESTABLE_OPTION_1 = encord.objects.NestableOption(
-    uid=[1, 1, 1],
+    _uid=[1, 1, 1],
     feature_node_hash="a3aeb48d",
     label="Yes",
     value="yes",
@@ -110,7 +110,7 @@ NESTABLE_OPTION_1 = encord.objects.NestableOption(
 )
 
 NESTABLE_OPTION_2 = encord.objects.NestableOption(
-    uid=[1, 1, 2],
+    _uid=[1, 1, 2],
     feature_node_hash="d0a4b373",
     label="No",
     value="no",
@@ -128,7 +128,7 @@ RADIO_ATTRIBUTE_3 = encord.objects.RadioAttribute(
 )
 # intentionally using a different import for backwards compatibility check
 CLASSIFICATION_1 = encord.objects.Classification(
-    uid=1,
+    _uid=1,
     feature_node_hash="a39d81c0",
     attributes=[RADIO_ATTRIBUTE_3],
 )
