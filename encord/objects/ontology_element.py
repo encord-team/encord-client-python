@@ -112,6 +112,7 @@ class OntologyElement(ABC):
 @dataclass
 class OntologyNestedElement(OntologyElement):
     uid: NestedID
+    """Deprecated. Please use feature_node_hash instead."""
 
 
 def _assert_singular_result_list(

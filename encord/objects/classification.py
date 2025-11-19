@@ -50,7 +50,7 @@ class Classification(OntologyElement):
     or general content category.
 
     Attributes:
-        uid (int): Unique identifier for the classification.
+        uid (int): Deprecated. Please use `feature_node_hash` instead.
         feature_node_hash (str): Unique hash value identifying the feature node
             in the ontology tree corresponding to this classification.
         attributes (List[Attribute]): List of `Attribute` instances that define

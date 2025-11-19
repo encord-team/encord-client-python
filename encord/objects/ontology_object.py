@@ -28,6 +28,7 @@ from encord.objects.ontology_element import OntologyElement
 @dataclass
 class Object(OntologyElement):
     uid: int
+    """Deprecated. Please use feature_node_hash instead."""
     name: str
     color: str
     shape: Shape
