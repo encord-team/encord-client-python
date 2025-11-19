@@ -115,7 +115,7 @@ class OntologyNestedElement(OntologyElement):
     _uid: NestedID
 
     @property
-    @deprecated(version="0.1.181", alternative="feature_node_hash")
+    @deprecated(version="0.1.184", alternative="feature_node_hash")
     def uid(self) -> NestedID:
         """
         This field is deprecated and will be removed in future versions.

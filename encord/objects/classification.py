@@ -76,7 +76,7 @@ class Classification(OntologyElement):
     _level: OntologyClassificationLevel | None = None
 
     @property
-    @deprecated(version="0.1.181", alternative="feature_node_hash")
+    @deprecated(version="0.1.184", alternative="feature_node_hash")
     def uid(self) -> int:
         """
         This field is deprecated and will be removed in future versions.
