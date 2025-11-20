@@ -16,7 +16,7 @@ from dataclasses import dataclass
 class ClassificationOption:
     """DEPRECATED: prefer using :class:`encord.ontology.Ontology`
 
-    A dataclass which holds nested options for the :class:`.ClassificationAttribute`.
+    A dataclass which holds nested options for the :class:`encord.project_ontology.classification_attribute.ClassificationAttribute`.
     """
 
     #: A unique (to the ontology) identifier of the option.

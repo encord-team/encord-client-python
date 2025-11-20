@@ -75,7 +75,7 @@ class Ontology:
 
     @classmethod
     def from_dict(cls, ontology_dict: Dict):
-        """Convert python dictionary too an :class:`.Ontology` object.
+        """Convert python dictionary too an :class:`encord.project_ontology.ontology.Ontology` object.
 
         Args:
             ontology_dict: The dictionary to convert.
@@ -137,7 +137,7 @@ class Ontology:
         return options
 
     def add_object(self, name: str, shape: ObjectShape) -> None:
-        """Add an :class:`.OntologyObject` to the ontology.
+        """Add an :class:`encord.project_ontology.ontology_object.OntologyObject` to the ontology.
 
         Args:
             name: A descriptive name of the object.
