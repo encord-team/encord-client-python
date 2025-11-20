@@ -176,17 +176,19 @@ class Collection:
 
     def list_items(
         self,
+        include_client_metadata: Optional[bool] = None,
         page_size: Optional[int] = None,
     ) -> Iterator[StorageItem]:
         """List storage items in the collection.
 
         Args:
+            include_client_metadata (Optional[bool]): Whether to include client metadata for each item.
             page_size (Optional[int]): The number of items to fetch per page.
 
         Returns:
             Iterator[StorageItem]: An iterator containing storage items in the collection.
         """
-        params = GetCollectionItemsParams(pageSize=page_size)
+        params = GetCollectionItemsParams(includeClientMetadata=include_client_metadata, pageSize=page_size)
         paged_items = self._client.get_paged_iterator(
             f"index/collections/{self.uuid}/accessible-items",
             params=params,
@@ -196,18 +198,19 @@ class Collection:
             yield StorageItem(api_client=self._client, orm_item=item)
 
     def list_items_include_inaccessible(
-        self, page_size: Optional[int] = None
+        self, include_client_metadata: Optional[bool] = None, page_size: Optional[int] = None
     ) -> Iterator[Union[StorageItem, StorageItemInaccessible]]:
         """List storage items in the collection, including those that are inaccessible.
 
         Args:
+            include_client_metadata (Optional[bool]): Whether to include client metadata for each item.
             page_size (Optional[int]): The number of items to fetch per page.
 
         Returns:
             Iterator[Union[StorageItem, StorageItemInaccessible]]: An iterator containing both accessible
             and inaccessible storage items in the collection.
         """
-        params = GetCollectionItemsParams(pageSize=page_size)
+        params = GetCollectionItemsParams(includeClientMetadata=include_client_metadata, pageSize=page_size)
         paged_items: Iterator[Union[orm_storage.StorageItem, orm_storage.StorageItemInaccessible]] = (
             self._client.get_paged_iterator(
                 f"index/collections/{self.uuid}/all-items",

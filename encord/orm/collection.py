@@ -43,11 +43,12 @@ class GetCollectionItemsParams(BaseDTO):
     """Query parameters for listing items inside a Collection.
 
     Args:
-        page_token: Token for fetching the next page of Collection items from a
-            previous call.
+        include_client_metadata: Optionally include client metadata into the result of this query.
+        page_token: Token for fetching the next page of Collection items from a previous call.
         page_size: Maximum number of items to return in a single page.
     """
 
+    include_client_metadata: Optional[bool] = Field(default=None, alias="includeClientMetadata")
     page_token: Optional[str] = Field(default=None, alias="pageToken")
     page_size: Optional[int] = Field(default=None, alias="pageSize")
 
