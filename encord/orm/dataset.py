@@ -416,7 +416,7 @@ class DataRow(dict, Formatter):
         returns whether this is a performance optimised image group. Returns `None` for other data types.
 
         DEPRECATED: This method is deprecated and will be removed in the upcoming library version.
-        Please use :meth:`.is_image_sequence` instead
+        Please use :meth:`encord.orm.dataset.DataRow.is_image_sequence` instead
         """
         return self.is_image_sequence
 
@@ -453,7 +453,7 @@ class DataRow(dict, Formatter):
         Args:
             signed_url: If True, this will fetch a generated signed url of the data asset.
             images_data_fetch_options: If not None, this will fetch the image data of the data asset. You can
-                additionally specify what to fetch with the :class:`.ImagesDataFetchOptions` class.
+                additionally specify what to fetch with the :class:`encord.orm.dataset.ImagesDataFetchOptions` class.
             client_metadata: If True, this will fetch the client metadata of the data asset.
         """
         if self["_querier"] is not None:
@@ -478,7 +478,7 @@ class DataRow(dict, Formatter):
     def save(self) -> None:
         """Sync local state to the server, if updates are made. This is a blocking function.
 
-        The newest values from the Encord server will update the current :class:`.DataRow` object.
+        The newest values from the Encord server will update the current :class:`encord.orm.dataset.DataRow` object.
         """
         if self["_querier"] is not None:
             payload = {}

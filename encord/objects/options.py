@@ -131,7 +131,7 @@ class NestableOption(Option):
         feature_node_hash: Optional[str] = None,
         required: bool = False,
     ) -> AttributeType:
-        """This method is deprecated, please use :meth:`.add_nested_option` instead.
+        """This method is deprecated, please use :meth:`.add_nested_attribute` instead.
         There is no functional difference between these methods.
         """
         return self.add_nested_attribute(
