@@ -32,7 +32,7 @@ class DatasetUserRole(IntEnum):
     USER = 1
 
 
-class DatasetUserRoleV2(CamelStrEnum):
+class DatasetUserRoleV2(str, Enum):
     """String-based dataset user roles used by the current API.
 
     This enum mirrors :class:`DatasetUserRole` but uses string values
