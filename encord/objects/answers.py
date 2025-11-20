@@ -11,6 +11,7 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
+import warnings
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Dict, Generic, Iterable, List, NoReturn, Optional, Set, TypeVar, Union
@@ -27,7 +28,7 @@ from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.frames import Ranges, ranges_to_list
 from encord.objects.ontology_element import _get_element_by_hash
 from encord.objects.options import FlatOption, NestableOption
-from encord.objects.utils import _lower_snake_case, short_uuid_str
+from encord.objects.utils import _lower_snake_case
 
 ValueType = TypeVar("ValueType")
 AttributeType = TypeVar("AttributeType", bound=Attribute)
@@ -42,7 +43,16 @@ class Answer(ABC, Generic[ValueType, AttributeType]):
     def __init__(self, ontology_attribute: AttributeType, track_hash: Optional[str] = None):
         self._answered = False
         self._ontology_attribute = ontology_attribute
-        self._track_hash = track_hash or short_uuid_str()
+
+        # DEPRECATED: the track_hash parameter is deprecated and will be removed in a future release
+        if track_hash is not None:
+            warnings.warn(
+                "The 'track_hash' parameter is deprecated and will be removed in a future release. "
+                "It is no longer used by the Encord platform.",
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
+
         self._is_manual_annotation = DEFAULT_MANUAL_ANNOTATION
         self._should_propagate = False
 
@@ -118,7 +128,7 @@ class Answer(ABC, Generic[ValueType, AttributeType]):
             "dynamic": True,
             "range": ranges_to_list(ranges),
             "shouldPropagate": self._should_propagate,
-            "trackHash": self._track_hash,
+            "trackHash": "",  # DEPRECATED: trackHash is deprecated
         }
 
 
