@@ -3,9 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from enum import auto
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from uuid import UUID
 
+from encord.common.deprecated import deprecated
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO, Field
 from encord.orm.dataset import DataUnitError, LongPollingStatus
@@ -266,23 +267,10 @@ class CreateStorageFolderPayload(BaseDTO):
     cloud_synced_folder_params: Optional[CloudSyncedFolderParams] = None
 
 
-class LayoutPayload(BaseDTO):
-    """Layout configuration for a group or view.
-
-    Args:
-        layout: Layout specification. Can be a built-in layout identifier
-            (``"default-grid"`` or ``"default-list"``) or a custom
-            layout dictionary.
-    """
-
-    layout: Union[Literal["default-grid"], Literal["default-list"], Dict]
-
-
 class DataGroupGrid(BaseDTO):
     """Grid-based layout for a data group.
 
     Args:
-        layout_type: Fixed value ``"default-grid"`` identifying grid layout.
         layout_contents:  Ordered list of item UUIDs to display in the grid.
         name: Optional name of the data group.
     """
@@ -292,12 +280,11 @@ class DataGroupGrid(BaseDTO):
     name: Optional[str] = None
 
 
-class DataGroupList(BaseDTO):
+class DataGroupCarousel(BaseDTO):
     """Carousel layout for a data group.
 
     Args:
-        layout_type:   Fixed value ``"default-list"`` identifying list layout.
-        layout_contents:  Ordered list of item UUIDs to display in the list.
+        layout_contents:  Ordered list of item UUIDs to display in the carousel.
         name:  Optional name of the data group.
     """
 
@@ -306,11 +293,17 @@ class DataGroupList(BaseDTO):
     name: Optional[str] = None
 
 
+@deprecated(version=None, alternative="DataGroupCarousel")
+class DataGroupList(DataGroupCarousel):
+    """
+    Deprecated, will be removed in a future release. Use `DataGroupCarousel` instead.
+    """
+
+
 class DataGroupCustom(BaseDTO):
     """Custom layout for a data group.
 
     Args:
-        layout_type: Fixed value ``"custom"`` identifying custom layout.
         name: Optional name of the data group.
         layout_contents: Mapping from arbitrary keys to item UUIDs.
         layout: Arbitrary layout configuration structure.
@@ -324,7 +317,7 @@ class DataGroupCustom(BaseDTO):
     settings: Optional[Dict] = None
 
 
-DataGroupInput = Union[DataGroupGrid, DataGroupList, DataGroupCustom]
+DataGroupInput = Union[DataGroupGrid, DataGroupCarousel, DataGroupCustom]
 
 
 class CreateDataGroupPayload(BaseDTO):
@@ -333,10 +326,12 @@ class CreateDataGroupPayload(BaseDTO):
     Args:
         item_type: Item type of the group. Must be ``"GROUP"``.
         params: Layout and configuration for the data group.
+        client_metadata: Optional custom metadata to be associated with the data group.
     """
 
     item_type: Literal["GROUP"] = "GROUP"
     params: DataGroupInput
+    client_metadata: Optional[Dict[str, Any]] = None
 
 
 class UploadSignedUrlsPayload(BaseDTO):
