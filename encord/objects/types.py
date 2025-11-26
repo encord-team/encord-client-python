@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Literal, Optional, TypedDict, Union
+from typing import TYPE_CHECKING, Any, List, Literal, Optional, TypedDict, Union
 
 if TYPE_CHECKING:
     from encord.objects import Shape
@@ -49,6 +49,7 @@ class BaseFrameObject(BaseFrameObjectRequired, total=False):
     lastEditedAt: str
     confidence: float
     manualAnnotation: bool
+    reviews: list[Any]  # TODO: Remove this as its deprecated
     isDeleted: bool  # TODO: Remove this as its deprecated, although its still being sent out
 
 
@@ -110,6 +111,7 @@ class FrameClassification(FrameClassificationRequired, total=False):
     lastEditedAt: str
     lastEditedBy: str
     manualAnnotation: bool
+    reviews: list[Any]
 
 
 class LabelBlob(TypedDict):
@@ -162,6 +164,7 @@ class ClassificationAnswer(ClassificationAnswerRequired, total=False):
     lastEditedAt: Union[str, None]
     lastEditedBy: Union[str, None]
     manualAnnotation: Union[bool, None]
+    reviews: list[Any]  # TODO: Remove this as its deprecated
 
 
 class ObjectAnswer(TypedDict):

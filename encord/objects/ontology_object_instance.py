@@ -801,7 +801,7 @@ class ObjectInstance:
                 last_edited_by=d.get("lastEditedBy"),
                 confidence=d["confidence"],
                 manual_annotation=d.get("manualAnnotation", True),
-                reviews=None,  # To be deprecated. Always set to None.
+                reviews=d.get("reviews"),
                 is_deleted=d.get("isDeleted"),
             )
 

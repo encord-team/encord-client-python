@@ -613,7 +613,7 @@ class ClassificationInstance:
                 manual_annotation=manual_annotation,
                 last_edited_at=last_edited_at,
                 last_edited_by=d.get("lastEditedBy"),
-                reviews=None,  # Deprecated and to be removed. Always None.
+                reviews=d.get("reviews"),
             )
 
         def update_from_optional_fields(
