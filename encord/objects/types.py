@@ -176,6 +176,11 @@ class ObjectAnswerForNonGeometric(BaseFrameObject):
     range: Union[List[List[int]], None]
 
 
+class ObjectAction(TypedDict):
+    objectHash: str
+    actions: List[DynamicAttributeObject]
+
+
 def is_containing_metadata(answer: ClassificationAnswer) -> bool:
     """Check if the classification answer contains necessary metadata fields."""
     return answer.get("createdBy") is not None

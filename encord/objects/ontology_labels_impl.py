@@ -88,6 +88,7 @@ from encord.objects.types import (
     DynamicAttributeObject,
     FrameClassification,
     FrameObject,
+    ObjectAction,
     ObjectAnswer,
     ObjectAnswerForNonGeometric,
     is_containing_metadata,
@@ -1749,7 +1750,7 @@ class LabelRowV2:
 
         return ret
 
-    def _to_object_actions(self) -> Dict[str, Any]:
+    def _to_object_actions(self) -> Dict[str, ObjectAction]:
         ret: Dict[str, Any] = {}
         for obj in self._objects_map.values():
             all_static_answers = self._dynamic_answers_to_encord_dict(obj)
@@ -1761,13 +1762,14 @@ class LabelRowV2:
             }
         return ret
 
-    def _to_classification_answers(self) -> Dict[str, Any]:
-        ret: Dict[str, Any] = {}
+    def _to_classification_answers(self) -> Dict[str, ClassificationAnswer]:
+        ret: Dict[str, ClassificationAnswer] = {}
         for classification in self._classifications_map.values():
             all_static_answers = classification.get_all_static_answers()
             classifications = [answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()]
+            answered_classifications = cast(List[AttributeDict], classifications)
             ret[classification.classification_hash] = {
-                "classifications": list(reversed(classifications)),
+                "classifications": list(reversed(answered_classifications)),
                 "classificationHash": classification.classification_hash,
                 "featureHash": classification.feature_hash,
             }
@@ -1798,12 +1800,12 @@ class LabelRowV2:
         return ret
 
     @staticmethod
-    def _dynamic_answers_to_encord_dict(object_instance: ObjectInstance) -> List[AttributeDict]:
-        ret = []
+    def _dynamic_answers_to_encord_dict(object_instance: ObjectInstance) -> List[DynamicAttributeObject]:
+        ret: List[DynamicAttributeObject] = []
         for answer, ranges in object_instance._get_all_dynamic_answers():
             d_opt = answer.to_encord_dict(ranges)
             if d_opt is not None:
-                ret.append(d_opt)
+                ret.append(cast(DynamicAttributeObject, d_opt))
         return ret
 
     def _to_encord_data_units(self) -> Dict[str, Any]:
@@ -2423,7 +2425,7 @@ class LabelRowV2:
     # This is only to be used by non-frame modalities (e.g. Audio)
     def _create_new_object_instance_with_ranges(
         self,
-        object_answer: dict,
+        object_answer: ObjectAnswerForNonGeometric,
         ranges: Ranges,
     ) -> ObjectInstance:
         feature_hash = object_answer["featureHash"]
@@ -2471,7 +2473,7 @@ class LabelRowV2:
 
     def _create_new_html_object_instance(
         self,
-        object_answer: dict,
+        object_answer: ObjectAnswerForNonGeometric,
         range_html: dict,
     ) -> ObjectInstance:
         feature_hash = object_answer["featureHash"]
