@@ -190,19 +190,21 @@ class ClassificationInstance:
         new_range_manager = RangeManager(frame_class=frames)
         ranges_to_add = new_range_manager.get_ranges()
 
-        is_present, conflicting_ranges = self._is_classification_present_on_frames(ranges_to_add)
-        if is_present and not overwrite:
-            location_msg = "globally" if self.is_global() else f"on the ranges {conflicting_ranges}"
-            raise LabelRowError(
-                f"The classification '{self.classification_hash}' already exists "
-                f"{location_msg}."
-                f"Set 'overwrite' parameter to True to override."
-            )
-        else:
-            self._range_manager.add_ranges(ranges_to_add)
+        if not overwrite:
+            # if we're overwriting, we don't really care if there's a conflict
+            is_present, conflicting_ranges = self._is_classification_present_on_frames(ranges_to_add)
+            if is_present:
+                location_msg = "globally" if self.is_global() else f"on the ranges {conflicting_ranges}"
+                raise LabelRowError(
+                    f"The classification '{self.classification_hash}' already exists "
+                    f"{location_msg}."
+                    f"Set 'overwrite' parameter to True to override."
+                )
 
-            if self._parent:
-                self._parent._add_frames_to_classification(self, ranges_to_add)
+        self._range_manager.add_ranges(ranges_to_add)
+
+        if self._parent:
+            self._parent._add_frames_to_classification(self, ranges_to_add)
 
     def set_for_frames(
         self,
