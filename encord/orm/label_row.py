@@ -4,7 +4,7 @@ import datetime
 from collections import OrderedDict
 from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from pydantic import Field
@@ -13,9 +13,6 @@ from encord.common.time_parser import parse_datetime
 from encord.orm import base_orm
 from encord.orm.base_dto import BaseDTO
 from encord.orm.formatter import Formatter
-
-if TYPE_CHECKING:
-    from encord.objects.spaces.types import SpaceInfo
 
 
 class LabelRow(base_orm.BaseORM):
@@ -308,9 +305,6 @@ class LabelRowMetadata(Formatter):
     audio_bit_depth: Optional[int]
     audio_num_channels: Optional[int]
 
-    """Information about spaces on this label row."""
-    spaces: dict
-
     group_hash: Optional[str] = None
 
     task_uuid: Optional[UUID] = None
@@ -351,7 +345,6 @@ class LabelRowMetadata(Formatter):
             data_title=json_dict["data_title"],
             data_type=json_dict["data_type"],
             data_link=json_dict["data_link"],
-            spaces=json_dict["spaces"],
             label_status=LabelStatus(json_dict["label_status"]),
             annotation_task_status=annotation_task_status,
             workflow_graph_node=WorkflowGraphNode.from_optional_dict(json_dict.get("workflow_graph_node")),
@@ -539,6 +532,4 @@ def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRo
         backing_item_uuid=label_row_metadata_dto.backing_item_uuid,
         assigned_user_email=label_row_metadata_dto.assigned_user_email,
         last_actioned_by_user_email=label_row_metadata_dto.last_actioned_by_user_email,
-        # TODO: Do we need this in the DTO?
-        spaces={},
     )
