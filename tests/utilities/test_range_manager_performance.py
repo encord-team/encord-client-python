@@ -50,8 +50,9 @@ def test_add_range_sequential_performance():
     )
 
 
-def test_initialization_performance_10k():
-    """Test initialization with 10,000 frames."""
+def test_initialization_performance_100k():
+    """Test initialization with 100,000 frames."""
+
     frames = list(range(NUM_RANGES))
 
     start = time.perf_counter()
