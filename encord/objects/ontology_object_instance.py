@@ -16,6 +16,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import (
+    TYPE_CHECKING,
     Any,
     Dict,
     Iterable,
@@ -57,7 +58,6 @@ from encord.objects.internal_helpers import (
     _infer_attribute_from_answer,
     _search_child_attributes,
 )
-from encord.objects.ontology_labels_impl import LabelRowV2
 from encord.objects.ontology_object import Object
 from encord.objects.options import Option
 from encord.objects.types import (
@@ -67,6 +67,9 @@ from encord.objects.types import (
     DynamicAttributeObject,
 )
 from encord.objects.utils import check_email, short_uuid_str
+
+if TYPE_CHECKING:
+    from encord.objects.ontology_labels_impl import LabelRowV2
 
 
 class ObjectInstance:
