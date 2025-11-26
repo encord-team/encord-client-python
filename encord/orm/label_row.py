@@ -533,3 +533,8 @@ def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRo
         assigned_user_email=label_row_metadata_dto.assigned_user_email,
         last_actioned_by_user_email=label_row_metadata_dto.last_actioned_by_user_email,
     )
+
+
+class LabelRowMetadataPage(BaseDTO):
+    results: list[LabelRowMetadataDTO]
+    next_page_token: str | None = None
