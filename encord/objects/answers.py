@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, Iterable, List, NoReturn, Optional, Set, TypeVar, Union
+from typing import Any, Dict, Generic, Iterable, List, NoReturn, Optional, Set, TypeVar, Union, cast
 
 from encord.common.deprecated import deprecated
 from encord.objects.attributes import (
@@ -27,6 +27,8 @@ from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.frames import Ranges, ranges_to_list
 from encord.objects.ontology_element import _get_element_by_hash
 from encord.objects.options import FlatOption, NestableOption
+from encord.objects.types import AnswerDict as AnswerDict
+from encord.objects.types import AttributeDict, DynamicAttributeObject
 from encord.objects.utils import _lower_snake_case, short_uuid_str
 
 ValueType = TypeVar("ValueType")
@@ -89,7 +91,9 @@ class Answer(ABC, Generic[ValueType, AttributeType]):
         assert self._value is not None, "Value can't be none for the answered Answer object"
         return self._value
 
-    def to_encord_dict(self, ranges: Optional[Ranges] = None) -> Optional[Dict[str, Any]]:
+    def to_encord_dict(
+        self, ranges: Optional[Ranges] = None, spaceId: Optional[str] = None
+    ) -> Optional[AttributeDict | DynamicAttributeObject]:
         """A low level helper to convert to the Encord JSON format.
         For most use cases the `get_answer` function should be used instead.
         """
@@ -100,26 +104,38 @@ class Answer(ABC, Generic[ValueType, AttributeType]):
         if self.is_dynamic:
             if ranges is None:
                 raise ValueError("Frame range should be set for dynamic answers")
-
-            ret.update(self._get_encord_dynamic_fields(ranges))
+            dynamic_ret = self._add_dynamic_fields(ret, ranges, spaceId)
+            return dynamic_ret
 
         return ret
 
     @abstractmethod
-    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> AttributeDict:
         pass
 
     @abstractmethod
     def from_dict(self, d: Dict[str, Any]) -> None:
         pass
 
-    def _get_encord_dynamic_fields(self, ranges: Ranges) -> Dict[str, Any]:
-        return {
+    def _add_dynamic_fields(
+        self, base_answer: AttributeDict, ranges: Ranges, spaceId: Optional[str] = None
+    ) -> DynamicAttributeObject:
+        ret: DynamicAttributeObject = {
+            "name": base_answer["name"],
+            "value": base_answer["value"],
+            "featureHash": base_answer["featureHash"],
+            "answers": base_answer["answers"],
+            "manualAnnotation": self._is_manual_annotation,
             "dynamic": True,
             "range": ranges_to_list(ranges),
             "shouldPropagate": self._should_propagate,
             "trackHash": self._track_hash,
         }
+
+        if spaceId is not None:
+            ret["spaceId"] = spaceId
+
+        return ret
 
 
 class TextAnswer(Answer[str, TextAttribute]):
@@ -150,7 +166,7 @@ class TextAnswer(Answer[str, TextAttribute]):
             other_answer = text_answer.get()
             self.set(other_answer)
 
-    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> AttributeDict:
         return {
             "name": self.ontology_attribute.name,
             "value": _lower_snake_case(self.ontology_attribute.name),
@@ -217,7 +233,7 @@ class RadioAnswer(Answer[NestableOption, RadioAttribute]):
             other_answer = radio_answer.get()
             self.set(other_answer)
 
-    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> AttributeDict:
         nestable_option = self._value
         assert nestable_option is not None  # Check is performed earlier, so just to silence mypy
 
@@ -225,11 +241,14 @@ class RadioAnswer(Answer[NestableOption, RadioAttribute]):
             "name": self.ontology_attribute.name,
             "value": _lower_snake_case(self.ontology_attribute.name),
             "answers": [
-                {
-                    "name": nestable_option.label,
-                    "value": nestable_option.value,
-                    "featureHash": nestable_option.feature_node_hash,
-                }
+                cast(
+                    AnswerDict,
+                    {
+                        "name": nestable_option.label,
+                        "value": nestable_option.value,
+                        "featureHash": nestable_option.feature_node_hash,
+                    },
+                )
             ],
             "featureHash": self.ontology_attribute.feature_node_hash,
             "manualAnnotation": self.is_manual_annotation,
@@ -379,15 +398,18 @@ class ChecklistAnswer(Answer[List[FlatOption], ChecklistAttribute]):
                 f"is associated with this class: `{self._ontology_attribute}`"
             )
 
-    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> AttributeDict:
         ontology_attribute: ChecklistAttribute = self._ontology_attribute
         checked_options = [option for option in ontology_attribute.options if self.get_option_value(option)]
-        answers = [
-            {
-                "name": option.label,
-                "value": option.value,
-                "featureHash": option.feature_node_hash,
-            }
+        answers: List[AnswerDict] = [
+            cast(
+                AnswerDict,
+                {
+                    "name": option.label,
+                    "value": option.value,
+                    "featureHash": option.feature_node_hash,
+                },
+            )
             for option in checked_options
         ]
         return {
@@ -449,7 +471,7 @@ class NumericAnswer(Answer[NumericAnswerValue, NumericAttribute]):
         self._answered = True
         self.is_manual_annotation = manual_annotation
 
-    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> Dict[str, Any]:
+    def _to_encord_dict_impl(self, is_dynamic: bool = False) -> AttributeDict:
         return {
             "name": self.ontology_attribute.name,
             "value": _lower_snake_case(self.ontology_attribute.name),

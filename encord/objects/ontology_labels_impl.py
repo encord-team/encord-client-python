@@ -15,7 +15,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Type, Union
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Type, Union, cast
 from uuid import UUID
 
 from encord.client import EncordClientProject
@@ -65,6 +65,7 @@ from encord.objects.coordinates import (
     SkeletonCoordinates,
     TextCoordinates,
     Visibility,
+    get_coordinates_from_frame_object_dict,
 )
 from encord.objects.frames import (
     Frames,
@@ -80,7 +81,17 @@ from encord.objects.metadata import DataGroupMetadata, DICOMSeriesMetadata, DICO
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
-from encord.objects.types import ClassificationAnswer, ClassificationObject, is_containing_metadata
+from encord.objects.types import (
+    AttributeDict,
+    BaseFrameObject,
+    ClassificationAnswer,
+    DynamicAttributeObject,
+    FrameClassification,
+    FrameObject,
+    ObjectAnswer,
+    ObjectAnswerForNonGeometric,
+    is_containing_metadata,
+)
 from encord.objects.utils import _lower_snake_case
 from encord.ontology import Ontology
 from encord.orm import storage as orm_storage
@@ -1778,7 +1789,7 @@ class LabelRowV2:
         return ret
 
     @staticmethod
-    def _get_all_static_answers(object_instance: ObjectInstance) -> List[Dict[str, Any]]:
+    def _get_all_static_answers(object_instance: ObjectInstance) -> List[AttributeDict]:
         ret = []
         for answer in object_instance._get_all_static_answers():
             d_opt = answer.to_encord_dict()
@@ -1787,7 +1798,7 @@ class LabelRowV2:
         return ret
 
     @staticmethod
-    def _dynamic_answers_to_encord_dict(object_instance: ObjectInstance) -> List[Dict[str, Any]]:
+    def _dynamic_answers_to_encord_dict(object_instance: ObjectInstance) -> List[AttributeDict]:
         ret = []
         for answer, ranges in object_instance._get_all_dynamic_answers():
             d_opt = answer.to_encord_dict(ranges)
@@ -2355,7 +2366,7 @@ class LabelRowV2:
 
     def _add_object_instances_from_objects(
         self,
-        objects_list: List[dict],
+        objects_list: List[FrameObject],
         frame: int,
     ) -> None:
         for frame_object_label in objects_list:
@@ -2384,7 +2395,7 @@ class LabelRowV2:
             answer_list = answer["actions"]
             object_instance.set_answer_from_list(answer_list)
 
-    def _create_new_object_instance(self, frame_object_label: dict, frame: int) -> ObjectInstance:
+    def _create_new_object_instance(self, frame_object_label: FrameObject, frame: int) -> ObjectInstance:
         ontology = self._ontology.structure
         feature_hash = frame_object_label["featureHash"]
         object_hash = frame_object_label["objectHash"]
@@ -2392,7 +2403,7 @@ class LabelRowV2:
         label_class = ontology.get_child_by_hash(feature_hash, type_=Object)
         object_instance = ObjectInstance(label_class, object_hash=object_hash)
 
-        coordinates = self._get_coordinates(frame_object_label)
+        coordinates = get_coordinates_from_frame_object_dict(frame_object_label)
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_label)
 
         object_instance.set_for_frames(
@@ -2422,7 +2433,8 @@ class LabelRowV2:
 
         frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
         frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
-        object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_info_dict)
+        frame_object_dict = cast(BaseFrameObject, frame_info_dict)
+        object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_dict)
 
         expected_shape: Shape
         coordinates: Union[AudioCoordinates, TextCoordinates]
@@ -2469,7 +2481,8 @@ class LabelRowV2:
 
         frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
         frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
-        object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_info_dict)
+        frame_object_dict = cast(BaseFrameObject, frame_info_dict)
+        object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_dict)
 
         object_instance = ObjectInstance(label_class, object_hash=object_hash)
         object_instance.set_for_frames(
@@ -2492,13 +2505,13 @@ class LabelRowV2:
 
     def _add_coordinates_to_object_instance(
         self,
-        frame_object_label: dict,
+        frame_object_label: FrameObject,
         frame: int = 0,
     ) -> None:
         object_hash = frame_object_label["objectHash"]
         object_instance = self._objects_map[object_hash]
 
-        coordinates = self._get_coordinates(frame_object_label)
+        coordinates = get_coordinates_from_frame_object_dict(frame_object_label)
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_label)
 
         object_instance.set_for_frames(
@@ -2514,51 +2527,11 @@ class LabelRowV2:
             is_deleted=object_frame_instance_info.is_deleted,
         )
 
-    def _get_coordinates(self, frame_object_label: dict) -> Coordinates:
-        if "boundingBox" in frame_object_label:
-            return BoundingBoxCoordinates.from_dict(frame_object_label)
-        if "rotatableBoundingBox" in frame_object_label:
-            return RotatableBoundingBoxCoordinates.from_dict(frame_object_label)
-        elif "polygon" in frame_object_label or "polygons" in frame_object_label:
-            return PolygonCoordinates.from_dict(frame_object_label)
-        elif "point" in frame_object_label:
-            coords = frame_object_label["point"]["0"]
-            if "x" in coords and "y" in coords and "z" in coords:
-                return PointCoordinate3D.from_dict(frame_object_label)
-            elif "x" in coords and "y" in coords:
-                return PointCoordinate.from_dict(frame_object_label)
-            else:
-                raise ValueError(f"Invalid point coordinates in {frame_object_label}")
-        elif "polyline" in frame_object_label:
-            return PolylineCoordinates.from_dict(frame_object_label)
-        elif "skeleton" in frame_object_label:
-
-            def _with_visibility_enum(point: dict):
-                if point.get(Visibility.INVISIBLE.value):
-                    point["visibility"] = Visibility.INVISIBLE
-                elif point.get(Visibility.OCCLUDED.value):
-                    point["visibility"] = Visibility.OCCLUDED
-                elif point.get(Visibility.SELF_OCCLUDED.value):
-                    point["visibility"] = Visibility.SELF_OCCLUDED
-                elif point.get(Visibility.VISIBLE.value):
-                    point["visibility"] = Visibility.VISIBLE
-                return point
-
-            values = [_with_visibility_enum(pnt) for pnt in frame_object_label["skeleton"].values()]
-            skeleton_frame_object_label = {
-                "name": frame_object_label["name"],
-                "values": values,
-            }
-            return SkeletonCoordinates.from_dict(skeleton_frame_object_label)
-        elif "bitmask" in frame_object_label:
-            return BitmaskCoordinates.from_dict(frame_object_label)
-        elif "cuboid" in frame_object_label:
-            return CuboidCoordinates.from_dict(frame_object_label)
-        else:
-            raise NotImplementedError(f"Getting coordinates for `{frame_object_label}` is not supported yet.")
-
     def _add_classification_instances_from_classifications(
-        self, classifications_list: List[dict], classification_answers: dict, frame: int
+        self,
+        classifications_list: List[FrameClassification],
+        classification_answers: Dict[str, ClassificationAnswer],
+        frame: int,
     ):
         for frame_classification_label in classifications_list:
             classification_hash = frame_classification_label["classificationHash"]
@@ -2599,9 +2572,9 @@ class LabelRowV2:
 
     def _create_new_classification_instance(
         self,
-        frame_classification_label: dict,
+        frame_classification_label: FrameClassification,
         frame: int,
-        classification_answers: dict,
+        classification_answers: Dict[str, ClassificationAnswer],
     ) -> Optional[ClassificationInstance]:
         feature_hash = frame_classification_label["featureHash"]
         classification_hash = frame_classification_label["classificationHash"]
@@ -2666,11 +2639,13 @@ class LabelRowV2:
         return classification_instance
 
     def _add_static_answers_from_dict(
-        self, classification_instance: ClassificationInstance, answers_list: List[ClassificationObject]
+        self, classification_instance: ClassificationInstance, answers_list: List[AttributeDict]
     ) -> None:
         classification_instance.set_answer_from_list(answers_list)
 
-    def _add_frames_to_classification_instance(self, frame_classification_label: dict, frame: int) -> None:
+    def _add_frames_to_classification_instance(
+        self, frame_classification_label: FrameClassification, frame: int
+    ) -> None:
         object_hash = frame_classification_label["classificationHash"]
         classification_instance = self._classifications_map[object_hash]
         frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)

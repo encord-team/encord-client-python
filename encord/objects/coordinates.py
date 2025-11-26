@@ -14,17 +14,34 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Type, TypedDict, Union, cast
 
 from encord.exceptions import LabelRowError
 from encord.objects.bitmask import BitmaskCoordinates
 from encord.objects.common import Shape
 from encord.objects.frames import Ranges
 from encord.objects.html_node import HtmlRange
+from encord.objects.types import (
+    BaseFrameObject,
+    BoundingBoxFrameObject,
+    FrameObject,
+    PointFrameObject2D,
+    PointFrameObject3D,
+    PolygonFrameObject,
+    PolylineFrameObject,
+    RotatableBoundingBoxFrameObject,
+)
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 
 logger = logging.getLogger(__name__)
+
+
+class BoundingBoxDict(TypedDict):
+    h: float
+    w: float
+    x: float
+    y: float
 
 
 @dataclass(frozen=True)
@@ -44,7 +61,7 @@ class BoundingBoxCoordinates:
     top_left_y: float
 
     @staticmethod
-    def from_dict(d: Dict) -> BoundingBoxCoordinates:
+    def from_dict(d: BoundingBoxFrameObject) -> BoundingBoxCoordinates:
         """Create a BoundingBoxCoordinates instance from a dictionary.
 
         Args:
@@ -61,7 +78,7 @@ class BoundingBoxCoordinates:
             top_left_y=bounding_box_dict["y"],
         )
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> BoundingBoxDict:
         """Convert the BoundingBoxCoordinates instance to a dictionary.
 
         Returns:
@@ -73,6 +90,10 @@ class BoundingBoxCoordinates:
             "x": self.top_left_x,
             "y": self.top_left_y,
         }
+
+
+class RotatableBoundingBoxDict(BoundingBoxDict):
+    theta: float
 
 
 @dataclass(frozen=True)
@@ -94,7 +115,7 @@ class RotatableBoundingBoxCoordinates:
     theta: float  # angle of rotation originating at center of box
 
     @staticmethod
-    def from_dict(d: Dict) -> RotatableBoundingBoxCoordinates:
+    def from_dict(d: RotatableBoundingBoxFrameObject) -> RotatableBoundingBoxCoordinates:
         """Create a RotatableBoundingBoxCoordinates instance from a dictionary.
 
         Args:
@@ -112,7 +133,7 @@ class RotatableBoundingBoxCoordinates:
             theta=rotatable_bounding_box_dict["theta"],
         )
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> RotatableBoundingBoxDict:
         """Convert the RotatableBoundingBoxCoordinates instance to a dictionary.
 
         Returns:
@@ -158,6 +179,11 @@ class CuboidCoordinates:
         }
 
 
+class PointDict(TypedDict):
+    x: float
+    y: float
+
+
 @dataclass(frozen=True)
 class PointCoordinate:
     """Represents a point coordinate, where all coordinates are a percentage relative to the total image size.
@@ -171,7 +197,7 @@ class PointCoordinate:
     y: float
 
     @staticmethod
-    def from_dict(d: Dict) -> PointCoordinate:
+    def from_dict(d: PointFrameObject2D) -> PointCoordinate:
         """Create a PointCoordinate instance from a dictionary.
 
         Args:
@@ -186,13 +212,17 @@ class PointCoordinate:
             y=first_item["y"],
         )
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> Dict[str, PointDict]:
         """Convert the PointCoordinate instance to a dictionary.
 
         Returns:
             dict: A dictionary representation of the point coordinate.
         """
         return {"0": {"x": self.x, "y": self.y}}
+
+
+class PointDict3D(PointDict):
+    z: float
 
 
 @dataclass(frozen=True)
@@ -210,7 +240,7 @@ class PointCoordinate3D:
     z: float
 
     @staticmethod
-    def from_dict(d: Dict) -> PointCoordinate3D:
+    def from_dict(d: PointFrameObject3D) -> PointCoordinate3D:
         """Create a PointCoordinate3D instance from a dictionary.
 
         Args:
@@ -222,7 +252,7 @@ class PointCoordinate3D:
         first_item = d["point"]["0"]
         return PointCoordinate3D(x=first_item["x"], y=first_item["y"], z=first_item["z"])
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict[str, PointDict3D]:
         """Convert the PointCoordinate instance to a dictionary.
 
         Returns:
@@ -234,6 +264,10 @@ class PointCoordinate3D:
 class PolygonCoordsToDict(str, Enum):
     single_polygon = "single_polygon"
     multiple_polygons = "multiple_polygons"
+
+
+LegacyPolygonDict = Union[Dict[str, PointDict], list[PointDict]]
+PolygonDict = List[List[List[float]]]
 
 
 class PolygonCoordinates:
@@ -275,7 +309,7 @@ class PolygonCoordinates:
         return self._polygons
 
     @staticmethod
-    def from_dict(d: Dict) -> "PolygonCoordinates":
+    def from_dict(d: PolygonFrameObject) -> "PolygonCoordinates":
         """Create a PolygonCoordinates instance from a dictionary.
 
         Supports both legacy format (single polygon with one contour) and the new complex format (multiple polygons and contours).
@@ -343,9 +377,11 @@ class PolygonCoordinates:
 
         # Parse new format if present
         polygons = []
-        for polygon in d.get("polygons", []):
-            contours = [flat_to_pnt_coordinates(contour) for contour in polygon]
-            polygons.append(contours)
+        raw_polygons = d.get("polygons", [])
+        if raw_polygons is not None:
+            for polygon in raw_polygons:
+                contours = [flat_to_pnt_coordinates(contour) for contour in polygon]
+                polygons.append(contours)
 
         return PolygonCoordinates(values=values, polygons=polygons)
 
@@ -384,6 +420,9 @@ def pnt_coordinates_to_flat(coordinates: List[PointCoordinate]) -> List[float]:
     return [coord for point in coordinates for coord in [point.x, point.y]]
 
 
+PolylineDict = Union[Dict[str, PointDict], list[PointDict], Dict[str, PointDict3D], list[PointDict3D]]
+
+
 @dataclass(frozen=True)
 class PolylineCoordinates:
     """Represents polyline coordinates as a list of point coordinates.
@@ -395,7 +434,7 @@ class PolylineCoordinates:
     values: Union[List[PointCoordinate], List[PointCoordinate3D]]
 
     @staticmethod
-    def from_dict(d: Dict) -> PolylineCoordinates:
+    def from_dict(d: PolylineFrameObject) -> PolylineCoordinates:
         """Create a PolylineCoordinates instance from a dictionary.
 
         Args:
@@ -418,7 +457,8 @@ class PolylineCoordinates:
         all_3d = all("x" in pnt and "y" in pnt and "z" in pnt for pnt in sorted_dict_values)
         values: Union[List[PointCoordinate], List[PointCoordinate3D]] = []
         if all_3d:
-            values = [PointCoordinate3D(x=value["x"], y=value["y"], z=value["z"]) for value in sorted_dict_values]
+            values_3d = cast(List[PointDict3D], sorted_dict_values)
+            values = [PointCoordinate3D(x=value["x"], y=value["y"], z=value["z"]) for value in values_3d]
         elif all_2d:
             values = [PointCoordinate(x=value["x"], y=value["y"]) for value in sorted_dict_values]
         else:
@@ -556,6 +596,16 @@ Coordinates = Union[
     CuboidCoordinates,
 ]
 
+GeometricCoordinates = Union[
+    BoundingBoxCoordinates,
+    RotatableBoundingBoxCoordinates,
+    PointCoordinate,
+    PolygonCoordinates,
+    PolylineCoordinates,
+    SkeletonCoordinates,
+    BitmaskCoordinates,
+]
+
 ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] = {
     Shape.BOUNDING_BOX: [BoundingBoxCoordinates],
     Shape.ROTATABLE_BOUNDING_BOX: [RotatableBoundingBoxCoordinates],
@@ -568,3 +618,134 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] 
     Shape.AUDIO: [AudioCoordinates],
     Shape.TEXT: [TextCoordinates, HtmlCoordinates],
 }
+
+
+def add_coordinates_to_frame_object_dict(
+    coordinates: Coordinates,
+    base_frame_object: BaseFrameObject,
+    width: int,
+    height: int,
+) -> FrameObject:
+    result: Dict[str, Any] = dict(base_frame_object)
+
+    if isinstance(coordinates, BoundingBoxCoordinates):
+        result["boundingBox"] = coordinates.to_dict()
+        result["shape"] = Shape.BOUNDING_BOX.value
+    elif isinstance(coordinates, RotatableBoundingBoxCoordinates):
+        result["rotatableBoundingBox"] = coordinates.to_dict()
+        result["shape"] = Shape.ROTATABLE_BOUNDING_BOX.value
+    elif isinstance(coordinates, PolygonCoordinates):
+        result["polygon"] = coordinates.to_dict()
+        result["polygons"] = coordinates.to_dict(PolygonCoordsToDict.multiple_polygons)
+        result["shape"] = Shape.POLYGON.value
+    elif isinstance(coordinates, PolylineCoordinates):
+        result["polyline"] = coordinates.to_dict()
+        result["shape"] = Shape.POLYLINE.value
+    elif isinstance(coordinates, (PointCoordinate, PointCoordinate3D)):
+        result["point"] = coordinates.to_dict()
+        result["shape"] = Shape.POINT.value
+    elif isinstance(coordinates, BitmaskCoordinates):
+        if not (height == coordinates._encoded_bitmask.height and width == coordinates._encoded_bitmask.width):
+            raise ValueError("Bitmask dimensions don't match the media dimensions")
+        result["bitmask"] = coordinates.to_dict()
+        result["shape"] = Shape.BITMASK.value
+    elif isinstance(coordinates, SkeletonCoordinates):
+        result["skeleton"] = coordinates.to_dict()
+        result["shape"] = Shape.SKELETON.value
+    elif isinstance(coordinates, CuboidCoordinates):
+        result["cuboid"] = coordinates.to_dict()
+        result["shape"] = Shape.CUBOID.value
+    else:
+        raise NotImplementedError(f"adding coordinates for this type not yet implemented {type(coordinates)}")
+
+    return cast(FrameObject, result)
+
+
+def get_coordinates_from_frame_object_dict(frame_object_dict: FrameObject) -> Coordinates:
+    if frame_object_dict["shape"] == Shape.BOUNDING_BOX:
+        return BoundingBoxCoordinates.from_dict(frame_object_dict)
+    elif frame_object_dict["shape"] == Shape.ROTATABLE_BOUNDING_BOX:
+        return RotatableBoundingBoxCoordinates.from_dict(frame_object_dict)
+    elif frame_object_dict["shape"] == Shape.POLYGON:
+        return PolygonCoordinates.from_dict(frame_object_dict)
+    elif frame_object_dict["shape"] == Shape.POINT:
+        coords = frame_object_dict["point"]["0"]
+        if "x" in coords and "y" in coords and "z" in coords:
+            return PointCoordinate3D.from_dict(frame_object_dict)  # type: ignore
+        elif "x" in coords and "y" in coords:
+            return PointCoordinate.from_dict(frame_object_dict)  # type: ignore
+        else:
+            raise ValueError(f"Invalid point coordinates in {frame_object_dict}")
+    elif frame_object_dict["shape"] == Shape.POLYLINE:
+        return PolylineCoordinates.from_dict(frame_object_dict)
+    elif "skeleton" in frame_object_dict:
+
+        def _with_visibility_enum(point: dict):
+            if point.get(Visibility.INVISIBLE.value):
+                point["visibility"] = Visibility.INVISIBLE
+            elif point.get(Visibility.OCCLUDED.value):
+                point["visibility"] = Visibility.OCCLUDED
+            elif point.get(Visibility.SELF_OCCLUDED.value):
+                point["visibility"] = Visibility.SELF_OCCLUDED
+            elif point.get(Visibility.VISIBLE.value):
+                point["visibility"] = Visibility.VISIBLE
+            return point
+
+        values = [_with_visibility_enum(pnt) for pnt in frame_object_dict["skeleton"].values()]
+        skeleton_frame_object_label = {
+            "name": frame_object_dict["name"],
+            "values": values,
+        }
+        return SkeletonCoordinates.from_dict(skeleton_frame_object_label)
+    elif "bitmask" in frame_object_dict:
+        return BitmaskCoordinates.from_dict(frame_object_dict)
+    elif "cuboid" in frame_object_dict:
+        return CuboidCoordinates.from_dict(frame_object_dict)
+    else:
+        raise NotImplementedError(f"Getting coordinates for `{frame_object_dict}` is not supported yet.")
+
+
+def get_geometric_coordinates_from_frame_object_dict(
+    frame_object_dict: FrameObject,
+) -> GeometricCoordinates:
+    if frame_object_dict["shape"] == Shape.BOUNDING_BOX:
+        return BoundingBoxCoordinates.from_dict(frame_object_dict)
+    elif frame_object_dict["shape"] == Shape.ROTATABLE_BOUNDING_BOX:
+        return RotatableBoundingBoxCoordinates.from_dict(frame_object_dict)
+    elif frame_object_dict["shape"] == Shape.POLYGON:
+        return PolygonCoordinates.from_dict(frame_object_dict)
+    elif frame_object_dict["shape"] == Shape.POINT:
+        coords = frame_object_dict["point"]["0"]
+        if "x" in coords and "y" in coords and "z" in coords:
+            return PointCoordinate3D.from_dict(frame_object_dict)  # type: ignore
+        elif "x" in coords and "y" in coords:
+            return PointCoordinate.from_dict(frame_object_dict)  # type: ignore
+        else:
+            raise ValueError(f"Invalid point coordinates in {frame_object_dict}")
+    elif frame_object_dict["shape"] == Shape.POLYLINE:
+        return PolylineCoordinates.from_dict(frame_object_dict)
+    elif "skeleton" in frame_object_dict:
+
+        def _with_visibility_enum(point: dict):
+            if point.get(Visibility.INVISIBLE.value):
+                point["visibility"] = Visibility.INVISIBLE
+            elif point.get(Visibility.OCCLUDED.value):
+                point["visibility"] = Visibility.OCCLUDED
+            elif point.get(Visibility.SELF_OCCLUDED.value):
+                point["visibility"] = Visibility.SELF_OCCLUDED
+            elif point.get(Visibility.VISIBLE.value):
+                point["visibility"] = Visibility.VISIBLE
+            return point
+
+        values = [_with_visibility_enum(pnt) for pnt in frame_object_dict["skeleton"].values()]
+        skeleton_frame_object_label = {
+            "name": frame_object_dict["name"],
+            "values": values,
+        }
+        return SkeletonCoordinates.from_dict(skeleton_frame_object_label)
+    elif "bitmask" in frame_object_dict:
+        return BitmaskCoordinates.from_dict(frame_object_dict)
+    elif "cuboid" in frame_object_dict:
+        raise NotImplementedError("Cuboid is not a two dimensional coordinate.")
+    else:
+        raise NotImplementedError(f"Getting coordinates for `{frame_object_dict}` is not supported yet.")

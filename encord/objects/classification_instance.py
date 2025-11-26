@@ -27,6 +27,7 @@ from typing import (
     Set,
     Tuple,
     Union,
+    cast,
 )
 
 from encord.common.range_manager import RangeManager
@@ -50,7 +51,7 @@ from encord.objects.internal_helpers import (
     _search_child_attributes,
 )
 from encord.objects.options import Option, _get_option_by_hash
-from encord.objects.types import ClassificationAnswer, ClassificationObject
+from encord.objects.types import AttributeDict, ClassificationAnswer, FrameClassification
 from encord.objects.utils import check_email, short_uuid_str
 
 if TYPE_CHECKING:
@@ -371,7 +372,7 @@ class ClassificationInstance:
 
         static_answer.set(answer)
 
-    def set_answer_from_list(self, answers_list: List[ClassificationObject]) -> None:
+    def set_answer_from_list(self, answers_list: List[AttributeDict]) -> None:
         """This is a low level helper function and should not be used directly.
 
         Sets the answer for the classification from a dictionary.
@@ -587,7 +588,8 @@ class ClassificationInstance:
         reviews: Optional[List[dict]] = None
 
         @staticmethod
-        def from_dict(d: Union[dict, ClassificationAnswer]) -> ClassificationInstance.FrameData:
+        def from_dict(d: FrameClassification | ClassificationAnswer) -> ClassificationInstance.FrameData:
+            """Frame data can also be obtained from ClassificationAnswer for Audio/Text classifications."""
             if "lastEditedAt" in d and d["lastEditedAt"] is not None:
                 last_edited_at = parse_datetime(d["lastEditedAt"])
             else:
@@ -601,9 +603,8 @@ class ClassificationInstance:
             manual_annotation = d.get("manualAnnotation")
             # If the manual annotation is not set, we to infer it from the classifications answers≠
             if not manual_annotation:
-                manual_annotation = any(
-                    classification.get("manualAnnotation") for classification in d.get("classifications", [])
-                )
+                classification_attributes = cast(List[AttributeDict], d.get("classifications", []))
+                manual_annotation = any(attribute.get("manualAnnotation") for attribute in classification_attributes)
 
             return ClassificationInstance.FrameData(
                 created_at=created_at,
@@ -612,7 +613,7 @@ class ClassificationInstance:
                 manual_annotation=manual_annotation,
                 last_edited_at=last_edited_at,
                 last_edited_by=d.get("lastEditedBy"),
-                reviews=d.get("reviews"),
+                reviews=None,  # Deprecated and to be removed. Always None.
             )
 
         def update_from_optional_fields(

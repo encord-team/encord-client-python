@@ -16,7 +16,6 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import (
-    TYPE_CHECKING,
     Any,
     Dict,
     Iterable,
@@ -26,6 +25,7 @@ from typing import (
     Set,
     Tuple,
     Union,
+    cast,
 )
 
 from encord.common.range_manager import RangeManager
@@ -52,17 +52,21 @@ from encord.objects.frames import (
     frames_to_ranges,
     ranges_list_to_ranges,
 )
-from encord.objects.html_node import HtmlRange, HtmlRanges
+from encord.objects.html_node import HtmlRanges
 from encord.objects.internal_helpers import (
     _infer_attribute_from_answer,
     _search_child_attributes,
 )
+from encord.objects.ontology_labels_impl import LabelRowV2
 from encord.objects.ontology_object import Object
 from encord.objects.options import Option
+from encord.objects.types import (
+    AnswerDict,
+    AttributeDict,
+    BaseFrameObject,
+    DynamicAttributeObject,
+)
 from encord.objects.utils import check_email, short_uuid_str
-
-if TYPE_CHECKING:
-    from encord.objects.ontology_labels_impl import LabelRowV2
 
 
 class ObjectInstance:
@@ -279,7 +283,7 @@ class ObjectInstance:
             )
         static_answer.set(answer, manual_annotation=manual_annotation)
 
-    def set_answer_from_list(self, answers_list: List[Dict[str, Any]]) -> None:
+    def set_answer_from_list(self, answers_list: List[AttributeDict]) -> None:
         """This is a low level helper function and should usually not be used directly.
 
         Sets the answer for the classification from a dictionary.
@@ -359,25 +363,32 @@ class ObjectInstance:
 
         return list(result_ranges.values())
 
-    def _set_answer_from_grouped_list(self, attribute: Attribute, answers_list: List[Dict[str, Any]]) -> None:
+    def _set_answer_from_grouped_list(
+        self, attribute: Attribute, answers_list: List[AttributeDict | DynamicAttributeObject]
+    ) -> None:
         if isinstance(attribute, ChecklistAttribute):
             if not attribute.dynamic:
                 options = []
                 for answer_dict in answers_list:
-                    for answer in answer_dict["answers"]:
+                    checklist_answers = cast(List[AnswerDict], answer_dict["answers"])
+                    for answer in checklist_answers:
                         feature_hash = answer["featureHash"]
                         option = attribute.get_child_by_hash(feature_hash, type_=Option)
                         options.append(option)
 
                 self._set_answer_unsafe(options, attribute, None)
             else:
+                dynamic_answers_list = cast(List[DynamicAttributeObject], answers_list)
                 all_feature_hashes: Set[str] = set()
                 ranges = []
-                for answer_dict in answers_list:
-                    feature_hashes: Set[str] = {answer["featureHash"] for answer in answer_dict["answers"]}
-                    all_feature_hashes.update(feature_hashes)
-                    for frame_range in ranges_list_to_ranges(answer_dict["range"]):
-                        ranges.append((frame_range, feature_hashes))
+                for answer_dict in dynamic_answers_list:
+                    # TODO: Pretty sure this was a bug before, because answers could also be a string
+                    answers = answer_dict["answers"]
+                    if isinstance(answers, list):
+                        feature_hashes: Set[str] = {answer["featureHash"] for answer in answers}
+                        all_feature_hashes.update(feature_hashes)
+                        for frame_range in ranges_list_to_ranges(answer_dict["range"]):
+                            ranges.append((frame_range, feature_hashes))
 
                 options_cache = {
                     feature_hash: attribute.get_child_by_hash(feature_hash, type_=Option)
@@ -766,7 +777,7 @@ class ObjectInstance:
         is_deleted: Optional[bool] = None
 
         @staticmethod
-        def from_dict(d: dict) -> ObjectInstance.FrameInfo:
+        def from_dict(d: BaseFrameObject) -> ObjectInstance.FrameInfo:
             """Create a FrameInfo instance from a dictionary.
 
             Args:
@@ -787,7 +798,7 @@ class ObjectInstance:
                 last_edited_by=d.get("lastEditedBy"),
                 confidence=d["confidence"],
                 manual_annotation=d.get("manualAnnotation", True),
-                reviews=d.get("reviews"),
+                reviews=None,  # To be deprecated. Always set to None.
                 is_deleted=d.get("isDeleted"),
             )
 
@@ -854,28 +865,34 @@ class ObjectInstance:
             static_answer = self._static_answer_map[attribute.feature_node_hash]
             static_answer.set(answer)
 
-    def _set_answer_from_dict(self, answer_dict: Dict[str, Any], attribute: Attribute) -> None:
+    def _set_answer_from_dict(self, answer_dict: AttributeDict | DynamicAttributeObject, attribute: Attribute) -> None:
         if attribute.dynamic:
-            ranges = ranges_list_to_ranges(answer_dict["range"])
+            dynamic_answer_dict = cast(DynamicAttributeObject, answer_dict)
+            ranges = ranges_list_to_ranges(dynamic_answer_dict["range"])
         else:
             ranges = None
 
+        answers = answer_dict["answers"]
         if isinstance(attribute, TextAttribute):
-            self._set_answer_unsafe(answer_dict["answers"], attribute, ranges)
+            text_answer = cast(str, answers)
+            self._set_answer_unsafe(text_answer, attribute, ranges)
         elif isinstance(attribute, RadioAttribute):
-            if len(answer_dict["answers"]) == 1:
-                feature_hash = answer_dict["answers"][0]["featureHash"]
+            radio_option_answers = cast(List[AnswerDict], answers)
+            if len(radio_option_answers) == 1:
+                feature_hash = radio_option_answers[0]["featureHash"]
                 option = attribute.get_child_by_hash(feature_hash, type_=Option)
                 self._set_answer_unsafe(option, attribute, ranges)
         elif isinstance(attribute, ChecklistAttribute):
+            checklist_answers = cast(List[AnswerDict], answers)
+
             options = []
-            for answer in answer_dict["answers"]:
+            for answer in checklist_answers:
                 feature_hash = answer["featureHash"]
                 option = attribute.get_child_by_hash(feature_hash, type_=Option)
                 options.append(option)
             self._set_answer_unsafe(options, attribute, ranges)
         elif isinstance(attribute, NumericAttribute):
-            value: float = answer_dict["answers"]
+            value = cast(float, answer_dict["answers"])
 
             if not isinstance(value, float) and not isinstance(value, int):
                 raise LabelRowError(f"The answer for a numeric attribute must be a float or an int. Found {value}.")
