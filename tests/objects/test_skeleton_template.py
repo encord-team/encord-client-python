@@ -1,6 +1,7 @@
 from deepdiff import DeepDiff
 
-from encord.objects.skeleton_template import SkeletonTemplate, SkeletonTemplateCoordinate
+from encord.objects.skeleton_template import SkeletonTemplate
+from encord.orm.skeleton_template import SkeletonTemplateCoordinate
 
 SKELETON_TEMPLATE_COORDINATES = [
     SkeletonTemplateCoordinate(x=0, y=0, name="point_0"),

@@ -1,14 +1,12 @@
 from datetime import datetime
-from functools import wraps
 from typing import Any, Callable, Dict, Literal, Type, TypeVar, get_origin
 
 # TODO: invent some dependency version dependent type checking to get rid of this ignore
 from pydantic import (  # type: ignore[attr-defined]
     BaseModel,
     ConfigDict,  # type: ignore[attr-defined]
-    Extra,
-    Field,
-    PrivateAttr,
+    Field,  # noqa: F401 needed for imports elsewhere
+    PrivateAttr,  # noqa: F401 needed for imports elsewhere
     RootModel,  # type: ignore[attr-defined]
     ValidationError,
     field_validator,

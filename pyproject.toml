@@ -81,5 +81,5 @@ select = ["W", "Q", "I", "D417", "RUF022", "F"]
 [tool.ruff.lint.pydocstyle]
 ignore-var-parameters = true
 
-[tool.ruff.lint.per-file-ignores]
-"encord/*" = ["F401", "E402"]
+#[tool.ruff.lint.per-file-ignores]
+#"encord/*" = ["F401", "E402"]

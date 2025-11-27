@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 from uuid import UUID
 
-from encord.orm.base_dto import BaseDTO, Field, dto_validator
+from encord.orm.base_dto import BaseDTO, Field
 
 
 class GetPresetParams(BaseDTO):
