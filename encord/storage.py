@@ -1232,6 +1232,7 @@ class StorageFolder:
     def create_data_group(
         self,
         params: Union[DataGroupInput, List[UUID]],
+        *,
         client_metadata: Optional[Dict[str, Any]] = None,
     ) -> UUID:
         """Creates a data group storage item in this folder.
