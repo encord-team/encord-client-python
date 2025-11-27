@@ -2,7 +2,7 @@ from uuid import UUID
 
 from encord.constants.enums import DataType
 from encord.objects.metadata import DataGroupMetadata
-from encord.orm.storage import DataGroupList, StorageItemType
+from encord.orm.storage import DataGroupCarousel, StorageItemType
 from encord.user_client import EncordUserClient
 
 # --- Configuration ---
@@ -76,10 +76,10 @@ groups = [
     # Add more groups as needed...
 ]
 
-# --- Create the data groups using default list layout ---
+# --- Create the data groups using default carousel layout ---
 for g in groups:
     group = folder.create_data_group(
-        DataGroupList(
+        DataGroupCarousel(
             name=g["name"],
             layout_contents=g["uuids"],
         )

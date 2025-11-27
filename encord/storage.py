@@ -1232,12 +1232,16 @@ class StorageFolder:
     def create_data_group(
         self,
         params: Union[DataGroupInput, List[UUID]],
+        *,
+        client_metadata: Optional[Dict[str, Any]] = None,
     ) -> UUID:
         """Creates a data group storage item in this folder.
 
         Args:
             params (Union[DataGroupInput, List[UUID]]): Parameters for the data group. When a list of UUIDs is provided,
                 the group will be created with a grid layout. For custom layouts, use DataGroupGrid, DataGroupList or DataGroupCustom.
+            client_metadata (Optional[Dict[str, Any]]): Optional custom metadata to be associated with the data group.
+                Should be a dictionary that is JSON-serializable.
 
         Returns:
             UUID: The UUID of the data group storage item.
@@ -1247,7 +1251,10 @@ class StorageFolder:
         return self._api_client.post(
             f"storage/folders/{self.uuid}/create-group-item",
             params=None,
-            payload=orm_storage.CreateDataGroupPayload(params=params),
+            payload=orm_storage.CreateDataGroupPayload(
+                params=params,
+                client_metadata=client_metadata,
+            ),
             result_type=UUID,
         )
 
