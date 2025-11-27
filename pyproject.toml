@@ -31,7 +31,7 @@ documentation = "https://python.docs.encord.com/"
 
 
 [dependency-groups]
-dev = [ # 'dev' group is synced by default in uv (no explicit configuration needed)
+dev = [# 'dev' group is synced by default in uv (no explicit configuration needed)
     "pytest>=7.4.1,<8.0.0",
     "pre-commit>=3.5.0,<4.0.0",
     "deepdiff>=8.6.1,<9.0.0",
@@ -80,6 +80,3 @@ select = ["W", "Q", "I", "D417", "RUF022", "F"]
 
 [tool.ruff.lint.pydocstyle]
 ignore-var-parameters = true
-
-#[tool.ruff.lint.per-file-ignores]
-#"encord/*" = ["F401", "E402"]

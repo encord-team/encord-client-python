@@ -1,7 +1,5 @@
 try:
     import cv2
-    import pycocotools
-    import shapely
 except ImportError as e:
     raise ImportError(
         "The 'opencv-python', 'pycocotools' and 'shapely' packages are required for the COCO export. "
