@@ -58,7 +58,6 @@ class IntegerRangeSet:
 
         return overlaps
 
-
     def remove(self, start: int, end: int) -> None:
         """Removes a range, splitting or deleting existing ranges."""
         if start > end:
