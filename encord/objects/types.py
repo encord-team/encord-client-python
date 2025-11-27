@@ -65,7 +65,8 @@ class RotatableBoundingBoxFrameObject(BaseFrameObject):
 
 class PolygonFrameObject(BaseFrameObject):
     shape: Literal[Shape.POLYGON]
-    polygon: LegacyPolygonDict  # TODO: Is this optional? We are deprecating it right?
+    polygon: LegacyPolygonDict
+    """deprecated, use 'polygons' field instead"""
     polygons: Optional[PolygonDict]
 
 
@@ -143,8 +144,6 @@ class DynamicAttributeObjectRequired(AttributeDict):
 
 class DynamicAttributeObject(DynamicAttributeObjectRequired, total=False):
     """All fields for dynamic attribute object in object_actions."""
-
-    spaceId: str
 
 
 class ClassificationAnswerRequired(TypedDict):
