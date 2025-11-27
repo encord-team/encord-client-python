@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import Iterator, List, Optional, Union
 from uuid import UUID
 
-from encord.client import EncordClientProject
 from encord.exceptions import (
     AuthorisationError,
     EncordException,

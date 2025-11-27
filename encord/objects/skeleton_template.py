@@ -11,12 +11,10 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, List, Optional, Set, Type
+from typing import List, Set
 
 from encord.objects.coordinates import SkeletonCoordinate, SkeletonCoordinates
 from encord.orm.skeleton_template import SkeletonTemplate as SkeletonTemplateORM
-from encord.orm.skeleton_template import SkeletonTemplateCoordinate
 
 
 class SkeletonTemplate(SkeletonTemplateORM):

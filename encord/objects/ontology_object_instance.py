@@ -28,7 +28,6 @@ from typing import (
     Union,
 )
 
-from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
@@ -52,7 +51,7 @@ from encord.objects.frames import (
     frames_to_ranges,
     ranges_list_to_ranges,
 )
-from encord.objects.html_node import HtmlRange, HtmlRanges
+from encord.objects.html_node import HtmlRanges
 from encord.objects.internal_helpers import (
     _infer_attribute_from_answer,
     _search_child_attributes,

@@ -24,7 +24,6 @@ from typing import (
     NoReturn,
     Optional,
     Sequence,
-    Set,
     Tuple,
     Union,
 )
@@ -42,9 +41,9 @@ from encord.objects.attributes import (
     TextAttribute,
     _get_attribute_by_hash,
 )
-from encord.objects.classification import Classification, OntologyClassificationLevel
+from encord.objects.classification import Classification
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
-from encord.objects.frames import Frames, Ranges, frames_class_to_frames_list, frames_to_ranges
+from encord.objects.frames import Frames, Ranges, frames_class_to_frames_list
 from encord.objects.internal_helpers import (
     _infer_attribute_from_answer,
     _search_child_attributes,

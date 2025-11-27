@@ -32,7 +32,7 @@ from encord.collection import Collection
 from encord.common.deprecated import deprecated
 from encord.common.time_parser import parse_datetime, parse_datetime_optional
 from encord.configs import ENCORD_DOMAIN, BearerConfig, SshConfig, UserConfig, get_env_ssh_key
-from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
+from encord.constants.string_constants import TYPE_DATASET, TYPE_PROJECT
 from encord.dataset import Dataset
 from encord.filter_preset import FilterPreset
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
@@ -62,12 +62,9 @@ from encord.orm.dataset import (
     DatasetInfo,
     DatasetsWithUserRolesListParams,
     DatasetsWithUserRolesListResponse,
-    DicomDeidentifyTask,
-    Images,
     StorageLocation,
     dataset_user_role_str_enum_to_int_enum,
 )
-from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.deidentification import (
     DicomDeIdGetResultLongPollingStatus,
     DicomDeIdGetResultParams,
@@ -79,7 +76,6 @@ from encord.orm.deidentification import (
 )
 from encord.orm.group import Group as OrmGroup
 from encord.orm.ontology import CreateOrUpdateOntologyPayload
-from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import (
     BenchmarkQaWorkflowSettings,
     CvatExportType,
@@ -108,7 +104,7 @@ from encord.utilities.client_utilities import (
     Issues,
     LocalImport,
 )
-from encord.utilities.ontology_user import OntologiesFilterParams, OntologyUserRole, OntologyWithUserRole
+from encord.utilities.ontology_user import OntologiesFilterParams, OntologyWithUserRole
 from encord.utilities.project_user import ProjectUserRole
 
 CVAT_LONG_POLLING_RESPONSE_RETRY_N = 3

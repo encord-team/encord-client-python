@@ -15,23 +15,16 @@ import os.path
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import Dict, Iterable, List, Optional, Union
 
 from tqdm import tqdm
 
 from encord.configs import BaseConfig
 from encord.exceptions import CloudUploadError, EncordException
-from encord.http.querier import Querier, create_new_session
+from encord.http.querier import create_new_session
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.orm.base_dto import BaseDTO
-from encord.orm.dataset import (
-    Audio,
-    DicomSeries,
-    Images,
-    SignedImagesURL,
-    Video,
-)
 from encord.orm.storage import StorageItemType, UploadSignedUrl
 
 PROGRESS_BAR_FILE_FACTOR = 100

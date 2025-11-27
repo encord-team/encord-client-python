@@ -37,7 +37,7 @@ from encord.orm.collection import (
     UpdateCollectionPayload,
 )
 from encord.orm.collection import ProjectCollection as OrmProjectCollection
-from encord.orm.label_row import LabelRowMetadata, label_row_metadata_dto_to_label_row_metadata
+from encord.orm.label_row import label_row_metadata_dto_to_label_row_metadata
 from encord.storage import StorageItem, StorageItemInaccessible
 
 log = logging.getLogger(__name__)

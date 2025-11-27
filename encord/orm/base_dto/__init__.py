@@ -25,3 +25,14 @@ else:
         RootModelDTO,
         dto_validator,
     )
+
+__all__ = [
+    "BaseDTO",
+    "BaseDTOInterface",
+    "BaseDTOWithExtra",
+    "Field",
+    "GenericBaseDTO",
+    "PrivateAttr",
+    "RootModelDTO",
+    "dto_validator",
+]

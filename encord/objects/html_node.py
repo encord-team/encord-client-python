@@ -11,8 +11,7 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Collection, List, Union, cast
+from typing import List
 
 from encord.orm.base_dto import BaseDTO
 

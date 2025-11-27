@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from enum import auto
 from typing import List, Literal, Union
 from uuid import UUID
