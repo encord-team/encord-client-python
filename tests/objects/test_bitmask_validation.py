@@ -185,8 +185,8 @@ def test_image_group_bitmask_dimension_validation():
     # Add bitmask with incorrect dimensions for frame 0 (256x256 instead of 512x512)
     frame_0_incorrect_mask = BitmaskCoordinates(np.zeros((256, 256), dtype=bool))
     frame_0_incorrect_instance = ObjectInstance(bitmask_object)
-    frame_0_incorrect_instance.set_for_frames(coordinates=frame_0_incorrect_mask, frames=0, overwrite=True)
-    label_row.add_object_instance(frame_0_incorrect_instance, force=True)
+    frame_0_incorrect_instance.set_for_frames(coordinates=frame_0_incorrect_mask, frames=0)
+    label_row.add_object_instance(frame_0_incorrect_instance)
 
     # Should fail on serialization
     with pytest.raises(ValueError, match="Bitmask dimensions don't match the media dimensions"):
@@ -198,8 +198,8 @@ def test_image_group_bitmask_dimension_validation():
 
     frame_1_incorrect_mask = BitmaskCoordinates(np.zeros((512, 512), dtype=bool))
     frame_1_incorrect_instance = ObjectInstance(bitmask_object)
-    frame_1_incorrect_instance.set_for_frames(coordinates=frame_1_incorrect_mask, frames=1, overwrite=True)
-    label_row.add_object_instance(frame_1_incorrect_instance, force=True)
+    frame_1_incorrect_instance.set_for_frames(coordinates=frame_1_incorrect_mask, frames=1)
+    label_row.add_object_instance(frame_1_incorrect_instance)
 
     # Should fail on serialization due to frame 1
     with pytest.raises(ValueError, match="Bitmask dimensions don't match the media dimensions"):
@@ -335,8 +335,8 @@ def test_dicom_bitmask_dimension_validation():
     # Add bitmask with incorrect dimensions for slice 0 (256x256 instead of 512x512)
     slice_0_incorrect_mask = BitmaskCoordinates(np.zeros((256, 256), dtype=bool))
     slice_0_incorrect_instance = ObjectInstance(bitmask_object)
-    slice_0_incorrect_instance.set_for_frames(coordinates=slice_0_incorrect_mask, frames=0, overwrite=True)
-    label_row.add_object_instance(slice_0_incorrect_instance, force=True)
+    slice_0_incorrect_instance.set_for_frames(coordinates=slice_0_incorrect_mask, frames=0)
+    label_row.add_object_instance(slice_0_incorrect_instance)
 
     # Should fail on serialization
     with pytest.raises(ValueError, match="Bitmask dimensions don't match the media dimensions"):

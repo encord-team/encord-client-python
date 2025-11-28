@@ -1264,59 +1264,25 @@ class LabelRowV2:
         @property
         def title(self) -> str:
             return self._image_data.title
-            """
-            Get the title of the image.
-
-            Returns:
-                str: The image title.
-            """
 
         @property
         def file_type(self) -> str:
             return self._image_data.file_type
-            """
-            Get the file type of the image.
-
-            Returns:
-                str: The image file type.
-            """
 
         @property
         def width(self) -> int:
             return self._image_data.width
-            """
-            Get the width of the image.
-
-            Returns:
-                int: The image width.
-            """
 
         @property
         def height(self) -> int:
             return self._image_data.height
-            """
-            Get the height of the image.
-
-            Returns:
-                int: The image height.
-            """
 
         @property
         def image_hash(self) -> str:
-            """Get the hash of the image.
-
-            Returns:
-                str: The image hash.
-            """
             return self._image_data.image_hash
 
         @property
         def frame_number(self) -> int:
-            """Get the frame number.
-
-            Returns:
-                int: The frame number.
-            """
             return self._image_data.index
 
     class FrameView:
@@ -1386,9 +1352,6 @@ class LabelRowV2:
         def width(self) -> int:
             """Get the width of the frame.
 
-            Returns:
-                int: The width of the image or image group.
-
             Raises:
                 LabelRowError: If the width is not set for the data type.
             """
@@ -1410,9 +1373,6 @@ class LabelRowV2:
         @property
         def height(self) -> int:
             """Get the height of the frame.
-
-            Returns:
-                int: The height of the image or image group.
 
             Raises:
                 LabelRowError: If the height is not set for the data type.
