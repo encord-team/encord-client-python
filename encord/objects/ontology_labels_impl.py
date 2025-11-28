@@ -1384,7 +1384,7 @@ class LabelRowV2:
 
         @property
         def width(self) -> int:
-            """Get the width of the image or image group.
+            """Get the width of the frame.
 
             Returns:
                 int: The width of the image or image group.
@@ -1392,8 +1392,16 @@ class LabelRowV2:
             Raises:
                 LabelRowError: If the width is not set for the data type.
             """
-            if self._label_row.data_type in [DataType.IMG_GROUP]:
+            if self._label_row.data_type == DataType.IMG_GROUP:
                 return self._frame_level_data().width
+            elif self._label_row.data_type == DataType.DICOM:
+                frame_metadata = self._label_row._frame_metadata[self._frame]
+                if frame_metadata is not None:
+                    return frame_metadata.width
+                elif self._label_row_read_only_data.width is not None:
+                    return self._label_row_read_only_data.width
+                else:
+                    raise LabelRowError(f"Width is expected but not set for the data type {self._label_row.data_type}")
             elif self._label_row_read_only_data.width is not None:
                 return self._label_row_read_only_data.width
             else:
@@ -1401,7 +1409,7 @@ class LabelRowV2:
 
         @property
         def height(self) -> int:
-            """Get the height of the image or image group.
+            """Get the height of the frame.
 
             Returns:
                 int: The height of the image or image group.
@@ -1409,8 +1417,16 @@ class LabelRowV2:
             Raises:
                 LabelRowError: If the height is not set for the data type.
             """
-            if self._label_row.data_type in [DataType.IMG_GROUP]:
+            if self._label_row.data_type == DataType.IMG_GROUP:
                 return self._frame_level_data().height
+            elif self._label_row.data_type == DataType.DICOM:
+                frame_metadata = self._label_row._frame_metadata[self._frame]
+                if frame_metadata is not None:
+                    return frame_metadata.height
+                elif self._label_row_read_only_data.height is not None:
+                    return self._label_row_read_only_data.height
+                else:
+                    raise LabelRowError(f"Height is expected but not set for the data type {self._label_row.data_type}")
             elif self._label_row_read_only_data.height is not None:
                 return self._label_row_read_only_data.height
             else:
