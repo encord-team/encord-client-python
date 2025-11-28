@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, TypedDict, Union
+from typing import Any, Dict, List, Literal, Optional, TypedDict, Union
 
-if TYPE_CHECKING:
-    from encord.objects import Shape
+from encord.objects.common import Shape
 
 """ Typed Dicts for Shape Coordinates """
 
