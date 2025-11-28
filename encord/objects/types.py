@@ -6,12 +6,18 @@ if TYPE_CHECKING:
     from encord.objects import Shape
     from encord.objects.coordinates import (
         BoundingBoxDict,
+        BoundingBoxFrameCoordinatesDict,
         LegacyPolygonDict,
+        Point3DFrameCoordinatesDict,
         PointDict,
         PointDict3D,
+        PointFrameCoordinatesDict,
         PolygonDict,
+        PolygonFrameCoordinatesDict,
         PolylineDict,
+        PolylineFrameCoordinatesDict,
         RotatableBoundingBoxDict,
+        RotatableBoundingBoxFrameCoordinatesDict,
     )
 
 
@@ -53,36 +59,28 @@ class BaseFrameObject(BaseFrameObjectRequired, total=False):
     isDeleted: bool  # TODO: Remove this as its deprecated, although its still being sent out
 
 
-class BoundingBoxFrameObject(BaseFrameObject):
+class BoundingBoxFrameObject(BaseFrameObject, BoundingBoxFrameCoordinatesDict):
     shape: Literal[Shape.BOUNDING_BOX]
-    boundingBox: BoundingBoxDict
 
 
-class RotatableBoundingBoxFrameObject(BaseFrameObject):
+class RotatableBoundingBoxFrameObject(BaseFrameObject, RotatableBoundingBoxFrameCoordinatesDict):
     shape: Literal[Shape.ROTATABLE_BOUNDING_BOX]
-    rotatableBoundingBox: RotatableBoundingBoxDict
 
 
-class PolygonFrameObject(BaseFrameObject):
+class PolygonFrameObject(BaseFrameObject, PolygonFrameCoordinatesDict):
     shape: Literal[Shape.POLYGON]
-    polygon: LegacyPolygonDict
-    """deprecated, use 'polygons' field instead"""
-    polygons: Optional[PolygonDict]
 
 
-class PolylineFrameObject(BaseFrameObject):
+class PolylineFrameObject(BaseFrameObject, PolylineFrameCoordinatesDict):
     shape: Literal[Shape.POLYLINE]
-    polyline: PolylineDict
 
 
-class PointFrameObject2D(BaseFrameObject):
+class PointFrameObject2D(BaseFrameObject, PointFrameCoordinatesDict):
     shape: Literal[Shape.POINT]
-    point: dict[str, PointDict]  # Actually the key here is always '0', but no way to type that.
 
 
-class PointFrameObject3D(BaseFrameObject):
+class PointFrameObject3D(BaseFrameObject, Point3DFrameCoordinatesDict):
     shape: Literal[Shape.POINT]
-    point: dict[str, PointDict3D]  # Actually the key here is always '0', but no way to type that.
 
 
 PointFrameObject = Union[PointFrameObject2D, PointFrameObject3D]
