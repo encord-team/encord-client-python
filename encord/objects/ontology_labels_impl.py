@@ -1264,59 +1264,25 @@ class LabelRowV2:
         @property
         def title(self) -> str:
             return self._image_data.title
-            """
-            Get the title of the image.
-
-            Returns:
-                str: The image title.
-            """
 
         @property
         def file_type(self) -> str:
             return self._image_data.file_type
-            """
-            Get the file type of the image.
-
-            Returns:
-                str: The image file type.
-            """
 
         @property
         def width(self) -> int:
             return self._image_data.width
-            """
-            Get the width of the image.
-
-            Returns:
-                int: The image width.
-            """
 
         @property
         def height(self) -> int:
             return self._image_data.height
-            """
-            Get the height of the image.
-
-            Returns:
-                int: The image height.
-            """
 
         @property
         def image_hash(self) -> str:
-            """Get the hash of the image.
-
-            Returns:
-                str: The image hash.
-            """
             return self._image_data.image_hash
 
         @property
         def frame_number(self) -> int:
-            """Get the frame number.
-
-            Returns:
-                int: The frame number.
-            """
             return self._image_data.index
 
     class FrameView:
@@ -1384,16 +1350,21 @@ class LabelRowV2:
 
         @property
         def width(self) -> int:
-            """Get the width of the image or image group.
-
-            Returns:
-                int: The width of the image or image group.
+            """Get the width of the frame.
 
             Raises:
                 LabelRowError: If the width is not set for the data type.
             """
-            if self._label_row.data_type in [DataType.IMG_GROUP]:
+            if self._label_row.data_type == DataType.IMG_GROUP:
                 return self._frame_level_data().width
+            elif self._label_row.data_type == DataType.DICOM:
+                frame_metadata = self._label_row._frame_metadata[self._frame]
+                if frame_metadata is not None:
+                    return frame_metadata.width
+                elif self._label_row_read_only_data.width is not None:
+                    return self._label_row_read_only_data.width
+                else:
+                    raise LabelRowError(f"Width is expected but not set for the data type {self._label_row.data_type}")
             elif self._label_row_read_only_data.width is not None:
                 return self._label_row_read_only_data.width
             else:
@@ -1401,16 +1372,21 @@ class LabelRowV2:
 
         @property
         def height(self) -> int:
-            """Get the height of the image or image group.
-
-            Returns:
-                int: The height of the image or image group.
+            """Get the height of the frame.
 
             Raises:
                 LabelRowError: If the height is not set for the data type.
             """
-            if self._label_row.data_type in [DataType.IMG_GROUP]:
+            if self._label_row.data_type == DataType.IMG_GROUP:
                 return self._frame_level_data().height
+            elif self._label_row.data_type == DataType.DICOM:
+                frame_metadata = self._label_row._frame_metadata[self._frame]
+                if frame_metadata is not None:
+                    return frame_metadata.height
+                elif self._label_row_read_only_data.height is not None:
+                    return self._label_row_read_only_data.height
+                else:
+                    raise LabelRowError(f"Height is expected but not set for the data type {self._label_row.data_type}")
             elif self._label_row_read_only_data.height is not None:
                 return self._label_row_read_only_data.height
             else:
