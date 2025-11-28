@@ -23,73 +23,22 @@ from encord.objects.frames import Ranges
 from encord.objects.html_node import HtmlRange
 from encord.objects.types import (
     BaseFrameObject,
+    BoundingBoxDict,
+    BoundingBoxFrameCoordinatesDict,
     FrameObject,
-    PointFrameObject2D,
-    PointFrameObject3D,
-    PolygonFrameObject,
-    PolylineFrameObject,
+    Point3DFrameCoordinatesDict,
+    PointDict,
+    PointDict3D,
+    PointFrameCoordinatesDict,
+    PolygonFrameCoordinatesDict,
+    PolylineFrameCoordinatesDict,
+    RotatableBoundingBoxDict,
+    RotatableBoundingBoxFrameCoordinatesDict,
 )
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 
 logger = logging.getLogger(__name__)
-
-""" Typed Dicts for Shape Coordinates """
-
-
-class BoundingBoxDict(TypedDict):
-    h: float
-    w: float
-    x: float
-    y: float
-
-
-class BoundingBoxFrameCoordinatesDict(TypedDict):
-    boundingBox: BoundingBoxDict
-
-
-class PointDict(TypedDict):
-    x: float
-    y: float
-
-
-class PointFrameCoordinatesDict(TypedDict):
-    point: dict[str, PointDict]  # Actually the key here is always '0', but no way to type that.
-
-
-class PointDict3D(PointDict):
-    z: float
-
-
-class Point3DFrameCoordinatesDict(TypedDict):
-    point: dict[str, PointDict3D]  # Actually the key here is always '0', but no way to type that.
-
-
-class RotatableBoundingBoxDict(BoundingBoxDict):
-    theta: float
-
-
-class RotatableBoundingBoxFrameCoordinatesDict(TypedDict):
-    rotatableBoundingBox: RotatableBoundingBoxDict
-
-
-PolylineDict = Union[Dict[str, PointDict], list[PointDict], Dict[str, PointDict3D], list[PointDict3D]]
-
-
-class PolylineFrameCoordinatesDict(TypedDict):
-    polyline: PolylineDict
-
-
-LegacyPolygonDict = Union[Dict[str, PointDict], list[PointDict]]
-PolygonDict = List[List[List[float]]]  # Introduced to support complex polygons
-
-
-class PolygonFrameCoordinatesDictRequired(TypedDict):
-    polygon: LegacyPolygonDict
-
-
-class PolygonFrameCoordinatesDict(PolygonFrameCoordinatesDictRequired, total=False):
-    polygons: Optional[PolygonDict]  # This was introduced to support complex polygons.
 
 
 @dataclass(frozen=True)

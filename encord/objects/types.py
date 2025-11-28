@@ -1,24 +1,66 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List, Literal, Optional, TypedDict, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, TypedDict, Union
 
 if TYPE_CHECKING:
     from encord.objects import Shape
-    from encord.objects.coordinates import (
-        BoundingBoxDict,
-        BoundingBoxFrameCoordinatesDict,
-        LegacyPolygonDict,
-        Point3DFrameCoordinatesDict,
-        PointDict,
-        PointDict3D,
-        PointFrameCoordinatesDict,
-        PolygonDict,
-        PolygonFrameCoordinatesDict,
-        PolylineDict,
-        PolylineFrameCoordinatesDict,
-        RotatableBoundingBoxDict,
-        RotatableBoundingBoxFrameCoordinatesDict,
-    )
+
+""" Typed Dicts for Shape Coordinates """
+
+
+class BoundingBoxDict(TypedDict):
+    h: float
+    w: float
+    x: float
+    y: float
+
+
+class BoundingBoxFrameCoordinatesDict(TypedDict):
+    boundingBox: BoundingBoxDict
+
+
+class PointDict(TypedDict):
+    x: float
+    y: float
+
+
+class PointFrameCoordinatesDict(TypedDict):
+    point: dict[str, PointDict]  # Actually the key here is always '0', but no way to type that.
+
+
+class PointDict3D(PointDict):
+    z: float
+
+
+class Point3DFrameCoordinatesDict(TypedDict):
+    point: dict[str, PointDict3D]  # Actually the key here is always '0', but no way to type that.
+
+
+class RotatableBoundingBoxDict(BoundingBoxDict):
+    theta: float
+
+
+class RotatableBoundingBoxFrameCoordinatesDict(TypedDict):
+    rotatableBoundingBox: RotatableBoundingBoxDict
+
+
+PolylineDict = Union[Dict[str, PointDict], list[PointDict], Dict[str, PointDict3D], list[PointDict3D]]
+
+
+class PolylineFrameCoordinatesDict(TypedDict):
+    polyline: PolylineDict
+
+
+LegacyPolygonDict = Union[Dict[str, PointDict], list[PointDict]]
+PolygonDict = List[List[List[float]]]  # Introduced to support complex polygons
+
+
+class PolygonFrameCoordinatesDictRequired(TypedDict):
+    polygon: LegacyPolygonDict
+
+
+class PolygonFrameCoordinatesDict(PolygonFrameCoordinatesDictRequired, total=False):
+    polygons: Optional[PolygonDict]  # This was introduced to support complex polygons.
 
 
 class AnswerDict(TypedDict):
