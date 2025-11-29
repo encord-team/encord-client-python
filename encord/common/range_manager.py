@@ -1,67 +1,53 @@
-from typing import Iterable, List, Optional, Set, Union, cast
+from typing import List, Optional, Set, Tuple, cast
 
+from encord.common.integer_range_set import IntegerRangeSet
 from encord.objects.frames import Frames, Range, Ranges
 
 
 class RangeManager:
-    """Range Manager class to hold a list of frame ranges, and operate on them."""
+    """Range Manager implemented using IntegerRangeSet for optimal performance.
+
+    This is a wrapper around IntegerRangeSet that provides the same API as RangeManager
+    but with improved performance characteristics.
+    """
 
     def __init__(self, frame_class: Optional[Frames] = None):
-        self.ranges: Ranges = []
+        self._range_set = IntegerRangeSet()
+
         if isinstance(frame_class, int):
-            self.add_range(Range(start=frame_class, end=frame_class))
+            self._range_set.add(frame_class, frame_class)
         elif isinstance(frame_class, Range):
-            self.add_range(frame_class)
+            self._range_set.add(frame_class.start, frame_class.end)
         elif isinstance(frame_class, (list, set)):
             if all(isinstance(x, int) for x in frame_class):
+                # Add individual frames
                 for frame in frame_class:
-                    self.add_range(Range(start=cast(int, frame), end=cast(int, frame)))
+                    self._range_set.add(cast(int, frame), cast(int, frame))
             elif all(isinstance(x, Range) for x in frame_class):
-                self.add_ranges(cast(Ranges, frame_class))
+                # Add ranges
+                for r in cast(Ranges, frame_class):
+                    self._range_set.add(r.start, r.end)
         elif frame_class is None:
-            self.ranges = []
+            pass  # Empty range set
         else:
             raise RuntimeError(f"Unexpected type for frames {type(frame_class)}.")
 
+    @property
+    def ranges(self) -> List[Tuple[int, int]]:
+        return self._range_set._ranges
+
     def add_range(self, new_range: Range) -> None:
         """Add a range, merging any overlapping ranges."""
-        if not self.ranges:
-            self.ranges.append(new_range)
-            return
-
-        merged_ranges = []
-
-        # Sort ranges based on the start of each range
-        for existing_range in sorted(self.ranges, key=lambda r: r.start):
-            if existing_range.overlaps(new_range):
-                new_range.merge(existing_range)
-            else:
-                merged_ranges.append(existing_range)
-
-        merged_ranges.append(new_range)  # Add the new (merged) range
-        self.ranges = sorted(merged_ranges, key=lambda r: r.start)
+        self._range_set.add(new_range.start, new_range.end)
 
     def add_ranges(self, new_ranges: Ranges) -> None:
         """Add multiple ranges."""
         for new_range in new_ranges:
-            self.add_range(new_range)
+            self._range_set.add(new_range.start, new_range.end)
 
     def remove_range(self, range_to_remove: Range) -> None:
-        """Remove a specific range."""
-        new_ranges = []
-
-        for r in self.ranges:
-            if not r.overlaps(range_to_remove):
-                # No overlap
-                new_ranges.append(r)
-            else:
-                # Partial overlap: split if needed
-                if r.start < range_to_remove.start:
-                    new_ranges.append(Range(r.start, range_to_remove.start - 1))
-                if r.end > range_to_remove.end:
-                    new_ranges.append(Range(range_to_remove.end + 1, r.end))
-
-        self.ranges = new_ranges
+        """Remove a specific range using IntegerRangeSet's native remove method."""
+        self._range_set.remove(range_to_remove.start, range_to_remove.end)
 
     def remove_ranges(self, ranges_to_remove: Ranges) -> None:
         """Remove multiple ranges."""
@@ -70,49 +56,34 @@ class RangeManager:
 
     def clear_ranges(self) -> None:
         """Clear all ranges."""
-        self.ranges = []
+        self._range_set.clear()
 
     def get_ranges(self) -> Ranges:
         """Return the sorted list of merged ranges."""
-        copied_ranges = [range.copy() for range in self.ranges]
-
-        return sorted(copied_ranges, key=lambda r: r.start)
+        return [Range(start, end) for start, end in self._range_set._ranges]
 
     def get_ranges_as_frames(self) -> Set[int]:
-        """Returns set of intersecting frames"""
-        res = set()
-        for r in self.ranges:
-            res.update(list(range(r.start, r.end + 1)))
-
+        """Returns set of intersecting frames."""
+        res: Set[int] = set()
+        for start, end in self._range_set._ranges:
+            res.update(range(start, end + 1))
         return res
 
     def intersection(self, other_frame_class: Frames) -> Ranges:
-        """Returns list of intersecting ranges"""
-        intersection_ranges: Ranges = []
-        other_range_manager = RangeManager(other_frame_class)
-        other_ranges = other_range_manager.get_ranges()
-        current_ranges = self.get_ranges()
+        """Returns list of intersecting ranges."""
+        # Convert other_frame_class to ranges
+        other_manager = RangeManager(other_frame_class)
 
-        # If either list of ranges is empty, there is no intersection
-        if len(other_ranges) == 0 or len(current_ranges) == 0:
+        if not self._range_set._ranges or not other_manager._range_set._ranges:
             return []
 
-        # Since ranges are sorted, we can use 2-pointer method to find intersections
-        current_index, other_index = 0, 0
+        intersection_ranges: Ranges = []
 
-        while current_index < len(current_ranges) and other_index < len(other_ranges):
-            current_range = current_ranges[current_index]
-            other_range = other_ranges[other_index]
-
-            if current_range.overlaps(other_range):
-                intersect_start = max(current_range.start, other_range.start)
-                intersect_end = min(current_range.end, other_range.end)
-                intersection_ranges.append(Range(intersect_start, intersect_end))
-
-            # Move pointer for the range that ends first
-            if current_range.end < other_range.end:
-                current_index += 1
-            else:
-                other_index += 1
+        # For each range in self, check intersection with other
+        for self_start, self_end in self._range_set._ranges:
+            overlaps = other_manager._range_set.intersection(self_start, self_end)
+            if overlaps:
+                for o_start, o_end in overlaps:
+                    intersection_ranges.append(Range(o_start, o_end))
 
         return intersection_ranges

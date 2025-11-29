@@ -24,6 +24,8 @@ class Range:
         end (int): The ending value of the range.
     """
 
+    __slots__ = ["start", "end"]  # Ranges are used heavily and are simple, so save memory
+
     start: int
     end: int
 
