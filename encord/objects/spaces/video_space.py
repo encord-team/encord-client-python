@@ -20,7 +20,7 @@ from encord.objects.attributes import (
 from encord.objects.coordinates import (
     GeometricCoordinates,
     add_coordinates_to_frame_object_dict,
-    get_geometric_coordinates_from_frame_object,
+    get_geometric_coordinates_from_frame_object_dict,
 )
 from encord.objects.frames import Frames, Ranges, frames_class_to_frames_list, ranges_list_to_ranges
 from encord.objects.internal_helpers import _infer_attribute_from_answer
@@ -778,7 +778,7 @@ class VideoSpace(Space):
             if object_instance is None:
                 object_instance = self._create_new_object_from_frame_object_dict(frame_object_label=obj)
 
-            coordinates = get_geometric_coordinates_from_frame_object(frame_object_label=obj)
+            coordinates = get_geometric_coordinates_from_frame_object_dict(frame_object_dict=obj)
             object_frame_instance_info = AnnotationMetadata.from_dict(obj)
             self.place_object(
                 object_instance=object_instance,

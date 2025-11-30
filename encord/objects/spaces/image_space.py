@@ -9,7 +9,7 @@ from encord.exceptions import LabelRowError
 from encord.objects.coordinates import (
     GeometricCoordinates,
     add_coordinates_to_frame_object_dict,
-    get_geometric_coordinates_from_frame_object,
+    get_geometric_coordinates_from_frame_object_dict,
 )
 from encord.objects.label_utils import create_frame_classification_dict, create_frame_object_dict
 from encord.objects.spaces.annotation.base_annotation import (
@@ -376,7 +376,7 @@ class ImageSpace(Space):
             if object_instance is None:
                 object_instance = self._create_new_object_from_frame_object_dict(frame_object_label=frame_object_label)
 
-            coordinates: GeometricCoordinates = get_geometric_coordinates_from_frame_object(frame_object_label)
+            coordinates: GeometricCoordinates = get_geometric_coordinates_from_frame_object_dict(frame_object_label)
 
             object_frame_instance_info = AnnotationMetadata.from_dict(frame_object_label)
             self.place_object(

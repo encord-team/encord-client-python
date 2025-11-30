@@ -34,7 +34,7 @@ def test_label_row_get_object_instances_on_space(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
-    image_space_2 = label_row.get_space("image-2-uuid", type_="image")
+    image_space_2 = label_row.get_space(id="image-2-uuid", type_="image")
 
     # Act
     coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
@@ -223,7 +223,7 @@ def test_update_attribute_for_object_which_exist_on_two_spaces(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
-    image_space_2 = label_row.get_space("image-2-uuid", type_="image")
+    image_space_2 = label_row.get_space(id="image-2-uuid", type_="image")
 
     new_object_instance = box_with_attributes_ontology_item.create_instance()
     box_coordinates_1 = BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5)
