@@ -401,6 +401,9 @@ def pnt_coordinates_to_flat(coordinates: List[PointCoordinate]) -> List[float]:
     return [coord for point in coordinates for coord in [point.x, point.y]]
 
 
+PolylineDict = Union[Dict[str, PointDict], list[PointDict], Dict[str, PointDict3D], list[PointDict3D]]
+
+
 @dataclass(frozen=True)
 class PolylineCoordinates:
     """Represents polyline coordinates as a list of point coordinates.
