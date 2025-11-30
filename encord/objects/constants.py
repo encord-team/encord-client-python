@@ -11,8 +11,13 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
-# for backwards compatibility
 from encord.common.constants import DATETIME_LONG_STRING_FORMAT
+
+# for backwards compatibility
+__all__ = [
+    "DATETIME_LONG_STRING_FORMAT",
+]
+
 
 DEFAULT_CONFIDENCE = 1.0
 DEFAULT_MANUAL_ANNOTATION = True

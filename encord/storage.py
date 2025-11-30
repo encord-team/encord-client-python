@@ -17,7 +17,7 @@ import time
 from datetime import datetime
 from math import ceil
 from pathlib import Path
-from typing import Any, Collection, Dict, Iterable, List, Literal, Optional, Sequence, TextIO, Union
+from typing import Any, Collection, Dict, Iterable, List, Optional, Sequence, TextIO, Union
 from uuid import UUID
 
 import requests

@@ -29,7 +29,6 @@ from typing import (
     cast,
 )
 
-from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError

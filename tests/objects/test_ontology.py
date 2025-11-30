@@ -9,8 +9,9 @@ import encord.objects.classification
 import encord.objects.ontology_structure
 import encord.objects.options
 from encord.objects.common import Shape
-from encord.objects.skeleton_template import SkeletonTemplate, SkeletonTemplateCoordinate
+from encord.objects.skeleton_template import SkeletonTemplate
 from encord.objects.utils import short_uuid_str
+from encord.orm.skeleton_template import SkeletonTemplateCoordinate
 from tests.objects.data.data_editor_blob import EDITOR_BLOB
 
 log = logging.getLogger(__name__)

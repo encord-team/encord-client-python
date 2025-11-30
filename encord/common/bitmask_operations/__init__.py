@@ -20,6 +20,10 @@ except ImportError:
     )
 
 __all__ = [
+    "_mask_to_rle",
+    "_rle_to_mask",
+    "_rle_to_string",
+    "_string_to_rle",
     "deserialise_bitmask",
     "serialise_bitmask",
     "transpose_bytearray",
