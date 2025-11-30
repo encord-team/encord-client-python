@@ -4,19 +4,19 @@ import logging
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from encord.common.time_parser import parse_datetime
-from encord.exceptions import LabelRowError
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import Coordinates
-from encord.objects.types import BaseFrameObject, FrameClassification, FrameObject
+from encord.objects.types import BaseFrameObject, FrameClassification
 from encord.objects.utils import check_email
 
 if TYPE_CHECKING:
     from encord.objects import ClassificationInstance, ObjectInstance
     from encord.objects.spaces.base_space import Space
     from encord.objects.spaces.image_space import ImageSpace
+    from encord.objects.spaces.range_space.range_space import RangeSpace
     from encord.objects.spaces.video_space import VideoSpace
 
 logger = logging.getLogger(__name__)
@@ -280,7 +280,9 @@ class ClassificationAnnotation(Annotation):
     Allows setting or getting annotation data for the Classification.
     """
 
-    def __init__(self, space: Union[VideoSpace, ImageSpace], classification_instance: ClassificationInstance):
+    def __init__(
+        self, space: Union[VideoSpace, ImageSpace, RangeSpace], classification_instance: ClassificationInstance
+    ):
         self._space = space
         self._classification_instance = classification_instance
 

@@ -84,6 +84,7 @@ from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.spaces.annotation.base_annotation import ClassificationAnnotation, ObjectAnnotation
 from encord.objects.spaces.base_space import Space, SpaceT
 from encord.objects.spaces.image_space import ImageSpace
+from encord.objects.spaces.range_space.audio_space import AudioSpace
 from encord.objects.spaces.types import SpaceInfo
 from encord.objects.spaces.video_space import VideoSpace
 from encord.objects.types import (
@@ -763,6 +764,10 @@ class LabelRowV2:
         pass
 
     @overload
+    def get_space(self, *, id: str, type_: Literal["audio"]) -> AudioSpace:
+        pass
+
+    @overload
     def get_space(self, *, layout_key: str, type_: Literal["video"]) -> VideoSpace:
         pass
 
@@ -770,12 +775,16 @@ class LabelRowV2:
     def get_space(self, *, layout_key: str, type_: Literal["image"]) -> ImageSpace:
         pass
 
+    @overload
+    def get_space(self, *, layout_key: str, type_: Literal["audio"]) -> AudioSpace:
+        pass
+
     def get_space(
         self,
         *,
         id: Optional[str] = None,
         layout_key: Optional[str] = None,
-        type_: Union[Literal["video"], Literal["image"]],
+        type_: Union[Literal["video"], Literal["image"], Literal["audio"]],
     ) -> Space:
         """Retrieves a single space which matches the specified id and type.
         Throws an exception if more than one or no space with the specified id and type is found.
@@ -798,11 +807,21 @@ class LabelRowV2:
 
         if layout_key is not None:
             for element in self._space_map.values():
-                if isinstance(element, VideoSpace) or isinstance(element, ImageSpace):
+                if (
+                    isinstance(element, VideoSpace)
+                    or isinstance(element, ImageSpace)
+                    or isinstance(element, AudioSpace)
+                ):
                     if element.layout_key == layout_key:
                         return element
 
-        raise LabelRowError(f"Could not find space with given id {id} ")
+        space_identifier_error_message = ""
+        if id is not None:
+            space_identifier_error_message = f"Could not find space with given id {id}."
+        elif layout_key is not None:
+            space_identifier_error_message = f"Could not find space with given layout key {layout_key}."
+
+        raise LabelRowError(space_identifier_error_message)
 
     def save(self, bundle: Optional[Bundle] = None, validate_before_saving: bool = False) -> None:
         """Upload the created labels to the Encord server.
@@ -1030,6 +1049,14 @@ class LabelRowV2:
                         elif isinstance(space, ImageSpace):
                             if frame != 0:
                                 continue
+                            if object_.object_hash in space._objects_map:
+                                append = True
+                                break
+                        elif isinstance(space, AudioSpace):
+                            # For backwards compatibility, we treat audio as being on frame=0
+                            if frame != 0:
+                                continue
+
                             if object_.object_hash in space._objects_map:
                                 append = True
                                 break
@@ -1339,6 +1366,14 @@ class LabelRowV2:
                                 append = True
                                 break
                         elif isinstance(space, ImageSpace):
+                            if frame != 0:
+                                continue
+
+                            if classification.classification_hash in space._classifications_map:
+                                append = True
+                                break
+                        elif isinstance(space, AudioSpace):
+                            # For backwards compatibility, all audio classifications are treated as being on frame 0
                             if frame != 0:
                                 continue
 
@@ -2355,9 +2390,6 @@ class LabelRowV2:
                     width=space_info["width"],
                     height=space_info["height"],
                 )
-                # test_video_space._parse_space_dict(
-                #     space_info, object_answers=object_answers, classification_answers=classification_answers
-                # )
                 res[space_id] = video_space
             elif space_info["space_type"] == SpaceType.IMAGE:
                 image_space = ImageSpace(
@@ -2367,10 +2399,15 @@ class LabelRowV2:
                     width=space_info["width"],
                     height=space_info["height"],
                 )
-                # test_image_space._parse_space_dict(
-                #     space_info, object_answers=object_answers, classification_answers=classification_answers
-                # )
                 res[space_id] = image_space
+            elif space_info["space_type"] == SpaceType.AUDIO:
+                audio_space = AudioSpace(
+                    space_id=space_id,
+                    parent=self,
+                    duration_ms=space_info["duration_ms"],
+                    child_info=space_info["info"],
+                )
+                res[space_id] = audio_space
 
         return res
 

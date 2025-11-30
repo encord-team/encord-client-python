@@ -38,14 +38,11 @@ class ImageSpaceInfo(BaseSpaceInfo):
 #     number_of_characters: int
 #
 #
-# class AudioSpaceInfo(BaseSpaceInfo):
-#     space_type: Literal[SpaceType.AUDIO]
-#     duration_ms: int
+class AudioSpaceInfo(BaseSpaceInfo):
+    space_type: Literal[SpaceType.AUDIO]
+    info: ChildInfo
+    duration_ms: int
 
 
-SpaceInfo = Union[VideoSpaceInfo, ImageSpaceInfo]
+SpaceInfo = Union[VideoSpaceInfo, ImageSpaceInfo, AudioSpaceInfo]
 
-""" Annotation Overlapping Strategy """
-OverlapReplace = Literal["REPLACE"]
-OverlapMerge = Literal["MERGE"]
-OverlapError = Literal["ERROR"]

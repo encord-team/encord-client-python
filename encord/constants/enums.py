@@ -68,3 +68,4 @@ def is_geometric(data_type: DataType) -> bool:
 class SpaceType(StringEnum):
     VIDEO = "video"
     IMAGE = "image"
+    AUDIO = "audio"

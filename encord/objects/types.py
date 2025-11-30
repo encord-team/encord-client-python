@@ -215,6 +215,7 @@ class ObjectAnswer(TypedDict):
 class ObjectAnswerForNonGeometric(BaseFrameObject):
     """For non-geometric modalities, metadata is contained in object answers, instead of frame"""
 
+    shape: Union[Literal[Shape.TEXT], Literal[Shape.AUDIO]]
     classifications: List[AttributeDict]
     range: Union[List[List[int]], None]
 
