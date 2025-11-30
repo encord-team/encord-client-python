@@ -433,7 +433,7 @@ class ObjectInstance:
             frame: The frame number to check.
 
         Raises:
-            LabelRowError: If the frame is out of the acceptable range.
+            :class:`~encord.exceptions.LabelRowError`: If the frame is out of the acceptable range.
         """
         if frame < 0 or frame >= self._last_frame:
             raise LabelRowError(
@@ -547,7 +547,7 @@ class ObjectInstance:
             Annotation: The annotation for the specified frame.
 
         Raises:
-            LabelRowError: If the frame is not present in the label row.
+            :class:`~encord.exceptions.LabelRowError`: If the frame is not present in the label row.
         """
         if self._non_geometric and frame != 0:
             raise LabelRowError(
@@ -622,7 +622,7 @@ class ObjectInstance:
         """Check if the ObjectInstance is valid.
 
         Raises:
-            LabelRowError: If the ObjectInstance is not on any frames.
+            :class:`~encord.exceptions.LabelRowError`: If the ObjectInstance is not on any frames.
         """
         if len(self._frames_to_instance_data) == 0:
             raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
@@ -633,7 +633,7 @@ class ObjectInstance:
         """Validate if there are any dynamic answers on frames that have no coordinates.
 
         Raises:
-            LabelRowError: If there are dynamic answers on frames without coordinates.
+            :class:`~encord.exceptions.LabelRowError`: If there are dynamic answers on frames without coordinates.
         """
         dynamic_frames = set(self._dynamic_answer_manager.frames())
         local_frames = self.get_annotation_frames()
@@ -942,12 +942,12 @@ def check_coordinate_type(coordinates: Coordinates, ontology_object: Object, par
     """Check if the coordinate type matches the expected type for the ontology object.
 
     Args:
-        coordinates (Coordinates): The coordinates to check.
-        ontology_object (Object): The ontology object to check against.
-        parent (LabelRowV2): The parent label row (if any) of the ontology object.
+        coordinates: The coordinates to check.
+        ontology_object: The ontology object to check against.
+        parent: The parent label row (if any) of the ontology object.
 
     Raises:
-        LabelRowError: If the coordinate type does not match the expected type.
+        :class:`~encord.exceptions.LabelRowError`: If the coordinate type does not match the expected type.
     """
     expected_coordinate_types = ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS[ontology_object.shape]
     if all(
@@ -989,7 +989,7 @@ class DynamicAnswerManager:
         """Check if the attribute is a valid dynamic attribute.
 
         Args:
-            attribute (Attribute): The attribute to check.
+            attribute: The attribute to check.
 
         Returns:
             bool: True if the attribute is valid, False otherwise.
@@ -1008,9 +1008,9 @@ class DynamicAnswerManager:
         """Delete the answer for a given attribute and frames.
 
         Args:
-            attribute (Attribute): The attribute to delete the answer for.
-            frames (Optional[Frames]): The frames to delete the answer for.
-            filter_answer (Union[str, Option, Iterable[Option], None]): The specific answer to delete.
+            attribute: The attribute to delete the answer for.
+            frames: The frames to delete the answer for.
+            filter_answer: The specific answer to delete.
         """
         if frames is None:
             frames = [Range(i, i) for i in self._frames_to_answers.keys()]
@@ -1045,9 +1045,9 @@ class DynamicAnswerManager:
         """Set the answer for a given attribute and frames.
 
         Args:
-            answer (Union[str, Option, Iterable[Option]]): The answer to set.
-            attribute (Attribute): The attribute to set the answer for.
-            frames (Optional[Frames]): The frames to set the answer for.
+            answer: The answer to set.
+            attribute: The attribute to set the answer for.
+            frames: The frames to set the answer for.
         """
         if frames is None:
             for available_frame_view in self._object_instance.get_annotations():
@@ -1081,9 +1081,9 @@ class DynamicAnswerManager:
         """Get answers for a given attribute, filtered by the specified criteria.
 
         Args:
-            attribute (Attribute): The attribute to get the answers for.
-            filter_answer (Union[str, Option, Iterable[Option], None]): The specific answer to filter by.
-            filter_frames (Optional[Frames]): The specific frames to filter by.
+            attribute: The attribute to get the answers for.
+            filter_answer: The specific answer to filter by.
+            filter_frames: The specific frames to filter by.
 
         Returns:
             AnswersForFrames: A list of answers and their associated frames.

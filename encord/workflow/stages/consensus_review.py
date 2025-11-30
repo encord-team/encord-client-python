@@ -56,24 +56,22 @@ class ConsensusReviewStage(WorkflowStageBase):
     ) -> Iterable[ConsensusReviewTask]:
         """Retrieves tasks for the ConsensusReviewStage.
 
-        **Parameters**
+        Args:
+            assignee: A list of user emails or a single user email to filter tasks by assignee.
+            data_hash: A list of data unit UUIDs or a single data unit UUID to filter tasks by data hash.
+            dataset_hash: A list of dataset UUIDs or a single dataset UUID to filter tasks by dataset hash.
+            data_title: A string to filter tasks by data title.
+            status: A list of task statuses or a single task status to filter tasks by their status.
 
-        - `assignee` (Union[List[str], str, None]): A list of user emails or a single user email to filter tasks by assignee.
-        - `data_hash` (Union[List[UUID], UUID, List[str], str, None]): A list of data unit UUIDs or a single data unit UUID to filter tasks by data hash.
-        - `dataset_hash` (Union[List[UUID], UUID, List[str], str, None]): A list of dataset UUIDs or a single dataset UUID to filter tasks by dataset hash.
-        - `data_title` (Optional[str]): A string to filter tasks by data title.
-        - `status` (Union[ConsensusReviewTaskStatus, List[ConsensusReviewTaskStatus], None]): A list of task statuses or a single task status to filter tasks by their status.
-
-        **Returns**
-
-        An iterable of `ConsensusReviewTask` instances with the following information:
-        - `uuid`: Unique identifier for the task.
-        - `created_at`: Time and date the task was created.
-        - `updated_at`: Time and date the task was last edited.
-        - `assignee`: The user currently assigned to the task. The value is None if no one is assigned to the task.
-        - `data_hash`: Unique identifier for the data unit.
-        - `data_title`: Name/title of the data unit.
-        - `options`: List of ConsensusReviewOptions. ConsensusReviewOptions are the labels available for each subtask, including information such as annotator, label_branch_name, and label_hash.
+        Returns:
+            An iterable of `ConsensusReviewTask` instances with the following information:
+            - `uuid`: Unique identifier for the task.
+            - `created_at`: Time and date the task was created.
+            - `updated_at`: Time and date the task was last edited.
+            - `assignee`: The user currently assigned to the task. The value is                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             None if no one is assigned to the task.
+            - `data_hash`: Unique identifier for the data unit.
+            - `data_title`: Name/title of the data unit.
+            - `options`: List of ConsensusReviewOptions. ConsensusReviewOptions are the labels available for each subtask, including information such as annotator, label_branch_name, and label_hash.
         """
         params = _ReviewTasksQueryParams(
             user_emails=ensure_list(assignee),
@@ -156,15 +154,13 @@ class ConsensusReviewTask(WorkflowTask):
     ) -> None:
         """Approve the current task.
 
-        **Parameters**
+        Args:
+            assignee: User email to be assigned to the review task whilst approving the task.
+            retain_assignee: Retains the current assignee whilst approving the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
+            bundle: Optional bundle of actions to execute with the approval.
 
-        - `assignee` (Optional[str]): User email to be assigned to the review task whilst approving the task.
-        - `retain_assignee` (bool): Retains the current assignee whilst approving the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
-        - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the approval.
-
-        **Returns**
-
-        None
+        Returns:
+            None
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -182,15 +178,13 @@ class ConsensusReviewTask(WorkflowTask):
     ) -> None:
         """Reject the current task.
 
-        **Parameters**
+        Args:
+            assignee: User email to be assigned to the review task whilst rejecting the task.
+            retain_assignee: Retains the current assignee whilst rejecting the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
+            bundle: Optional bundle of actions to execute with the rejection.
 
-        - `assignee` (Optional[str]): User email to be assigned to the review task whilst rejecting the task.
-        - `retain_assignee` (bool): Retains the current assignee whilst rejecting the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
-        - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the rejection.
-
-        **Returns**
-
-        None
+        Returns:
+            None
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -202,14 +196,12 @@ class ConsensusReviewTask(WorkflowTask):
     def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
         """Assign the current task to a user.
 
-        **Parameters**
+        Args:
+            assignee: The user to assign the task to.
+            bundle: Optional bundle of actions to execute with the assignment.
 
-        - `assignee` (str): The user to assign the task to.
-        - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the assignment.
-
-        **Returns**
-
-        None
+        Returns:
+            None
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -221,13 +213,11 @@ class ConsensusReviewTask(WorkflowTask):
     def release(self, *, bundle: Optional[Bundle] = None) -> None:
         """Release the current task from the current user.
 
-        **Parameters**
+        Args:
+            bundle: Optional bundle of actions to execute with the release.
 
-        - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the release.
-
-        **Returns**
-
-        None
+        Returns:
+            None
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -239,14 +229,12 @@ class ConsensusReviewTask(WorkflowTask):
     def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
         """Moves the review task from its current stage to another stage.
 
-        **Parameters**
+        Args:
+            destination_stage_uuid: Unique identifier of the stage to move the task to.
+            bundle: Optional bundle of actions to execute with the move.
 
-        - `destination_stage_uuid` (UUID): Unique identifier of the stage to move the task to.
-        - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the move.
-
-        **Returns**
-
-        None
+        Returns:
+            None
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.move(

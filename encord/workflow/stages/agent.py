@@ -63,12 +63,12 @@ class AgentTask(WorkflowTask):
         Exactly one of `pathway_name` or `pathway_uuid` must be provided to
         specify the pathway to take.
 
-        **Parameters**
-            pathway_name (Optional[str]): Name of the pathway to follow.
-            pathway_uuid (Optional[Union[UUID, str]]): Unique identifier of the pathway to follow.
-            bundle (Optional[Bundle]): Optional bundle to associate with the action.
+        Args:
+            pathway_name: Name of the pathway to follow.
+            pathway_uuid: Unique identifier of the pathway to follow.
+            bundle: Optional bundle to associate with the action.
 
-        **Raises**
+        Raises:
             ValueError: If neither `pathway_name` nor `pathway_uuid` is provided.
         """
         if not pathway_name and not pathway_uuid:
@@ -88,13 +88,12 @@ class AgentTask(WorkflowTask):
     def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
         """Moves the task from its current stage to another stage.
 
-        **Parameters**
-            destination_stage_uuid (UUID): Unique identifier of the stage to move the task to.
-            bundle (Optional[Bundle]): Optional bundle to associate with the move action.
+        Args:
+            destination_stage_uuid: Unique identifier of the stage to move the task to.
+            bundle: Optional bundle to associate with the move action.
 
-        **Returns**
-
-        None
+        Returns:
+            None
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.move(
@@ -140,17 +139,15 @@ class AgentStage(WorkflowStageBase):
     ) -> Iterable[AgentTask]:
         """Retrieves tasks for the AgentStage.
 
-        **Parameters**
+        Args:
+            assignee: A list of user emails or a single user email to filter tasks by assignee.
+            data_hash: A list of data unit UUIDs or a single data unit UUID to filter tasks by data hash.
+            dataset_hash: A list of dataset UUIDs or a single dataset UUID to filter tasks by dataset hash.
+            data_title: A string to filter tasks by data title.
+            status: A status or a list of statuses to filter tasks by their status.
 
-        - `assignee` (Union[List[str], str, None]): A list of user emails or a single user email to filter tasks by assignee.
-        - `data_hash` (Union[List[UUID], UUID, List[str], str, None]): A list of data unit UUIDs or a single data unit UUID to filter tasks by data hash.
-        - `dataset_hash` (Union[List[UUID], UUID, List[str], str, None]): A list of dataset UUIDs or a single dataset UUID to filter tasks by dataset hash.
-        - `data_title` (Optional[str]): A string to filter tasks by data title.
-        - `status` (Optional[AnnotationTaskStatus | List[AnnotationTaskStatus]]): A status or a list of statuses to filter tasks by their status.
-
-        **Returns**
-
-        An iterable of `AnnotationTask` instances from both non-Consensus and Consensus Projects.
+        Returns:
+            An iterable of :class:`~encord.workflow.stages.AnnotationTask` instances from both non-Consensus and Consensus Projects.
         """
         params = _AgentTasksQueryParams(
             user_emails=ensure_list(assignee),

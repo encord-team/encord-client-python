@@ -97,15 +97,14 @@ class Workflow:
         uuid: Optional[Union[UUID, str]] = None,
         type_: Optional[Type[WorkflowStageT]] = None,
     ) -> WorkflowStageT:
-        """**Params**
+        """
+        Args:
+            name: Name of the stage.
+            uuid: Unique identifier for the stage.
+            type_: The type of stage.
 
-        - name: Name of the stage.
-        - uuid: Unique identifier for the stage.
-        - type_: The type of stage.
-
-        **Returns**
-
-        Returns a Workflow stage (`type_`) from non-Consensus and Consensus Projects.
+        Returns:
+            A Workflow stage (`type_`) from non-Consensus and Consensus Projects.
         """
         for stage in self.stages:
             if (uuid is not None and stage.uuid == _ensure_uuid(uuid)) or (name is not None and stage.title == name):

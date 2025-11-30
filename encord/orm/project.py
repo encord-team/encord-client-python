@@ -7,6 +7,7 @@ from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
+from encord.common.deprecated import deprecated
 from encord.exceptions import WrongProjectTypeError
 from encord.orm import base_orm
 from encord.orm.analytics import CamelStrEnum
@@ -15,6 +16,7 @@ from encord.orm.workflow import WorkflowDTO
 from encord.utilities.project_user import ProjectUserRole
 
 
+@deprecated("0.1.180", "get_dataset()")
 class Project(base_orm.BaseORM):
     """DEPRECATED - prefer using the `encord.project.Project` class instead.
 
@@ -554,7 +556,7 @@ class GetProjectUsersPayload(BaseDTO):
 
 class ProjectUserResponse(BaseDTO):
     """
-    This one should be merged with ProjectUser class
+    This one should be merged with :class:`~encord.utilities.project_user.ProjectUser` class
     But at the moment server doesn't return "project_hash" field (which is correct I suppose), that ProjectUser expects
     TODO: deprecate project_hash field from ProjectUsers and merge this two together
     """

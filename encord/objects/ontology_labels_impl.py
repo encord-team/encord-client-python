@@ -247,14 +247,15 @@ class LabelRowV2:
     def label_status(self) -> LabelStatus:
         """Returns the current labeling status for the label row.
 
-        **Note**: This method is not supported for workflow-based projects. Please see our
-        :ref:`workflow documentation <tutorials/workflows:Workflows>` for more details.
+        Note:
+            This method is not supported for workflow-based projects. Please see our
+            :ref:`workflow documentation <tutorials/workflows:Workflows>` for more details.
 
         Returns:
             LabelStatus: The current labeling status.
 
         Raises:
-            WrongProjectTypeError: If used with workflow-based projects.
+            :class:`~encord.exceptions.WrongProjectTypeError`: If used with workflow-based projects.
         """
         if self.__is_tms2_project:
             raise WrongProjectTypeError(
@@ -268,14 +269,15 @@ class LabelRowV2:
     def annotation_task_status(self) -> AnnotationTaskStatus:
         """Returns the current annotation task status for the label row.
 
-        **Note**: This method is not supported for workflow-based projects. Please see our
-        :ref:`workflow documentation <tutorials/workflows:Workflows>` for more details.
+        Note:
+            This method is not supported for workflow-based projects. Please see our
+            :ref:`workflow documentation <tutorials/workflows:Workflows>` for more details.
 
         Returns:
             AnnotationTaskStatus: The current annotation task status.
 
         Raises:
-            WrongProjectTypeError: If used with workflow-based projects.
+            :class:`~encord.exceptions.WrongProjectTypeError`: If used with workflow-based projects.
         """
         if self.__is_tms2_project:
             raise WrongProjectTypeError(
@@ -453,7 +455,7 @@ class LabelRowV2:
             Optional[UUID]: The workflow task uuid or None if not applicable.
 
         Raises:
-            WrongProjectTypeError: If used with non-workflow-based projects.
+            :class:`~encord.exceptions.WrongProjectTypeError`: If used with non-workflow-based projects.
         """
         if not self.__is_tms2_project:
             raise WrongProjectTypeError('"task_uuid" property only works with workflow-based projects.')
@@ -472,7 +474,7 @@ class LabelRowV2:
             Optional[float]: The workflow priority or None if not applicable.
 
         Raises:
-            WrongProjectTypeError: If used with non-workflow-based projects.
+            :class:`~encord.exceptions.WrongProjectTypeError`: If used with non-workflow-based projects.
         """
         if not self.__is_tms2_project:
             raise WrongProjectTypeError('"priority" property only works with workflow-based projects.')
@@ -697,7 +699,7 @@ class LabelRowV2:
             Optional[str]: The image hash if the frame number is within bounds, `None` otherwise.
 
         Raises:
-            LabelRowError: If this function is used for non-image data types.
+            :class:`~encord.exceptions.LabelRowError`: If this function is used for non-image data types.
         """
         self._check_labelling_is_initalised()
 
@@ -716,7 +718,7 @@ class LabelRowV2:
             Optional[int]: The frame number if the image hash is found, `None` otherwise.
 
         Raises:
-            LabelRowError: If this function is used for non-image data types.
+            :class:`~encord.exceptions.LabelRowError`: If this function is used for non-image data types.
         """
         self._check_labelling_is_initalised()
 
@@ -809,7 +811,7 @@ class LabelRowV2:
             FrameViewMetadata: Metadata for the specified frame or image hash.
 
         Raises:
-            LabelRowError: If the specified frame or image hash is not found in the label row.
+            :class:`~encord.exceptions.LabelRowError`: If the specified frame or image hash is not found in the label row.
         """
         self._method_not_supported_for_audio()
 
@@ -912,7 +914,7 @@ class LabelRowV2:
             force: If `True`, overwrites the current objects; otherwise, it will replace the current object.
 
         Raises:
-            LabelRowError: If the object instance is already part of another LabelRowV2.
+            :class:`~encord.exceptions.LabelRowError`: If the object instance is already part of another LabelRowV2.
         """
         self._method_not_supported_for_audio(range_only=object_instance.is_range_only())
 
@@ -962,7 +964,7 @@ class LabelRowV2:
             force: If `True`, overwrites the current objects; otherwise, it will replace the current object.
 
         Raises:
-            LabelRowError: If the classification instance is already part of another LabelRowV2 or has overlapping frames.
+            :class:`~encord.exceptions.LabelRowError`: If the classification instance is already part of another LabelRowV2 or has overlapping frames.
         """
         self._check_labelling_is_initalised()
 
@@ -1223,7 +1225,7 @@ class LabelRowV2:
             bundle: Optional parameter. If passed, the method will be executed in a deferred way as part of the bundle.
 
         Raises:
-            LabelRowError: If the label hash is None.
+            :class:`~encord.exceptions.LabelRowError`: If the label hash is None.
         """
         if self.label_hash is None:
             raise LabelRowError(
@@ -1245,7 +1247,7 @@ class LabelRowV2:
             bundle: Optional parameter. If passed, the method will be executed in a deferred way as part of the bundle.
 
         Raises:
-            WrongProjectTypeError: If the project is not a workflow-based project.
+            :class:`~encord.exceptions.WrongProjectTypeError`: If the project is not a workflow-based project.
         """
         if not self.__is_tms2_project:
             raise WrongProjectTypeError("Setting priority only possible for workflow-based projects")
@@ -1317,7 +1319,7 @@ class LabelRowV2:
                 str: The image hash.
 
             Raises:
-                LabelRowError: If the data type is not IMAGE or IMG_GROUP.
+                :class:`~encord.exceptions.LabelRowError`: If the data type is not IMAGE or IMG_GROUP.
             """
             if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
                 raise LabelRowError("Image hash can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
@@ -1331,7 +1333,7 @@ class LabelRowV2:
                 str: The image title.
 
             Raises:
-                LabelRowError: If the data type is not IMAGE or IMG_GROUP.
+                :class:`~encord.exceptions.LabelRowError`: If the data type is not IMAGE or IMG_GROUP.
             """
             if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
                 raise LabelRowError("Image title can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
@@ -1345,7 +1347,7 @@ class LabelRowV2:
                 str: The file type.
 
             Raises:
-                LabelRowError: If the data type is not IMAGE or IMG_GROUP.
+                :class:`~encord.exceptions.LabelRowError`: If the data type is not IMAGE or IMG_GROUP.
             """
             if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
                 raise LabelRowError("File type can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
@@ -1365,7 +1367,7 @@ class LabelRowV2:
             """Get the width of the frame.
 
             Raises:
-                LabelRowError: If the width is not set for the data type.
+                :class:`~encord.exceptions.LabelRowError`: If the width is not set for the data type.
             """
             if self._label_row.data_type == DataType.IMG_GROUP:
                 return self._frame_level_data().width
@@ -1387,7 +1389,7 @@ class LabelRowV2:
             """Get the height of the frame.
 
             Raises:
-                LabelRowError: If the height is not set for the data type.
+                :class:`~encord.exceptions.LabelRowError`: If the height is not set for the data type.
             """
             if self._label_row.data_type == DataType.IMG_GROUP:
                 return self._frame_level_data().height
@@ -1412,7 +1414,7 @@ class LabelRowV2:
                 Optional[str]: The data link, or `None` if not available.
 
             Raises:
-                LabelRowError: If the data type is not IMAGE or IMG_GROUP.
+                :class:`~encord.exceptions.LabelRowError`: If the data type is not IMAGE or IMG_GROUP.
             """
             if self._label_row.data_type not in [DataType.IMAGE, DataType.IMG_GROUP]:
                 raise LabelRowError("Data link can only be retrieved for DataType.IMAGE or DataType.IMG_GROUP")
@@ -1457,7 +1459,7 @@ class LabelRowV2:
                 manual_annotation: Optional flag indicating manual annotation.
 
             Raises:
-                LabelRowError: If the object instance is already assigned to a different label row.
+                :class:`~encord.exceptions.LabelRowError`: If the object instance is already assigned to a different label row.
             """
             label_row = object_instance.is_assigned_to_label_row()
             if label_row and self._label_row != label_row:
@@ -1506,7 +1508,7 @@ class LabelRowV2:
                 last_edited_by: Optional last editor identifier.
 
             Raises:
-                LabelRowError: If the classification instance is already assigned to a different label row.
+                :class:`~encord.exceptions.LabelRowError`: If the classification instance is already assigned to a different label row.
             """
             if created_at is None:
                 created_at = datetime.now()

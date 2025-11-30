@@ -157,9 +157,9 @@ class FilterPreset:
         """Update the preset's definition.
 
         Args:
-           name (Optional[str]): The new name for the preset.
-           description (Optional[str]): The new description for the preset.
-           filter_preset_json (Optional[dict]): The new filters for the preset in their raw json format.
+            name: The new name for the preset.
+            description: The new description for the preset.
+            filter_preset_json: The new filters for the preset in their raw json format.
         """
         filters_definition = None
         if isinstance(filter_preset_json, dict):

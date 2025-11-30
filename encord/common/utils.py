@@ -40,6 +40,7 @@ def validate_user_agent_suffix(user_agent_suffix: str) -> str:
     """
     Validate a User-Agent string according to RFC 9110, excluding comments.
     Returns it whitespace trimmed
+
     Args:
         user_agent_suffix: The User-Agent string to validate
 

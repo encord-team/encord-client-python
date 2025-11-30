@@ -231,14 +231,12 @@ class MetadataSchema:
     def add_embedding(self, k: str, *, size: int) -> None:
         """Adds a new embedding to the metadata schema.
 
-        **Parameters:**
+        Args:
+            k : str: The key under which the embedding will be stored in the schema.
+            size : int: The size of the embedding.
 
-        - k : str: The key under which the embedding will be stored in the schema.
-        - size : int: The size of the embedding.
-
-        **Raises:**
-
-        MetadataSchemaError: If the key `k` is already defined in the schema.
+        Raises:
+            :class:`~encord.metadata_schema.MetadataSchemaError`: If the key `k` is already defined in the schema.
         """
         if k in self._schema:
             raise MetadataSchemaError(f"{k} is already defined")
@@ -253,14 +251,12 @@ class MetadataSchema:
     def add_enum(self, k: str, *, values: Sequence[str]) -> None:
         """Adds a new enum to the metadata schema.
 
-        **Parameters:**
+        Args:
+            k : str: The key under which the embedding will be stored in the schema.
+            values : Sequence[str]: The set of values for the enum (min 1, max 256).
 
-        - k : str: The key under which the embedding will be stored in the schema.
-        - values : Sequence[str]: The set of values for the enum (min 1, max 256).
-
-        **Raises:**
-
-        MetadataSchemaError: If the key `k` is already defined in the schema.
+        Raises:
+            :class:`~encord.metadata_schema.MetadataSchemaError`: If the key `k` is already defined in the schema.
         """
         if k in self._schema:
             raise MetadataSchemaError(f"{k} is already defined")
@@ -275,14 +271,12 @@ class MetadataSchema:
     def add_enum_options(self, k: str, *, values: Sequence[str]) -> None:
         """Adds extra valid enum values to an existing enum schema.
 
-        **Parameters:**
+        Args:
+            k : str: The key referencing the enum.
+            values : Sequence[str]: The set of new values to add to the enum (min 1, max 256).
 
-        - k : str: The key referencing the enum.
-        - values : Sequence[str]: The set of new values to add to the enum (min 1, max 256).
-
-        **Raises:**
-
-        MetadataSchemaError: If the key `k` is not defined in the schema or is not an enum.
+        Raises:
+            :class:`~encord.metadata_schema.MetadataSchemaError`: If the key `k` is not defined in the schema or is not an enum.
         """
         if k not in self._schema:
             raise MetadataSchemaError(f"{k} is already defined")
@@ -309,18 +303,16 @@ class MetadataSchema:
     ) -> None:
         """Sets a simple metadata type for a given key in the schema.
 
-        **Parameters:**
+        Args:
+            k : str: The key for which the metadata type is being set.
+            data_type : Literal["boolean", "datetime", "number", "uuid", "varchar", "text", "string", "long_string"]
+                The type of metadata to be associated with the key. Must be a valid identifier.
+                "string" is an alias of "varchar"
+                "long_string" is an alias of "text"
 
-        - k : str: The key for which the metadata type is being set.
-        - data_type : Literal["boolean", "datetime", "number", "uuid", "varchar", "text", "string", "long_string"]
-                   The type of metadata to be associated with the key. Must be a valid identifier.
-                   "string" is an alias of "varchar"
-                   "long_string" is an alias of "text"
-
-        **Raises:**
-
-        MetadataSchemaError: If the key `k` is already defined in the schema with a conflicting type.
-        ValueError: If `data_type` is not a valid type of metadata identifier.
+        Raises:
+            :class:`~encord.metadata_schema.MetadataSchemaError`: If the key `k` is already defined in the schema with a conflicting type.
+            ValueError: If `data_type` is not a valid type of metadata identifier.
         """
         if isinstance(data_type, MetadataSchemaScalarType):
             data_type = data_type.to_simple_str()
@@ -357,34 +349,29 @@ class MetadataSchema:
 
         Alias of add_scalar
 
-        **Parameters:**
+        Args:
+            k : str: The key for which the metadata type is being set.
+            data_type : Literal["boolean", "datetime", "number", "uuid", "varchar", "text", "string", "long_string"]
+                The type of metadata to be associated with the key. Must be a valid identifier.
+                "string" is an alias of "varchar"
+                "long_string" is an alias of "text"
 
-        - k : str: The key for which the metadata type is being set.
-        - data_type : Literal["boolean", "datetime", "number", "uuid", "varchar", "text", "string", "long_string"]
-                   The type of metadata to be associated with the key. Must be a valid identifier.
-                   "string" is an alias of "varchar"
-                   "long_string" is an alias of "text"
-
-        **Raises:**
-
-        MetadataSchemaError: If the key `k` is already defined in the schema with a conflicting type.
-        ValueError: If `data_type` is not a valid type of metadata identifier.
+        Raises:
+            :class:`~encord.metadata_schema.MetadataSchemaError`: If the key `k` is already defined in the schema with a conflicting type.
+            ValueError: If `data_type` is not a valid type of metadata identifier.
         """
         self.add_scalar(k, data_type=data_type)
 
     def delete_key(self, k: str, *, hard: bool = False) -> None:
         """Delete a metadata key from the schema.
 
-        **Parameters:**
-
-        k : str: The key for which the metadata type is being deleted.
-
-        hard: bool: If the deletion should prevent indexing of this key unconditionally.
+        Args:
+            k: The key for which the metadata type is being deleted.
+            hard: If the deletion should prevent indexing of this key unconditionally.
                 Setting this to true prevents restoring the type definition in the future.
 
-        **Raises:**
-
-        MetadataSchemaError: If the key `k` is already deleted or not present in the schema
+        Raises:
+            :class:`~encord.metadata_schema.MetadataSchemaError`: If the key `k` is already deleted or not present in the schema
         """
         if k not in self._schema:
             raise MetadataSchemaError(f"{k} is not defined")
@@ -402,13 +389,11 @@ class MetadataSchema:
     def restore_key(self, k: str) -> None:
         """Restore a deleted metadata key to its original value.
 
-        **Parameters:**
+        Args:
+            k: The key for which the metadata type is to be restored.
 
-        k : str: The key for which the metadata type is to be restored.
-
-        **Raises:**
-
-        MetadataSchemaError: If the key `k` is not already deleted or not present in the schema
+        Raises:
+            :class:`~encord.metadata_schema.MetadataSchemaError`: If the key `k` is not already deleted or not present in the schema
         """
         if k not in self._schema:
             raise MetadataSchemaError(f"{k} is not defined")
@@ -424,27 +409,24 @@ class MetadataSchema:
     def keys(self) -> Sequence[str]:
         """Returns a sequence of all keys defined in the metadata schema.
 
-        **Returns:**
-
-        Sequence[str]: A list of keys present in the metadata schema.
+        Returns:
+            Sequence[str]: A list of keys present in the metadata schema.
         """
         return list(self._schema.keys())
 
     def has_key(self, k: str) -> bool:
         """Check if any definition exists for a key.
 
-        **Parameters:**
-
-        k : str: The key for which the metadata type is to be retrieved.
+        Args:
+            k: The key for which the metadata type is to be retrieved.
         """
         return k in self._schema
 
     def is_key_deleted(self, k: str) -> bool:
         """Check if the key is defined as deleted. (Tombstone type)
 
-        **Parameters:**
-
-        k : str: The key for which the metadata type is to be retrieved.
+        Args:
+            k: The key for which the metadata type is to be retrieved.
         """
         if k not in self._schema:
             return False
@@ -457,16 +439,14 @@ class MetadataSchema:
     ) -> Union[Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding", "enum"], None]:
         """Retrieves the metadata type associated with a given key.
 
-        **Parameters:**
+        Args:
+            k : str: The key for which the metadata type is to be retrieved.
 
-        k : str: The key for which the metadata type is to be retrieved.
-
-        **Returns:**
-
-        Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding", "enum"]: The metadata type associated with the key `k`.
+        Returns:
+            Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding", "enum"]: The metadata type associated with the key `k`.
 
         Raises:
-        MetadataSchemaError: If the key `k` is not supported by the current SDK.
+            :class:`~encord.metadata_schema.MetadataSchemaError`: If the key `k` is not supported by the current SDK.
         """
         if k not in self._schema:
             return None
@@ -498,17 +478,14 @@ class MetadataSchema:
     def get_embedding_size(self, k: str) -> int:
         """Retrieves size associated with a given embedding.
 
-        **Parameters:**
+        Args:
+            k: The key for which the metadata type is to be retrieved.
 
-        k : str: The key for which the metadata type is to be retrieved.
+        Returns:
+            The size of the embedding
 
-        **Returns:**
-
-        int: The size of the embedding
-
-        **Raises:**
-
-        MetadataSchemaError: If the key `k` is not defined in the schema or is not an embedding
+        Raises:
+            :class:`~encord.metadata_schema.MetadataSchemaError`: If the key `k` is not defined in the schema or is not an embedding
         """
         if k not in self._schema:
             raise MetadataSchemaError(f"{k} is not defined")
@@ -522,17 +499,14 @@ class MetadataSchema:
     def get_enum_options(self, k: str) -> Sequence[str]:
         """Retrieves all values associated with a given enum.
 
-        **Parameters:**
+        Args:
+            k: The key for which the metadata type is to be retrieved.
 
-        k : str: The key for which the metadata type is to be retrieved.
+        Returns:
+            Sequence: The list of all values associated with an enum type.
 
-        **Returns:**
-
-        Sequence[str]: The list of all values associated with an enum type.
-
-        **Raises:**
-
-        MetadataSchemaError: If the key `k` is not defined in the schema or is not an enum.
+        Raises:
+            :class:`~encord.metadata_schema.MetadataSchemaError`: If the key `k` is not defined in the schema or is not an enum.
         """
         if k not in self._schema:
             raise MetadataSchemaError(f"{k} is not defined")

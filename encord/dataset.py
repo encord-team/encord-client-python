@@ -104,7 +104,7 @@ class Dataset:
         ```
 
         Returns:
-            List[DataRow]: A list of DataRow objects.
+            List[:class:`~encord.orm.dataset.DataRow`]: A list of :class:`~encord.orm.dataset.DataRow` objects.
         """
         return self._dataset_instance.data_rows
 
@@ -128,12 +128,12 @@ class Dataset:
             data_hashes: Optional list of individual data unit hashes to include.
 
         Returns:
-            List[DataRow]: A list of DataRow objects that match the filter.
+            List[:class:`~encord.orm.dataset.DataRow`]: A list of :class:`~encord.orm.dataset.DataRow` objects that match the filter.
 
         Raises:
-            AuthorisationError: If the dataset API key is invalid.
-            ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
-            UnknownError: If an error occurs while retrieving the dataset.
+            :class:`~encord.exceptions.AuthorisationError`: If the dataset API key is invalid.
+            :class:`~encord.exceptions.ResourceNotFoundError`: If no dataset exists by the specified dataset EntityId.
+            :class:`~encord.exceptions.UnknownError`: If an error occurs while retrieving the dataset.
         """
         return self._client.list_data_rows(title_eq, title_like, created_before, created_after, data_types, data_hashes)
 
@@ -168,7 +168,6 @@ class Dataset:
 
     def add_users(self, user_emails: List[str], user_role: DatasetUserRole) -> List[DatasetUser]:
         """Add users to the dataset.
-
 
         If the user already exists in the Dataset, this operation succeeds but the `user_role` remains unchanged. The
         existing `user_role` is reflected in the `DatasetUser` instance returned.
@@ -239,7 +238,7 @@ class Dataset:
             Video: An object describing the created video, see :class:`encord.orm.dataset.Video`.
 
         Raises:
-            UploadOperationNotSupportedError: If trying to upload to external datasets (e.g., S3/GPC/Azure).
+            :class:`~encord.exceptions.UploadOperationNotSupportedError`: If trying to upload to external datasets (e.g., S3/GPC/Azure).
         """
         folder_uuid = folder.uuid if isinstance(folder, StorageFolder) else folder
 
@@ -273,7 +272,7 @@ class Dataset:
             List[ImageGroup]: A list containing the object(s) describing the created data unit(s). See :class:`encord.orm.dataset.ImageGroup`.
 
         Raises:
-            UploadOperationNotSupportedError: If trying to upload to external datasets (e.g., S3/GPC/Azure).
+            :class:`~encord.exceptions.UploadOperationNotSupportedError`: If trying to upload to external datasets (e.g., S3/GPC/Azure).
             InvalidArgumentError: If the folder is specified, but the dataset is a mirror dataset.
         """
         return self._client.create_image_group(
@@ -303,7 +302,7 @@ class Dataset:
             A dictionary describing the created series.
 
         Raises:
-            UploadOperationNotSupportedError: If trying to upload to external datasets (e.g., S3/GPC/Azure).
+            :class:`~encord.exceptions.UploadOperationNotSupportedError`: If trying to upload to external datasets (e.g., S3/GPC/Azure).
             InvalidArgumentError: If the folder is specified, but the dataset is a mirror dataset.
         """
         return self._client.create_dicom_series(
@@ -348,8 +347,7 @@ class Dataset:
             duplicates_behavior: The behavior to follow when encountering duplicates. Defaults to `SKIP`. See also :class:`encord.orm.dataset.DataLinkDuplicatesBehavior`.
 
         Returns:
-            List of DataRow objects representing linked items.
-
+            List of :class:`~encord.orm.dataset.DataRow` objects representing linked items.
         """
         return self._client.link_items(item_uuids, duplicates_behavior)
 
@@ -445,8 +443,7 @@ class Dataset:
             new_title: New title of the data item being updated.
 
         Returns:
-        Boolean indicating whether the update was successful.
-
+            Boolean indicating whether the update was successful.
         """
         return self._client.update_data_item(data_hash, new_title)
 

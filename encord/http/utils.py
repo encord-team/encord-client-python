@@ -89,8 +89,8 @@ def get_batches(iterable: List, n: int) -> List[List]:
     """Split an iterable into fixed-size batches.
 
     Args:
-        iterable (List): The input list to be split.
-        n (int): The maximum size of each batch.
+        iterable: The input list to be split.
+        n: The maximum size of each batch.
 
     Returns:
         List[List]: A list of lists where each sublist represents a batch.
@@ -130,13 +130,13 @@ def upload_to_signed_url_list_for_single_file(
     """Attempt to upload a single file to a signed URL, appending failures if any occur.
 
     Args:
-        failures (List[UploadToSignedUrlFailure]): A list to append failures to.
-        file_path (Union[str, Path]): Path of the file to upload.
-        title (str): Title or identifier for the file.
-        signed_url (str): The signed URL to upload the file to.
-        upload_item_type (StorageItemType): The type of the file being uploaded.
-        max_retries (int): Maximum number of retries in case of failure.
-        backoff_factor (float): Backoff factor for retry delays.
+        failures: A list to append failures to.
+        file_path: Path of the file to upload.
+        title: Title or identifier for the file.
+        signed_url: The signed URL to upload the file to.
+        upload_item_type: The type of the file being uploaded.
+        max_retries: Maximum number of retries in case of failure.
+        backoff_factor: Backoff factor for retry delays.
     """
     try:
         _upload_single_file(
@@ -178,11 +178,11 @@ def upload_to_signed_url_list(
     """Upload multiple files to signed URLs and return upload results.
 
     Args:
-        file_paths (Iterable[Union[str, Path]]): Paths of files to upload.
-        config (BaseConfig): Configuration object with request settings.
-        api_client (ApiClient): API client used to fetch presigned URLs.
-        upload_item_type (StorageItemType): Type of items being uploaded.
-        cloud_upload_settings (CloudUploadSettings): Upload configuration.
+        file_paths: Paths of files to upload.
+        config: Configuration object with request settings.
+        api_client: API client used to fetch presigned URLs.
+        upload_item_type: Type of items being uploaded.
+        cloud_upload_settings: Upload configuration.
 
     Returns:
         List[Dict]: A list of dictionaries containing upload metadata:
@@ -191,8 +191,8 @@ def upload_to_signed_url_list(
             - ``title`` (str): File name or title.
 
     Raises:
-        EncordException: If any file path does not exist.
-        CloudUploadError: If uploads fail and ``allow_failures`` is False.
+        :class:`~encord.exceptions.EncordException`: If any file path does not exist.
+        :class:`~encord.exceptions.CloudUploadError`: If uploads fail and ``allow_failures`` is False.
     """
     for file_path in file_paths:
         if not os.path.exists(file_path):

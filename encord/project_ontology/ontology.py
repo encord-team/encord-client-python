@@ -160,11 +160,10 @@ class Ontology:
         """Add a classification to the ontology.
 
         Args:
-             name: A descriptive name of the classification.
-             classification_type: The type of the classification.
-             required: Indicate whether annotating this classification is required.
-             options: Nested classification options.
-
+            name: A descriptive name of the classification.
+            classification_type: The type of the classification.
+            required: Indicate whether annotating this classification is required.
+            options: Nested classification options.
         """
         ontology_classification = OntologyClassification(
             str(self.__current_classification_id()),

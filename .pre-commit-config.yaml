@@ -29,3 +29,10 @@ repos:
         entry: uv run mypy
         language: system
         files: ^encord/.*py$
+      - id: docstring-linter
+        name: Docstring Quality Check
+        entry: python tools/docstring_linter.py --check --config tools/docstring_linter_config.json --files
+        language: system
+        types: [python]
+        files: ^encord/.*py$
+        pass_filenames: true

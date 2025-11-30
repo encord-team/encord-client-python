@@ -62,7 +62,7 @@ class BoundingBoxCoordinates:
         """Create a BoundingBoxCoordinates instance from a dictionary.
 
         Args:
-            d (dict): A dictionary containing bounding box information.
+            d: A dictionary containing bounding box information.
 
         Returns:
             BoundingBoxCoordinates: An instance of BoundingBoxCoordinates.
@@ -113,7 +113,7 @@ class RotatableBoundingBoxCoordinates:
         """Create a RotatableBoundingBoxCoordinates instance from a dictionary.
 
         Args:
-            d (dict): A dictionary containing rotatable bounding box information.
+            d: A dictionary containing rotatable bounding box information.
 
         Returns:
             RotatableBoundingBoxCoordinates: An instance of RotatableBoundingBoxCoordinates.
@@ -190,7 +190,7 @@ class PointCoordinate:
         """Create a PointCoordinate instance from a dictionary.
 
         Args:
-            d (dict): A dictionary containing point coordinate information.
+            d: A dictionary containing point coordinate information.
 
         Returns:
             PointCoordinate: An instance of PointCoordinate.
@@ -229,7 +229,7 @@ class PointCoordinate3D:
         """Create a PointCoordinate3D instance from a dictionary.
 
         Args:
-            d (dict): A dictionary containing point coordinate information.
+            d: A dictionary containing point coordinate information.
 
         Returns:
             PointCoordinate3D: An instance of PointCoordinate3D.
@@ -261,8 +261,8 @@ class PolygonCoordinates:
     ):
         """
         Args:
-            values (List[PointCoordinate]): A list of PointCoordinate objects defining the polygon.
-            polygons (List[List[List[PointCoordinate]]]): A list of polygons, where each polygon is a list of contours, where each contour is a list of points.
+            values: A list of PointCoordinate objects defining the polygon.
+            polygons: A list of polygons, where each polygon is a list of contours, where each contour is a list of points.
         """
         if not values and not polygons:
             raise LabelRowError("Either `values` or `polygons` must be provided")
@@ -296,45 +296,45 @@ class PolygonCoordinates:
         Supports both legacy format (single polygon with one contour) and the new complex format (multiple polygons and contours).
 
         Args:
-        d (dict): Dictionary containing polygon coordinates information.
+            d: Dictionary containing polygon coordinates information.
 
         Returns:
-        PolygonCoordinates: A PolygonCoordinates instance.
+            PolygonCoordinates: A PolygonCoordinates instance.
 
         Examples:
-        Legacy format (mapping of index -> point):
-        ```json
-        {
-          "polygon": {
-            "0": {"x": 12.3, "y": 45.6},
-            "1": {"x": 78.9, "y": 12.3}
-          }
-        }
-        ```
+            Legacy format (mapping of index -> point):
+            ```json
+            {
+              "polygon": {
+                "0": {"x": 12.3, "y": 45.6},
+                "1": {"x": 78.9, "y": 12.3}
+              }
+            }
+            ```
 
-        Legacy format (list of points):
-        ```json
-        {
-          "polygon": [
-            {"x": 12.3, "y": 45.6},
-            {"x": 78.9, "y": 12.3}
-          ]
-        }
-        ```
-
-        New format (polygons -> contours -> points):
-        ```json
-        {
-          "polygons": [
-            [
-              [
+            Legacy format (list of points):
+            ```json
+            {
+              "polygon": [
                 {"x": 12.3, "y": 45.6},
                 {"x": 78.9, "y": 12.3}
               ]
-            ]
-          ]
-        }
-        ```
+            }
+            ```
+
+            New format (polygons -> contours -> points):
+            ```json
+            {
+              "polygons": [
+                [
+                  [
+                    {"x": 12.3, "y": 45.6},
+                    {"x": 78.9, "y": 12.3}
+                  ]
+                ]
+              ]
+            }
+            ```
         """
         polygon_dict = d.get("polygon")
         values: List[PointCoordinate] = []
@@ -416,7 +416,7 @@ class PolylineCoordinates:
         """Create a PolylineCoordinates instance from a dictionary.
 
         Args:
-            d (dict): A dictionary containing polyline coordinates information.
+            d: A dictionary containing polyline coordinates information.
 
         Returns:
             PolylineCoordinates: An instance of PolylineCoordinates.

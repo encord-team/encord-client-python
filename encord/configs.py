@@ -77,9 +77,9 @@ class BaseConfig(ABC):
         """Define headers for a request.
 
         Args:
-            resource_id (Optional[str]): The resource ID.
-            resource_type (Optional[str]): The resource type.
-            data (str): The request data.
+            resource_id: The resource ID.
+            resource_type: The resource type.
+            data: The request data.
 
         Returns:
             Dict[str, Any]: A dictionary of headers.
@@ -91,7 +91,7 @@ class BaseConfig(ABC):
         """Define headers for a request (v2).
 
         Args:
-            request (PreparedRequest): The prepared request.
+            request: The prepared request.
 
         Returns:
             PreparedRequest: The prepared request with headers defined.
@@ -126,9 +126,9 @@ class UserConfig(BaseConfig):
         """Define headers for a user-specific request.
 
         Args:
-            resource_id (Optional[str]): The resource ID.
-            resource_type (Optional[str]): The resource type.
-            data (str): The request data.
+            resource_id: The resource ID.
+            resource_type: The resource type.
+            data: The request data.
 
         Returns:
             Dict[str, Any]: A dictionary of headers.
@@ -139,7 +139,7 @@ class UserConfig(BaseConfig):
         """Define headers for a user-specific request (v2).
 
         Args:
-            request (PreparedRequest): The prepared request.
+            request: The prepared request.
 
         Returns:
             PreparedRequest: The prepared request with headers defined.
@@ -193,7 +193,7 @@ def get_env_ssh_key() -> str:
         str: The raw SSH key.
 
     Raises:
-        ResourceNotFoundError: If the SSH key file or key is not found or is empty.
+        :class:`~encord.exceptions.ResourceNotFoundError`: If the SSH key file or key is not found or is empty.
     """
     ssh_file = os.environ.get(_ENCORD_SSH_KEY_FILE)
     if ssh_file:
@@ -265,9 +265,9 @@ class SshConfig(Config):
         """Define headers for an SSH key-based request.
 
         Args:
-            resource_id (Optional[str]): The resource ID.
-            resource_type (Optional[str]): The resource type.
-            data (str): The request data.
+            resource_id: The resource ID.
+            resource_type: The resource type.
+            data: The request data.
 
         Returns:
             Dict[str, Any]: A dictionary of headers.
@@ -288,7 +288,7 @@ class SshConfig(Config):
         """Define headers for an SSH key-based request (v2).
 
         Args:
-            request (PreparedRequest): The prepared request.
+            request: The prepared request.
 
         Returns:
             PreparedRequest: The prepared request with headers defined.
@@ -356,9 +356,9 @@ class BearerConfig(Config):
         """Define headers for a bearer token-based request.
 
         Args:
-            resource_id (Optional[str]): The resource ID.
-            resource_type (Optional[str]): The resource type.
-            data (str): The request data.
+            resource_id: The resource ID.
+            resource_type: The resource type.
+            data: The request data.
 
         Returns:
             Dict[str, Any]: A dictionary of headers.
@@ -378,7 +378,7 @@ class BearerConfig(Config):
         """Define headers for a bearer token-based request (v2).
 
         Args:
-            request (PreparedRequest): The prepared request.
+            request: The prepared request.
 
         Returns:
             PreparedRequest: The prepared request with headers defined.
@@ -402,6 +402,7 @@ class BearerConfig(Config):
             token: The bearer token.
             requests_settings: The requests settings for all outgoing network requests.
             domain: Base domain for the endpoints
+
         Returns:
             BearerConfig: The bearer token configuration.
         """

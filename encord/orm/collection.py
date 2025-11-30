@@ -326,7 +326,7 @@ class ProjectCollectionBulkItemResponse(BaseDTO):
 
     Attributes:
         failed_items: Items for which the bulk operation failed. Each entry contains
-            the original request that could not be processed successfully.
+        the original request that could not be processed successfully.
     """
 
     failed_items: List[Union[ProjectDataCollectionItemRequest, ProjectLabelCollectionItemRequest]]

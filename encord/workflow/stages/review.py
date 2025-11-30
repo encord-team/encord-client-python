@@ -72,9 +72,8 @@ class LabelReview(BaseDTO):
     def approve(self, *, bundle: Optional[Bundle] = None):
         """Approves the review.
 
-        **Parameters**
-
-        - `bundle` (Optional[Bundle]): Optional bundle parameter.
+        Args:
+            bundle: Optional bundle parameter.
         """
         workflow_client, stage_uuid, task_uuid = self._get_client_data()
         workflow_client.label_review_action(
@@ -90,9 +89,10 @@ class LabelReview(BaseDTO):
     ):
         """Rejects the review.
 
-        **Parameters**
-
-        - `bundle` (Optional[Bundle]): Optional bundle parameter.
+        Args:
+            comment: Optional comment for the review.
+            issue_tags: Optional list of tags for the issue.
+            bundle: Optional bundle parameter.
         """
         workflow_client, stage_uuid, task_uuid = self._get_client_data()
         workflow_client.label_review_action(
@@ -105,9 +105,8 @@ class LabelReview(BaseDTO):
     def reopen(self, *, bundle: Optional[Bundle] = None):
         """Reopens the review.
 
-        **Parameters**
-
-        - `bundle` (Optional[Bundle]): Optional bundle parameter.
+        Args:
+            bundle: Optional bundle parameter.
         """
         workflow_client, stage_uuid, task_uuid = self._get_client_data()
         workflow_client.label_review_action(
@@ -150,23 +149,21 @@ class ReviewStage(WorkflowStageBase):
     ) -> Iterable[ReviewTask]:
         """Retrieves tasks for the ReviewStage.
 
-        **Parameters**
+        Args:
+            assignee: User assigned to a task.
+            data_hash: Unique ID for the data unit.
+            dataset_hash: Unique ID for the dataset that the data unit belongs to.
+            data_title: Name of the data unit.
+            status: Status of the task.
 
-        - `assignee` (Union[List[str], str, None]): User assigned to a task.
-        - `data_hash` (Union[List[UUID], UUID, List[str], str, None]): Unique ID for the data unit.
-        - `dataset_hash` (Union[List[UUID], UUID, List[str], str, None]): Unique ID for the dataset that the data unit belongs to.
-        - `data_title` (Optional[str]): Name of the data unit.
-        - `status` (Union[ReviewTaskStatus, List[ReviewTaskStatus], None]): Status of the task.
-
-        **Returns**
-
-        An iterable of `ReviewTask` instances with the following information:
-        - `uuid`: Unique identifier for the task.
-        - `created_at`: Time and date the task was created.
-        - `updated_at`: Time and date the task was last edited.
-        - `assignee`: The user currently assigned to the task. The value is None if no one is assigned to the task.
-        - `data_hash`: Unique identifier for the data unit.
-        - `data_title`: Name/title of the data unit.
+        Returns:
+            An iterable of `ReviewTask` instances with the following information:
+            - `uuid`: Unique identifier for the task.
+            - `created_at`: Time and date the task was created.
+            - `updated_at`: Time and date the task was last edited.
+            - `assignee`: The user currently assigned to the task. The value is None if no one is assigned to the task.
+            - `data_hash`: Unique identifier for the data unit.
+            - `data_title`: Name/title of the data unit.
         """
         params = _ReviewTasksQueryParams(
             user_emails=ensure_list(assignee),
@@ -243,15 +240,13 @@ class ReviewTask(WorkflowTask):
     ) -> None:
         """Approves the task.
 
-        **Parameters**
+        Args:
+            assignee: User email to be assigned to the task whilst approving the task.
+            retain_assignee: Retains the current assignee whilst approving the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
+            bundle: Optional bundle parameter.
 
-        - `assignee` (Optional[str]): User email to be assigned to the task whilst approving the task.
-        - `retain_assignee` (bool): Retains the current assignee whilst approving the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
-        - `bundle` (Optional[Bundle]): Optional bundle parameter.
-
-        **Returns**
-
-        None
+        Returns:
+            None
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -269,15 +264,13 @@ class ReviewTask(WorkflowTask):
     ) -> None:
         """Rejects the task.
 
-        **Parameters**
+        Args:
+            assignee: User email to be assigned to the task whilst rejecting the task.
+            retain_assignee: Retains the current assignee whilst rejecting the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
+            bundle: Optional bundle parameter.
 
-        - `assignee` (Optional[str]): User email to be assigned to the task whilst rejecting the task.
-        - `retain_assignee` (bool): Retains the current assignee whilst rejecting the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
-        - `bundle` (Optional[Bundle]): Optional bundle parameter.
-
-        **Returns**
-
-        None
+        Returns:
+            None
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -289,14 +282,12 @@ class ReviewTask(WorkflowTask):
     def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
         """Assigns the task to a user.
 
-        **Parameters**
+        Args:
+            assignee: The user to assign the task to.
+            bundle: Optional bundle parameter.
 
-        - `assignee` (str): The user to assign the task to.
-        - `bundle` (Optional[Bundle]): Optional bundle parameter.
-
-        **Returns**
-
-        None
+        Returns:
+            None
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -308,13 +299,11 @@ class ReviewTask(WorkflowTask):
     def release(self, *, bundle: Optional[Bundle] = None) -> None:
         """Releases the task from the current user.
 
-        **Parameters**
+        Args:
+            bundle: Optional bundle parameter.
 
-        - `bundle` (Optional[Bundle]): Optional bundle parameter.
-
-        **Returns**
-
-        None
+        Returns:
+            None
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -326,14 +315,12 @@ class ReviewTask(WorkflowTask):
     def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
         """Moves the review task from its current stage to another stage.
 
-        **Parameters**
+        Args:
+            destination_stage_uuid: Unique identifier of the stage to move the task to.
+            bundle: Optional bundle parameter.
 
-        - `destination_stage_uuid` (UUID): Unique identifier of the stage to move the task to.
-        - `bundle` (Optional[Bundle]): Optional bundle parameter.
-
-        **Returns**
-
-        None
+        Returns:
+            None
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.move(
@@ -348,16 +335,15 @@ class ReviewTask(WorkflowTask):
     ) -> Iterable[LabelReview]:
         """Retrieves label reviews for the Review task.
 
-        **Parameters**
-        - `status` (Union[ReviewTaskStatus, List[ReviewTaskStatus], None]): Status of the task.
+        Args:
+            status: Status of the task.
 
-        **Returns**
-
-        An iterable of `ReviewTask` instances with the following information:
-        - `uuid`: Unique identifier for label review.
-        - `status`: Current status of the label review.
-        - `label_type`: Type of the label. Can be either Object or Classification.
-        - `label_id`: Unique identifier of the label.
+        Returns:
+            An iterable of `ReviewTask` instances with the following information:
+            - `uuid`: Unique identifier for label review.
+            - `status`: Current status of the label review.
+            - `label_type`: Type of the label. Can be either Object or Classification.
+            - `label_id`: Unique identifier of the label.
         """
         workflow_client, stage_uuid = self._get_client_data()
         for r in workflow_client.get_label_reviews(stage_uuid, self.uuid, type_=LabelReview):

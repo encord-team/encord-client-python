@@ -36,7 +36,7 @@ AttributeType = TypeVar("AttributeType", bound=Attribute)
 
 
 class Answer(ABC, Generic[ValueType, AttributeType]):
-    """An internal helper class for the LabelRowV2 class. This class is not meant to be used directly by users."""
+    """An internal helper class for the :class:`~encord.objects.LabelRowV2` class. This class is not meant to be used directly by users."""
 
     _ontology_attribute: AttributeType
     _value: Optional[ValueType]

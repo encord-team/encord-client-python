@@ -118,7 +118,7 @@ class StorageFolder(BaseDTO):
         user_role: Role of the current user in this folder.
         synced_dataset_hash: UUID of the dataset synced with this folder, if any.
         path_to_root: Path from this folder to the root, represented as a list
-            of :class:`PathElement` instances.
+        of :class:`~encord.orm.PathElement` instances.
     """
 
     uuid: UUID
@@ -148,7 +148,7 @@ class StorageItem(BaseDTO):
         created_at: Timestamp when the item was created.
         last_edited_at: Timestamp when the item was last modified.
         is_tombstone: This item has been deleted but the link is retained for consistency reasons.
-        Mostly for items in the 'cloud linked folders' that are referenced but aren't present after a re-sync.
+            Mostly for items in the 'cloud linked folders' that are referenced but aren't present after a re-sync.
         is_placeholder: This item has been added to the folder but isn't fully processed yet.
         backed_data_units_count:  Number of data units backed by this storage item.
         storage_location: Storage backend where the item resides.
