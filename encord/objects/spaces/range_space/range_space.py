@@ -9,7 +9,7 @@ from encord.common.range_manager import RangeManager
 from encord.common.time_parser import format_datetime_to_long_string, format_datetime_to_long_string_optional
 from encord.constants.enums import DataType, SpaceType
 from encord.exceptions import LabelRowError
-from encord.objects import ClassificationInstance
+from encord.objects import ClassificationInstance, Shape
 from encord.objects.frames import Range, Ranges
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.spaces.annotation.base_annotation import AnnotationData, AnnotationMetadata
@@ -21,10 +21,12 @@ from encord.objects.spaces.annotation.range_annotation import (
 from encord.objects.spaces.base_space import Space
 from encord.objects.spaces.types import SpaceInfo
 from encord.objects.types import (
+    AttributeDict,
     BaseFrameObject,
     ClassificationAnswer,
     FrameClassification,
     LabelBlob,
+    ObjectAnswer,
     ObjectAnswerForNonGeometric,
 )
 from encord.objects.utils import _lower_snake_case
@@ -280,89 +282,16 @@ class RangeSpace(Space):
         label_class = ontology.get_child_by_hash(feature_hash, type_=Object)
         return ObjectInstance(ontology_object=label_class, object_hash=object_hash)
 
-    def _parse_space_dict(
-        self,
-        space_info: SpaceInfo,
-        object_answers: dict[str, ObjectAnswerForNonGeometric],
-        classification_answers: dict,
-    ) -> None:
-        pass
-        """Parse object and classification answers, and populate object and classification instances."""
-        # for object_answer in object_answers.values():
-        #     ranges_in_object_answer = object_answer["range"] if object_answer["range"] is not None else []
-        #     ranges = [Range(range[0], range[1]) for range in ranges_in_object_answer]
-        # if self.space_type == SpaceType.TEXT:
-        #     object_instance = self.parent._create_new_object_instance_with_ranges(
-        #         object_answer, ranges, DataType.PLAIN_TEXT
-        #     )
-        #     frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
-        #     frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
-        #     object_frame_instance_info = AnnotationMetadata.from_dict(frame_info_dict)
-        #
-        #     self.place_object(
-        #         object=object_instance,
-        #         ranges=ranges,
-        #         created_at=object_frame_instance_info.created_at,
-        #         created_by=object_frame_instance_info.created_by,
-        #         last_edited_at=object_frame_instance_info.last_edited_at,
-        #         last_edited_by=object_frame_instance_info.last_edited_by,
-        #         manual_annotation=object_frame_instance_info.manual_annotation,
-        #         reviews=object_frame_instance_info.reviews,
-        #         confidence=object_frame_instance_info.confidence,
-        #     )
-
-        #     object_instance = self._create_new_object(
-        #         object_hash=object_answer["objectHash"],
-        #         feature_hash=object_answer["featureHash"],
-        #     )
-        #
-        #     frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
-        #     frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
-        #     frame_object_dict = cast(BaseFrameObject, frame_info_dict)
-        #     object_frame_instance_info = AnnotationMetadata.from_dict(frame_object_dict)
-        #
-        #     self.put_object_instance(
-        #         object_instance=object_instance,
-        #         ranges=ranges,
-        #         created_at=object_frame_instance_info.created_at,
-        #         created_by=object_frame_instance_info.created_by,
-        #         last_edited_at=object_frame_instance_info.last_edited_at,
-        #         last_edited_by=object_frame_instance_info.last_edited_by,
-        #         manual_annotation=object_frame_instance_info.manual_annotation,
-        #         confidence=object_frame_instance_info.confidence,
-        #     )
-        #
-        #     answer_list = object_answer["classifications"]
-        #     object_instance.set_answer_from_list(answer_list)
-        #
-        # else:
-        #     raise ValueError(f"Space type {self.space_type} is invalid for this space.")
-
-        # for classification_answer in classification_answers.values():
-        #     classification_instance = self._label_row._create_new_classification_instance_with_ranges(
-        #         classification_answer
-        #     )
-        #     annotation_metadata = AnnotationMetadata.from_dict(classification_answer)
-        #
-        #     # TODO: Need to use global classifications here
-        #     self.put_classification_instance(
-        #         classification_instance=classification_instance,
-        #         created_at=annotation_metadata.created_at,
-        #         created_by=annotation_metadata.created_by,
-        #         confidence=annotation_metadata.confidence,
-        #         manual_annotation=annotation_metadata.manual_annotation,
-        #         last_edited_at=annotation_metadata.last_edited_at,
-        #         last_edited_by=annotation_metadata.last_edited_by,
-        #     )
-
     def _build_labels_dict(self) -> dict[str, LabelBlob]:
         """For range-based annotations, labels are stored in objects/classifications index"""
         return {}
 
-    def _to_object_answers(self) -> dict[str, ObjectAnswerForNonGeometric]:
+    def _to_object_answers(self) -> dict[str, Union[ObjectAnswerForNonGeometric, ObjectAnswer]]:
         ret: dict[str, ObjectAnswerForNonGeometric] = {}
 
         for obj in self.get_object_instances():
+            shape = cast(Union[Literal[Shape.TEXT], Literal[Shape.AUDIO]], obj.ontology_item.shape.value)
+
             all_static_answers = self._label_row._get_all_static_answers(obj)
             annotation = self._object_hash_to_annotation_data[obj.object_hash]
             annotation_metadata = annotation.annotation_metadata
@@ -377,14 +306,14 @@ class RangeSpace(Space):
                 "featureHash": obj.feature_hash,
                 "name": obj.ontology_item.name,
                 "color": obj.ontology_item.color,
-                "shape": obj.ontology_item.shape.value,
+                "shape": shape,
                 "value": _lower_snake_case(obj.ontology_item.name),
                 "range": [[range.start, range.end] for range in annotation.range_manager.get_ranges()],
             }
 
             ret[obj.object_hash] = object_index_element
 
-        return ret
+        return cast(dict[str, Union[ObjectAnswer, ObjectAnswerForNonGeometric]], ret)
 
     def _to_classification_answers(self) -> dict[str, ClassificationAnswer]:
         ret: dict[str, ClassificationAnswer] = {}
@@ -392,10 +321,13 @@ class RangeSpace(Space):
             all_static_answers = classification.get_all_static_answers()
             annotation = self._classification_hash_to_annotation_data[classification.classification_hash]
             annotation_metadata = annotation.annotation_metadata
-            classifications = [answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()]
+            classification_attributes = [
+                answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()
+            ]
+            classification_attributes_without_none = cast(list[AttributeDict], classification_attributes)
 
             classification_index_element: ClassificationAnswer = {
-                "classifications": list(reversed(classifications)),
+                "classifications": list(reversed(classification_attributes_without_none)),
                 "classificationHash": classification.classification_hash,
                 "featureHash": classification.feature_hash,
                 "range": [],

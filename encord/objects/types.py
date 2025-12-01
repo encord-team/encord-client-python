@@ -92,7 +92,7 @@ class BaseFrameObject(BaseFrameObjectRequired, total=False):
     """
 
     createdBy: Optional[str]  # This is optional because we set the default to the current user on the BE
-    lastEditedBy: str
+    lastEditedBy: Optional[str]  # This is optional because we set the default to the current user on the BE
     lastEditedAt: str
     confidence: float
     manualAnnotation: bool

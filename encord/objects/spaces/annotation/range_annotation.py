@@ -95,7 +95,7 @@ class RangeClassificationAnnotation(ClassificationAnnotation):
         """This field is deprecated. It is only here for backwards compatibility. It always returns 0."""
         return 0
 
-    def _get_annotation_data(self) -> RangeObjectAnnotationData:
+    def _get_annotation_data(self) -> AnnotationData:
         return self._space._classification_hash_to_annotation_data[self._classification_instance.classification_hash]
 
     def _check_if_annotation_is_valid(self) -> None:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Union, cast
 
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
@@ -8,7 +8,7 @@ from encord.objects.frames import Range, Ranges
 from encord.objects.spaces.annotation.base_annotation import AnnotationMetadata
 from encord.objects.spaces.range_space.range_space import RangeSpace
 from encord.objects.spaces.types import AudioSpaceInfo, ChildInfo, SpaceInfo
-from encord.objects.types import BaseFrameObject, ObjectAnswerForNonGeometric
+from encord.objects.types import BaseFrameObject, ObjectAnswer, ObjectAnswerForNonGeometric
 
 if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
@@ -60,10 +60,11 @@ class AudioSpace(RangeSpace):
     def _parse_space_dict(
         self,
         space_info: SpaceInfo,
-        object_answers: dict[str, ObjectAnswerForNonGeometric],
+        object_answers: dict[str, Union[ObjectAnswer, ObjectAnswerForNonGeometric]],
         classification_answers: dict,
     ) -> None:
-        for object_answer in object_answers.values():
+        object_answers_for_non_geometric = cast(dict[str, ObjectAnswerForNonGeometric], object_answers)
+        for object_answer in object_answers_for_non_geometric.values():
             ranges_in_object_answer = object_answer["range"] if object_answer["range"] is not None else []
             ranges = [Range(range[0], range[1]) for range in ranges_in_object_answer]
 
