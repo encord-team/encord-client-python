@@ -67,7 +67,7 @@ def test_unplace_object_on_video_space_throws_error_if_object_has_frames(ontolog
 
     # Act
     with pytest.raises(LabelRowError) as e:
-        video_space_1.unplace_object(
+        video_space_1.remove_object_from_frames(
             object_instance=new_object_instance,
             frames=[1],
         )
@@ -250,7 +250,7 @@ def test_unplace_classification_on_video_space_throws_error_if_classification_ha
 
     # Act
     with pytest.raises(LabelRowError) as e:
-        video_space_1.unplace_classification(
+        video_space_1.remove_classification_from_frames(
             classification=new_classification_instance,
             frames=[1],
         )
