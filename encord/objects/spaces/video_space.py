@@ -433,7 +433,7 @@ class VideoSpace(Space):
     def place_classification(
         self,
         classification: ClassificationInstance,
-        placement: Frames,
+        frames: Frames,
         *,
         overwrite: bool = False,
         created_at: Optional[datetime] = None,
@@ -446,7 +446,7 @@ class VideoSpace(Space):
     ) -> None:
         self._method_not_supported_for_classification_instance_with_frames(classification_instance=classification)
 
-        frame_list = frames_class_to_frames_list(placement)
+        frame_list = frames_class_to_frames_list(frames)
         self._are_frames_valid(frame_list)
 
         self._classification_map[classification.classification_hash] = classification
@@ -828,7 +828,7 @@ class VideoSpace(Space):
             classification_frame_instance_info = AnnotationMetadata.from_dict(classification)
             self.place_classification(
                 classification=classification_instance,
-                placement=frame,
+                frames=frame,
                 created_at=classification_frame_instance_info.created_at,
                 created_by=classification_frame_instance_info.created_by,
                 last_edited_at=classification_frame_instance_info.last_edited_at,
