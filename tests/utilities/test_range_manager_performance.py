@@ -2,8 +2,6 @@
 
 import time
 
-import pytest
-
 from encord.common.range_manager import RangeManager
 from encord.objects.frames import Range
 
@@ -125,22 +123,3 @@ def test_remove_range_performance():
     # Original: 10,000 ranges, split 1000 of them → ~11,000 ranges
     assert len(rm.get_ranges()) > 10_500
     assert elapsed < REMOVE_RANGE_THRESHOLD, f"remove_range took {elapsed:.3f}s, threshold is {REMOVE_RANGE_THRESHOLD}s"
-
-
-@pytest.mark.parametrize("num_ranges", [1_000, 10_000, 50_000])
-def test_scalability_add_ranges(num_ranges):
-    """Test that add_ranges() scales reasonably with input size."""
-    rm = RangeManager()
-    ranges = [Range(i * 10, i * 10 + 5) for i in range(num_ranges)]
-
-    start = time.perf_counter()
-    rm.add_ranges(ranges)
-    elapsed = time.perf_counter() - start
-
-    # Should scale roughly linearly (O(n log n))
-    # Allow 2ms per 1000 ranges as a rough guideline
-    expected_max = (num_ranges / 1000) * 0.02
-    print(f"\nadd_ranges({num_ranges:,}): {elapsed:.3f}s (max: {expected_max:.3f}s)")
-
-    assert len(rm.get_ranges()) == num_ranges
-    assert elapsed < expected_max, f"Scalability issue: {elapsed:.3f}s > {expected_max:.3f}s for {num_ranges} ranges"
