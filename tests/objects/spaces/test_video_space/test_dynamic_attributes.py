@@ -7,7 +7,6 @@ from encord.objects import LabelRowV2, Object
 from encord.objects.attributes import Attribute
 from encord.objects.coordinates import PointCoordinate
 from encord.objects.frames import Range
-from encord.objects.spaces.base_space import FramePlacement
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.two_videos import (
     DATA_GROUP_METADATA,
@@ -38,10 +37,8 @@ def test_add_dynamic_attributes_to_frames_on_object_on_video_space(ontology):
     point_coordinates = PointCoordinate(x=0.5, y=0.5)
     video_space_1.place_object(
         object_instance=new_object_instance,
-        placement=FramePlacement(
-            frames=[0, 1, 2],
-            coordinates=point_coordinates,
-        ),
+        frames=[0, 1, 2],
+        coordinates=point_coordinates,
     )
 
     answer_on_frame_0 = "Frame 0"
@@ -89,10 +86,8 @@ def test_remove_dynamic_attributes_from_frame_on_video_space(ontology):
     point_coordinates = PointCoordinate(x=0.5, y=0.5)
     video_space_1.place_object(
         object_instance=new_object_instance,
-        placement=FramePlacement(
-            frames=[0, 1, 2],
-            coordinates=point_coordinates,
-        ),
+        frames=[0, 1, 2],
+        coordinates=point_coordinates,
     )
 
     answer = "Answers"
@@ -132,10 +127,8 @@ def test_unplace_object_removes_dynamic_attributes_from_those_frames(ontology):
     point_coordinates = PointCoordinate(x=0.5, y=0.5)
     video_space_1.place_object(
         object_instance=new_object_instance,
-        placement=FramePlacement(
-            frames=[0, 1, 2],
-            coordinates=point_coordinates,
-        ),
+        frames=[0, 1, 2],
+        coordinates=point_coordinates,
     )
     answer = "Answers"
     video_space_1.set_answer_on_frames(
@@ -169,10 +162,8 @@ def test_remove_object_removes_dynamic_attributes_for_that_object(ontology):
     point_coordinates = PointCoordinate(x=0.5, y=0.5)
     video_space_1.place_object(
         object_instance=new_object_instance,
-        placement=FramePlacement(
-            frames=[0, 1, 2],
-            coordinates=point_coordinates,
-        ),
+        frames=[0, 1, 2],
+        coordinates=point_coordinates,
     )
     answer = "Answers"
     video_space_1.set_answer_on_frames(
@@ -202,7 +193,9 @@ def test_add_dynamic_attributes_to_frames_where_object_does_not_exist_on_video_s
     point_coordinates = PointCoordinate(x=0.5, y=0.5)
 
     video_space_1.place_object(
-        object_instance=new_object_instance, placement=FramePlacement(frames=[0], coordinates=point_coordinates)
+        object_instance=new_object_instance,
+        frames=[0],
+        coordinates=point_coordinates,
     )
 
     answer_on_frame_1 = "Frame 1"

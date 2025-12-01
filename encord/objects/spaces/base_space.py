@@ -25,12 +25,6 @@ if TYPE_CHECKING:
 SpaceT = TypeVar("SpaceT", bound="Space")
 
 
-@dataclass
-class FramePlacement:
-    frames: Frames
-    coordinates: GeometricCoordinates
-
-
 class Space(ABC):
     """
     Manages the objects on a space within LabelRowV2.

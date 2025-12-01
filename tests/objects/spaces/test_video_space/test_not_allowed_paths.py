@@ -6,7 +6,6 @@ from encord.exceptions import LabelRowError
 from encord.objects import Classification, LabelRowV2, Object
 from encord.objects.attributes import Attribute
 from encord.objects.coordinates import BoundingBoxCoordinates, PointCoordinate
-from encord.objects.spaces.base_space import FramePlacement
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.two_videos import (
     DATA_GROUP_METADATA,
@@ -44,10 +43,8 @@ def test_place_object_on_video_space_throws_error_if_object_has_frames(ontology)
     with pytest.raises(LabelRowError) as e:
         video_space_1.place_object(
             object_instance=new_object_instance,
-            placement=FramePlacement(
-                frames=[1],
-                coordinates=box_coordinates,
-            ),
+            frames=[1],
+            coordinates=box_coordinates,
         )
 
     assert (
@@ -87,10 +84,8 @@ def test_add_object_to_label_row_throws_error_if_object_is_on_space(ontology):
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     video_space_1.place_object(
         object_instance=new_object_instance,
-        placement=FramePlacement(
-            frames=[1],
-            coordinates=box_coordinates,
-        ),
+        frames=[1],
+        coordinates=box_coordinates,
     )
 
     # Act
@@ -112,10 +107,8 @@ def test_remove_object_from_label_row_throws_error_if_object_is_on_space(ontolog
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     video_space_1.place_object(
         object_instance=new_object_instance,
-        placement=FramePlacement(
-            frames=[1],
-            coordinates=box_coordinates,
-        ),
+        frames=[1],
+        coordinates=box_coordinates,
     )
 
     # Act
@@ -137,10 +130,8 @@ def test_set_for_frames_throws_error_if_object_is_on_space(ontology):
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     video_space_1.place_object(
         object_instance=new_object_instance,
-        placement=FramePlacement(
-            frames=[1],
-            coordinates=box_coordinates,
-        ),
+        frames=[1],
+        coordinates=box_coordinates,
     )
 
     # Act
@@ -162,10 +153,8 @@ def test_remove_from_frames_throws_error_if_object_is_on_space(ontology):
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     video_space_1.place_object(
         object_instance=new_object_instance,
-        placement=FramePlacement(
-            frames=[1],
-            coordinates=box_coordinates,
-        ),
+        frames=[1],
+        coordinates=box_coordinates,
     )
 
     # Act
@@ -187,10 +176,8 @@ def test_get_annotation_throws_error_if_object_is_on_space(ontology):
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     video_space_1.place_object(
         object_instance=new_object_instance,
-        placement=FramePlacement(
-            frames=[1],
-            coordinates=box_coordinates,
-        ),
+        frames=[1],
+        coordinates=box_coordinates,
     )
 
     # Act
@@ -209,10 +196,8 @@ def test_get_annotation_frames_throws_error_if_object_is_on_space(ontology):
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     video_space_1.place_object(
         object_instance=new_object_instance,
-        placement=FramePlacement(
-            frames=[1],
-            coordinates=box_coordinates,
-        ),
+        frames=[1],
+        coordinates=box_coordinates,
     )
 
     # Act
@@ -361,10 +346,8 @@ def test_place_object_on_video_space_throws_error_if_object_has_dynamic_attribut
     with pytest.raises(LabelRowError) as e:
         video_space_1.place_object(
             object_instance=new_object_instance,
-            placement=FramePlacement(
-                frames=[0, 1, 2],
-                coordinates=PointCoordinate(x=0.5, y=0.5),
-            ),
+            frames=[0, 1, 2],
+            coordinates=PointCoordinate(x=0.5, y=0.5),
         )
 
     assert (
@@ -382,10 +365,8 @@ def test_set_dynamic_attributes_throws_error_if_object_on_space(ontology):
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
     video_space_1.place_object(
         object_instance=new_object_instance,
-        placement=FramePlacement(
-            frames=[0, 1, 2],
-            coordinates=PointCoordinate(x=0.5, y=0.5),
-        ),
+        frames=[0, 1, 2],
+        coordinates=PointCoordinate(x=0.5, y=0.5),
     )
 
     # Act
@@ -407,10 +388,8 @@ def test_get_dynamic_attributes_throws_error_if_object_on_space(ontology):
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
     video_space_1.place_object(
         object_instance=new_object_instance,
-        placement=FramePlacement(
-            frames=[0, 1, 2],
-            coordinates=PointCoordinate(x=0.5, y=0.5),
-        ),
+        frames=[0, 1, 2],
+        coordinates=PointCoordinate(x=0.5, y=0.5),
     )
 
     # Act
@@ -432,10 +411,8 @@ def test_delete_dynamic_attributes_throws_error_if_object_on_space(ontology):
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
     video_space_1.place_object(
         object_instance=new_object_instance,
-        placement=FramePlacement(
-            frames=[0, 1, 2],
-            coordinates=PointCoordinate(x=0.5, y=0.5),
-        ),
+        frames=[0, 1, 2],
+        coordinates=PointCoordinate(x=0.5, y=0.5),
     )
 
     # Act

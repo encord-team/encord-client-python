@@ -4,9 +4,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from encord.exceptions import LabelRowError
-from encord.objects.coordinates import Coordinates, GeometricCoordinates
+from encord.objects.coordinates import GeometricCoordinates
 from encord.objects.spaces.annotation.base_annotation import AnnotationData, ClassificationAnnotation, ObjectAnnotation
-from encord.objects.spaces.base_space import FramePlacement, Space
 
 if TYPE_CHECKING:
     from encord.objects import ClassificationInstance, ObjectInstance
@@ -82,7 +81,8 @@ class GeometricFrameObjectAnnotation(ObjectAnnotation):
         self._check_if_annotation_is_valid()
         self._space.place_object(
             object_instance=self._object_instance,
-            placement=FramePlacement(coordinates=coordinates, frames=self.frame),
+            frames=self.frame,
+            coordinates=coordinates,
             overwrite=True,
         )
 

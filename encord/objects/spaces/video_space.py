@@ -32,7 +32,7 @@ from encord.objects.spaces.annotation.geometric_annotation import (
     GeometricAnnotationData,
     GeometricFrameObjectAnnotation,
 )
-from encord.objects.spaces.base_space import FramePlacement, Space
+from encord.objects.spaces.base_space import Space
 from encord.objects.spaces.types import ChildInfo, SpaceInfo, VideoSpaceInfo
 from encord.objects.types import (
     AttributeDict,
@@ -191,7 +191,8 @@ class VideoSpace(Space):
     def place_object(
         self,
         object_instance: ObjectInstance,
-        placement: FramePlacement,
+        frames: Frames,
+        coordinates: GeometricCoordinates,
         *,
         overwrite: bool = False,
         created_at: Optional[datetime] = None,
@@ -204,8 +205,6 @@ class VideoSpace(Space):
     ) -> None:
         self._method_not_supported_for_object_instance_with_frames(object_instance=object_instance)
         self._method_not_supported_for_object_instance_with_dynamic_attributes(object_instance=object_instance)
-        frames = placement.frames
-        coordinates = placement.coordinates
 
         self._place_object(
             object_instance=object_instance,
@@ -782,10 +781,8 @@ class VideoSpace(Space):
             object_frame_instance_info = AnnotationMetadata.from_dict(obj)
             self.place_object(
                 object_instance=object_instance,
-                placement=FramePlacement(
-                    coordinates=coordinates,
-                    frames=frame,
-                ),
+                coordinates=coordinates,
+                frames=frame,
                 created_at=object_frame_instance_info.created_at,
                 created_by=object_frame_instance_info.created_by,
                 last_edited_at=object_frame_instance_info.last_edited_at,
