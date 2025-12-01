@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import TYPE_CHECKING, List, Optional, cast
+from typing import TYPE_CHECKING, List, Literal, Optional, Union, cast
 
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import format_datetime_to_long_string, format_datetime_to_long_string_optional
@@ -35,6 +35,8 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from encord.objects import Object
     from encord.objects.ontology_labels_impl import LabelRowV2
+
+RangeOverlapStrategy = Union[Literal["error"], Literal["merge"], Literal["replace"]]
 
 
 class RangeSpace(Space):
@@ -74,6 +76,7 @@ class RangeSpace(Space):
         object_instance: ObjectInstance,
         ranges: Ranges | Range,
         *,
+        on_overlap: RangeOverlapStrategy = "error",
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,
@@ -87,10 +90,21 @@ class RangeSpace(Space):
         if isinstance(ranges, Range):
             ranges = [ranges]
 
-        # TODO: Do we need to check overwrites here?
         self._are_ranges_valid(ranges)
 
         existing_annotation_data = self._object_hash_to_annotation_data.get(object_instance.object_hash)
+        has_overlap = False
+
+        if existing_annotation_data is not None:
+            overlapping_ranges = existing_annotation_data.range_manager.intersection(ranges)
+            has_overlap = len(overlapping_ranges) > 0
+            if has_overlap and on_overlap == "error":
+                raise LabelRowError(
+                    f"Annotations already exist on the ranges {overlapping_ranges}. "
+                    "Set the 'on_overlap' parameter to 'merge' to add the object instance to the new ranges while keeping existing annotations. "
+                    "Set the 'on_overlap' parameter to 'replace' to remove object instance from existing ranges before adding it to the new ranges."
+                )
+
         if existing_annotation_data is None:
             existing_annotation_data = RangeObjectAnnotationData(
                 annotation_metadata=AnnotationMetadata(),
@@ -108,7 +122,14 @@ class RangeSpace(Space):
             manual_annotation=manual_annotation,
         )
 
-        existing_annotation_data.range_manager.add_ranges(ranges)
+        if has_overlap:
+            if on_overlap == "merge":
+                existing_annotation_data.range_manager.add_ranges(ranges)
+            elif on_overlap == "replace":
+                existing_annotation_data.range_manager.clear_ranges()
+                existing_annotation_data.range_manager.add_ranges(ranges)
+        else:
+            existing_annotation_data.range_manager.add_ranges(ranges)
 
     def remove_object_instance_from_range(self, object: ObjectInstance, ranges: Ranges | Range) -> None:
         if isinstance(ranges, Range):

@@ -81,7 +81,9 @@ def test_place_object_on_audio_space(ontology):
         ranges=Range(start=0, end=100),
     )
 
-    audio_space_1.put_object_instance(object_instance=new_object_instance, ranges=Range(start=80, end=200))
+    audio_space_1.put_object_instance(
+        object_instance=new_object_instance, ranges=Range(start=80, end=200), on_overlap="merge"
+    )
 
     # Assert
     object_instances = label_row.get_object_instances()
@@ -102,6 +104,73 @@ def test_place_object_on_audio_space(ontology):
     )  # Coordinates are here for backwards compatibility
     assert first_annotation.object_hash == new_object_instance.object_hash
     assert first_annotation.ranges == [Range(start=0, end=200)]
+
+
+def test_put_objects_with_error_overlapping_strategy(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
+    new_object_instance = audio_obj_ontology_item.create_instance()
+    audio_space_1.put_object_instance(
+        object_instance=new_object_instance,
+        ranges=Range(start=0, end=100),
+    )
+
+    # Act
+    with pytest.raises(LabelRowError) as e:
+        audio_space_1.put_object_instance(
+            object_instance=new_object_instance,
+            ranges=Range(start=80, end=200),
+        )
+
+    assert e.value.message == (
+        "Annotations already exist on the ranges [(80:100)]. "
+        "Set the 'on_overlap' parameter to 'merge' to add the object instance to the new ranges while keeping existing annotations. "
+        "Set the 'on_overlap' parameter to 'replace' to remove object instance from existing ranges before adding it to the new ranges."
+    )
+
+
+def test_put_objects_with_merge_overlapping_strategy(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
+    new_object_instance = audio_obj_ontology_item.create_instance()
+    audio_space_1.put_object_instance(
+        object_instance=new_object_instance,
+        ranges=Range(start=0, end=100),
+    )
+
+    # Act
+    audio_space_1.put_object_instance(
+        object_instance=new_object_instance, ranges=Range(start=80, end=200), on_overlap="merge"
+    )
+
+    # Assert
+    object_annotations = audio_space_1.get_object_instance_annotations()
+    assert object_annotations[0].ranges == [Range(start=0, end=200)]
+
+
+def test_put_objects_with_replace_overlapping_strategy(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
+    new_object_instance = audio_obj_ontology_item.create_instance()
+    audio_space_1.put_object_instance(
+        object_instance=new_object_instance,
+        ranges=Range(start=0, end=100),
+    )
+
+    # Act
+    audio_space_1.put_object_instance(
+        object_instance=new_object_instance, ranges=Range(start=80, end=200), on_overlap="replace"
+    )
+
+    # Assert
+    object_annotations = audio_space_1.get_object_instance_annotations()
+    assert object_annotations[0].ranges == [Range(start=80, end=200)]
 
 
 def test_place_object_on_invalid_ranges_on_audio_space(ontology):

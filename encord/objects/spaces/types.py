@@ -45,4 +45,3 @@ class AudioSpaceInfo(BaseSpaceInfo):
 
 
 SpaceInfo = Union[VideoSpaceInfo, ImageSpaceInfo, AudioSpaceInfo]
-
