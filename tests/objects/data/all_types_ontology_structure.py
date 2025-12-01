@@ -321,6 +321,14 @@ all_types_structure = OntologyStructure(
                     dynamic=False,
                     archived=False,
                 ),
+                TextAttribute(
+                    uid=[8, 2],
+                    feature_node_hash="dynamicTranscriptFeatureHash",
+                    name="Dynamic Transcript",
+                    required=False,
+                    dynamic=True,
+                    archived=False,
+                ),
             ],
         ),
         Object(

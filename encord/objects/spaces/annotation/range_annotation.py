@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Union
 
 from encord.common.range_manager import RangeManager
 from encord.exceptions import LabelRowError
-from encord.objects.common import Shape
 from encord.objects.coordinates import AudioCoordinates, TextCoordinates
 from encord.objects.frames import Range, Ranges
 from encord.objects.spaces.annotation.base_annotation import AnnotationData, ClassificationAnnotation, ObjectAnnotation

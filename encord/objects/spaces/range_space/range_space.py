@@ -86,6 +86,9 @@ class RangeSpace(Space):
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
     ) -> None:
+        self._method_not_supported_for_object_instance_with_frames(object_instance=object_instance)
+        self._method_not_supported_for_object_instance_with_dynamic_attributes(object_instance=object_instance)
+
         self._objects_map[object_instance.object_hash] = object_instance
         object_instance._add_to_space(self)
 
