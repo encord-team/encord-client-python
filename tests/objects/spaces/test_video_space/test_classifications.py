@@ -164,6 +164,26 @@ def test_place_classification_on_frames_with_overwrite_on_video_space(ontology):
     assert annotation_on_frame_1.classification_hash == classification_instance_2.classification_hash
 
 
+def test_place_classification_on_invalid_frames(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
+
+    classification_instance_1 = text_classification.create_instance()
+
+    # Act
+    with pytest.raises(LabelRowError) as negative_frame_error:
+        video_space_1.place_classification(classification=classification_instance_1, placement=[-1])
+
+    with pytest.raises(LabelRowError) as exceed_frame_error:
+        video_space_1.place_classification(classification=classification_instance_1, placement=[100])
+
+    # Assert
+    assert negative_frame_error.value.message == "Frame -1 is invalid. Negative frames are not supported."
+    assert exceed_frame_error.value.message == "Frame 100 is invalid. The max frame on this video is 9."
+
+
 def test_unplace_classification_from_frames_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)

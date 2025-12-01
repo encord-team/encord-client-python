@@ -76,6 +76,7 @@ class VideoSpace(Space):
         self._is_readonly = child_info["is_readonly"]
         self._file_name = child_info["file_name"]
 
+        # Need to check if this is 1-indexed
         self._number_of_frames: int = number_of_frames
         self._width = width
         self._height = height
@@ -116,6 +117,19 @@ class VideoSpace(Space):
             for hash_to_remove in hashes_to_remove:
                 self._frames_to_classification_hash_to_annotation_data[frame].pop(hash_to_remove, None)
 
+    def _are_frames_valid(self, frames: List[int]) -> None:
+        max_frame = max(frames)
+        min_frame = min(frames)
+
+        max_allowed_frame_index = self._number_of_frames - 1  # Number of frames is 1-indexed.
+
+        if min_frame < 0:
+            raise LabelRowError(f"Frame {min_frame} is invalid. Negative frames are not supported.")
+        if max_frame > max_allowed_frame_index:
+            raise LabelRowError(
+                f"Frame {max_frame} is invalid. The max frame on this video is {max_allowed_frame_index}."
+            )
+
     def _place_object(
         self,
         object_instance: ObjectInstance,
@@ -132,6 +146,7 @@ class VideoSpace(Space):
         is_deleted: Optional[bool] = None,
     ) -> None:
         frame_list = frames_class_to_frames_list(frames)
+        self._are_frames_valid(frame_list)
         self._objects_map[object_instance.object_hash] = object_instance
 
         if object_instance.object_hash not in self._object_hash_to_dynamic_answer_manager:
@@ -432,6 +447,8 @@ class VideoSpace(Space):
         self._method_not_supported_for_classification_instance_with_frames(classification_instance=classification)
 
         frame_list = frames_class_to_frames_list(placement)
+        self._are_frames_valid(frame_list)
+
         self._classification_map[classification.classification_hash] = classification
         classification._add_to_space(self)
 

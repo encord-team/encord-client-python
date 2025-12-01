@@ -156,6 +156,35 @@ def test_place_object_on_frames_with_overwrite_on_video_space(ontology):
     assert annotation_on_frame_1.coordinates == coordinates_2
 
 
+def test_place_object_on_invalid_frames(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
+    new_object_instance = box_ontology_item.create_instance()
+
+    coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
+
+    # Act
+    with pytest.raises(LabelRowError) as negative_frame_error:
+        video_space_1.place_object(
+            object_instance=new_object_instance,
+            frames=[-1],
+            coordinates=coordinates,
+        )
+
+    with pytest.raises(LabelRowError) as exceed_frame_error:
+        video_space_1.place_object(
+            object_instance=new_object_instance,
+            frames=[50_000],
+            coordinates=coordinates,
+        )
+
+    # Assert
+    assert negative_frame_error.value.message == "Frame -1 is invalid. Negative frames are not supported."
+    assert exceed_frame_error.value.message == "Frame 50000 is invalid. The max frame on this video is 9."
+
+
 def test_unplace_object_from_frames_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
