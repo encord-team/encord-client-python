@@ -97,4 +97,4 @@ class IntegerRangeSet:
         self._ranges = []
 
     def __repr__(self) -> str:
-        return f"RangeSet({self._ranges})"
+        return f"IntegerRangeSet({self._ranges})"
