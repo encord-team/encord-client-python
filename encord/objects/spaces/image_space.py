@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, cast
+from typing import TYPE_CHECKING, Optional, Sequence, cast
 
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
@@ -43,8 +43,8 @@ if TYPE_CHECKING:
 class ImageSpace(Space):
     """Image space implementation for single-frame image annotations."""
 
-    def __init__(self, space_id: str, parent: LabelRowV2, child_info: ChildInfo, width: int, height: int):
-        super().__init__(space_id, SpaceType.IMAGE, parent)
+    def __init__(self, space_id: str, label_row: LabelRowV2, child_info: ChildInfo, width: int, height: int):
+        super().__init__(space_id, label_row)
         self._objects_map: dict[str, ObjectInstance] = dict()
         self._classification_ontologies: set[str] = set()
         self._classifications_map: dict[str, ClassificationInstance] = dict()
@@ -229,7 +229,7 @@ class ImageSpace(Space):
     def _create_new_object_from_frame_object_dict(self, frame_object_label: FrameObject) -> ObjectInstance:
         from encord.objects.ontology_object import Object, ObjectInstance
 
-        ontology = self.parent._ontology.structure
+        ontology = self._label_row._ontology.structure
         feature_hash = frame_object_label["featureHash"]
         object_hash = frame_object_label["objectHash"]
         label_class = ontology.get_child_by_hash(feature_hash, type_=Object)
@@ -240,7 +240,7 @@ class ImageSpace(Space):
     ) -> Optional[ClassificationInstance]:
         from encord.objects import Classification, ClassificationInstance
 
-        ontology = self.parent._ontology.structure
+        ontology = self._label_row._ontology.structure
         feature_hash = frame_classification_label["featureHash"]
         classification_hash = frame_classification_label["classificationHash"]
         label_class = ontology.get_child_by_hash(feature_hash, type_=Classification)
@@ -251,7 +251,7 @@ class ImageSpace(Space):
                 ontology_classification=label_class, classification_hash=classification_hash
             )
             answers_dict = classification_answer["classifications"]
-            self.parent._add_static_answers_from_dict(new_classification_instance, answers_dict)
+            self._label_row._add_static_answers_from_dict(new_classification_instance, answers_dict)
 
             return new_classification_instance
 
@@ -265,7 +265,7 @@ class ImageSpace(Space):
         from encord.objects.ontology_object import Object
 
         ontology_hash = object_instance._ontology_object.feature_node_hash
-        ontology_object = self.parent._ontology.structure.get_child_by_hash(ontology_hash, type_=Object)
+        ontology_object = self._label_row._ontology.structure.get_child_by_hash(ontology_hash, type_=Object)
 
         frame_object_dict = create_frame_object_dict(
             ontology_object=ontology_object,
@@ -291,10 +291,12 @@ class ImageSpace(Space):
         from encord.objects.attributes import Attribute
 
         ontology_hash = classification_instance._ontology_classification.feature_node_hash
-        ontology_classification = self.parent._ontology.structure.get_child_by_hash(ontology_hash, type_=Classification)
+        ontology_classification = self._label_row._ontology.structure.get_child_by_hash(
+            ontology_hash, type_=Classification
+        )
 
         attribute_hash = classification_instance.ontology_item.attributes[0].feature_node_hash
-        attribute = self.parent._ontology.structure.get_child_by_hash(attribute_hash, type_=Attribute)
+        attribute = self._label_row._ontology.structure.get_child_by_hash(attribute_hash, type_=Attribute)
 
         frame_object_dict = create_frame_classification_dict(
             ontology_classification=ontology_classification,
@@ -368,7 +370,7 @@ class ImageSpace(Space):
             object_hash = frame_object_label["objectHash"]
             object_instance = None
 
-            for space in self.parent._space_map.values():
+            for space in self._label_row._space_map.values():
                 object_instance = space._objects_map.get(object_hash)
                 if object_instance is not None:
                     break
@@ -393,7 +395,7 @@ class ImageSpace(Space):
         # Process classifications
         for classification in frame_label["classifications"]:
             classification_hash = classification["classificationHash"]
-            entity = self.parent._space_classifications_map.get(classification_hash)
+            entity = self._label_row._space_classifications_map.get(classification_hash)
 
             if entity is None:
                 entity = self._create_new_classification_from_frame_label_dict(
@@ -417,7 +419,7 @@ class ImageSpace(Space):
     def _to_object_answers(self) -> dict[str, ObjectAnswer]:
         ret: dict[str, ObjectAnswer] = {}
         for object_instance in self.get_objects():
-            all_static_answers = self.parent._get_all_static_answers(object_instance)
+            all_static_answers = self._label_row._get_all_static_answers(object_instance)
             object_index_element: ObjectAnswer = {
                 "classifications": list(reversed(all_static_answers)),
                 "objectHash": object_instance.object_hash,

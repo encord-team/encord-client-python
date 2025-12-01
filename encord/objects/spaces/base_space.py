@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import (
     TYPE_CHECKING,
     Dict,
@@ -12,8 +11,6 @@ from typing import (
 
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
-from encord.objects.coordinates import GeometricCoordinates
-from encord.objects.frames import Frames
 from encord.objects.spaces.annotation.base_annotation import ClassificationAnnotation, ObjectAnnotation
 from encord.objects.spaces.types import SpaceInfo
 from encord.objects.types import ClassificationAnswer, ObjectAnswer
@@ -32,15 +29,14 @@ class Space(ABC):
     """
 
     space_id: str
-    parent: LabelRowV2
+    _label_row: LabelRowV2
     space_type: SpaceType
     _objects_map: dict[str, ObjectInstance]
     _classifications_map: dict[str, ClassificationInstance]
 
-    def __init__(self, space_id: str, space_type: SpaceType, parent: LabelRowV2):
+    def __init__(self, space_id: str, label_row: LabelRowV2):
         self.space_id = space_id
-        self.space_type = space_type
-        self.parent = parent
+        self._label_row = label_row
         self._objects_map: dict[str, ObjectInstance] = dict()
         self._classifications_map: dict[str, ClassificationInstance] = dict()
 
