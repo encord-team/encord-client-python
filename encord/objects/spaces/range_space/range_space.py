@@ -141,6 +141,7 @@ class RangeSpace(Space):
         self,
         classification_instance: ClassificationInstance,
         *,
+        on_overlap: Union[Literal["error"], Literal["replace"]] = "error",
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,
@@ -148,18 +149,28 @@ class RangeSpace(Space):
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
     ) -> None:
-        is_classification_instance_present = classification_instance.classification_hash in self._classifications_map
         is_classification_of_same_ontology_present = (
             classification_instance._ontology_classification.feature_node_hash in self._classification_ontologies
         )
 
-        if is_classification_instance_present:
-            raise LabelRowError(f"The classification '{classification_instance.classification_hash}' already exists.")
-
-        if is_classification_of_same_ontology_present:
+        if is_classification_of_same_ontology_present and on_overlap == "error":
+            ontology_classification = classification_instance._ontology_classification
             raise LabelRowError(
-                f"A classification instance for the classification with feature hash '{classification_instance._ontology_classification.feature_node_hash}' already exists."
+                f"Annotation for the classification '{ontology_classification.title}' already exists. "
+                "Set the 'on_overlap' parameter to 'replace' to overwrite this annotation."
             )
+        elif is_classification_of_same_ontology_present and on_overlap == "replace":
+            classification_to_remove = None
+            for existing_classification_instance in self._classifications_map.values():
+                if (
+                    existing_classification_instance._ontology_classification.feature_node_hash
+                    == classification_instance._ontology_classification.feature_node_hash
+                ):
+                    classification_to_remove = existing_classification_instance
+
+            if classification_to_remove is not None:
+                self._classifications_map.pop(classification_to_remove.classification_hash)
+                self._classification_hash_to_annotation_data.pop(classification_to_remove.classification_hash)
 
         self._classifications_map[classification_instance.classification_hash] = classification_instance
         classification_instance._add_to_space(self)
@@ -167,6 +178,7 @@ class RangeSpace(Space):
         existing_annotation_data = self._classification_hash_to_annotation_data.get(
             classification_instance.classification_hash
         )
+
         if existing_annotation_data is None:
             existing_annotation_data = AnnotationData(
                 annotation_metadata=AnnotationMetadata(),

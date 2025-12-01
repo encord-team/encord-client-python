@@ -128,7 +128,10 @@ def test_place_classification_where_classification_already_exists(ontology):
         audio_space_1.put_classification_instance(classification_instance=classification_instance_1)
 
     # Assert
-    assert e.value.message == f"The classification '{classification_instance_1.classification_hash}' already exists."
+    assert (
+        e.value.message
+        == "Annotation for the classification 'Text classification' already exists. Set the 'on_overlap' parameter to 'replace' to overwrite this annotation."
+    )
 
 
 def test_place_classification_on_where_classification_of_same_class_already_exists(ontology):
@@ -154,8 +157,33 @@ def test_place_classification_on_where_classification_of_same_class_already_exis
     # Assert
     assert (
         e.value.message
-        == f"A classification instance for the classification with feature hash '{text_classification.feature_node_hash}' already exists."
+        == "Annotation for the classification 'Text classification' already exists. Set the 'on_overlap' parameter to 'replace' to overwrite this annotation."
     )
+
+
+def test_place_classification_replace_overlapping_strategy_exists(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
+
+    classification_instance_1 = text_classification.create_instance()
+    classification_instance_2 = text_classification.create_instance()
+    text_answer_1 = "Answer 1"
+    text_answer_2 = "Answer 2"
+
+    classification_instance_1.set_answer(answer=text_answer_1)
+    classification_instance_2.set_answer(answer=text_answer_2)
+
+    audio_space_1.put_classification_instance(classification_instance=classification_instance_1)
+
+    # Act
+    audio_space_1.put_classification_instance(classification_instance=classification_instance_2, on_overlap="replace")
+
+    # Assert
+    classification_annotations = audio_space_1.get_classification_instance_annotations()
+    assert len(classification_annotations) == 1
+    assert classification_annotations[0].classification_hash == classification_instance_2.classification_hash
 
 
 def test_remove_classification_from_audio_space(ontology):
