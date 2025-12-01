@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
-from encord.common.range_manager import RangeManager
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
-from encord.objects.frames import Ranges
+from encord.objects.frames import Range, Ranges
+from encord.objects.spaces.annotation.base_annotation import AnnotationMetadata
 from encord.objects.spaces.range_space.range_space import RangeSpace
 from encord.objects.spaces.types import AudioSpaceInfo, ChildInfo, SpaceInfo
+from encord.objects.types import BaseFrameObject, ObjectAnswerForNonGeometric
 
 if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
@@ -16,8 +17,8 @@ if TYPE_CHECKING:
 class AudioSpace(RangeSpace):
     """Audio space implementation for range-based annotations."""
 
-    def __init__(self, space_id: str, parent: LabelRowV2, duration_ms: int, child_info: ChildInfo):
-        super().__init__(space_id, SpaceType.AUDIO, parent)
+    def __init__(self, space_id: str, label_row: LabelRowV2, duration_ms: int, child_info: ChildInfo):
+        super().__init__(space_id, label_row)
         self._duration_ms = duration_ms
 
         self._layout_key = child_info["layout_key"]
@@ -55,3 +56,54 @@ class AudioSpace(RangeSpace):
                 "file_name": self._file_name,
             },
         )
+
+    def _parse_space_dict(
+        self,
+        space_info: SpaceInfo,
+        object_answers: dict[str, ObjectAnswerForNonGeometric],
+        classification_answers: dict,
+    ) -> None:
+        for object_answer in object_answers.values():
+            ranges_in_object_answer = object_answer["range"] if object_answer["range"] is not None else []
+            ranges = [Range(range[0], range[1]) for range in ranges_in_object_answer]
+
+            object_instance = self._create_new_object(
+                object_hash=object_answer["objectHash"],
+                feature_hash=object_answer["featureHash"],
+            )
+
+            frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
+            frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
+            frame_object_dict = cast(BaseFrameObject, frame_info_dict)
+            object_frame_instance_info = AnnotationMetadata.from_dict(frame_object_dict)
+
+            self.put_object_instance(
+                object_instance=object_instance,
+                ranges=ranges,
+                created_at=object_frame_instance_info.created_at,
+                created_by=object_frame_instance_info.created_by,
+                last_edited_at=object_frame_instance_info.last_edited_at,
+                last_edited_by=object_frame_instance_info.last_edited_by,
+                manual_annotation=object_frame_instance_info.manual_annotation,
+                confidence=object_frame_instance_info.confidence,
+            )
+
+            answer_list = object_answer["classifications"]
+            object_instance.set_answer_from_list(answer_list)
+
+        for classification_answer in classification_answers.values():
+            classification_instance = self._label_row._create_new_classification_instance_with_ranges(
+                classification_answer
+            )
+            annotation_metadata = AnnotationMetadata.from_dict(classification_answer)
+
+            # TODO: Need to use global classifications here
+            self.put_classification_instance(
+                classification_instance=classification_instance,
+                created_at=annotation_metadata.created_at,
+                created_by=annotation_metadata.created_by,
+                confidence=annotation_metadata.confidence,
+                manual_annotation=annotation_metadata.manual_annotation,
+                last_edited_at=annotation_metadata.last_edited_at,
+                last_edited_by=annotation_metadata.last_edited_by,
+            )

@@ -44,17 +44,17 @@ def test_label_row_get_object_instances_on_space(ontology):
     range_2 = Range(start=200, end=300)
 
     # Place objects on space 1
-    audio_space_1.place_object(
-        object=object_instance_1,
+    audio_space_1.put_object_instance(
+        object_instance=object_instance_1,
         ranges=range_1,
     )
-    audio_space_1.place_object(
-        object=object_instance_2,
+    audio_space_1.put_object_instance(
+        object_instance=object_instance_2,
         ranges=range_2,
     )
 
     # Place objects on space 2
-    audio_space_2.place_object(object=object_instance_1, ranges=range_2)
+    audio_space_2.put_object_instance(object_instance=object_instance_1, ranges=range_2)
 
     # Assert
     object_instances = label_row.get_object_instances()
@@ -76,23 +76,23 @@ def test_place_object_on_audio_space(ontology):
 
     # Act
     new_object_instance = audio_obj_ontology_item.create_instance()
-    audio_space_1.place_object(
-        object=new_object_instance,
+    audio_space_1.put_object_instance(
+        object_instance=new_object_instance,
         ranges=Range(start=0, end=100),
     )
 
-    audio_space_1.place_object(object=new_object_instance, ranges=Range(start=80, end=200))
+    audio_space_1.put_object_instance(object_instance=new_object_instance, ranges=Range(start=80, end=200))
 
     # Assert
     object_instances = label_row.get_object_instances()
     assert len(object_instances) == 1
 
-    objects_on_space = audio_space_1.get_objects()
+    objects_on_space = audio_space_1.get_object_instances()
     object_on_space = objects_on_space[0]
     assert len(objects_on_space) == 1
     assert object_on_space._spaces == {audio_space_1.space_id: audio_space_1}
 
-    annotations = audio_space_1.get_object_annotations()
+    annotations = audio_space_1.get_object_instance_annotations()
     assert len(annotations) == 1
 
     first_annotation = annotations[0]
@@ -113,13 +113,13 @@ def test_place_object_on_invalid_ranges_on_audio_space(ontology):
 
     # Act
     with pytest.raises(LabelRowError) as negative_range_error:
-        audio_space_1.place_object(
-            object=new_object_instance,
+        audio_space_1.put_object_instance(
+            object_instance=new_object_instance,
             ranges=Range(start=-20, end=100),
         )
 
     with pytest.raises(LabelRowError) as exceed_max_range_error:
-        audio_space_1.place_object(object=new_object_instance, ranges=Range(start=0, end=6 * 60 * 1000))
+        audio_space_1.put_object_instance(object_instance=new_object_instance, ranges=Range(start=0, end=6 * 60 * 1000))
 
     # Assert
     assert (
@@ -138,21 +138,21 @@ def test_remove_object_from_ranges_on_audio_space(ontology):
     audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
     new_object_instance = audio_obj_ontology_item.create_instance()
 
-    audio_space_1.place_object(object=new_object_instance, ranges=Range(start=100, end=500))
+    audio_space_1.put_object_instance(object_instance=new_object_instance, ranges=Range(start=100, end=500))
 
     # Act
-    audio_space_1.remove_object_from_range(object=new_object_instance, ranges=Range(start=150, end=200))
+    audio_space_1.remove_object_instance_from_range(object=new_object_instance, ranges=Range(start=150, end=200))
 
     # Assert
     object_instances = label_row.get_object_instances()
     assert len(object_instances) == 1
 
-    objects_on_space = audio_space_1.get_objects()
+    objects_on_space = audio_space_1.get_object_instances()
     object_on_space = objects_on_space[0]
     assert len(objects_on_space) == 1
     assert object_on_space._spaces == {audio_space_1.space_id: audio_space_1}
 
-    annotations_on_space = audio_space_1.get_object_annotations()
+    annotations_on_space = audio_space_1.get_object_instance_annotations()
     assert len(annotations_on_space) == 1
 
     first_annotation = annotations_on_space[0]
@@ -174,10 +174,10 @@ def test_remove_object_from_audio_space(ontology):
     audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
     new_object_instance = audio_obj_ontology_item.create_instance()
 
-    audio_space_1.place_object(object=new_object_instance, ranges=Range(start=0, end=100))
+    audio_space_1.put_object_instance(object_instance=new_object_instance, ranges=Range(start=0, end=100))
 
     # Act
-    audio_space_1.remove_object(
+    audio_space_1.remove_object_instance(
         object_hash=new_object_instance.object_hash,
     )
 
@@ -185,10 +185,10 @@ def test_remove_object_from_audio_space(ontology):
     object_instances = label_row.get_object_instances()
     assert len(object_instances) == 0
 
-    objects_on_space = audio_space_1.get_objects()
+    objects_on_space = audio_space_1.get_object_instances()
     assert len(objects_on_space) == 0
 
-    annotations_on_space = audio_space_1.get_object_annotations()
+    annotations_on_space = audio_space_1.get_object_instance_annotations()
     assert len(annotations_on_space) == 0
 
     annotations_on_object = new_object_instance.get_annotations()
@@ -207,20 +207,20 @@ def test_add_object_to_two_spaces(ontology):
     range_2 = Range(start=200, end=300)
 
     # Act
-    audio_space_1.place_object(
-        object=new_object_instance,
+    audio_space_1.put_object_instance(
+        object_instance=new_object_instance,
         ranges=range_1,
     )
-    audio_space_2.place_object(
-        object=new_object_instance,
+    audio_space_2.put_object_instance(
+        object_instance=new_object_instance,
         ranges=range_2,
     )
 
     # Assert
-    objects = audio_space_1.get_objects()
+    objects = audio_space_1.get_object_instances()
     assert len(objects) == 1
 
-    annotations_on_audio_space_1 = audio_space_1.get_object_annotations()
+    annotations_on_audio_space_1 = audio_space_1.get_object_instance_annotations()
     first_annotation_on_audio_space_1 = annotations_on_audio_space_1[0]
     assert len(annotations_on_audio_space_1) == 1
     assert first_annotation_on_audio_space_1.coordinates == AudioCoordinates(
@@ -228,7 +228,7 @@ def test_add_object_to_two_spaces(ontology):
     )  # Coordinates here for backwards compatibility
     assert first_annotation_on_audio_space_1.ranges == [range_1]
 
-    annotations_on_audio_space_2 = audio_space_2.get_object_annotations()
+    annotations_on_audio_space_2 = audio_space_2.get_object_instance_annotations()
     first_annotation_on_audio_space_2 = annotations_on_audio_space_2[0]
     assert len(annotations_on_audio_space_2) == 1
     assert first_annotation_on_audio_space_2.coordinates == AudioCoordinates(
@@ -248,8 +248,8 @@ def test_update_attribute_for_object_which_exist_on_two_spaces(ontology):
     range_1 = Range(start=0, end=100)
     range_2 = Range(start=200, end=300)
 
-    audio_space_1.place_object(object=new_object_instance, ranges=range_1)
-    audio_space_2.place_object(object=new_object_instance, ranges=range_2)
+    audio_space_1.put_object_instance(object_instance=new_object_instance, ranges=range_1)
+    audio_space_2.put_object_instance(object_instance=new_object_instance, ranges=range_2)
 
     object_answer = new_object_instance.get_answer(attribute=audio_obj_transcription_attribute_ontology_item)
     assert object_answer is None
@@ -262,10 +262,10 @@ def test_update_attribute_for_object_which_exist_on_two_spaces(ontology):
     object_answer = new_object_instance.get_answer(attribute=audio_obj_transcription_attribute_ontology_item)
     assert object_answer == new_answer
 
-    object_on_audio_space_1 = audio_space_1.get_objects()[0]
+    object_on_audio_space_1 = audio_space_1.get_object_instances()[0]
     assert object_on_audio_space_1.get_answer(audio_obj_transcription_attribute_ontology_item) == new_answer
 
-    object_on_audio_space_2 = audio_space_2.get_objects()[0]
+    object_on_audio_space_2 = audio_space_2.get_object_instances()[0]
     assert object_on_audio_space_2.get_answer(audio_obj_transcription_attribute_ontology_item) == new_answer
 
     object_answer_dict = label_row.to_encord_dict()["object_answers"]
@@ -316,22 +316,22 @@ def test_get_object_annotations(ontology):
     date1 = datetime(2020, 1, 1)
     date2 = datetime(2020, 5, 5)
 
-    audio_space_1.place_object(
-        object=object_instance_1,
+    audio_space_1.put_object_instance(
+        object_instance=object_instance_1,
         ranges=range_1,
         last_edited_by=name_1,
         last_edited_at=date1,
     )
 
-    audio_space_1.place_object(
-        object=object_instance_2,
+    audio_space_1.put_object_instance(
+        object_instance=object_instance_2,
         ranges=range_2,
         last_edited_by=name_2,
         last_edited_at=date2,
     )
 
     # Act
-    object_annotations = audio_space_1.get_object_annotations()
+    object_annotations = audio_space_1.get_object_instance_annotations()
     first_annotation = object_annotations[0]
     second_annotation = object_annotations[1]
 
@@ -374,28 +374,28 @@ def test_get_object_annotations_with_filter_objects(ontology):
     date1 = datetime(2020, 1, 1)
     date2 = datetime(2020, 5, 5)
 
-    audio_space_1.place_object(
-        object=object_instance_1,
+    audio_space_1.put_object_instance(
+        object_instance=object_instance_1,
         ranges=range_1,
         last_edited_by=name_1,
         last_edited_at=date1,
     )
 
-    audio_space_1.place_object(
-        object=object_instance_2,
+    audio_space_1.put_object_instance(
+        object_instance=object_instance_2,
         ranges=range_2,
         last_edited_by=name_2,
         last_edited_at=date2,
     )
 
     # Act
-    object_annotations_for_object_1 = audio_space_1.get_object_annotations(
-        filter_objects=[object_instance_1.object_hash]
+    object_annotations_for_object_1 = audio_space_1.get_object_instance_annotations(
+        filter_object_instances=[object_instance_1.object_hash]
     )
     first_annotation_for_object_1 = object_annotations_for_object_1[0]
 
-    object_annotations_for_object_2 = audio_space_1.get_object_annotations(
-        filter_objects=[object_instance_2.object_hash]
+    object_annotations_for_object_2 = audio_space_1.get_object_instance_annotations(
+        filter_object_instances=[object_instance_2.object_hash]
     )
     first_annotation_for_object_2 = object_annotations_for_object_2[0]
 
@@ -440,15 +440,15 @@ def test_get_object_annotations_from_object_instance(ontology):
     date1 = datetime(2020, 1, 1)
     date2 = datetime(2020, 5, 5)
 
-    audio_space_1.place_object(
-        object=object_instance_1,
+    audio_space_1.put_object_instance(
+        object_instance=object_instance_1,
         ranges=range_1,
         last_edited_by=name_1,
         last_edited_at=date1,
     )
 
-    audio_space_1.place_object(
-        object=object_instance_2,
+    audio_space_1.put_object_instance(
+        object_instance=object_instance_2,
         ranges=range_2,
         last_edited_by=name_2,
         last_edited_at=date2,
@@ -501,8 +501,8 @@ def test_update_annotation_from_object_annotation_using_coordinates(ontology):
     date = datetime(2020, 1, 1)
     new_date = datetime(2020, 5, 5)
 
-    audio_space_1.place_object(
-        object=object_instance,
+    audio_space_1.put_object_instance(
+        object_instance=object_instance,
         ranges=current_range,
         last_edited_by=name,
         last_edited_at=date,
@@ -533,7 +533,7 @@ def test_update_annotation_from_object_annotation_using_coordinates(ontology):
     assert not DeepDiff(current_object_answers_dict, EXPECTED_CURRENT_OBJECT_ANSWERS_DICT)
 
     # Act
-    object_annotations = audio_space_1.get_object_annotations()
+    object_annotations = audio_space_1.get_object_instance_annotations()
     object_annotation = object_annotations[0]
 
     object_annotation.created_by = new_name
@@ -584,8 +584,8 @@ def test_update_annotation_from_object_annotation(ontology):
     date = datetime(2020, 1, 1)
     new_date = datetime(2020, 5, 5)
 
-    audio_space_1.place_object(
-        object=object_instance,
+    audio_space_1.put_object_instance(
+        object_instance=object_instance,
         ranges=current_range,
         last_edited_by=name,
         last_edited_at=date,
@@ -616,7 +616,7 @@ def test_update_annotation_from_object_annotation(ontology):
     assert not DeepDiff(current_object_answers_dict, EXPECTED_CURRENT_OBJECT_ANSWERS_DICT)
 
     # Act
-    object_annotations = audio_space_1.get_object_annotations()
+    object_annotations = audio_space_1.get_object_instance_annotations()
     object_annotation = object_annotations[0]
 
     object_annotation.created_by = new_name

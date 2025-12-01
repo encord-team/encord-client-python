@@ -2,7 +2,6 @@ from unittest.mock import Mock
 
 import pytest
 
-from encord.constants.enums import SpaceType
 from encord.objects import LabelRowV2
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.two_audio import DATA_GROUP_METADATA
@@ -26,11 +25,9 @@ def test_get_space_by_id(ontology):
 
     # Assert
     assert audio_space_1.space_id == "audio-1-uuid"
-    assert audio_space_1.space_type == SpaceType.AUDIO
     assert audio_space_1.layout_key == "english_transcription"
 
     assert audio_space_2.space_id == "audio-2-uuid"
-    assert audio_space_2.space_type == SpaceType.AUDIO
     assert audio_space_2.layout_key == "french_transcription"
 
 
@@ -44,9 +41,7 @@ def test_get_space_by_layout_key(ontology):
 
     # Assert
     assert audio_space_1.space_id == "audio-1-uuid"
-    assert audio_space_1.space_type == SpaceType.AUDIO
     assert audio_space_1.layout_key == "english_transcription"
 
     assert audio_space_2.space_id == "audio-2-uuid"
-    assert audio_space_2.space_type == SpaceType.AUDIO
     assert audio_space_2.layout_key == "french_transcription"

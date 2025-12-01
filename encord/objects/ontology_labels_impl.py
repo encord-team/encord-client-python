@@ -2403,7 +2403,7 @@ class LabelRowV2:
             elif space_info["space_type"] == SpaceType.AUDIO:
                 audio_space = AudioSpace(
                     space_id=space_id,
-                    parent=self,
+                    label_row=self,
                     duration_ms=space_info["duration_ms"],
                     child_info=space_info["info"],
                 )
