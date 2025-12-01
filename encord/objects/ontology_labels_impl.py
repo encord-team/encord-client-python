@@ -2341,7 +2341,7 @@ class LabelRowV2:
             if space_info["space_type"] == SpaceType.VIDEO:
                 video_space = VideoSpace(
                     space_id=space_id,
-                    parent=self,
+                    label_row=self,
                     child_info=space_info["info"],
                     number_of_frames=space_info["number_of_frames"],
                     width=space_info["width"],
@@ -2354,7 +2354,7 @@ class LabelRowV2:
             elif space_info["space_type"] == SpaceType.IMAGE:
                 image_space = ImageSpace(
                     space_id=space_id,
-                    parent=self,
+                    label_row=self,
                     child_info=space_info["info"],
                     width=space_info["width"],
                     height=space_info["height"],

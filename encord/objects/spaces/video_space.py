@@ -56,9 +56,15 @@ class VideoSpace(Space):
     """Video space implementation for frame-based video annotations."""
 
     def __init__(
-        self, space_id: str, parent: LabelRowV2, child_info: ChildInfo, number_of_frames: int, width: int, height: int
+        self,
+        space_id: str,
+        label_row: LabelRowV2,
+        child_info: ChildInfo,
+        number_of_frames: int,
+        width: int,
+        height: int,
     ):
-        super().__init__(space_id, SpaceType.VIDEO, parent)
+        super().__init__(space_id, label_row)
 
         self._frames_to_object_hash_to_annotation_data: defaultdict[int, dict[str, GeometricAnnotationData]] = (
             defaultdict(dict)
@@ -156,7 +162,7 @@ class VideoSpace(Space):
 
         object_instance._add_to_space(self)
 
-        check_coordinate_type(coordinates, object_instance._ontology_object, self.parent)
+        check_coordinate_type(coordinates, object_instance._ontology_object, self._label_row)
 
         for frame in frame_list:
             objects_on_frame = self._frames_to_object_hash_to_annotation_data.get(frame)
@@ -600,7 +606,7 @@ class VideoSpace(Space):
     def _create_new_object_from_frame_object_dict(self, frame_object_label: FrameObject) -> ObjectInstance:
         from encord.objects.ontology_object import Object, ObjectInstance
 
-        ontology = self.parent._ontology.structure
+        ontology = self._label_row._ontology.structure
         feature_hash = frame_object_label["featureHash"]
         object_hash = frame_object_label["objectHash"]
         label_class = ontology.get_child_by_hash(feature_hash, type_=Object)
@@ -611,7 +617,7 @@ class VideoSpace(Space):
     ) -> ClassificationInstance:
         from encord.objects import Classification, ClassificationInstance
 
-        ontology = self.parent._ontology.structure
+        ontology = self._label_row._ontology.structure
         feature_hash = frame_classification_label["featureHash"]
         classification_hash = frame_classification_label["classificationHash"]
         label_class = ontology.get_child_by_hash(feature_hash, type_=Classification)
@@ -624,7 +630,7 @@ class VideoSpace(Space):
             ontology_classification=label_class, classification_hash=classification_hash
         )
         answers_dict = classification_answer["classifications"]
-        self.parent._add_static_answers_from_dict(new_classification_instance, answers_dict)
+        self._label_row._add_static_answers_from_dict(new_classification_instance, answers_dict)
 
         return new_classification_instance
 
@@ -665,7 +671,7 @@ class VideoSpace(Space):
         from encord.objects.ontology_object import Object
 
         ontology_hash = object_instance._ontology_object.feature_node_hash
-        ontology_object = self.parent._ontology.structure.get_child_by_hash(ontology_hash, type_=Object)
+        ontology_object = self._label_row._ontology.structure.get_child_by_hash(ontology_hash, type_=Object)
 
         base_frame_object = create_frame_object_dict(
             ontology_object=ontology_object,
@@ -691,10 +697,12 @@ class VideoSpace(Space):
         from encord.objects.attributes import Attribute
 
         ontology_hash = classification_instance._ontology_classification.feature_node_hash
-        ontology_classification = self.parent._ontology.structure.get_child_by_hash(ontology_hash, type_=Classification)
+        ontology_classification = self._label_row._ontology.structure.get_child_by_hash(
+            ontology_hash, type_=Classification
+        )
 
         attribute_hash = classification_instance.ontology_item.attributes[0].feature_node_hash
-        attribute = self.parent._ontology.structure.get_child_by_hash(attribute_hash, type_=Attribute)
+        attribute = self._label_row._ontology.structure.get_child_by_hash(attribute_hash, type_=Attribute)
 
         frame_object_dict = create_frame_classification_dict(
             ontology_classification=ontology_classification,
@@ -737,7 +745,7 @@ class VideoSpace(Space):
     def _to_object_answers(self) -> dict[str, ObjectAnswer]:
         ret: dict[str, ObjectAnswer] = {}
         for object_instance in self._objects_map.values():
-            all_static_answers = self.parent._get_all_static_answers(object_instance)
+            all_static_answers = self._label_row._get_all_static_answers(object_instance)
             object_index_element: ObjectAnswer = {
                 "classifications": list(reversed(all_static_answers)),
                 "objectHash": object_instance.object_hash,
@@ -786,7 +794,7 @@ class VideoSpace(Space):
             # TODO: Might have to keep track of all objects on spaces in parent
             object_instance = None
 
-            for space in self.parent._space_map.values():
+            for space in self._label_row._space_map.values():
                 object_instance = space._objects_map.get(object_hash)
                 if object_instance is not None:
                     break
@@ -814,7 +822,7 @@ class VideoSpace(Space):
             classification_hash = classification["classificationHash"]
 
             classification_instance = None
-            for space in self.parent._space_map.values():
+            for space in self._label_row._space_map.values():
                 classification_instance = space._classifications_map.get(classification_hash)
                 if classification_instance is not None:
                     break
