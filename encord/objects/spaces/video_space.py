@@ -136,7 +136,7 @@ class VideoSpace(Space):
                 f"Frame {max_frame} is invalid. The max frame on this video is {max_allowed_frame_index}."
             )
 
-    def _place_object(
+    def _put_object_instance(
         self,
         object_instance: ObjectInstance,
         frames: Frames,
@@ -149,7 +149,6 @@ class VideoSpace(Space):
         last_edited_by: Optional[str] = None,
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
-        is_deleted: Optional[bool] = None,
     ) -> None:
         frame_list = frames_class_to_frames_list(frames)
         self._are_frames_valid(frame_list)
@@ -197,7 +196,6 @@ class VideoSpace(Space):
                 last_edited_by=last_edited_by,
                 confidence=confidence,
                 manual_annotation=manual_annotation,
-                is_deleted=is_deleted,
             )
             existing_frame_annotation_data.coordinates = coordinates
 
@@ -209,7 +207,7 @@ class VideoSpace(Space):
     def is_readonly(self) -> bool:
         return self._is_readonly
 
-    def place_object(
+    def put_object_instance(
         self,
         object_instance: ObjectInstance,
         frames: Frames,
@@ -222,12 +220,11 @@ class VideoSpace(Space):
         last_edited_by: Optional[str] = None,
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
-        is_deleted: Optional[bool] = None,
     ) -> None:
         self._method_not_supported_for_object_instance_with_frames(object_instance=object_instance)
         self._method_not_supported_for_object_instance_with_dynamic_attributes(object_instance=object_instance)
 
-        self._place_object(
+        self._put_object_instance(
             object_instance=object_instance,
             frames=frames,
             coordinates=coordinates,
@@ -238,7 +235,6 @@ class VideoSpace(Space):
             last_edited_by=last_edited_by,
             confidence=confidence,
             manual_annotation=manual_annotation,
-            is_deleted=is_deleted,
         )
 
     def remove_object_from_frames(
@@ -436,9 +432,9 @@ class VideoSpace(Space):
 
         return dynamic_answer_manager.get_answer(attribute, filter_answer, filter_frames=frames)
 
-    def place_classification(
+    def put_classification_instance(
         self,
-        classification: ClassificationInstance,
+        classification_instance: ClassificationInstance,
         frames: Frames,
         *,
         overwrite: bool = False,
@@ -448,24 +444,27 @@ class VideoSpace(Space):
         last_edited_by: Optional[str] = None,
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
-        is_deleted: Optional[bool] = None,
     ) -> None:
-        self._method_not_supported_for_classification_instance_with_frames(classification_instance=classification)
+        self._method_not_supported_for_classification_instance_with_frames(
+            classification_instance=classification_instance
+        )
 
         frame_list = frames_class_to_frames_list(frames)
         self._are_frames_valid(frame_list)
 
-        self._classification_map[classification.classification_hash] = classification
-        classification._add_to_space(self)
+        self._classification_map[classification_instance.classification_hash] = classification_instance
+        classification_instance._add_to_space(self)
 
         is_present, conflicting_ranges = self._is_classification_present_on_frames(
-            classification._ontology_classification, frame_list
+            classification_instance._ontology_classification, frame_list
         )
 
         if is_present and not overwrite:
-            location_msg = "globally" if classification.is_global() else f"on the ranges {conflicting_ranges}. "
+            location_msg = (
+                "globally" if classification_instance.is_global() else f"on the ranges {conflicting_ranges}. "
+            )
             raise LabelRowError(
-                f"The classification '{classification.classification_hash}' already exists "
+                f"The classification '{classification_instance.classification_hash}' already exists "
                 f"{location_msg}"
                 f"Set 'overwrite' parameter to True to overwrite."
             )
@@ -473,13 +472,13 @@ class VideoSpace(Space):
         # If overwriting, remove conflicting classification entries from other classification instances
         if is_present and overwrite:
             self._remove_conflicting_classifications_from_frames(
-                classification=classification,
+                classification=classification_instance,
                 conflicting_ranges=conflicting_ranges,
             )
 
         for frame in frame_list:
             existing_frame_classification_annotation_data = self._get_frame_classification_annotation_data(
-                classification_hash=classification.classification_hash, frame=frame
+                classification_hash=classification_instance.classification_hash, frame=frame
             )
 
             if existing_frame_classification_annotation_data is None:
@@ -487,9 +486,9 @@ class VideoSpace(Space):
                     annotation_metadata=AnnotationMetadata(),
                 )
 
-                self._frames_to_classification_hash_to_annotation_data[frame][classification.classification_hash] = (
-                    existing_frame_classification_annotation_data
-                )
+                self._frames_to_classification_hash_to_annotation_data[frame][
+                    classification_instance.classification_hash
+                ] = existing_frame_classification_annotation_data
 
             existing_frame_classification_annotation_data.annotation_metadata.update_from_optional_fields(
                 created_at=created_at,
@@ -498,53 +497,59 @@ class VideoSpace(Space):
                 last_edited_by=last_edited_by,
                 confidence=confidence,
                 manual_annotation=manual_annotation,
-                is_deleted=is_deleted,
             )
 
         range_manager = RangeManager(frame_class=frame_list)
         ranges_to_add = range_manager.get_ranges()
 
-        existing_range_manager = self._classifications_to_ranges.get(classification._ontology_classification)
+        existing_range_manager = self._classifications_to_ranges.get(classification_instance._ontology_classification)
         if existing_range_manager is None:
-            self._classifications_to_ranges[classification._ontology_classification] = range_manager
+            self._classifications_to_ranges[classification_instance._ontology_classification] = range_manager
         else:
             existing_range_manager.add_ranges(ranges_to_add)
 
-    def remove_classification_from_frames(
+    def remove_classification_instance_from_frames(
         self,
-        classification: ClassificationInstance,
+        classification_instance: ClassificationInstance,
         frames: Frames,
     ):
-        self._method_not_supported_for_classification_instance_with_frames(classification_instance=classification)
+        self._method_not_supported_for_classification_instance_with_frames(
+            classification_instance=classification_instance
+        )
         frame_list = frames_class_to_frames_list(frames)
         # TODO: What if all frames are unplaaced?
         for frame in frame_list:
-            self._frames_to_classification_hash_to_annotation_data[frame].pop(classification.classification_hash)
+            self._frames_to_classification_hash_to_annotation_data[frame].pop(
+                classification_instance.classification_hash
+            )
 
         range_manager = RangeManager(frame_class=frames)
         ranges_to_remove = range_manager.get_ranges()
 
-        classification_range_manager = self._classifications_to_ranges.get(classification._ontology_classification)
+        classification_range_manager = self._classifications_to_ranges.get(
+            classification_instance._ontology_classification
+        )
         if classification_range_manager is not None:
             classification_range_manager.remove_ranges(ranges_to_remove)
 
     def _get_object_annotation_on_frame(self, object_hash: str, frame: int = 0) -> GeometricFrameObjectAnnotation:
         return GeometricFrameObjectAnnotation(space=self, object_instance=self._objects_map[object_hash], frame=frame)
 
-    def get_object_annotations(
-        self, filter_objects: Optional[list[str]] = None
+    # TODO: Remove this
+    def get_object_instance_annotations(
+        self, filter_object_instances: Optional[list[str]] = None
     ) -> list[GeometricFrameObjectAnnotation]:
         res: list[GeometricFrameObjectAnnotation] = []
 
         for frame, obj in dict(sorted(self._frames_to_object_hash_to_annotation_data.items())).items():
             for obj_hash, annotation in obj.items():
-                if filter_objects is None or obj_hash in filter_objects:
+                if filter_object_instances is None or obj_hash in filter_object_instances:
                     res.append(self._get_object_annotation_on_frame(object_hash=obj_hash, frame=frame))
 
         return res
 
-    def get_classification_annotations(
-        self, filter_classifications: Optional[list[str]] = None
+    def get_classification_instance_annotations(
+        self, filter_classification_instances: Optional[list[str]] = None
     ) -> list[FrameClassificationAnnotation]:
         res: list[FrameClassificationAnnotation] = []
 
@@ -552,7 +557,7 @@ class VideoSpace(Space):
             sorted(self._frames_to_classification_hash_to_annotation_data.items())
         ).items():
             for classification_hash, annotation in classification.items():
-                if filter_classifications is None or classification_hash in filter_classifications:
+                if filter_classification_instances is None or classification_hash in filter_classification_instances:
                     res.append(
                         FrameClassificationAnnotation(
                             space=self,
@@ -563,13 +568,13 @@ class VideoSpace(Space):
 
         return res
 
-    def get_objects(self) -> list[ObjectInstance]:
+    def get_object_instances(self) -> list[ObjectInstance]:
         return list(self._objects_map.values())
 
-    def get_classifications(self) -> list[ClassificationInstance]:
+    def get_classification_instances(self) -> list[ClassificationInstance]:
         return list(self._classification_map.values())
 
-    def remove_object(self, object_hash: str) -> Optional[ObjectInstance]:
+    def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         object_instance = self._objects_map.pop(object_hash, None)
 
         if object_instance is not None:
@@ -590,7 +595,7 @@ class VideoSpace(Space):
 
         return object_instance
 
-    def remove_classification(self, classification_hash: str) -> Optional[ClassificationInstance]:
+    def remove_classification_instance(self, classification_hash: str) -> Optional[ClassificationInstance]:
         classification_instance = self._classification_map.pop(classification_hash, None)
 
         if classification_instance is not None:
@@ -804,7 +809,7 @@ class VideoSpace(Space):
 
             coordinates = get_geometric_coordinates_from_frame_object_dict(frame_object_dict=obj)
             object_frame_instance_info = AnnotationMetadata.from_dict(obj)
-            self.place_object(
+            self.put_object_instance(
                 object_instance=object_instance,
                 coordinates=coordinates,
                 frames=frame,
@@ -834,8 +839,8 @@ class VideoSpace(Space):
                 )
 
             classification_frame_instance_info = AnnotationMetadata.from_dict(classification)
-            self.place_classification(
-                classification=classification_instance,
+            self.put_classification_instance(
+                classification_instance=classification_instance,
                 frames=frame,
                 created_at=classification_frame_instance_info.created_at,
                 created_by=classification_frame_instance_info.created_by,

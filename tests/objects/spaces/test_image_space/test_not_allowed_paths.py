@@ -41,7 +41,7 @@ def test_place_object_on_image_space_throws_error_if_object_has_frames(ontology)
 
     # Act
     with pytest.raises(LabelRowError) as e:
-        image_space_1.place_object(
+        image_space_1.put_object_instance(
             object_instance=new_object_instance,
             coordinates=box_coordinates,
         )
@@ -59,7 +59,7 @@ def test_add_object_to_label_row_throws_error_if_object_is_on_space(ontology):
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
-    image_space_1.place_object(
+    image_space_1.put_object_instance(
         object_instance=new_object_instance,
         coordinates=box_coordinates,
     )
@@ -81,7 +81,7 @@ def test_remove_object_from_label_row_throws_error_if_object_is_on_space(ontolog
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
-    image_space_1.place_object(
+    image_space_1.put_object_instance(
         object_instance=new_object_instance,
         coordinates=box_coordinates,
     )
@@ -103,7 +103,7 @@ def test_set_for_frames_throws_error_if_object_is_on_space(ontology):
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
-    image_space_1.place_object(
+    image_space_1.put_object_instance(
         object_instance=new_object_instance,
         coordinates=box_coordinates,
     )
@@ -125,7 +125,7 @@ def test_remove_from_frames_throws_error_if_object_is_on_space(ontology):
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
-    image_space_1.place_object(
+    image_space_1.put_object_instance(
         object_instance=new_object_instance,
         coordinates=box_coordinates,
     )
@@ -147,7 +147,7 @@ def test_get_annotation_throws_error_if_object_is_on_space(ontology):
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
-    image_space_1.place_object(
+    image_space_1.put_object_instance(
         object_instance=new_object_instance,
         coordinates=box_coordinates,
     )
@@ -166,7 +166,7 @@ def test_get_annotation_frames_throws_error_if_object_is_on_space(ontology):
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
-    image_space_1.place_object(
+    image_space_1.put_object_instance(
         object_instance=new_object_instance,
         coordinates=box_coordinates,
     )
@@ -188,7 +188,7 @@ def test_place_classification_on_image_space_throws_error_if_object_has_frames(o
 
     # Act
     with pytest.raises(LabelRowError) as e:
-        image_space_1.place_classification(classification=new_classification_instance)
+        image_space_1.put_classification_instance(classification_instance=new_classification_instance)
 
     assert (
         e.value.message
@@ -202,7 +202,7 @@ def test_add_classification_to_label_row_throws_error_if_classification_is_on_sp
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
     new_classification_instance = text_classification.create_instance()
-    image_space_1.place_classification(classification=new_classification_instance)
+    image_space_1.put_classification_instance(classification_instance=new_classification_instance)
 
     # Act
     with pytest.raises(LabelRowError) as e:
@@ -220,7 +220,7 @@ def test_remove_classification_from_label_row_throws_error_if_classification_is_
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
     new_classification_instance = text_classification.create_instance()
-    image_space_1.place_classification(classification=new_classification_instance)
+    image_space_1.put_classification_instance(classification_instance=new_classification_instance)
 
     # Act
     with pytest.raises(LabelRowError) as e:
@@ -238,7 +238,7 @@ def test_set_for_frames_throws_error_if_classification_is_on_space(ontology):
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
     new_classification_instance = text_classification.create_instance()
-    image_space_1.place_classification(classification=new_classification_instance)
+    image_space_1.put_classification_instance(classification_instance=new_classification_instance)
 
     # Act
     with pytest.raises(LabelRowError) as e:
@@ -256,7 +256,7 @@ def test_remove_from_frames_throws_error_if_classification_is_on_space(ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
     new_classification_instance = text_classification.create_instance()
-    image_space_1.place_classification(classification=new_classification_instance)
+    image_space_1.put_classification_instance(classification_instance=new_classification_instance)
 
     # Act
     with pytest.raises(LabelRowError) as e:
@@ -274,7 +274,7 @@ def test_get_annotation_throws_error_if_classification_is_on_space(ontology):
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
     new_classification_instance = text_classification.create_instance()
-    image_space_1.place_classification(classification=new_classification_instance)
+    image_space_1.put_classification_instance(classification_instance=new_classification_instance)
 
     # Act
     with pytest.raises(LabelRowError) as e:
@@ -294,7 +294,7 @@ def test_place_object_on_image_space_throws_error_if_object_has_dynamic_attribut
 
     # Act
     with pytest.raises(LabelRowError) as e:
-        image_space_1.place_object(
+        image_space_1.put_object_instance(
             object_instance=new_object_instance,
             coordinates=PointCoordinate(x=0.5, y=0.5),
         )
@@ -312,7 +312,7 @@ def test_set_dynamic_attributes_throws_error_if_object_on_space(ontology):
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
 
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
-    image_space_1.place_object(
+    image_space_1.put_object_instance(
         object_instance=new_object_instance,
         coordinates=PointCoordinate(x=0.5, y=0.5),
     )
@@ -334,7 +334,7 @@ def test_get_dynamic_attributes_throws_error_if_object_on_space(ontology):
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
 
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
-    image_space_1.place_object(
+    image_space_1.put_object_instance(
         object_instance=new_object_instance,
         coordinates=PointCoordinate(x=0.5, y=0.5),
     )
@@ -356,7 +356,7 @@ def test_delete_dynamic_attributes_throws_error_if_object_on_space(ontology):
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
 
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
-    image_space_1.place_object(
+    image_space_1.put_object_instance(
         object_instance=new_object_instance,
         coordinates=PointCoordinate(x=0.5, y=0.5),
     )

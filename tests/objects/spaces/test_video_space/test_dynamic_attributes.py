@@ -35,7 +35,7 @@ def test_add_dynamic_attributes_to_frames_on_object_on_video_space(ontology):
 
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
     point_coordinates = PointCoordinate(x=0.5, y=0.5)
-    video_space_1.place_object(
+    video_space_1.put_object_instance(
         object_instance=new_object_instance,
         frames=[0, 1, 2],
         coordinates=point_coordinates,
@@ -84,7 +84,7 @@ def test_remove_dynamic_attributes_from_frame_on_video_space(ontology):
 
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
     point_coordinates = PointCoordinate(x=0.5, y=0.5)
-    video_space_1.place_object(
+    video_space_1.put_object_instance(
         object_instance=new_object_instance,
         frames=[0, 1, 2],
         coordinates=point_coordinates,
@@ -125,7 +125,7 @@ def test_unplace_object_removes_dynamic_attributes_from_those_frames(ontology):
 
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
     point_coordinates = PointCoordinate(x=0.5, y=0.5)
-    video_space_1.place_object(
+    video_space_1.put_object_instance(
         object_instance=new_object_instance,
         frames=[0, 1, 2],
         coordinates=point_coordinates,
@@ -160,7 +160,7 @@ def test_remove_object_removes_dynamic_attributes_for_that_object(ontology):
 
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
     point_coordinates = PointCoordinate(x=0.5, y=0.5)
-    video_space_1.place_object(
+    video_space_1.put_object_instance(
         object_instance=new_object_instance,
         frames=[0, 1, 2],
         coordinates=point_coordinates,
@@ -171,7 +171,7 @@ def test_remove_object_removes_dynamic_attributes_for_that_object(ontology):
     )
 
     # Act
-    video_space_1.remove_object(object_hash=new_object_instance.object_hash)
+    video_space_1.remove_object_instance(object_hash=new_object_instance.object_hash)
 
     # Assert
     with pytest.raises(LabelRowError) as e:
@@ -192,7 +192,7 @@ def test_add_dynamic_attributes_to_frames_where_object_does_not_exist_on_video_s
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
     point_coordinates = PointCoordinate(x=0.5, y=0.5)
 
-    video_space_1.place_object(
+    video_space_1.put_object_instance(
         object_instance=new_object_instance,
         frames=[0],
         coordinates=point_coordinates,

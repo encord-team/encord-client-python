@@ -79,7 +79,7 @@ class GeometricFrameObjectAnnotation(ObjectAnnotation):
     @coordinates.setter
     def coordinates(self, coordinates: GeometricCoordinates) -> None:
         self._check_if_annotation_is_valid()
-        self._space.place_object(
+        self._space.put_object_instance(
             object_instance=self._object_instance,
             frames=self.frame,
             coordinates=coordinates,

@@ -1312,7 +1312,7 @@ class LabelRowV2:
             # Needed to remove filter out duplicate classification instances across spaces
             classification_hashes: set[str] = set()
             for space in self._space_map.values():
-                for classification in space.get_classifications():
+                for classification in space.get_classification_instances():
                     if classification.classification_hash in classification_hashes:
                         continue
 

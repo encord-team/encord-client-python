@@ -66,7 +66,7 @@ class ImageSpace(Space):
     def is_readonly(self) -> bool:
         return self._is_readonly
 
-    def place_object(
+    def put_object_instance(
         self,
         object_instance: ObjectInstance,
         coordinates: GeometricCoordinates,
@@ -106,9 +106,9 @@ class ImageSpace(Space):
 
         self._object_hash_to_annotation_data[object_instance.object_hash] = frame_annotation_data
 
-    def place_classification(
+    def put_classification_instance(
         self,
-        classification: ClassificationInstance,
+        classification_instance: ClassificationInstance,
         *,
         overwrite: bool = False,
         created_at: Optional[datetime] = None,
@@ -118,22 +118,24 @@ class ImageSpace(Space):
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
     ) -> None:
-        self._method_not_supported_for_classification_instance_with_frames(classification_instance=classification)
+        self._method_not_supported_for_classification_instance_with_frames(
+            classification_instance=classification_instance
+        )
 
-        is_classification_instance_present = classification.classification_hash in self._classifications_map
+        is_classification_instance_present = classification_instance.classification_hash in self._classifications_map
         is_classification_of_same_ontology_present = (
-            classification._ontology_classification.feature_node_hash in self._classification_ontologies
+            classification_instance._ontology_classification.feature_node_hash in self._classification_ontologies
         )
 
         if is_classification_instance_present and not overwrite:
             raise LabelRowError(
-                f"The classification '{classification.classification_hash}' already exists. Set 'overwrite' parameter to True to overwrite."
+                f"The classification '{classification_instance.classification_hash}' already exists. Set 'overwrite' parameter to True to overwrite."
             )
 
         if is_classification_of_same_ontology_present:
             if not overwrite:
                 raise LabelRowError(
-                    f"A classification instance for the classification with feature hash '{classification._ontology_classification.feature_node_hash}' already exists. Set 'overwrite' parameter to True to overwrite."
+                    f"A classification instance for the classification with feature hash '{classification_instance._ontology_classification.feature_node_hash}' already exists. Set 'overwrite' parameter to True to overwrite."
                 )
             else:
                 # Remove classification instances of that ontology item
@@ -141,7 +143,7 @@ class ImageSpace(Space):
                 for classification_instance in self._classifications_map.values():
                     if (
                         classification_instance._ontology_classification.feature_node_hash
-                        == classification._ontology_classification.feature_node_hash
+                        == classification_instance._ontology_classification.feature_node_hash
                     ):
                         classification_hash_to_remove = classification_instance.classification_hash
 
@@ -149,19 +151,19 @@ class ImageSpace(Space):
                     self._classifications_map.pop(classification_hash_to_remove)
                     self._classification_hash_to_annotation_data.pop(classification_hash_to_remove)
 
-        self._classifications_map[classification.classification_hash] = classification
-        self._classification_ontologies.add(classification._ontology_classification.feature_node_hash)
-        classification._add_to_space(self)
+        self._classifications_map[classification_instance.classification_hash] = classification_instance
+        self._classification_ontologies.add(classification_instance._ontology_classification.feature_node_hash)
+        classification_instance._add_to_space(self)
 
         existing_frame_classification_annotation_data = self._classification_hash_to_annotation_data.get(
-            classification.classification_hash
+            classification_instance.classification_hash
         )
         if existing_frame_classification_annotation_data is None:
             existing_frame_classification_annotation_data = AnnotationData(
                 annotation_metadata=AnnotationMetadata(),
             )
 
-            self._classification_hash_to_annotation_data[classification.classification_hash] = (
+            self._classification_hash_to_annotation_data[classification_instance.classification_hash] = (
                 existing_frame_classification_annotation_data
             )
 
@@ -174,22 +176,24 @@ class ImageSpace(Space):
             manual_annotation=manual_annotation,
         )
 
-    def get_object_annotations(self, filter_objects: Optional[list[str]] = None) -> Sequence[GeometricObjectAnnotation]:
+    def get_object_instance_annotations(
+        self, filter_object_instances: Optional[list[str]] = None
+    ) -> Sequence[GeometricObjectAnnotation]:
         res: list[GeometricObjectAnnotation] = []
 
         for obj_hash, annotation in self._object_hash_to_annotation_data.items():
-            if filter_objects is None or obj_hash in filter_objects:
+            if filter_object_instances is None or obj_hash in filter_object_instances:
                 res.append(GeometricObjectAnnotation(space=self, object_instance=self._objects_map[obj_hash]))
 
         return res
 
-    def get_classification_annotations(
-        self, filter_classifications: Optional[list[str]] = None
+    def get_classification_instance_annotations(
+        self, filter_classification_instances: Optional[list[str]] = None
     ) -> list[SingleFrameClassificationAnnotation]:
         res: list[SingleFrameClassificationAnnotation] = []
 
         for classification_hash, annotation_data in dict(self._classification_hash_to_annotation_data.items()).items():
-            if filter_classifications is None or classification_hash in filter_classifications:
+            if filter_classification_instances is None or classification_hash in filter_classification_instances:
                 res.append(
                     SingleFrameClassificationAnnotation(
                         space=self,
@@ -199,13 +203,13 @@ class ImageSpace(Space):
 
         return res
 
-    def get_objects(self) -> list[ObjectInstance]:
+    def get_object_instances(self) -> list[ObjectInstance]:
         return list(self._objects_map.values())
 
-    def get_classifications(self) -> list[ClassificationInstance]:
+    def get_classification_instances(self) -> list[ClassificationInstance]:
         return list(self._classifications_map.values())
 
-    def remove_object(self, object_hash: str) -> Optional[ObjectInstance]:
+    def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         object_instance = self._objects_map.pop(object_hash, None)
         self._object_hash_to_annotation_data.pop(object_hash)
 
@@ -214,7 +218,7 @@ class ImageSpace(Space):
 
         return object_instance
 
-    def remove_classification(self, classification_hash: str) -> Optional[ClassificationInstance]:
+    def remove_classification_instance(self, classification_hash: str) -> Optional[ClassificationInstance]:
         classification_instance = self._classifications_map.pop(classification_hash, None)
 
         if classification_instance is not None:
@@ -381,7 +385,7 @@ class ImageSpace(Space):
             coordinates: GeometricCoordinates = get_geometric_coordinates_from_frame_object_dict(frame_object_label)
 
             object_frame_instance_info = AnnotationMetadata.from_dict(frame_object_label)
-            self.place_object(
+            self.put_object_instance(
                 object_instance=object_instance,
                 coordinates=coordinates,
                 created_at=object_frame_instance_info.created_at,
@@ -406,7 +410,7 @@ class ImageSpace(Space):
                 continue
 
             classification_frame_instance_info = AnnotationMetadata.from_dict(classification)
-            self.place_classification(
+            self.put_classification_instance(
                 entity,
                 created_at=classification_frame_instance_info.created_at,
                 created_by=classification_frame_instance_info.created_by,
@@ -418,7 +422,7 @@ class ImageSpace(Space):
 
     def _to_object_answers(self) -> dict[str, ObjectAnswer]:
         ret: dict[str, ObjectAnswer] = {}
-        for object_instance in self.get_objects():
+        for object_instance in self.get_object_instances():
             all_static_answers = self._label_row._get_all_static_answers(object_instance)
             object_index_element: ObjectAnswer = {
                 "classifications": list(reversed(all_static_answers)),
@@ -430,7 +434,7 @@ class ImageSpace(Space):
 
     def _to_classification_answers(self) -> dict[str, ClassificationAnswer]:
         ret: dict[str, ClassificationAnswer] = {}
-        for classification in self.get_classifications():
+        for classification in self.get_classification_instances():
             all_static_answers = classification.get_all_static_answers()
             classifications: list[AttributeDict] = [
                 cast(AttributeDict, answer.to_encord_dict()) for answer in all_static_answers if answer.is_answered()

@@ -47,11 +47,11 @@ def test_label_row_get_classification_instances_on_image_space(ontology):
     classification_instance_3 = radio_classification.create_instance()
 
     # Place classification on space 1
-    image_space_1.place_classification(classification=classification_instance_1)
-    image_space_1.place_classification(classification=classification_instance_2)
+    image_space_1.put_classification_instance(classification_instance=classification_instance_1)
+    image_space_1.put_classification_instance(classification_instance=classification_instance_2)
 
     # Place classification on space 2
-    image_space_2.place_classification(classification=classification_instance_3)
+    image_space_2.put_classification_instance(classification_instance=classification_instance_3)
 
     # Assert
     all_classification_instances = label_row.get_classification_instances()
@@ -72,7 +72,7 @@ def test_place_classification_on_image_space(ontology):
 
     # Act
     new_classification_instance = text_classification.create_instance()
-    image_space_1.place_classification(classification=new_classification_instance)
+    image_space_1.put_classification_instance(classification_instance=new_classification_instance)
 
     text_answer = "Some answer"
     new_classification_instance.set_answer(answer=text_answer)
@@ -81,12 +81,12 @@ def test_place_classification_on_image_space(ontology):
     classifications_on_label_row = label_row.get_classification_instances()
     assert len(classifications_on_label_row) == 1
 
-    classifications_on_space = image_space_1.get_classifications()
+    classifications_on_space = image_space_1.get_classification_instances()
     classification_on_space = classifications_on_space[0]
     assert len(classifications_on_space) == 1
     assert classification_on_space._spaces == {image_space_1.space_id: image_space_1}
 
-    annotations = image_space_1.get_classification_annotations()
+    annotations = image_space_1.get_classification_instance_annotations()
     assert len(annotations) == 1
 
     first_annotation = annotations[0]
@@ -125,11 +125,11 @@ def test_place_classification_on_frame_where_classification_instance_exists_on_i
 
     classification_instance_1.set_answer(answer=text_answer_1)
 
-    image_space_1.place_classification(classification=classification_instance_1)
+    image_space_1.put_classification_instance(classification_instance=classification_instance_1)
 
     # Act
     with pytest.raises(LabelRowError) as e:
-        image_space_1.place_classification(classification=classification_instance_1)
+        image_space_1.put_classification_instance(classification_instance=classification_instance_1)
 
     # Assert
     assert (
@@ -152,11 +152,11 @@ def test_place_classification_on_frame_where_classification_of_same_ontology_ite
     classification_instance_1.set_answer(answer=text_answer_1)
     classification_instance_2.set_answer(answer=text_answer_2)
 
-    image_space_1.place_classification(classification=classification_instance_1)
+    image_space_1.put_classification_instance(classification_instance=classification_instance_1)
 
     # Act
     with pytest.raises(LabelRowError) as e:
-        image_space_1.place_classification(classification=classification_instance_2)
+        image_space_1.put_classification_instance(classification_instance=classification_instance_2)
 
     # Assert
     assert (
@@ -179,12 +179,12 @@ def test_place_classification_on_frames_with_overwrite_on_image_space(ontology):
     classification_instance_1.set_answer(answer=text_answer_1)
     classification_instance_2.set_answer(answer=text_answer_2)
 
-    image_space_1.place_classification(classification=classification_instance_1)
+    image_space_1.put_classification_instance(classification_instance=classification_instance_1)
 
     # Act
-    image_space_1.place_classification(classification=classification_instance_2, overwrite=True)
+    image_space_1.put_classification_instance(classification_instance=classification_instance_2, overwrite=True)
 
-    annotations_on_classifications = image_space_1.get_classification_annotations()
+    annotations_on_classifications = image_space_1.get_classification_instance_annotations()
 
     assert len(annotations_on_classifications) == 1
     annotation_on_frame_0 = annotations_on_classifications[0]
@@ -199,23 +199,23 @@ def test_remove_classification_from_image_space(ontology):
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
 
     new_classification_instance = text_classification.create_instance()
-    image_space_1.place_classification(classification=new_classification_instance)
-    classifications_on_space = image_space_1.get_classifications()
+    image_space_1.put_classification_instance(classification_instance=new_classification_instance)
+    classifications_on_space = image_space_1.get_classification_instances()
     assert len(classifications_on_space) == 1
-    annotations = image_space_1.get_classification_annotations()
+    annotations = image_space_1.get_classification_instance_annotations()
     assert len(annotations) == 1
 
     # Act
-    image_space_1.remove_classification(new_classification_instance.classification_hash)
+    image_space_1.remove_classification_instance(new_classification_instance.classification_hash)
 
     # Assert
     classifications_on_label_row = label_row.get_classification_instances()
     assert len(classifications_on_label_row) == 0
 
-    classifications_on_space = image_space_1.get_classifications()
+    classifications_on_space = image_space_1.get_classification_instances()
     assert len(classifications_on_space) == 0
 
-    annotations = image_space_1.get_classification_annotations()
+    annotations = image_space_1.get_classification_instance_annotations()
     assert len(annotations) == 0
 
 
@@ -233,20 +233,20 @@ def test_get_classification_annotations(ontology):
     date1 = datetime(2020, 1, 1)
     date2 = datetime(2020, 5, 5)
 
-    image_space_1.place_classification(
-        classification=text_classification_instance,
+    image_space_1.put_classification_instance(
+        classification_instance=text_classification_instance,
         last_edited_by=name_1,
         last_edited_at=date1,
     )
 
-    image_space_1.place_classification(
-        classification=checklist_classification_instance,
+    image_space_1.put_classification_instance(
+        classification_instance=checklist_classification_instance,
         last_edited_by=name_2,
         last_edited_at=date2,
     )
 
     # Act
-    classification_annotations = image_space_1.get_classification_annotations()
+    classification_annotations = image_space_1.get_classification_instance_annotations()
     first_annotation = classification_annotations[0]
     second_annotation = classification_annotations[1]
 
@@ -280,26 +280,26 @@ def test_get_classification_annotations_with_filter_classifications(ontology):
     date1 = datetime(2020, 1, 1)
     date2 = datetime(2020, 5, 5)
 
-    image_space_1.place_classification(
-        classification=text_classification_instance,
+    image_space_1.put_classification_instance(
+        classification_instance=text_classification_instance,
         last_edited_by=name_1,
         last_edited_at=date1,
     )
 
-    image_space_1.place_classification(
-        classification=checklist_classification_instance,
+    image_space_1.put_classification_instance(
+        classification_instance=checklist_classification_instance,
         last_edited_by=name_2,
         last_edited_at=date2,
     )
 
     # Act
-    annotations_for_classification_1 = image_space_1.get_classification_annotations(
-        filter_classifications=[text_classification_instance.classification_hash]
+    annotations_for_classification_1 = image_space_1.get_classification_instance_annotations(
+        filter_classification_instances=[text_classification_instance.classification_hash]
     )
     first_annotation_for_text_classification = annotations_for_classification_1[0]
 
-    annotations_for_classification_2 = image_space_1.get_classification_annotations(
-        filter_classifications=[checklist_classification_instance.classification_hash]
+    annotations_for_classification_2 = image_space_1.get_classification_instance_annotations(
+        filter_classification_instances=[checklist_classification_instance.classification_hash]
     )
     first_annotation_for_checklist_classification = annotations_for_classification_2[0]
 
@@ -338,14 +338,14 @@ def test_get_classification_annotations_from_classification_instance(ontology):
     date1 = datetime(2020, 1, 1)
     date2 = datetime(2020, 5, 5)
 
-    image_space_1.place_classification(
-        classification=text_classification_instance,
+    image_space_1.put_classification_instance(
+        classification_instance=text_classification_instance,
         last_edited_by=name_1,
         last_edited_at=date1,
     )
 
-    image_space_1.place_classification(
-        classification=checklist_classification_instance,
+    image_space_1.put_classification_instance(
+        classification_instance=checklist_classification_instance,
         last_edited_by=name_2,
         last_edited_at=date2,
     )
@@ -391,8 +391,8 @@ def test_update_annotation_from_object_annotation(ontology):
     date = datetime(2020, 1, 1)
     new_date = datetime(2020, 5, 5)
 
-    image_space_1.place_classification(
-        classification=classification_instance_1,
+    image_space_1.put_classification_instance(
+        classification_instance=classification_instance_1,
         created_at=date,
         last_edited_by=name,
         last_edited_at=date,
@@ -422,7 +422,7 @@ def test_update_annotation_from_object_annotation(ontology):
     assert not DeepDiff(current_frame_dict, EXPECTED_CURRENT_LABELS_DICT)
 
     # Act
-    classification_annotations = image_space_1.get_classification_annotations()
+    classification_annotations = image_space_1.get_classification_instance_annotations()
     classification_annotation = classification_annotations[0]
 
     classification_annotation.created_by = new_name

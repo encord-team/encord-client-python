@@ -364,7 +364,11 @@ class ClassificationInstance:
         if self._is_assigned_to_space():
             res: List[ClassificationAnnotation] = []
             for space in self._spaces.values():
-                res.extend(space.get_classification_annotations(filter_classifications=[self.classification_hash]))
+                res.extend(
+                    space.get_classification_instance_annotations(
+                        filter_classification_instances=[self.classification_hash]
+                    )
+                )
             return res
         else:
             return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_data.keys())]
