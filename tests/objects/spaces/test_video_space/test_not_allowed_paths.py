@@ -217,7 +217,7 @@ def test_place_classification_on_video_space_throws_error_if_object_has_frames(o
 
     # Act
     with pytest.raises(LabelRowError) as e:
-        video_space_1.place_classification(classification=new_classification_instance, placement=[0])
+        video_space_1.place_classification(classification=new_classification_instance, frames=[0])
 
     assert (
         e.value.message
@@ -252,7 +252,7 @@ def test_add_classification_to_label_row_throws_error_if_classification_is_on_sp
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_classification_instance = text_classification.create_instance()
-    video_space_1.place_classification(classification=new_classification_instance, placement=0)
+    video_space_1.place_classification(classification=new_classification_instance, frames=0)
 
     # Act
     with pytest.raises(LabelRowError) as e:
@@ -270,7 +270,7 @@ def test_remove_classification_from_label_row_throws_error_if_classification_is_
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_classification_instance = text_classification.create_instance()
-    video_space_1.place_classification(classification=new_classification_instance, placement=0)
+    video_space_1.place_classification(classification=new_classification_instance, frames=0)
 
     # Act
     with pytest.raises(LabelRowError) as e:
@@ -288,7 +288,7 @@ def test_set_for_frames_throws_error_if_classification_is_on_space(ontology):
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_classification_instance = text_classification.create_instance()
-    video_space_1.place_classification(classification=new_classification_instance, placement=0)
+    video_space_1.place_classification(classification=new_classification_instance, frames=0)
 
     # Act
     with pytest.raises(LabelRowError) as e:
@@ -306,7 +306,7 @@ def test_remove_from_frames_throws_error_if_classification_is_on_space(ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_classification_instance = text_classification.create_instance()
-    video_space_1.place_classification(classification=new_classification_instance, placement=0)
+    video_space_1.place_classification(classification=new_classification_instance, frames=0)
 
     # Act
     with pytest.raises(LabelRowError) as e:
@@ -324,7 +324,7 @@ def test_get_annotation_throws_error_if_classification_is_on_space(ontology):
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_classification_instance = text_classification.create_instance()
-    video_space_1.place_classification(classification=new_classification_instance, placement=0)
+    video_space_1.place_classification(classification=new_classification_instance, frames=0)
 
     # Act
     with pytest.raises(LabelRowError) as e:

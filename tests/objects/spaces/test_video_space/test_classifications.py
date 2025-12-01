@@ -42,11 +42,11 @@ def test_label_row_get_classification_instances_on_video_space(ontology):
     classification_instance_2 = checklist_classification.create_instance()
 
     # Place classification on space 1
-    video_space_1.place_classification(classification=classification_instance_1, placement=[0, 1, 2])
-    video_space_1.place_classification(classification=classification_instance_2, placement=[2, 3, 4])
+    video_space_1.place_classification(classification=classification_instance_1, frames=[0, 1, 2])
+    video_space_1.place_classification(classification=classification_instance_2, frames=[2, 3, 4])
 
     # Place classification on space 2
-    video_space_2.place_classification(classification=classification_instance_1, placement=[1])
+    video_space_2.place_classification(classification=classification_instance_1, frames=[1])
 
     # Assert
     all_classification_instances = label_row.get_classification_instances()
@@ -64,8 +64,8 @@ def test_place_classification_on_video_space(ontology):
 
     # Act
     new_classification_instance = text_classification.create_instance()
-    video_space_1.place_classification(classification=new_classification_instance, placement=[1])
-    video_space_1.place_classification(classification=new_classification_instance, placement=[0, 2, 3])
+    video_space_1.place_classification(classification=new_classification_instance, frames=[1])
+    video_space_1.place_classification(classification=new_classification_instance, frames=[0, 2, 3])
 
     text_answer = "Some answer"
     new_classification_instance.set_answer(answer=text_answer)
@@ -120,11 +120,11 @@ def test_place_classification_on_frame_where_classification_exists_video_space(o
     classification_instance_1.set_answer(answer=text_answer_1)
     classification_instance_2.set_answer(answer=text_answer_2)
 
-    video_space_1.place_classification(classification=classification_instance_1, placement=[0, 1, 2])
+    video_space_1.place_classification(classification=classification_instance_1, frames=[0, 1, 2])
 
     # Act
     with pytest.raises(LabelRowError) as e:
-        video_space_1.place_classification(classification=classification_instance_2, placement=[1])
+        video_space_1.place_classification(classification=classification_instance_2, frames=[1])
 
     # Assert
     assert (
@@ -147,10 +147,10 @@ def test_place_classification_on_frames_with_overwrite_on_video_space(ontology):
     classification_instance_1.set_answer(answer=text_answer_1)
     classification_instance_2.set_answer(answer=text_answer_2)
 
-    video_space_1.place_classification(classification=classification_instance_1, placement=[0, 1, 2])
+    video_space_1.place_classification(classification=classification_instance_1, frames=[0, 1, 2])
 
     # Act
-    video_space_1.place_classification(classification=classification_instance_2, placement=[1], overwrite=True)
+    video_space_1.place_classification(classification=classification_instance_2, frames=[1], overwrite=True)
 
     annotations_on_classifications = video_space_1.get_classification_annotations()
 
@@ -174,10 +174,10 @@ def test_place_classification_on_invalid_frames(ontology):
 
     # Act
     with pytest.raises(LabelRowError) as negative_frame_error:
-        video_space_1.place_classification(classification=classification_instance_1, placement=[-1])
+        video_space_1.place_classification(classification=classification_instance_1, frames=[-1])
 
     with pytest.raises(LabelRowError) as exceed_frame_error:
-        video_space_1.place_classification(classification=classification_instance_1, placement=[100])
+        video_space_1.place_classification(classification=classification_instance_1, frames=[100])
 
     # Assert
     assert negative_frame_error.value.message == "Frame -1 is invalid. Negative frames are not supported."
@@ -191,7 +191,7 @@ def test_unplace_classification_from_frames_on_video_space(ontology):
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
     new_classification_instance = text_classification.create_instance()
-    video_space_1.place_classification(classification=new_classification_instance, placement=[0, 1, 2])
+    video_space_1.place_classification(classification=new_classification_instance, frames=[0, 1, 2])
 
     annotations_before_removing = video_space_1.get_classification_annotations()
     annotation_to_be_removed = annotations_before_removing[1]
@@ -220,7 +220,7 @@ def test_remove_classification_from_video_space(ontology):
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
     new_classification_instance = text_classification.create_instance()
-    video_space_1.place_classification(classification=new_classification_instance, placement=[0, 2, 3])
+    video_space_1.place_classification(classification=new_classification_instance, frames=[0, 2, 3])
     classifications_on_space = video_space_1.get_classifications()
     assert len(classifications_on_space) == 1
     annotations = video_space_1.get_classification_annotations()
@@ -255,14 +255,14 @@ def test_get_classification_annotations(ontology):
 
     video_space_1.place_classification(
         classification=new_classification_instance,
-        placement=[1],
+        frames=[1],
         last_edited_by=name_1,
         last_edited_at=date1,
     )
 
     video_space_1.place_classification(
         classification=new_classification_instance,
-        placement=[0, 2, 3],
+        frames=[0, 2, 3],
         last_edited_by=name_2,
         last_edited_at=date2,
     )
@@ -304,14 +304,14 @@ def test_get_classification_annotations_with_filter_classifications(ontology):
 
     video_space_1.place_classification(
         classification=classification_instance_1,
-        placement=[0, 1, 2],
+        frames=[0, 1, 2],
         last_edited_by=name_1,
         last_edited_at=date1,
     )
 
     video_space_1.place_classification(
         classification=classification_instance_2,
-        placement=[4, 5],
+        frames=[4, 5],
         last_edited_by=name_2,
         last_edited_at=date2,
     )
@@ -359,14 +359,14 @@ def test_get_classification_annotations_from_classification_instance(ontology):
 
     video_space_1.place_classification(
         classification=classification_instance_1,
-        placement=[0, 1, 2],
+        frames=[0, 1, 2],
         last_edited_by=name_1,
         last_edited_at=date1,
     )
 
     video_space_1.place_classification(
         classification=classification_instance_2,
-        placement=[4, 5],
+        frames=[4, 5],
         last_edited_by=name_2,
         last_edited_at=date2,
     )
@@ -409,7 +409,7 @@ def test_update_annotation_from_object_annotation(ontology):
 
     video_space_1.place_classification(
         classification=classification_instance_1,
-        placement=[1],
+        frames=[1],
         created_at=date,
         last_edited_by=name,
         last_edited_at=date,
