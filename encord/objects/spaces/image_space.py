@@ -69,7 +69,7 @@ class ImageSpace(Space):
     def place_object(
         self,
         object_instance: ObjectInstance,
-        placement: GeometricCoordinates,
+        coordinates: GeometricCoordinates,
         *,
         overwrite: bool = False,
         created_at: Optional[datetime] = None,
@@ -92,7 +92,7 @@ class ImageSpace(Space):
 
         frame_annotation_data = GeometricAnnotationData(
             annotation_metadata=AnnotationMetadata(),
-            coordinates=placement,
+            coordinates=coordinates,
         )
 
         frame_annotation_data.annotation_metadata.update_from_optional_fields(
@@ -381,7 +381,7 @@ class ImageSpace(Space):
             object_frame_instance_info = AnnotationMetadata.from_dict(frame_object_label)
             self.place_object(
                 object_instance=object_instance,
-                placement=coordinates,
+                coordinates=coordinates,
                 created_at=object_frame_instance_info.created_at,
                 created_by=object_frame_instance_info.created_by,
                 last_edited_at=object_frame_instance_info.last_edited_at,

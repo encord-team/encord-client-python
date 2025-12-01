@@ -43,7 +43,7 @@ def test_place_object_on_image_space_throws_error_if_object_has_frames(ontology)
     with pytest.raises(LabelRowError) as e:
         image_space_1.place_object(
             object_instance=new_object_instance,
-            placement=box_coordinates,
+            coordinates=box_coordinates,
         )
 
     assert (
@@ -61,7 +61,7 @@ def test_add_object_to_label_row_throws_error_if_object_is_on_space(ontology):
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     image_space_1.place_object(
         object_instance=new_object_instance,
-        placement=box_coordinates,
+        coordinates=box_coordinates,
     )
 
     # Act
@@ -83,7 +83,7 @@ def test_remove_object_from_label_row_throws_error_if_object_is_on_space(ontolog
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     image_space_1.place_object(
         object_instance=new_object_instance,
-        placement=box_coordinates,
+        coordinates=box_coordinates,
     )
 
     # Act
@@ -105,7 +105,7 @@ def test_set_for_frames_throws_error_if_object_is_on_space(ontology):
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     image_space_1.place_object(
         object_instance=new_object_instance,
-        placement=box_coordinates,
+        coordinates=box_coordinates,
     )
 
     # Act
@@ -127,7 +127,7 @@ def test_remove_from_frames_throws_error_if_object_is_on_space(ontology):
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     image_space_1.place_object(
         object_instance=new_object_instance,
-        placement=box_coordinates,
+        coordinates=box_coordinates,
     )
 
     # Act
@@ -149,7 +149,7 @@ def test_get_annotation_throws_error_if_object_is_on_space(ontology):
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     image_space_1.place_object(
         object_instance=new_object_instance,
-        placement=box_coordinates,
+        coordinates=box_coordinates,
     )
 
     # Act
@@ -168,7 +168,7 @@ def test_get_annotation_frames_throws_error_if_object_is_on_space(ontology):
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     image_space_1.place_object(
         object_instance=new_object_instance,
-        placement=box_coordinates,
+        coordinates=box_coordinates,
     )
 
     # Act
@@ -296,7 +296,7 @@ def test_place_object_on_image_space_throws_error_if_object_has_dynamic_attribut
     with pytest.raises(LabelRowError) as e:
         image_space_1.place_object(
             object_instance=new_object_instance,
-            placement=PointCoordinate(x=0.5, y=0.5),
+            coordinates=PointCoordinate(x=0.5, y=0.5),
         )
 
     assert (
@@ -314,7 +314,7 @@ def test_set_dynamic_attributes_throws_error_if_object_on_space(ontology):
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
     image_space_1.place_object(
         object_instance=new_object_instance,
-        placement=PointCoordinate(x=0.5, y=0.5),
+        coordinates=PointCoordinate(x=0.5, y=0.5),
     )
 
     # Act
@@ -336,7 +336,7 @@ def test_get_dynamic_attributes_throws_error_if_object_on_space(ontology):
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
     image_space_1.place_object(
         object_instance=new_object_instance,
-        placement=PointCoordinate(x=0.5, y=0.5),
+        coordinates=PointCoordinate(x=0.5, y=0.5),
     )
 
     # Act
@@ -358,7 +358,7 @@ def test_delete_dynamic_attributes_throws_error_if_object_on_space(ontology):
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
     image_space_1.place_object(
         object_instance=new_object_instance,
-        placement=PointCoordinate(x=0.5, y=0.5),
+        coordinates=PointCoordinate(x=0.5, y=0.5),
     )
 
     # Act
