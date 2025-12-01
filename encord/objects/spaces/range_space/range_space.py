@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional, cast
 
@@ -53,6 +53,22 @@ class RangeSpace(Space):
         # Since we can only have one classification of a particular class, this keeps track to make sure we don't add duplicates
         self._classification_ontologies: set[str] = set()
 
+    @abstractmethod
+    def _are_ranges_valid(self, ranges: Ranges) -> None:
+        pass
+
+    def _get_start_and_end_of_ranges(self, ranges: Ranges) -> tuple[int, int]:
+        if len(ranges) == 0:
+            raise LabelRowError("The array of ranges is empty. Please specify at least one range.")
+
+        range_manager = RangeManager(ranges)
+
+        sorted_ranges = range_manager.get_ranges()
+        start_of_range = sorted_ranges[0].start
+        end_of_range = sorted_ranges[-1].end
+
+        return start_of_range, end_of_range
+
     def place_object(
         self,
         object: ObjectInstance,
@@ -73,6 +89,7 @@ class RangeSpace(Space):
             ranges = [ranges]
 
         # TODO: Do we need to check overwrites here?
+        self._are_ranges_valid(ranges)
 
         existing_annotation_data = self._object_hash_to_annotation_data.get(object.object_hash)
         if existing_annotation_data is None:

@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from encord.common.range_manager import RangeManager
 from encord.constants.enums import SpaceType
+from encord.exceptions import LabelRowError
+from encord.objects.frames import Ranges
 from encord.objects.spaces.range_space.range_space import RangeSpace
 from encord.objects.spaces.types import AudioSpaceInfo, ChildInfo, SpaceInfo
 
@@ -20,6 +23,17 @@ class AudioSpace(RangeSpace):
         self._layout_key = child_info["layout_key"]
         self._is_readonly = child_info["is_readonly"]
         self._file_name = child_info["file_name"]
+
+    def _are_ranges_valid(self, ranges: Ranges) -> None:
+        start_of_range, end_of_range = self._get_start_and_end_of_ranges(ranges)
+
+        if start_of_range < 0:
+            raise LabelRowError(f"Range starting with {start_of_range} is invalid. Negative ranges are not supported.")
+
+        if end_of_range > self._duration_ms:
+            raise LabelRowError(
+                f"Range ending with {end_of_range} is invalid. This audio file is only {self._duration_ms} ms long."
+            )
 
     @property
     def layout_key(self) -> str:

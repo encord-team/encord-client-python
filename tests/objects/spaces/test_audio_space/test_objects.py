@@ -5,6 +5,7 @@ import pytest
 from deepdiff import DeepDiff
 
 from encord.common.time_parser import format_datetime_to_long_string
+from encord.exceptions import LabelRowError
 from encord.objects import LabelRowV2, Object
 from encord.objects.attributes import Attribute
 from encord.objects.coordinates import AudioCoordinates
@@ -101,6 +102,33 @@ def test_place_object_on_audio_space(ontology):
     )  # Coordinates are here for backwards compatibility
     assert first_annotation.object_hash == new_object_instance.object_hash
     assert first_annotation.ranges == [Range(start=0, end=200)]
+
+
+def test_place_object_on_invalid_ranges_on_audio_space(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
+    new_object_instance = audio_obj_ontology_item.create_instance()
+
+    # Act
+    with pytest.raises(LabelRowError) as negative_range_error:
+        audio_space_1.place_object(
+            object=new_object_instance,
+            ranges=Range(start=-20, end=100),
+        )
+
+    with pytest.raises(LabelRowError) as exceed_max_range_error:
+        audio_space_1.place_object(object=new_object_instance, ranges=Range(start=0, end=6 * 60 * 1000))
+
+    # Assert
+    assert (
+        negative_range_error.value.message == "Range starting with -20 is invalid. Negative ranges are not supported."
+    )
+    assert (
+        exceed_max_range_error.value.message
+        == f"Range ending with {6 * 60 * 1000} is invalid. This audio file is only {5 * 60 * 1000} ms long."
+    )
 
 
 def test_remove_object_from_ranges_on_audio_space(ontology):
