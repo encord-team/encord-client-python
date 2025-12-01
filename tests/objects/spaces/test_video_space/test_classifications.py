@@ -180,7 +180,7 @@ def test_unplace_classification_from_frames_on_video_space(ontology):
     assert annotation_to_be_removed.frame == 1
 
     # Act
-    video_space_1.unplace_classification(classification=new_classification_instance, frames=[1])
+    video_space_1.remove_classification_from_frames(classification=new_classification_instance, frames=[1])
 
     # Assert
     annotations_after_removing = video_space_1.get_classification_annotations()

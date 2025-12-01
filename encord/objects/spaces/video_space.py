@@ -221,7 +221,7 @@ class VideoSpace(Space):
             is_deleted=is_deleted,
         )
 
-    def unplace_object(
+    def remove_object_from_frames(
         self,
         object_instance: ObjectInstance,
         frames: Frames,
@@ -488,7 +488,7 @@ class VideoSpace(Space):
         else:
             existing_range_manager.add_ranges(ranges_to_add)
 
-    def unplace_classification(
+    def remove_classification_from_frames(
         self,
         classification: ClassificationInstance,
         frames: Frames,

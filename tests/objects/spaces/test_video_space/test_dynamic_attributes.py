@@ -143,7 +143,7 @@ def test_unplace_object_removes_dynamic_attributes_from_those_frames(ontology):
     )
 
     # Act
-    video_space_1.unplace_object(object_instance=new_object_instance, frames=[1])
+    video_space_1.remove_object_from_frames(object_instance=new_object_instance, frames=[1])
 
     # Assert
     actual_answers = video_space_1.get_answer_on_frames(

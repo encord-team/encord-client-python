@@ -178,7 +178,7 @@ def test_unplace_object_from_frames_on_video_space(ontology):
     )
 
     # Act
-    video_space_1.unplace_object(
+    video_space_1.remove_object_from_frames(
         object_instance=new_object_instance,
         frames=[1],
     )
