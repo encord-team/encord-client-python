@@ -149,6 +149,12 @@ def test_add_range_adjacent_merged() -> None:
     assert actual_ranges[0].end == 15
 
 
+def test_cant_add_end_before_start() -> None:
+    rm = RangeManager()
+    with pytest.raises(ValueError):
+        rm.add_range(Range(start=15, end=10))
+
+
 def test_add_range_merges_contained() -> None:
     rm = RangeManager(frame_class=[Range(start=5, end=20)])
     rm.add_range(Range(start=10, end=15))

@@ -9,7 +9,7 @@ class IntegerRangeSet:
 
     def add(self, start: int, end: int) -> None:
         if start > end:
-            return
+            raise ValueError(f"Start of range {start} must not be greater than end {end}.")
 
         # 1. Find Merge Window
         i = bisect.bisect_left(self._ranges, (start, end))
