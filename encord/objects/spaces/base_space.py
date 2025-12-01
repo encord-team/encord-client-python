@@ -30,7 +30,6 @@ class Space(ABC):
 
     space_id: str
     _label_row: LabelRowV2
-    space_type: SpaceType
     _objects_map: dict[str, ObjectInstance]
     _classifications_map: dict[str, ClassificationInstance]
 
@@ -41,30 +40,32 @@ class Space(ABC):
         self._classifications_map: dict[str, ClassificationInstance] = dict()
 
     @abstractmethod
-    def get_objects(
+    def get_object_instances(
         self,
     ) -> list[ObjectInstance]:
         pass
 
     @abstractmethod
-    def get_classifications(
+    def get_classification_instances(
         self,
     ) -> list[ClassificationInstance]:
         pass
 
-    def remove_object(self, object_hash: str) -> Optional[ObjectInstance]:
+    def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         pass
 
-    def remove_classification(self, classification_hash: str) -> Optional[ClassificationInstance]:
-        pass
-
-    @abstractmethod
-    def get_object_annotations(self, filter_objects: Optional[list[str]] = None) -> Sequence[ObjectAnnotation]:
+    def remove_classification_instance(self, classification_hash: str) -> Optional[ClassificationInstance]:
         pass
 
     @abstractmethod
-    def get_classification_annotations(
-        self, filter_classifications: Optional[list[str]] = None
+    def get_object_instance_annotations(
+        self, filter_object_instances: Optional[list[str]] = None
+    ) -> Sequence[ObjectAnnotation]:
+        pass
+
+    @abstractmethod
+    def get_classification_instance_annotations(
+        self, filter_classification_instances: Optional[list[str]] = None
     ) -> Sequence[ClassificationAnnotation]:
         pass
 

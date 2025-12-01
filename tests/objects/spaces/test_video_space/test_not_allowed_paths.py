@@ -41,7 +41,7 @@ def test_place_object_on_video_space_throws_error_if_object_has_frames(ontology)
 
     # Act
     with pytest.raises(LabelRowError) as e:
-        video_space_1.place_object(
+        video_space_1.put_object_instance(
             object_instance=new_object_instance,
             frames=[1],
             coordinates=box_coordinates,
@@ -82,7 +82,7 @@ def test_add_object_to_label_row_throws_error_if_object_is_on_space(ontology):
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
-    video_space_1.place_object(
+    video_space_1.put_object_instance(
         object_instance=new_object_instance,
         frames=[1],
         coordinates=box_coordinates,
@@ -105,7 +105,7 @@ def test_remove_object_from_label_row_throws_error_if_object_is_on_space(ontolog
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
-    video_space_1.place_object(
+    video_space_1.put_object_instance(
         object_instance=new_object_instance,
         frames=[1],
         coordinates=box_coordinates,
@@ -128,7 +128,7 @@ def test_set_for_frames_throws_error_if_object_is_on_space(ontology):
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
-    video_space_1.place_object(
+    video_space_1.put_object_instance(
         object_instance=new_object_instance,
         frames=[1],
         coordinates=box_coordinates,
@@ -151,7 +151,7 @@ def test_remove_from_frames_throws_error_if_object_is_on_space(ontology):
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
-    video_space_1.place_object(
+    video_space_1.put_object_instance(
         object_instance=new_object_instance,
         frames=[1],
         coordinates=box_coordinates,
@@ -174,7 +174,7 @@ def test_get_annotation_throws_error_if_object_is_on_space(ontology):
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
-    video_space_1.place_object(
+    video_space_1.put_object_instance(
         object_instance=new_object_instance,
         frames=[1],
         coordinates=box_coordinates,
@@ -194,7 +194,7 @@ def test_get_annotation_frames_throws_error_if_object_is_on_space(ontology):
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
-    video_space_1.place_object(
+    video_space_1.put_object_instance(
         object_instance=new_object_instance,
         frames=[1],
         coordinates=box_coordinates,
@@ -217,7 +217,7 @@ def test_place_classification_on_video_space_throws_error_if_object_has_frames(o
 
     # Act
     with pytest.raises(LabelRowError) as e:
-        video_space_1.place_classification(classification=new_classification_instance, frames=[0])
+        video_space_1.put_classification_instance(classification_instance=new_classification_instance, frames=[0])
 
     assert (
         e.value.message
@@ -235,8 +235,8 @@ def test_unplace_classification_on_video_space_throws_error_if_classification_ha
 
     # Act
     with pytest.raises(LabelRowError) as e:
-        video_space_1.remove_classification_from_frames(
-            classification=new_classification_instance,
+        video_space_1.remove_classification_instance_from_frames(
+            classification_instance=new_classification_instance,
             frames=[1],
         )
 
@@ -252,7 +252,7 @@ def test_add_classification_to_label_row_throws_error_if_classification_is_on_sp
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_classification_instance = text_classification.create_instance()
-    video_space_1.place_classification(classification=new_classification_instance, frames=0)
+    video_space_1.put_classification_instance(classification_instance=new_classification_instance, frames=0)
 
     # Act
     with pytest.raises(LabelRowError) as e:
@@ -270,7 +270,7 @@ def test_remove_classification_from_label_row_throws_error_if_classification_is_
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_classification_instance = text_classification.create_instance()
-    video_space_1.place_classification(classification=new_classification_instance, frames=0)
+    video_space_1.put_classification_instance(classification_instance=new_classification_instance, frames=0)
 
     # Act
     with pytest.raises(LabelRowError) as e:
@@ -288,7 +288,7 @@ def test_set_for_frames_throws_error_if_classification_is_on_space(ontology):
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_classification_instance = text_classification.create_instance()
-    video_space_1.place_classification(classification=new_classification_instance, frames=0)
+    video_space_1.put_classification_instance(classification_instance=new_classification_instance, frames=0)
 
     # Act
     with pytest.raises(LabelRowError) as e:
@@ -306,7 +306,7 @@ def test_remove_from_frames_throws_error_if_classification_is_on_space(ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_classification_instance = text_classification.create_instance()
-    video_space_1.place_classification(classification=new_classification_instance, frames=0)
+    video_space_1.put_classification_instance(classification_instance=new_classification_instance, frames=0)
 
     # Act
     with pytest.raises(LabelRowError) as e:
@@ -324,7 +324,7 @@ def test_get_annotation_throws_error_if_classification_is_on_space(ontology):
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_classification_instance = text_classification.create_instance()
-    video_space_1.place_classification(classification=new_classification_instance, frames=0)
+    video_space_1.put_classification_instance(classification_instance=new_classification_instance, frames=0)
 
     # Act
     with pytest.raises(LabelRowError) as e:
@@ -344,7 +344,7 @@ def test_place_object_on_video_space_throws_error_if_object_has_dynamic_attribut
 
     # Act
     with pytest.raises(LabelRowError) as e:
-        video_space_1.place_object(
+        video_space_1.put_object_instance(
             object_instance=new_object_instance,
             frames=[0, 1, 2],
             coordinates=PointCoordinate(x=0.5, y=0.5),
@@ -363,7 +363,7 @@ def test_set_dynamic_attributes_throws_error_if_object_on_space(ontology):
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
-    video_space_1.place_object(
+    video_space_1.put_object_instance(
         object_instance=new_object_instance,
         frames=[0, 1, 2],
         coordinates=PointCoordinate(x=0.5, y=0.5),
@@ -386,7 +386,7 @@ def test_get_dynamic_attributes_throws_error_if_object_on_space(ontology):
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
-    video_space_1.place_object(
+    video_space_1.put_object_instance(
         object_instance=new_object_instance,
         frames=[0, 1, 2],
         coordinates=PointCoordinate(x=0.5, y=0.5),
@@ -409,7 +409,7 @@ def test_delete_dynamic_attributes_throws_error_if_object_on_space(ontology):
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
-    video_space_1.place_object(
+    video_space_1.put_object_instance(
         object_instance=new_object_instance,
         frames=[0, 1, 2],
         coordinates=PointCoordinate(x=0.5, y=0.5),

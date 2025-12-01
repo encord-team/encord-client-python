@@ -673,7 +673,8 @@ class ObjectInstance:
                 # We can cast here, because our ObjectAnnotation is built to mimic `ObjectInstance.Annotation`
                 res.extend(
                     cast(
-                        List[ObjectInstance.Annotation], space.get_object_annotations(filter_objects=[self.object_hash])
+                        List[ObjectInstance.Annotation],
+                        space.get_object_instance_annotations(filter_object_instances=[self.object_hash]),
                     )
                 )
             return res
