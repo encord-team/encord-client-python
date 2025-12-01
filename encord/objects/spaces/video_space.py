@@ -3,8 +3,9 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Literal, Optional, Sequence, Set, Tuple, Union, cast
 
+from encord.common.enum import StringEnum
 from encord.common.range_manager import RangeManager
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
@@ -50,6 +51,8 @@ if TYPE_CHECKING:
     from encord.objects import Classification, ClassificationInstance, Option
     from encord.objects.ontology_labels_impl import LabelRowV2
     from encord.objects.ontology_object import Object, ObjectInstance
+
+FrameOverlapStrategy = Union[Literal["error"], Literal["replace"]]
 
 
 class VideoSpace(Space):
@@ -142,7 +145,7 @@ class VideoSpace(Space):
         frames: Frames,
         coordinates: GeometricCoordinates,
         *,
-        overwrite: bool = False,
+        on_overlap: FrameOverlapStrategy,
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,
@@ -169,10 +172,9 @@ class VideoSpace(Space):
                 continue
 
             existing_frame_data = objects_on_frame.get(object_instance.object_hash)
-
-            if overwrite is False and existing_frame_data is not None:
+            if on_overlap == "error" and existing_frame_data is not None:
                 raise LabelRowError(
-                    "Cannot overwrite existing data for a frame. Set 'overwrite' to 'True' to overwrite."
+                    f"Annotation already exists on frame {frame}. Set 'on_overlap' to 'replace' to overwrite existing annotations."
                 )
 
         for frame in frame_list:
@@ -213,7 +215,7 @@ class VideoSpace(Space):
         frames: Frames,
         coordinates: GeometricCoordinates,
         *,
-        overwrite: bool = False,
+        on_overlap: FrameOverlapStrategy = "error",
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,
@@ -228,7 +230,7 @@ class VideoSpace(Space):
             object_instance=object_instance,
             frames=frames,
             coordinates=coordinates,
-            overwrite=overwrite,
+            on_overlap=on_overlap,
             created_at=created_at,
             created_by=created_by,
             last_edited_at=last_edited_at,
@@ -437,7 +439,7 @@ class VideoSpace(Space):
         classification_instance: ClassificationInstance,
         frames: Frames,
         *,
-        overwrite: bool = False,
+        on_overlap: FrameOverlapStrategy = "error",
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,
@@ -459,18 +461,18 @@ class VideoSpace(Space):
             classification_instance._ontology_classification, frame_list
         )
 
-        if is_present and not overwrite:
+        if is_present and on_overlap == "error":
             location_msg = (
                 "globally" if classification_instance.is_global() else f"on the ranges {conflicting_ranges}. "
             )
             raise LabelRowError(
                 f"The classification '{classification_instance.classification_hash}' already exists "
                 f"{location_msg}"
-                f"Set 'overwrite' parameter to True to overwrite."
+                f"Set 'on_overlap' parameter to 'replace' to overwrite."
             )
 
         # If overwriting, remove conflicting classification entries from other classification instances
-        if is_present and overwrite:
+        if is_present and on_overlap == "replace":
             self._remove_conflicting_classifications_from_frames(
                 classification=classification_instance,
                 conflicting_ranges=conflicting_ranges,
@@ -819,7 +821,6 @@ class VideoSpace(Space):
                 last_edited_by=object_frame_instance_info.last_edited_by,
                 manual_annotation=object_frame_instance_info.manual_annotation,
                 confidence=object_frame_instance_info.confidence,
-                # is_deleted=object_frame_instance_info.is_deleted,
             )
 
         # Process classifications

@@ -129,7 +129,7 @@ def test_place_classification_on_frame_where_classification_exists_video_space(o
     # Assert
     assert (
         e.value.message
-        == f"The classification '{classification_instance_2.classification_hash}' already exists on the ranges {[Range(start=1, end=1)]}. Set 'overwrite' parameter to True to overwrite."
+        == f"The classification '{classification_instance_2.classification_hash}' already exists on the ranges {[Range(start=1, end=1)]}. Set 'on_overlap' parameter to 'replace' to overwrite."
     )
 
 

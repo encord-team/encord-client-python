@@ -83,7 +83,7 @@ class GeometricFrameObjectAnnotation(ObjectAnnotation):
             object_instance=self._object_instance,
             frames=self.frame,
             coordinates=coordinates,
-            overwrite=True,
+            on_overlap="replace",
         )
 
     def _get_annotation_data(self) -> GeometricAnnotationData:

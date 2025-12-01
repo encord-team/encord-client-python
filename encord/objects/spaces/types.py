@@ -44,3 +44,8 @@ class ImageSpaceInfo(BaseSpaceInfo):
 
 
 SpaceInfo = Union[VideoSpaceInfo, ImageSpaceInfo]
+
+""" Annotation Overlapping Strategy """
+OverlapReplace = Literal["REPLACE"]
+OverlapMerge = Literal["MERGE"]
+OverlapError = Literal["ERROR"]

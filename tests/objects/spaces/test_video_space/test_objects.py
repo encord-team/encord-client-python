@@ -127,7 +127,10 @@ def test_place_object_on_frames_where_object_already_exists_video_space(ontology
         )
 
     # Assert
-    assert e.value.message == "Cannot overwrite existing data for a frame. Set 'overwrite' to 'True' to overwrite."
+    assert (
+        e.value.message
+        == "Annotation already exists on frame 1. Set 'on_overlap' to 'replace' to overwrite existing annotations."
+    )
 
 
 def test_place_object_on_frames_with_overwrite_on_video_space(ontology):
@@ -143,10 +146,7 @@ def test_place_object_on_frames_with_overwrite_on_video_space(ontology):
 
     # Act
     video_space_1.put_object_instance(
-        object_instance=new_object_instance,
-        frames=[1],
-        coordinates=coordinates_2,
-        overwrite=True,
+        object_instance=new_object_instance, frames=[1], coordinates=coordinates_2, on_overlap="replace"
     )
 
     # Assert
