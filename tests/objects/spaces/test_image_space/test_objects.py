@@ -42,11 +42,11 @@ def test_label_row_get_object_instances_on_space(ontology):
     object_instance_2 = box_ontology_item.create_instance()
 
     # Place objects on space 1
-    image_space_1.place_object(object_instance=object_instance_1, placement=coordinates)
-    image_space_1.place_object(object_instance=object_instance_2, placement=coordinates)
+    image_space_1.place_object(object_instance=object_instance_1, coordinates=coordinates)
+    image_space_1.place_object(object_instance=object_instance_2, coordinates=coordinates)
 
     # Place objects on space 2
-    image_space_2.place_object(object_instance=object_instance_1, placement=coordinates)
+    image_space_2.place_object(object_instance=object_instance_1, coordinates=coordinates)
 
     object_instances = label_row.get_object_instances()
     assert len(object_instances) == 2
@@ -71,11 +71,11 @@ def test_place_object_on_image_space(ontology):
     object_instance_2 = box_ontology_item.create_instance()
     image_space_1.place_object(
         object_instance=object_instance_1,
-        placement=coordinates_1,
+        coordinates=coordinates_1,
     )
     image_space_1.place_object(
         object_instance=object_instance_2,
-        placement=coordinates_2,
+        coordinates=coordinates_2,
     )
 
     # Assert
@@ -109,14 +109,14 @@ def test_place_object_that_already_exists_image_space(ontology):
     new_object_instance = box_ontology_item.create_instance()
     image_space_1.place_object(
         object_instance=new_object_instance,
-        placement=BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0),
+        coordinates=BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0),
     )
 
     # Act
     with pytest.raises(LabelRowError) as e:
         image_space_1.place_object(
             object_instance=new_object_instance,
-            placement=BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5),
+            coordinates=BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5),
         )
 
     # Assert
@@ -134,13 +134,13 @@ def test_place_object_on_frames_with_overwrite_on_image_space(ontology):
     coordinates_2 = BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5)
     image_space_1.place_object(
         object_instance=new_object_instance,
-        placement=coordinates_1,
+        coordinates=coordinates_1,
     )
 
     # Act
     image_space_1.place_object(
         object_instance=new_object_instance,
-        placement=coordinates_2,
+        coordinates=coordinates_2,
         overwrite=True,
     )
 
@@ -160,7 +160,7 @@ def test_remove_object_from_image_space(ontology):
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     image_space_1.place_object(
         object_instance=new_object_instance,
-        placement=box_coordinates,
+        coordinates=box_coordinates,
     )
 
     # Act
@@ -196,11 +196,11 @@ def test_add_object_to_two_spaces(ontology):
     # Act
     image_space_1.place_object(
         object_instance=new_object_instance,
-        placement=box_coordinates_1,
+        coordinates=box_coordinates_1,
     )
     image_space_2.place_object(
         object_instance=new_object_instance,
-        placement=box_coordinates_2,
+        coordinates=box_coordinates_2,
     )
 
     # Assert
@@ -230,12 +230,12 @@ def test_update_attribute_for_object_which_exist_on_two_spaces(ontology):
 
     image_space_1.place_object(
         object_instance=new_object_instance,
-        placement=box_coordinates_1,
+        coordinates=box_coordinates_1,
     )
 
     image_space_2.place_object(
         object_instance=new_object_instance,
-        placement=box_coordinates_1,
+        coordinates=box_coordinates_1,
     )
 
     object_answer = new_object_instance.get_answer(attribute=box_text_attribute_ontology_item)
@@ -293,14 +293,14 @@ def test_get_object_annotations(ontology):
 
     image_space_1.place_object(
         object_instance=object_instance_1,
-        placement=coordinates_1,
+        coordinates=coordinates_1,
         last_edited_by=name_1,
         last_edited_at=date1,
     )
 
     image_space_1.place_object(
         object_instance=object_instance_2,
-        placement=coordinates_2,
+        coordinates=coordinates_2,
         last_edited_by=name_2,
         last_edited_at=date2,
     )
@@ -347,14 +347,14 @@ def test_get_object_annotations_with_filter_objects(ontology):
 
     image_space_1.place_object(
         object_instance=object_instance_1,
-        placement=coordinates_1,
+        coordinates=coordinates_1,
         last_edited_by=name_1,
         last_edited_at=date1,
     )
 
     image_space_1.place_object(
         object_instance=object_instance_2,
-        placement=coordinates_2,
+        coordinates=coordinates_2,
         last_edited_by=name_2,
         last_edited_at=date2,
     )
@@ -407,14 +407,14 @@ def test_get_object_annotations_from_object_instance(ontology):
 
     image_space_1.place_object(
         object_instance=object_instance_1,
-        placement=coordinates_1,
+        coordinates=coordinates_1,
         last_edited_by=name_1,
         last_edited_at=date1,
     )
 
     image_space_1.place_object(
         object_instance=object_instance_2,
-        placement=coordinates_2,
+        coordinates=coordinates_2,
         last_edited_by=name_2,
         last_edited_at=date2,
     )
@@ -462,7 +462,7 @@ def test_update_annotation_from_object_annotation(ontology):
 
     image_space_1.place_object(
         object_instance=object_instance,
-        placement=coordinates,
+        coordinates=coordinates,
         last_edited_by=name,
         last_edited_at=date,
         created_at=date,
