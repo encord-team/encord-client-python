@@ -134,7 +134,7 @@ def test_place_classification_on_frame_where_classification_instance_exists_on_i
     # Assert
     assert (
         e.value.message
-        == f"The classification '{classification_instance_1.classification_hash}' already exists. Set 'overwrite' parameter to True to overwrite."
+        == f"A classification instance for the classification with feature hash '{classification_instance_1._ontology_classification.feature_node_hash}' already exists. Set 'on_overlap' parameter to 'replace' to overwrite."
     )
 
 
@@ -161,7 +161,7 @@ def test_place_classification_on_frame_where_classification_of_same_ontology_ite
     # Assert
     assert (
         e.value.message
-        == f"A classification instance for the classification with feature hash '{text_classification.feature_node_hash}' already exists. Set 'overwrite' parameter to True to overwrite."
+        == f"A classification instance for the classification with feature hash '{text_classification.feature_node_hash}' already exists. Set 'on_overlap' parameter to 'replace' to overwrite."
     )
 
 
@@ -182,7 +182,7 @@ def test_place_classification_on_frames_with_overwrite_on_image_space(ontology):
     image_space_1.put_classification_instance(classification_instance=classification_instance_1)
 
     # Act
-    image_space_1.put_classification_instance(classification_instance=classification_instance_2, overwrite=True)
+    image_space_1.put_classification_instance(classification_instance=classification_instance_2, on_overlap="replace")
 
     annotations_on_classifications = image_space_1.get_classification_instance_annotations()
 
