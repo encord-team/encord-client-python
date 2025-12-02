@@ -10,6 +10,7 @@ labels = {
     "dataset_title": "Dataset with 2 frame video",
     "data_title": "two-frame-video.mp4",
     "data_type": "video",
+    "spaces": {},
     "data_units": {
         "cd57cf5c-2541-4a46-a836-444540ee987a": {
             "data_hash": "cd57cf5c-2541-4a46-a836-444540ee987a",

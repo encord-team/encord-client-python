@@ -42,6 +42,7 @@ def test_image_bitmask_dimension_validation():
         audio_sample_rate=None,
         audio_num_channels=None,
         audio_bit_depth=None,
+        spaces={},
     )
 
     # Create empty labels dict
@@ -122,6 +123,7 @@ def test_image_group_bitmask_dimension_validation():
         audio_sample_rate=None,
         audio_num_channels=None,
         audio_bit_depth=None,
+        spaces={},
     )
 
     # Create empty labels dict for image group with different dimensions per frame
@@ -232,6 +234,7 @@ def test_dicom_bitmask_dimension_validation():
         audio_sample_rate=None,
         audio_num_channels=None,
         audio_bit_depth=None,
+        spaces={},
     )
 
     dicom_labels = {

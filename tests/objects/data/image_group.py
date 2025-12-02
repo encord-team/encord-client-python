@@ -454,4 +454,5 @@ image_group_labels = {
     },
     "object_actions": {},
     "label_status": "LABEL_IN_PROGRESS",
+    "spaces": {},
 }

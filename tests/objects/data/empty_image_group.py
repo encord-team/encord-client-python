@@ -127,4 +127,5 @@ empty_image_group_labels = {
     "classification_answers": {},
     "object_actions": {},
     "label_status": "LABEL_IN_PROGRESS",
+    "spaces": {},
 }
