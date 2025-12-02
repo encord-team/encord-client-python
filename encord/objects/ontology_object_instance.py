@@ -92,6 +92,7 @@ class ObjectInstance:
         self._non_geometric = ontology_object.shape in (Shape.AUDIO, Shape.TEXT)
 
         self._frames_to_instance_data: Dict[int, AnnotationData] = {}
+        self._instance_data: RangeObjectAnnotationData
         self._spaces: dict[str, Space] = dict()
 
     def _is_assigned_to_space(self) -> bool:
