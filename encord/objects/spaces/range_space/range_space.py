@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import logging
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from datetime import datetime
-from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union, cast
+from typing import TYPE_CHECKING, Dict, Literal, Optional, Union, cast
 
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import format_datetime_to_long_string, format_datetime_to_long_string_optional
-from encord.constants.enums import DataType, SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects import ClassificationInstance, Shape
 from encord.objects.frames import Range, Ranges
@@ -19,10 +18,8 @@ from encord.objects.spaces.annotation.range_annotation import (
     RangeObjectAnnotationData,
 )
 from encord.objects.spaces.base_space import Space
-from encord.objects.spaces.types import SpaceInfo
 from encord.objects.types import (
     AttributeDict,
-    BaseFrameObject,
     ClassificationAnswer,
     FrameClassification,
     LabelBlob,
@@ -52,8 +49,8 @@ class RangeSpace(Space):
         super().__init__(space_id, label_row)
         self._objects_map: dict[str, ObjectInstance] = dict()
         self._classifications_map: dict[str, ClassificationInstance] = dict()
-        self._object_hash_to_annotation_data: dict[str, RangeObjectAnnotationData] = dict()
         self._classification_hash_to_annotation_data: dict[str, AnnotationData] = dict()
+        self._object_hash_to_range_manager:dict[str, RangeManager] = dict()
 
         # Since we can only have one classification of a particular class, this keeps track to make sure we don't add duplicates
         self._classification_ontologies: set[str] = set()
@@ -98,11 +95,11 @@ class RangeSpace(Space):
 
         self._are_ranges_valid(ranges)
 
-        existing_annotation_data = self._object_hash_to_annotation_data.get(object_instance.object_hash)
+        existing_annotation_range_manager = self._object_hash_to_range_manager.get(object_instance.object_hash)
         has_overlap = False
 
-        if existing_annotation_data is not None:
-            overlapping_ranges = existing_annotation_data.range_manager.intersection(ranges)
+        if existing_annotation_range_manager is not None:
+            overlapping_ranges = existing_annotation_range_manager.intersection(ranges)
             has_overlap = len(overlapping_ranges) > 0
             if has_overlap and on_overlap == "error":
                 raise LabelRowError(
@@ -110,16 +107,11 @@ class RangeSpace(Space):
                     "Set the 'on_overlap' parameter to 'merge' to add the object instance to the new ranges while keeping existing annotations. "
                     "Set the 'on_overlap' parameter to 'replace' to remove object instance from existing ranges before adding it to the new ranges."
                 )
+        elif existing_annotation_range_manager is None:
+            existing_annotation_range_manager = RangeManager()
+            self._object_hash_to_range_manager[object_instance.object_hash] = existing_annotation_range_manager
 
-        if existing_annotation_data is None:
-            existing_annotation_data = RangeObjectAnnotationData(
-                annotation_metadata=AnnotationMetadata(),
-                range_manager=RangeManager(),
-            )
-
-            self._object_hash_to_annotation_data[object_instance.object_hash] = existing_annotation_data
-
-        existing_annotation_data.annotation_metadata.update_from_optional_fields(
+        object_instance._instance_metadata.update_from_optional_fields(
             created_at=created_at,
             created_by=created_by,
             last_edited_at=last_edited_at,
@@ -130,18 +122,18 @@ class RangeSpace(Space):
 
         if has_overlap:
             if on_overlap == "merge":
-                existing_annotation_data.range_manager.add_ranges(ranges)
+                existing_annotation_range_manager.add_ranges(ranges)
             elif on_overlap == "replace":
-                existing_annotation_data.range_manager.clear_ranges()
-                existing_annotation_data.range_manager.add_ranges(ranges)
+                existing_annotation_range_manager.clear_ranges()
+                existing_annotation_range_manager.add_ranges(ranges)
         else:
-            existing_annotation_data.range_manager.add_ranges(ranges)
+            existing_annotation_range_manager.add_ranges(ranges)
 
     def remove_object_instance_from_range(self, object: ObjectInstance, ranges: Ranges | Range) -> None:
         if isinstance(ranges, Range):
             ranges = [ranges]
 
-        self._object_hash_to_annotation_data[object.object_hash].range_manager.remove_ranges(ranges)
+        self._object_hash_to_range_manager[object.object_hash].remove_ranges(ranges)
 
     def put_classification_instance(
         self,
@@ -213,7 +205,7 @@ class RangeSpace(Space):
     ) -> list[RangeObjectAnnotation]:
         res: list[RangeObjectAnnotation] = []
 
-        for obj_hash, annotation in self._object_hash_to_annotation_data.items():
+        for obj_hash, annotation in self._object_hash_to_range_manager.items():
             if filter_object_instances is None or obj_hash in filter_object_instances:
                 res.append(RangeObjectAnnotation(space=self, object_instance=self._objects_map[obj_hash]))
 
@@ -243,8 +235,8 @@ class RangeSpace(Space):
 
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         object_instance = self._objects_map.pop(object_hash, None)
-        self._object_hash_to_annotation_data.pop(object_hash)
-
+        # self._object_hash_to_annotation_data.pop(object_hash)
+        self._object_hash_to_range_manager.pop(object_hash)
         if object_instance is not None:
             object_instance._remove_from_space(self.space_id)
 
@@ -299,9 +291,10 @@ class RangeSpace(Space):
         ret: Dict[str, ObjectAnswerForNonGeometric] = {}
 
         for obj in self.get_object_instances():
-            annotation = self._object_hash_to_annotation_data[obj.object_hash]
-            annotation_metadata = annotation.annotation_metadata
-            ranges = [[range.start, range.end] for range in annotation.range_manager.get_ranges()]
+            # annotation = self._object_hash_to_annotation_data[obj.object_hash]
+            range_manager = self._object_hash_to_range_manager[obj.object_hash]
+            annotation_metadata = obj._instance_metadata
+            ranges = [[range.start, range.end] for range in range_manager.get_ranges()]
             does_obj_exist = obj.object_hash in existing_object_answers
 
             if does_obj_exist:

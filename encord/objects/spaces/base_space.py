@@ -10,7 +10,6 @@ from typing import (
     Union,
 )
 
-from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects.spaces.annotation.base_annotation import ClassificationAnnotation, ObjectAnnotation
 from encord.objects.spaces.types import SpaceInfo

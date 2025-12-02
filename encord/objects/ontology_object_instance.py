@@ -29,6 +29,7 @@ from typing import (
     cast,
 )
 
+from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
@@ -91,6 +92,10 @@ class ObjectInstance:
         # Only used for non-frame entities
         self._non_geometric = ontology_object.shape in (Shape.AUDIO, Shape.TEXT)
 
+        # Only for Range based modalities, where the ranged objects share the same metadata across all spaces
+        self._instance_metadata: AnnotationMetadata = AnnotationMetadata()
+
+
         self._frames_to_instance_data: Dict[int, AnnotationData] = {}
         self._spaces: dict[str, Space] = dict()
 
@@ -102,6 +107,9 @@ class ObjectInstance:
 
     def _remove_from_space(self, space_id: str) -> None:
         self._spaces.pop(space_id)
+        if not self._spaces:
+            # Reset metadata if not on any space
+            self._instance_metadata = AnnotationMetadata()
 
     def is_assigned_to_label_row(self) -> Optional[LabelRowV2]:
         """Checks if the object instance is assigned to a label row.

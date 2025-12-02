@@ -46,7 +46,7 @@ class RangeObjectAnnotation(ObjectAnnotation):
     def ranges(self, ranges: Union[Range, Ranges]) -> None:
         self._check_if_annotation_is_valid()
         new_range_manager = RangeManager(ranges)
-        self._space._object_hash_to_annotation_data[self._object_instance.object_hash].range_manager = new_range_manager
+        self._space._object_hash_to_range_manager[self._object_instance.object_hash] = new_range_manager
 
     @property
     def coordinates(self) -> AudioCoordinates | TextCoordinates:
@@ -68,13 +68,17 @@ class RangeObjectAnnotation(ObjectAnnotation):
         """This field is deprecated. It is only here for backwards compatibility. Use .ranges instead."""
         self._check_if_annotation_is_valid()
         new_range_manager = RangeManager(frame_class=coordinates.range)
-        self._space._object_hash_to_annotation_data[self._object_instance.object_hash].range_manager = new_range_manager
+        self._space._object_hash_to_range_manager[self._object_instance.object_hash] = new_range_manager
 
     def _get_annotation_data(self) -> RangeObjectAnnotationData:
-        return self._space._object_hash_to_annotation_data[self._object_instance.object_hash]
+        return RangeObjectAnnotationData(
+            annotation_metadata=self._object_instance._instance_metadata,
+            range_manager=self._space._object_hash_to_range_manager[self._object_instance.object_hash]
+        )
+
 
     def _check_if_annotation_is_valid(self) -> None:
-        if self._object_instance.object_hash not in self._space._object_hash_to_annotation_data:
+        if self._object_instance.object_hash not in self._space._object_hash_to_range_manager:
             raise LabelRowError(
                 "Trying to use an ObjectInstance.FrameAnnotation for a VideoObjectInstance that is not on the frame"
             )

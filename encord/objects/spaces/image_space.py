@@ -253,7 +253,7 @@ class ImageSpace(Space):
         """
         res: list[SingleFrameClassificationAnnotation] = []
 
-        for classification_hash, annotation_data in dict(self._classification_hash_to_annotation_data.items()).items():
+        for classification_hash, annotation_data in self._classification_hash_to_annotation_data.items():
             if filter_classification_instances is None or classification_hash in filter_classification_instances:
                 res.append(
                     SingleFrameClassificationAnnotation(
