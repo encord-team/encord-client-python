@@ -10,6 +10,7 @@ labels = {
     "dataset_title": "Dataset with one single image annotated",
     "data_title": "rousseau_2.jpg",
     "data_type": "image",
+    "spaces": {},
     "data_units": {
         "649aba74-365b-45fa-a375-3036ee0eda78": {
             "data_hash": "649aba74-365b-45fa-a375-3036ee0eda78",
