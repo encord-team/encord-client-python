@@ -95,7 +95,6 @@ class ObjectInstance:
         # Only for Range based modalities, where the ranged objects share the same metadata across all spaces
         self._instance_metadata: AnnotationMetadata = AnnotationMetadata()
 
-
         self._frames_to_instance_data: Dict[int, AnnotationData] = {}
         self._spaces: dict[str, Space] = dict()
 

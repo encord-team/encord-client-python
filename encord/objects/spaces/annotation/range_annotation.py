@@ -73,9 +73,8 @@ class RangeObjectAnnotation(ObjectAnnotation):
     def _get_annotation_data(self) -> RangeObjectAnnotationData:
         return RangeObjectAnnotationData(
             annotation_metadata=self._object_instance._instance_metadata,
-            range_manager=self._space._object_hash_to_range_manager[self._object_instance.object_hash]
+            range_manager=self._space._object_hash_to_range_manager[self._object_instance.object_hash],
         )
-
 
     def _check_if_annotation_is_valid(self) -> None:
         if self._object_instance.object_hash not in self._space._object_hash_to_range_manager:

@@ -89,6 +89,7 @@ from encord.objects.spaces.annotation.base_annotation import ClassificationAnnot
 from encord.objects.spaces.base_space import Space, SpaceT
 from encord.objects.spaces.image_space import ImageSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
+from encord.objects.spaces.range_space.text_space import TextSpace
 from encord.objects.spaces.types import SpaceInfo
 from encord.objects.spaces.video_space import VideoSpace
 from encord.objects.types import (
@@ -775,6 +776,10 @@ class LabelRowV2:
         pass
 
     @overload
+    def get_space(self, *, id: str, type_: Literal["text"]) -> TextSpace:
+        pass
+
+    @overload
     def get_space(self, *, layout_key: str, type_: Literal["video"]) -> VideoSpace:
         pass
 
@@ -786,12 +791,16 @@ class LabelRowV2:
     def get_space(self, *, layout_key: str, type_: Literal["audio"]) -> AudioSpace:
         pass
 
+    @overload
+    def get_space(self, *, layout_key: str, type_: Literal["text"]) -> TextSpace:
+        pass
+
     def get_space(
         self,
         *,
         id: Optional[str] = None,
         layout_key: Optional[str] = None,
-        type_: Union[Literal["video"], Literal["image"], Literal["audio"]],
+        type_: Literal["video", "image", "audio", "text"],
     ) -> Space:
         """Retrieves a single space which matches the specified id and type.
         Throws an exception if more than one or no space with the specified id and type is found.
@@ -818,6 +827,7 @@ class LabelRowV2:
                     isinstance(element, VideoSpace)
                     or isinstance(element, ImageSpace)
                     or isinstance(element, AudioSpace)
+                    or isinstance(element, TextSpace)
                 ):
                     if element.layout_key == layout_key:
                         return element
@@ -1060,7 +1070,16 @@ class LabelRowV2:
                                 append = True
                                 break
                         elif isinstance(space, AudioSpace):
-                            # For backwards compatibility, we treat audio as being on frame=0
+                            # For backwards compatibility, we treat text as being on frame=0
+                            if frame != 0:
+                                continue
+
+                            if object_.object_hash in space._objects_map:
+                                append = True
+                                break
+
+                        elif isinstance(space, TextSpace):
+                            # For backwards compatibility, we treat text as being on frame=0
                             if frame != 0:
                                 continue
 
@@ -1381,6 +1400,14 @@ class LabelRowV2:
                                 break
                         elif isinstance(space, AudioSpace):
                             # For backwards compatibility, all audio classifications are treated as being on frame 0
+                            if frame != 0:
+                                continue
+
+                            if classification.classification_hash in space._classifications_map:
+                                append = True
+                                break
+                        elif isinstance(space, TextSpace):
+                            # For backwards compatibility, all text classifications are treated as being on frame 0
                             if frame != 0:
                                 continue
 
@@ -2420,6 +2447,14 @@ class LabelRowV2:
                     child_info=space_info["info"],
                 )
                 res[space_id] = audio_space
+            elif space_info["space_type"] == SpaceType.TEXT:
+                text_space = TextSpace(
+                    space_id=space_id,
+                    label_row=self,
+                    number_of_characters=space_info["number_of_characters"],
+                    child_info=space_info["info"],
+                )
+                res[space_id] = text_space
 
         return res
 
@@ -2443,6 +2478,11 @@ class LabelRowV2:
             elif space_info["space_type"] == SpaceType.AUDIO:
                 audio_space = self.get_space(id=space_id, type_="audio")
                 audio_space._parse_space_dict(
+                    space_info, object_answers=object_answers, classification_answers=classification_answers
+                )
+            elif space_info["space_type"] == SpaceType.TEXT:
+                text_space = self.get_space(id=space_id, type_="text")
+                text_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
 

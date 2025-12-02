@@ -32,16 +32,16 @@ class ImageSpaceInfo(BaseSpaceInfo):
     height: int
 
 
-#
-# class TextSpaceInfo(BaseSpaceInfo):
-#     space_type: Literal[SpaceType.TEXT]
-#     number_of_characters: int
-#
-#
+class TextSpaceInfo(BaseSpaceInfo):
+    space_type: Literal[SpaceType.TEXT]
+    number_of_characters: int
+    info: ChildInfo
+
+
 class AudioSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.AUDIO]
     info: ChildInfo
     duration_ms: int
 
 
-SpaceInfo = Union[VideoSpaceInfo, ImageSpaceInfo, AudioSpaceInfo]
+SpaceInfo = Union[VideoSpaceInfo, ImageSpaceInfo, AudioSpaceInfo, TextSpaceInfo]

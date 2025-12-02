@@ -50,7 +50,7 @@ class RangeSpace(Space):
         self._objects_map: dict[str, ObjectInstance] = dict()
         self._classifications_map: dict[str, ClassificationInstance] = dict()
         self._classification_hash_to_annotation_data: dict[str, AnnotationData] = dict()
-        self._object_hash_to_range_manager:dict[str, RangeManager] = dict()
+        self._object_hash_to_range_manager: dict[str, RangeManager] = dict()
 
         # Since we can only have one classification of a particular class, this keeps track to make sure we don't add duplicates
         self._classification_ontologies: set[str] = set()

@@ -69,3 +69,4 @@ class SpaceType(StringEnum):
     VIDEO = "video"
     IMAGE = "image"
     AUDIO = "audio"
+    TEXT = "text"
