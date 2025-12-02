@@ -286,9 +286,9 @@ class MlModelsClient:
             ModelIteration: Information about the training iteration
 
         Raises:
-            EncordException: If training encountered an error
+            :class:`~encord.exceptions.EncordException`: If training encountered an error
             ValueError: If status response is invalid
-            RequestException: If there are network connectivity issues
+            :class:`~encord.exceptions.RequestException`: If there are network connectivity issues
         """
         failed_requests_count = 0
         polling_start_timestamp = time.perf_counter()

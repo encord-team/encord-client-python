@@ -1,0 +1,51 @@
+{
+  "sdk_package_name": "encord",
+  "description": "Configuration for Encord SDK docstring linter",
+
+  "sdk_classes": [
+    "LabelRowV2",
+    "Dataset",
+    "Project",
+    "OntologyStructure",
+    "Workflow",
+    "StorageItem",
+    "StorageFolder",
+    "Collection",
+    "Ontology",
+    "ProjectUser",
+    "DataRow",
+    "ObjectInstance",
+    "ClassificationInstance",
+    "EncordUserClient",
+    "StorageItemType",
+    "AnnotationTaskStatus",
+    "LabelStatus",
+    "ProjectType",
+    "WorkflowGraphNode",
+    "Bundle"
+  ],
+
+  "exceptions": [
+    "AuthorizationError",
+    "AuthenticationError",
+    "ResourceNotFoundError",
+    "UnknownError",
+    "OperationNotAllowed",
+    "LabelRowError",
+    "WrongProjectTypeError"
+  ],
+
+  "auto_fix_rules": {
+    "invalid_section_headers": true,
+    "spelling_inconsistencies": true,
+    "unlinked_exceptions": false,
+    "unlinked_classes": false
+  },
+
+  "ignore_patterns": [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/.*"
+  ]
+}

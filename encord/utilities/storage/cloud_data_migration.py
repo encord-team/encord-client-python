@@ -30,17 +30,18 @@ def update_storage_item_cloud_info(
     configuration changes (and thus the data is accessible through a different cloud integration), or if the data has
     been moved to a different location (and thus the URL has changed).
 
-    :param user_client: The user client to use.
-    :param item: The item to update. Can be either a StorageItem instance, the item's UUID, or the URL of the item.
-    :param new_url: The new URL to set. URL will be left unchanged if `None` is passed.
-    :param new_cloud_integration: The new cloud integration to set. Cloud integration will be left unchanged if `None`
-        is passed.
-    :param from_cloud_integration: The cloud integration to update from. Acts as a check: no update will be performed if
-        cloud integration of the item does not match this value. If `None`, the check will be skipped.
-    :param verify_access: Whether to verify access to the item.
-    :param skip_missing: if true, no error will be raised if the item is not found. Otherwise, the operation (and
-        the operations in the same bundle) will be cancelled and an error will be raised.
-    :param bundle: The optional :class:`encord.http.bundle.Bundle` instance used to group updates into bulk calls.
+    Args:
+        user_client: The user client to use.
+        item: The item to update. Can be either a :class:`~encord.storage.StorageItem` instance, the item's UUID, or the URL of the item.
+        new_url: The new URL to set. URL will be left unchanged if `None` is passed.
+        new_cloud_integration: The new cloud integration to set. Cloud integration will be left unchanged if `None`
+            is passed.
+        from_cloud_integration: The cloud integration to update from. Acts as a check: no update will be performed if
+            cloud integration of the item does not match this value. If `None`, the check will be skipped.
+        verify_access: Whether to verify access to the item.
+        skip_missing: if true, no error will be raised if the item is not found. Otherwise, the operation (and
+            the operations in the same bundle) will be cancelled and an error will be raised.
+        bundle: The optional :class:`encord.http.bundle.Bundle` instance used to group updates into bulk calls.
     """
     if not bundle:
         with Bundle() as bundle:

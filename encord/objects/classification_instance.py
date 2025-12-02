@@ -291,9 +291,10 @@ class ClassificationInstance:
             self._frames_to_data[frame] = frame_data
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
-        """Args:
-        frame: Either the frame number or the image hash if the data type is an image or image group.
-            Defaults to the first frame.
+        """
+        Args:
+            frame: Either the frame number or the image hash if the data type is an image or image group.
+                Defaults to the first frame.
         """
         if self.is_global():
             raise LabelRowError("Cannot get annotation for a global classification instance.")
@@ -327,8 +328,9 @@ class ClassificationInstance:
             self._parent._remove_frames_from_classification(self, frames)
 
     def get_annotations(self) -> List[Annotation]:
-        """Returns:
-        A list of `ClassificationInstance.Annotation` in order of available frames.
+        """
+        Returns:
+            A list of `ClassificationInstance.Annotation` in order of available frames.
         """
         return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_data.keys())]
 

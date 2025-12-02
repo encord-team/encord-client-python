@@ -134,7 +134,7 @@ class WorkflowDTO(BaseDTO):
 
     Args:
         stages: List of workflow stages in the project workflow graph.
-        This can include both standard workflow nodes and agent nodes.
+            This can include both standard workflow nodes and agent nodes.
     """
 
     stages: List[Union[WorkflowAgentNode, WorkflowNode]]

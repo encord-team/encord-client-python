@@ -10,8 +10,8 @@ def set_client_metadata_schema_from_dict(api_client: ApiClient, json_dict: Dict[
     """Set the client metadata schema from a dictionary.
 
     Args:
-        api_client (ApiClient): The API client to use for the request.
-        json_dict (Dict[str, orm.ClientMetadataSchemaTypes]): A dictionary containing the client metadata schema types.
+        api_client: The API client to use for the request.
+        json_dict: A dictionary containing the client metadata schema types.
 
     Raises:
         NotImplementedError: If an unexpected data type is encountered in the schema.
@@ -32,7 +32,7 @@ def get_client_metadata_schema(api_client: ApiClient) -> Optional[Dict[str, orm.
     """Retrieve the client metadata schema.
 
     Args:
-        api_client (ApiClient): The API client to use for the request.
+        api_client: The API client to use for the request.
 
     Returns:
         Optional[Dict[str, orm.ClientMetadataSchemaTypes]]: A dictionary containing the client metadata schema types

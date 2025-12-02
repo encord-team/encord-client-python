@@ -279,19 +279,19 @@ class Project:
         """Add users to the project.
 
         If the user already exists in the Project, this operation succeeds but the `user_role` remains unchanged. The
-        existing `user_role` is reflected in the `ProjectUser` instance returned.
+        existing `user_role` is reflected in the `:class:`~encord.utilities.project_user.ProjectUser`` instance returned.
 
         Args:
             user_emails: List of user emails to be added.
             user_role: The user role to assign to all users.
 
         Returns:
-            List[ProjectUser]: A list of ProjectUser objects representing the added users.
+            List[:class:`~encord.utilities.project_user.ProjectUser`]: A list of :class:`~encord.utilities.project_user.ProjectUser` objects representing the added users.
 
         Raises:
-            AuthorisationError: If the project API key is invalid.
-            ResourceNotFoundError: If no project exists by the specified project EntityId.
-            UnknownError: If an error occurs while adding the users to the project.
+            :class:`~encord.exceptions.AuthorisationError`: If the project API key is invalid.
+            :class:`~encord.exceptions.ResourceNotFoundError`: If no project exists by the specified project EntityId.
+            :class:`~encord.exceptions.UnknownError`: If an error occurs while adding the users to the project.
         """
         return self._client.add_users(user_emails, user_role)
 
@@ -299,7 +299,7 @@ class Project:
         """List all users that have access to the project.
 
         Returns:
-            Iterable[ProjectUser]: An iterable of ProjectUser objects.
+            Iterable[:class:`~encord.utilities.project_user.ProjectUser`]: An iterable of :class:`~encord.utilities.project_user.ProjectUser` objects.
         """
         yield from self._client.list_users(UUID(self.project_hash))
 
@@ -357,7 +357,7 @@ class Project:
         Args:
             copy_datasets: If True, the datasets of the existing project are copied over, and new tasks are created from those datasets.
             copy_collaborators: If True, all users of the existing project are copied over with their current roles.
-                                If label and/or annotator reviewer mapping is set, this will also be copied over.
+                If label and/or annotator reviewer mapping is set, this will also be copied over.
             copy_models: If True, all models with their training information will be copied into the new project.
             copy_labels: Options for copying labels, defined in `CopyLabelsOptions`.
             new_title: When provided, will be used as the title for the new project.
@@ -367,9 +367,9 @@ class Project:
             str: The EntityId of the newly created project.
 
         Raises:
-            AuthorisationError: If the project API key is invalid.
-            ResourceNotFoundError: If no project exists by the specified project EntityId.
-            UnknownError: If an error occurs while copying the project.
+            :class:`~encord.exceptions.AuthorisationError`: If the project API key is invalid.
+            :class:`~encord.exceptions.ResourceNotFoundError`: If no project exists by the specified project EntityId.
+            :class:`~encord.exceptions.UnknownError`: If an error occurs while copying the project.
         """
         return self._client.copy_project(
             new_title=new_title,
@@ -390,11 +390,11 @@ class Project:
             bool: True if the datasets were successfully added, False otherwise.
 
         Raises:
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            ResourceNotFoundError: If one or more datasets don't exist by the specified dataset_hashes.
-            UnknownError: If an error occurs while adding the datasets to the project.
-            OperationNotAllowed: If the write operation is not allowed by the API key.
+            :class:`~encord.exceptions.AuthenticationError`: If the project API key is invalid.
+            :class:`~encord.exceptions.AuthorisationError`: If access to the specified resource is restricted.
+            :class:`~encord.exceptions.ResourceNotFoundError`: If one or more datasets don't exist by the specified dataset_hashes.
+            :class:`~encord.exceptions.UnknownError`: If an error occurs while adding the datasets to the project.
+            :class:`~encord.exceptions.OperationNotAllowed`: If the write operation is not allowed by the API key.
         """
         res = self._client.add_datasets(dataset_hashes)
         self.refetch_data()
@@ -410,11 +410,11 @@ class Project:
             bool: True if the datasets were successfully removed, False otherwise.
 
         Raises:
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            ResourceNotFoundError: If no dataset exists by the specified dataset_hash (uid).
-            UnknownError: If an error occurs while removing the datasets from the project.
-            OperationNotAllowed: If the operation is not allowed by the API key.
+            :class:`~encord.exceptions.AuthenticationError`: If the project API key is invalid.
+            :class:`~encord.exceptions.AuthorisationError`: If access to the specified resource is restricted.
+            :class:`~encord.exceptions.ResourceNotFoundError`: If no dataset exists by the specified dataset_hash (uid).
+            :class:`~encord.exceptions.UnknownError`: If an error occurs while removing the datasets from the project.
+            :class:`~encord.exceptions.OperationNotAllowed`: If the operation is not allowed by the API key.
         """
         res = self._client.remove_datasets(dataset_hashes)
         self.refetch_data()
@@ -431,7 +431,7 @@ class Project:
 
     @deprecated("0.1.102", alternative="encord.ontology.Ontology class")
     def add_object(self, name: str, shape: ObjectShape) -> bool:
-        """DEPRECATED: Prefer using :class:`Ontology [encord.ontology.Ontology]` to manipulate ontology.
+        """DEPRECATED: Prefer using :class:`~encord.ontology.Ontology` to manipulate ontology.
 
         Add an object to an ontology.
 
@@ -445,10 +445,10 @@ class Project:
             bool: True if the object was added successfully, False otherwise.
 
         Raises:
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            UnknownError: If an error occurs while adding the object to the project ontology.
-            OperationNotAllowed: If the operation is not allowed by the API key.
+            :class:`~encord.exceptions.AuthenticationError`: If the project API key is invalid.
+            :class:`~encord.exceptions.AuthorisationError`: If access to the specified resource is restricted.
+            :class:`~encord.exceptions.UnknownError`: If an error occurs while adding the object to the project ontology.
+            :class:`~encord.exceptions.OperationNotAllowed`: If the operation is not allowed by the API key.
             ValueError: If invalid arguments are supplied in the function call.
         """
         res = self._client.add_object(name, shape)
@@ -463,7 +463,7 @@ class Project:
         required: bool,
         options: Optional[Iterable[str]] = None,
     ):
-        """DEPRECATED: Prefer using :class:`Ontology encord.ontology.Ontology` to manipulate ontology.
+        """DEPRECATED: Prefer using :class:`~encord.ontology.Ontology` to manipulate ontology.
 
         Add a classification to an ontology.
 
@@ -476,10 +476,10 @@ class Project:
             options: The list of options for the classification (to be set to None for texts).
 
         Raises:
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            UnknownError: If an error occurs while adding the classification to the project ontology.
-            OperationNotAllowed: If the operation is not allowed by the API key.
+            :class:`~encord.exceptions.AuthenticationError`: If the project API key is invalid.
+            :class:`~encord.exceptions.AuthorisationError`: If access to the specified resource is restricted.
+            :class:`~encord.exceptions.UnknownError`: If an error occurs while adding the classification to the project ontology.
+            :class:`~encord.exceptions.OperationNotAllowed`: If the operation is not allowed by the API key.
             ValueError: If invalid arguments are supplied in the function call.
         """
         res = self._client.add_classification(name, classification_type, required, options)
@@ -524,9 +524,9 @@ class Project:
             dict: Full set of filled frames including interpolated objects.
 
         Raises:
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            UnknownError: If an error occurs while running interpolation.
+            :class:`~encord.exceptions.AuthenticationError`: If the project API key is invalid.
+            :class:`~encord.exceptions.AuthorisationError`: If access to the specified resource is restricted.
+            :class:`~encord.exceptions.UnknownError`: If an error occurs while running interpolation.
         """
         return self._client.object_interpolation(key_frames, objects_to_interpolate)
 
@@ -541,9 +541,9 @@ class Project:
             A tuple consisting of the video (if it exists) and a list of individual images (if they exist).
 
         Raises:
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            UnknownError: If an error occurs while retrieving the object.
+            :class:`~encord.exceptions.AuthenticationError`: If the project API key is invalid.
+            :class:`~encord.exceptions.AuthorisationError`: If access to the specified resource is restricted.
+            :class:`~encord.exceptions.UnknownError`: If an error occurs while retrieving the object.
         """
         return self._client.get_data(data_hash, get_signed_url)
 
@@ -597,15 +597,15 @@ class Project:
         The start_time and end_time parameters are required. The maximum time range is 30 days.
 
         Args:
-           action: Filter the editor logs by action.
-           actor_user_email: Filter the editor logs by the user email.
-           data_unit_id: Filter the editor logs by the data id (data_hash).
-           workflow_stage_id: Filter the editor logs by the workflow stage id.
-           end_time: Filter the editor logs to only include logs before the specified time.
-           start_time: Filter the editor logs to only include logs after the specified time.
+            action: Filter the editor logs by action.
+            actor_user_email: Filter the editor logs by the user email.
+            data_unit_id: Filter the editor logs by the data id (data_hash).
+            workflow_stage_id: Filter the editor logs by the workflow stage id.
+            end_time: Filter the editor logs to only include logs before the specified time.
+            start_time: Filter the editor logs to only include logs after the specified time.
 
         Returns:
-           An iterator on the editor logs.
+            An iterator on the editor logs.
         """
 
         # we don't put the limit in the parameters anymore because it works as a batch size in the iterator.
@@ -700,11 +700,11 @@ class Project:
             LabelRow: A label row instance.
 
         Raises:
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            ResourceNotFoundError: If no label exists by the specified label_hash (uid).
-            UnknownError: If an error occurs while retrieving the label.
-            OperationNotAllowed: If the read operation is not allowed by the API key.
+            :class:`~encord.exceptions.AuthenticationError`: If the project API key is invalid.
+            :class:`~encord.exceptions.AuthorisationError`: If access to the specified resource is restricted.
+            :class:`~encord.exceptions.ResourceNotFoundError`: If no label exists by the specified label_hash (uid).
+            :class:`~encord.exceptions.UnknownError`: If an error occurs while retrieving the label.
+            :class:`~encord.exceptions.OperationNotAllowed`: If the read operation is not allowed by the API key.
         """
         return self._client.get_label_row(
             uid,
@@ -739,12 +739,12 @@ class Project:
             List of LabelRow instances.
 
         Raises:
-            MultiLabelLimitError: If too many labels were requested. Check the error's maximum_labels_allowed field to read the most up to date error limit.
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            ResourceNotFoundError: If no label exists by the specified label_hash (uid).
-            UnknownError: If an error occurs while retrieving the label.
-            OperationNotAllowed: If the read operation is not allowed by the API key.
+            :class:`~encord.exceptions.MultiLabelLimitError`: If too many labels were requested. Check the error's maximum_labels_allowed field to read the most up to date error limit.
+            :class:`~encord.exceptions.AuthenticationError`: If the project API key is invalid.
+            :class:`~encord.exceptions.AuthorisationError`: If access to the specified resource is restricted.
+            :class:`~encord.exceptions.ResourceNotFoundError`: If no label exists by the specified label_hash (uid).
+            :class:`~encord.exceptions.UnknownError`: If an error occurs while retrieving the label.
+            :class:`~encord.exceptions.OperationNotAllowed`: If the read operation is not allowed by the API key.
         """
         return self._client.get_label_rows(
             uids,
@@ -773,13 +773,13 @@ class Project:
             bool: True if the label row is successfully saved, False otherwise.
 
         Raises:
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            ResourceNotFoundError: If no label exists by the specified label_hash (uid).
-            UnknownError: If an error occurs while saving the label.
-            OperationNotAllowed: If the write operation is not allowed by the API key.
-            AnswerDictionaryError: If an object or classification instance is missing in answer dictionaries.
-            CorruptedLabelError: If a blurb is corrupted (e.g., if the frame labels have more frames than the video).
+            :class:`~encord.exceptions.AuthenticationError`: If the project API key is invalid.
+            :class:`~encord.exceptions.AuthorisationError`: If access to the specified resource is restricted.
+            :class:`~encord.exceptions.ResourceNotFoundError`: If no label exists by the specified label_hash (uid).
+            :class:`~encord.exceptions.UnknownError`: If an error occurs while saving the label.
+            :class:`~encord.exceptions.OperationNotAllowed`: If the write operation is not allowed by the API key.
+            :class:`~encord.exceptions.AnswerDictionaryError`: If an object or classification instance is missing in answer dictionaries.
+            :class:`~encord.exceptions.CorruptedLabelError`: If a blurb is corrupted (e.g., if the frame labels have more frames than the video).
         """
         return self._client.save_label_row(uid, label, validate_before_saving)
 
@@ -798,13 +798,13 @@ class Project:
             LabelRow: A label row instance.
 
         Raises:
-            AuthenticationError: If the project API key is invalid.
-            AuthorisationError: If access to the specified resource is restricted.
-            UnknownError: If an error occurs while saving the label.
-            OperationNotAllowed: If the write operation is not allowed by the API key.
-            AnswerDictionaryError: If an object or classification instance is missing in answer dictionaries.
-            CorruptedLabelError: If a blurb is corrupted (e.g., if the frame labels have more frames than the video).
-            ResourceExistsError: If a label row already exists for this project data. Avoids overriding existing work.
+            :class:`~encord.exceptions.AuthenticationError`: If the project API key is invalid.
+            :class:`~encord.exceptions.AuthorisationError`: If access to the specified resource is restricted.
+            :class:`~encord.exceptions.UnknownError`: If an error occurs while saving the label.
+            :class:`~encord.exceptions.OperationNotAllowed`: If the write operation is not allowed by the API key.
+            :class:`~encord.exceptions.AnswerDictionaryError`: If an object or classification instance is missing in answer dictionaries.
+            :class:`~encord.exceptions.CorruptedLabelError`: If a blurb is corrupted (e.g., if the frame labels have more frames than the video).
+            :class:`~encord.exceptions.ResourceExistsError`: If a label row already exists for this project data. Avoids overriding existing work.
         """
         return self._client.create_label_row(uid)
 
@@ -839,7 +839,7 @@ class Project:
             after: The beginning of the period of interest.
             before: The end of the period of interest.
             group_by_data_unit: If True, time spent by a collaborator for each data unit is provided separately.
-                                If False, all time spent in the scope of the project is aggregated together.
+                If False, all time spent in the scope of the project is aggregated together.
 
         Yields:
             CollaboratorTimer: Information about the time spent by each collaborator.
@@ -902,11 +902,11 @@ class Project:
         """Import labels in COCO format to an Encord Project.
 
         Args:
-            labels_dict (Dict[str, Any]): A dictionary in COCO annotation format.
-            category_id_to_feature_hash (Dict[CategoryID, str]): A mapping of category IDs from the COCO data to their corresponding feature hashes in the Project's Ontology.
-            image_id_to_frame_index (Dict[ImageID, FrameIndex]): A mapping of image IDs to FrameIndex(data_hash, frame_offset), used to locate the corresponding frames in the Encord Project.
-            branch_name (Optional[str]): Optionally specify a branch name. Defaults to the `main` branch.
-            confidence_field_name (Optional[str]): Optionally specify the name of the confidence field in the COCO annotations. Defaults to assigning `1.0` as confidence value to all annotations.
+            labels_dict: A dictionary in COCO annotation format.
+            category_id_to_feature_hash: A mapping of category IDs from the COCO data to their corresponding feature hashes in the Project's Ontology.
+            image_id_to_frame_index: A mapping of image IDs to FrameIndex(data_hash, frame_offset), used to locate the corresponding frames in the Encord Project.
+            branch_name: Optionally specify a branch name. Defaults to the `main` branch.
+            confidence_field_name: Optionally specify the name of the confidence field in the COCO annotations. Defaults to assigning `1.0` as confidence value to all annotations.
         """
         from encord.utilities.coco.datastructure import CocoRootModel
         from encord.utilities.coco.importer import import_coco_labels
@@ -935,16 +935,16 @@ class Project:
         Args:
             label_hashes: List of label hashes to include. If not provided, all label rows will be included.
             include_object_feature_hashes: If `None`, all objects will be included.
-                 Otherwise, only objects with the specified feature hashes will be included.
+                Otherwise, only objects with the specified feature hashes will be included.
             include_classification_feature_hashes: If `None`, all classifications will be included.
                 Otherwise, only classifications with the specified feature hashes will be included.
             branch_name: Optionally specify a branch name. Defaults to the `main` branch.
 
         Returns:
             Dict[str, Any]: A dictionary in the COCO format containing the exported labels,
-                including annotations and metadata conforming to COCO standards.
-                The dictionary also includes additional fields specific to Encord,
-                providing supplementary information not defined in the COCO standard.
+            including annotations and metadata conforming to COCO standards.
+            The dictionary also includes additional fields specific to Encord,
+            providing supplementary information not defined in the COCO standard.
 
         Raises:
             ImportError: If the 'coco' extra dependencies are not installed.
@@ -980,14 +980,14 @@ class Project:
 
         Args:
             collection_uuids: The unique identifiers (UUIDs) of the collections to retrieve.
-            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+            page_size: Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             The list of collections which match the given criteria.
 
         Raises:
             ValueError: If any of the collection uuids is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+            :class:`~encord.exceptions.AuthorisationError` : If the user does not have access to it.
         """
         collections = (
             [UUID(collection) if isinstance(collection, str) else collection for collection in collection_uuids]
@@ -1010,9 +1010,10 @@ class Project:
 
         Returns:
             None
+
         Raises:
             ValueError: If `collection_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+            :class:`~encord.exceptions.AuthorisationError` : If the user does not have access to it.
         """
         if isinstance(collection_uuid, str):
             collection_uuid = UUID(collection_uuid)
@@ -1034,7 +1035,7 @@ class Project:
             ProjectCollection: Newly created collection.
 
         Raises:
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to the folder.
+            :class:`~encord.exceptions.AuthorisationError` : If the user does not have access to the folder.
         """
         new_uuid = ProjectCollection._create_collection(
             self._client._api_client, self._project_instance.project_hash, name, description, collection_type
@@ -1047,9 +1048,11 @@ class Project:
 
     def active_import(self, project_mode: ActiveProjectMode, *, video_sampling_rate: Optional[float] = None) -> None:
         """Import the associated Active project. Progress in the app
+
         Args:
             project_mode: Active projects can be imported up to a certain stage. Use the ActiveProjectModeEnum to select the stage
             video_sampling_rate: Optional[float]: For videos, what's the sampling rate of frames for analysis
+
         Returns:
             None
         """
@@ -1064,14 +1067,14 @@ class Project:
 
         Args:
             filter_preset_uuids: The unique identifiers (UUIDs) of the filter presets to retrieve.
-            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+            page_size: Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             The list of filter presets which match the given criteria.
 
         Raises:
             ValueError: If any of the filter preset uuids is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+            :class:`~encord.exceptions.AuthorisationError` : If the user does not have access to it.
         """
         filter_presets = (
             [

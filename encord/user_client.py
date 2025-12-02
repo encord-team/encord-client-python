@@ -126,7 +126,7 @@ class EncordUserClient:
     High–level entrypoint to the Encord SDK for an authenticated user.
 
     `EncordUserClient`` is the primary interface for interacting with
-    Encord resources such as Projects, Datasets, Collections, Workflows, and
+    Encord resources such as Projects, Datasets, :class:`~encord.collection.Collection`s, Workflows, and
     Storage Items. It manages authentication, request signing, and low-level
     communication on behalf of the user.
 
@@ -141,16 +141,15 @@ class EncordUserClient:
     - Interacting with collections and Index
 
     Args:
-    config : UserConfig The user configuration containing authentication credentials
-        and client options.
-    querier : Querier Internal HTTP/query executor used to communicate with the Encord API.
-        Users do not normally construct this directly.
+        config : UserConfig The user configuration containing authentication credentials
+            and client options.
+        querier : Querier Internal HTTP/query executor used to communicate with the Encord API.
+            Users do not normally construct this directly.
 
-    **Notes**
-
-    Instances of this class should generally be created using the provided
-    ``create_*`` methods rather than by calling the constructor
-    directly.
+    Notes:
+        Instances of this class should generally be created using the provided
+        ``create_*`` methods rather than by calling the constructor
+        directly.
     """
 
     def __init__(self, config: UserConfig, querier: Querier):
@@ -184,7 +183,7 @@ class EncordUserClient:
         dataset_hash: Union[str, UUID],
         dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
     ) -> Dataset:
-        """Get the Dataset class to access dataset fields and manipulate a dataset.
+        """Get the :class:`~encord.dataset.Dataset` class to access dataset fields and manipulate a dataset.
 
         You only have access to this project if you are one of the following
 
@@ -213,7 +212,7 @@ class EncordUserClient:
         return Dataset(client, orm_dataset)
 
     def get_project(self, project_hash: Union[str, UUID]) -> Project:
-        """Get the Project class to access project fields and manipulate a project.
+        """Get the :class:`~encord.project.Project` class to access project fields and manipulate a project.
 
         You will only have access to this project if you are one of the following
 
@@ -297,16 +296,15 @@ class EncordUserClient:
     ) -> CreateDatasetResponse:
         """
         Args:
-            dataset_title (str): Title of the dataset.
-            dataset_type (StorageLocation): Type of storage location where the data will be stored.
-            dataset_description (Optional[str]): Optional description of the dataset.
-            create_backing_folder (bool): Whether to create a mirrored backing Folder. If True (default),
+            dataset_title: Title of the dataset.
+            dataset_type: Type of storage location where the data will be stored.
+            dataset_description: Optional description of the dataset.
+            create_backing_folder: Whether to create a mirrored backing Folder. If True (default),
                 the Folder and Dataset are synced. Recommended to set False for complex
                 or large-scale projects.
 
         Returns:
-            CreateDatasetResponse:
-
+            :class:`~encord.orm.dataset.CreateDatasetResponse`
         """
         return self.__create_dataset(
             title=dataset_title,
@@ -340,7 +338,7 @@ class EncordUserClient:
             edited_before: optional last modification date filter, 'less'
             edited_after: optional last modification date filter, 'greater'
             include_org_access: if set to true and the calling user is the organization admin, the
-              method returns all datasets in the organization.
+                method returns all datasets in the organization.
 
         Returns:
             list of datasets matching filter conditions, with the roles that the current user has on them. Each item
@@ -491,7 +489,7 @@ class EncordUserClient:
             edited_before: optional last modification date filter, 'less'
             edited_after: optional last modification date filter, 'greater'
             include_org_access: if set to true and the calling user is the organization admin, the
-              method will return all projects in the organization.
+                method will return all projects in the organization.
             tags_anyof: optional tag names filter; matches projects having at least one of the tag names.
 
         Returns:
@@ -522,18 +520,18 @@ class EncordUserClient:
         workflow_settings: ProjectWorkflowSettings = ManualReviewWorkflowSettings(),
         workflow_template_hash: Optional[str] = None,
     ) -> str:
-        """Creates a new Project and returns its uid ('project_hash')
+        """Creates a new :class:`~encord.project.Project` and returns its uid ('project_hash')
 
         Args:
             project_title: the title of the Project
             dataset_hashes: a list of the Dataset uids that the project will use
             project_description: the optional description of the project
-            ontology_hash: the uid of an Ontology to be used. If omitted, a new empty Ontology will be created
+            ontology_hash: the uid of an :class:`~encord.ontology.Ontology` to be used. If omitted, a new empty :class:`~encord.ontology.Ontology` will be created
             workflow_settings: selects and configures the type of the quality control Workflow to use, See :class:`encord.orm.project.ProjectWorkflowSettings` for details. If omitted, :class:`~encord.orm.project.ManualReviewWorkflowSettings` is used.
             workflow_template_hash: Project is created using a Workflow based on the template provided. If omitted, the project will be created using the default standard workflow.
 
         Returns:
-            the uid of the Project.
+            The UUID of the Project.
         """
         project = {
             "title": project_title,
@@ -883,10 +881,11 @@ class EncordUserClient:
             filter_integration_uuids: optional list of integration UUIDs to include.
             filter_integration_titles: optional list of integration titles to include (exact match).
             include_org_access: if set to true and the calling user is the organization admin, the
-              method will return all cloud integrations in the organization.
+                method will return all cloud integrations in the organization.
 
-        If `filter_integration_uuids` and `filter_integration_titles` are both provided, the method will return
-        the integrations that match both of the filters.
+        Notes:
+            If `filter_integration_uuids` and `filter_integration_titles` are both provided, the method will return
+            the integrations that match both of the filters.
         """
         if filter_integration_uuids is not None:
             filter_integration_uuids = [UUID(x) if isinstance(x, str) else x for x in filter_integration_uuids]
@@ -930,7 +929,7 @@ class EncordUserClient:
             edited_before: optional last modification date filter, 'less'
             edited_after: optional last modification date filter, 'greater'
             include_org_access: if set to true and the calling user is the organization admin, the
-              method will return all ontologies in the organization.
+                method will return all ontologies in the organization.
 
         Returns:
             list of ontologies matching filter conditions, with the roles that the current user has on them. Each item
@@ -961,15 +960,15 @@ class EncordUserClient:
         """Creates a new ontology with the given title, description, and structure.
 
         Args:
-        title (str): The title of the ontology.
-        description (str, optional): A brief description of the ontology. Defaults to an empty string.
-        structure (Optional[OntologyStructure], optional): The structural definition of the ontology. If not provided, a default structure is used.
+            title: The title of the ontology.
+            description: A brief description of the ontology. Defaults to an empty string.
+            structure: The structural definition of the ontology. If not provided, a default structure is used.
 
         Returns:
-        Ontology: The newly created ontology object.
+            :class:`~encord.ontology.Ontology`: The newly created ontology object.
 
         Raises:
-        ValueError: If the provided structure contains a classification without any attributes.
+            ValueError: If the provided structure contains a classification without any attributes.
         """
         try:
             structure_dict = structure.to_dict() if structure else OntologyStructure().to_dict()
@@ -1258,7 +1257,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `folder_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the folder with the given UUID does not exist or
+            :class:`~encord.exceptions.AuthorisationError` : If the folder with the given UUID does not exist or
                 the user does not have access to it.
         """
         if isinstance(folder_uuid, str):
@@ -1277,7 +1276,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `item_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
+            :class:`~encord.exceptions.AuthorisationError` : If the item with the given UUID does not exist or
                 the user does not have access to it.
         """
         if isinstance(item_uuid, str):
@@ -1301,7 +1300,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If any of the item uuids is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If some of the items with the given UUIDs do not exist or
+            :class:`~encord.exceptions.AuthorisationError` : If some of the items with the given UUIDs do not exist or
                 the user does not have access to them.
         """
         internal_item_uuids: List[UUID] = [UUID(item) if isinstance(item, str) else item for item in item_uuids]
@@ -1325,7 +1324,7 @@ class EncordUserClient:
                 no filtering is applied.
             org_access: If `True`, and if the caller is `ADMIN` of their organization, the results contain the
                 folders belonging to the organization, instead of those accessible to the user. If enabled
-                but the user is not an organization admin, the `AuthorisationError` is raised. Default value is `False`.
+                but the user is not an organization admin, the :class:`~encord.exceptions.AuthorisationError` is raised. Default value is `False`.
             order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
             desc: If True, sort in descending order.
             page_size: Number of folders to return per page. Default if not specified is 100. Maximum value is 1000.
@@ -1364,7 +1363,7 @@ class EncordUserClient:
                 no filtering is applied.
             org_access: If `True`, and if the caller is `ADMIN` of their organization, the results contain the
                 folders belonging to the organization, instead of those accessible to the user. If enabled
-               but the user is not an organization admin, the `AuthorisationError` is raised. Default value is `False`.
+                but the user is not an organization admin, the :class:`~encord.exceptions.AuthorisationError` is raised. Default value is `False`.
             order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
             desc: If True, sort in descending order.
             page_size: Number of folders to return per page. Default if not specified is 100. Maximum value is 1000.
@@ -1400,7 +1399,8 @@ class EncordUserClient:
     ) -> Iterable[StorageItem]:
         """Recursively search for storage items, starting from the root level.
 
-        **Warning:** This method is slow. We recommend using `storage_folder.list_items` instead.
+        Warning:
+            This method is slow. We recommend using `storage_folder.list_items` instead.
 
         Args:
             search: Search string to filter items by name.
@@ -1409,14 +1409,15 @@ class EncordUserClient:
                 dataset links.
             item_types: Filter items by type.
             org_access: If `True`, and if the caller is `ADMIN` of their organization, the results contain the
-               items belonging to the organization, instead of those accessible to the user. If enabled
-                but the user is not an organization admin, the `AuthorisationError` is raised. Default value is `False`.
+                items belonging to the organization, instead of those accessible to the user. If enabled
+                but the user is not an organization admin, the :class:`~encord.exceptions.AuthorisationError` is raised. Default value is `False`.
             order: Sort order.
             desc: Sort in descending order.
             get_signed_urls: If True, return signed URLs for the items.
             page_size: Number of items to return per page. Default if not specified is 100. Maximum value is 1000.
 
-        At least one of `search` or `item_types` must be provided.
+        Notes:
+            At least one of `search` or `item_types` must be provided.
 
         Returns:
             Iterable of items in the folder.
@@ -1457,7 +1458,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `collection_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
+            :class:`~encord.exceptions.AuthorisationError` : If the item with the given UUID does not exist or
                 the user does not have access to it.
         """
         if isinstance(collection_uuid, str):
@@ -1478,14 +1479,14 @@ class EncordUserClient:
         Args:
             top_level_folder_uuid: The unique identifier of the top level folder.
             collection_uuids: The unique identifiers (UUIDs) of the collections to retrieve.
-            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+            page_size: Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             The list of collections which match the given criteria.
 
         Raises:
             ValueError: If `top_level_folder_uuid` or any of the collection uuids is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+            :class:`~encord.exceptions.AuthorisationError` : If the user does not have access to it.
         """
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
@@ -1512,7 +1513,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `collection_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+            :class:`~encord.exceptions.AuthorisationError` : If the user does not have access to it.
         """
         if isinstance(collection_uuid, str):
             collection_uuid = UUID(collection_uuid)
@@ -1529,11 +1530,11 @@ class EncordUserClient:
             description: The description of the collection.
 
         Returns:
-            Collection: Newly created collection.
+            :class:`~encord.collection.Collection`: Newly created collection.
 
         Raises:
             ValueError: If `top_level_folder_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to the folder.
+            :class:`~encord.exceptions.AuthorisationError` : If the user does not have access to the folder.
         """
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
@@ -1551,7 +1552,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `preset_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
+            :class:`~encord.exceptions.AuthorisationError` : If the item with the given UUID does not exist or
                 the user does not have access to it.
         """
         if isinstance(preset_uuid, str):
@@ -1565,14 +1566,14 @@ class EncordUserClient:
 
         Args:
             preset_uuids: The list of unique identifiers (UUIDs) to be retrieved.
-            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+            page_size: Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             The list of presets which match the given criteria.
 
         Raises:
             ValueError: If any of the preset uuids is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+            :class:`~encord.exceptions.AuthorisationError` : If the user does not have access to it.
         """
         internal_preset_uuids: List[UUID] = [
             UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuids
@@ -1586,14 +1587,14 @@ class EncordUserClient:
 
         Args:
             top_level_folder_uuid: The unique identifier of the top level folder.
-            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+            page_size: Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             The list of presets which match the given criteria.
 
         Raises:
             ValueError: If `top_level_folder_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+            :class:`~encord.exceptions.AuthorisationError` : If the user does not have access to it.
         """
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
@@ -1626,7 +1627,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `preset_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+            :class:`~encord.exceptions.AuthorisationError` : If the user does not have access to it.
         """
         if isinstance(preset_uuid, str):
             preset_uuid = UUID(preset_uuid)

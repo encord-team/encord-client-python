@@ -534,7 +534,8 @@ class DataRow(dict, Formatter):
     def _compare_upload_payload(self, upload_res: dict, initial_payload: dict) -> None:
         """Compares the upload payload with the response from the server.
 
-        NOTE: this could also compare the new fields, field by field and update the current DataRow.
+        Note:
+            This could also compare the new fields, field by field and update the current :class:`~encord.orm.dataset.DataRow`.
         """
         updated_fields = set(upload_res["updated_fields"])
         fields_requested_for_update = set(initial_payload.keys())
@@ -1119,8 +1120,9 @@ class DataUnitError(BaseDTO):
 class DatasetDataLongPolling(BaseDTO):
     """Response of the upload job's long polling request.
 
-    **Note:** An upload job consists of job units, where job unit could be
-    either a video, image group, dicom series, or a single image.
+    Note:
+        An upload job consists of job units, where job unit could be
+        either a video, image group, dicom series, or a single image.
     """
 
     status: LongPollingStatus
@@ -1189,10 +1191,10 @@ class CreateDatasetResponseV2(BaseDTO):
     """Response returned when creating a dataset (current format).
 
     Args:
-         dataset_uuid: UUID of the newly created dataset.
-         backing_folder_uuid: Optional UUID of the backing folder created alongside the
-             dataset, if applicable.
-             A 'not None' indicates a legacy "mirror" dataset was created.
+        dataset_uuid: UUID of the newly created dataset.
+        backing_folder_uuid: Optional UUID of the backing folder created alongside the
+            dataset, if applicable.
+            A 'not None' indicates a legacy "mirror" dataset was created.
     """
 
     dataset_uuid: UUID

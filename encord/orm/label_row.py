@@ -380,8 +380,9 @@ class LabelRowMetadata(Formatter):
         return ret
 
     def to_dict(self) -> Dict:
-        """Returns:
-        The dict equivalent of LabelRowMetadata.
+        """
+        Returns:
+            The dict equivalent of LabelRowMetadata.
         """
 
         def transform(value: Any):
@@ -484,19 +485,17 @@ class LabelRowMetadataDTO(BaseDTO):
 
 def label_row_metadata_dto_to_label_row_metadata(label_row_metadata_dto: LabelRowMetadataDTO) -> LabelRowMetadata:
     """Convert a :class:`LabelRowMetadataDTO` instance to a
-    :class:`LabelRowMetadata` dataclass.
+    :class:LabelRowMetadata dataclass.
 
-    This helper is useful when working with DTOs returned by the API
+    This helper is useful when working with DTOs returned by the API,
     but you prefer the richer, formatter-enabled
-    :class:`LabelRowMetadata` representation in your application code.
+    :class:LabelRowMetadata representation in your application code.
 
     Args:
-
-    label_row_metadata_dto: Metadata DTO returned from the API.
+        label_row_metadata_dto: Metadata DTO returned from the API.
 
     Returns:
-
-    LabelRowMetadata: Equivalent dataclass instance with the same fields populated.
+        :class:LabelRowMetadata: Equivalent dataclass instance with the same fields populated.
     """
     return LabelRowMetadata(
         label_hash=label_row_metadata_dto.label_hash,

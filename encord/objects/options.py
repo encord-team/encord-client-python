@@ -152,9 +152,9 @@ class NestableOption(Option):
             cls: attribute type, one of `RadioAttribute`, `ChecklistAttribute`, `TextAttribute`
             name: the user-visible name of the attribute
             local_uid: integer identifier of the attribute. Normally auto-generated;
-                    omit this unless the aim is to create an exact clone of existing ontology
+                omit this unless the aim is to create an exact clone of existing ontology
             feature_node_hash: global identifier of the object. Normally auto-generated;
-                    omit this unless the aim is to create an exact clone of existing ontology
+                omit this unless the aim is to create an exact clone of existing ontology
             required: whether the label editor would mark this attribute as 'required'
 
         Returns:

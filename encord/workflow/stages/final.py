@@ -41,20 +41,18 @@ class FinalStage(WorkflowStageBase):
     ) -> Iterable[FinalStageTask]:
         """Retrieves tasks for the FinalStage.
 
-        **Parameters**
+        Args:
+            data_hash: Unique ID(s) for the data unit(s).
+            dataset_hash: Unique ID(s) for the dataset(s) that the data unit(s) belongs to.
+            data_title: A string to filter tasks by the data unit's name.
 
-        - `data_hash` (Union[List[UUID], UUID, List[str], str, None]): Unique ID(s) for the data unit(s).
-        - `dataset_hash` (Union[List[UUID], UUID, List[str], str, None]): Unique ID(s) for the dataset(s) that the data unit(s) belongs to.
-        - `data_title` (Optional[str]): A string to filter tasks by the data unit's name.
-
-        **Returns**
-
-        An iterable of `FinalStageTask` instances with the following information:
-        - `uuid`: Unique identifier for the task.
-        - `created_at`: Time and date the task was created.
-        - `updated_at`: Time and date the task was last edited.
-        - `data_hash`: Unique identifier for the data unit.
-        - `data_title`: Name/title of the data unit.
+        Returns:
+            An iterable of `FinalStageTask` instances with the following information:
+            - `uuid`: Unique identifier for the task.
+            - `created_at`: Time and date the task was created.
+            - `updated_at`: Time and date the task was last edited.
+            - `data_hash`: Unique identifier for the data unit.
+            - `data_title`: Name/title of the data unit.
         """
         params = _FinalTasksQueryParams(
             data_hashes=ensure_uuid_list(data_hash),
@@ -88,14 +86,12 @@ class FinalStageTask(WorkflowTask):
     def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
         """Moves the final stage task from its current stage to another stage.
 
-        **Parameters**
+        Args:
+            destination_stage_uuid: Unique identifier of the stage to move the task to.
+            bundle: Optional bundle of actions to execute with the move.
 
-        - `destination_stage_uuid` (UUID): Unique identifier of the stage to move the task to.
-        - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the move.
-
-        **Returns**
-
-        None
+        Returns:
+            None
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.move(

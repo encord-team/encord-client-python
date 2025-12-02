@@ -102,7 +102,7 @@ class OntologyElement(ABC):
             The child node with the specified title and type.
 
         Raises:
-            OntologyError: If more than one or no matching child is found.
+            :class:`~encord.exceptions.OntologyError`: If more than one or no matching child is found.
         """
         found_items = self.get_children_by_title(title, type_)
         _assert_singular_result_list(found_items, title, type_)

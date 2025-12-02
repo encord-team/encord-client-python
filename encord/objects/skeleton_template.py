@@ -33,7 +33,7 @@ class SkeletonTemplate(SkeletonTemplateORM):
         """Create an instance of SkeletonCoordinates with the provided coordinates.
 
         Args:
-            provided_coordinates (List[SkeletonCoordinate]): A list of SkeletonCoordinate objects to align.
+            provided_coordinates: A list of SkeletonCoordinate objects to align.
 
         Returns:
             SkeletonCoordinates: An instance of SkeletonCoordinates with aligned coordinates.

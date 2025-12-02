@@ -79,8 +79,8 @@ class TaskIssues:
         """Adds a file issue.
 
         Args:
-            comment (str): The comment for the issue.
-            issue_tags (List[str]): The issue tags for the issue.
+            comment: The comment for the issue.
+            issue_tags: The issue tags for the issue.
         """
         self._issue_client.add_issue(
             project_uuid=self._project_uuid,
@@ -95,9 +95,9 @@ class TaskIssues:
         """Adds a frame issue.
 
         Args:
-            frame_index (int): The index of the frame to add the issue to.
-            comment (str): The comment for the issue.
-            issue_tags (List[str]): The issue tags for the issue.
+            frame_index: The index of the frame to add the issue to.
+            comment: The comment for the issue.
+            issue_tags: The issue tags for the issue.
         """
         self._issue_client.add_issue(
             project_uuid=self._project_uuid,
@@ -107,14 +107,14 @@ class TaskIssues:
         )
 
     def add_coordinate_issue(self, frame_index: int, x: float, y: float, comment: str, issue_tags: List[str]) -> None:
-        """Adds a issue pinned to a coordinate.
+        """Adds an issue pinned to a coordinate.
 
         Args:
-            frame_index (int): The index of the frame to add the issue to.
-            x (float): The x coordinate of the issue.
-            y (float): The y coordinate of the issue.
-            comment (str): The comment for the issue.
-            issue_tags (List[str]): The issue tags for the issue.
+            frame_index: The index of the frame to add the issue to.
+            x: The x coordinate of the issue.
+            y: The y coordinate of the issue.
+            comment: The comment for the issue.
+            issue_tags: The issue tags for the issue.
         """
         self._issue_client.add_issue(
             project_uuid=self._project_uuid,

@@ -163,8 +163,8 @@ class Collection:
         """Update the collection's name and/or description.
 
         Args:
-           name (Optional[str]): The new name for the collection.
-           description (Optional[str]): The new description for the collection.
+            name: The new name for the collection.
+            description: The new description for the collection.
         """
         payload = UpdateCollectionPayload(name=name, description=description)
         self._client.patch(
@@ -182,11 +182,11 @@ class Collection:
         """List storage items in the collection.
 
         Args:
-            include_client_metadata (Optional[bool]): Whether to include client metadata for each item.
-            page_size (Optional[int]): The number of items to fetch per page.
+            include_client_metadata: Whether to include client metadata for each item.
+            page_size: The number of items to fetch per page.
 
         Returns:
-            Iterator[StorageItem]: An iterator containing storage items in the collection.
+            Iterator[:class:`~encord.storage.StorageItem`]: An iterator containing storage items in the collection.
         """
         params = GetCollectionItemsParams(includeClientMetadata=include_client_metadata, pageSize=page_size)
         paged_items = self._client.get_paged_iterator(
@@ -203,11 +203,11 @@ class Collection:
         """List storage items in the collection, including those that are inaccessible.
 
         Args:
-            include_client_metadata (Optional[bool]): Whether to include client metadata for each item.
-            page_size (Optional[int]): The number of items to fetch per page.
+            include_client_metadata: Whether to include client metadata for each item.
+            page_size: The number of items to fetch per page.
 
         Returns:
-            Iterator[Union[StorageItem, StorageItemInaccessible]]: An iterator containing both accessible
+            Iterator[Union[:class:`~encord.storage.StorageItem`, :class:`~encord.storage.StorageItem`Inaccessible]]: An iterator containing both accessible
             and inaccessible storage items in the collection.
         """
         params = GetCollectionItemsParams(includeClientMetadata=include_client_metadata, pageSize=page_size)
@@ -228,8 +228,8 @@ class Collection:
         """Add storage items to the collection.
 
         Args:
-            storage_item_uuids (Sequence[Union[UUID, str]]): The list of storage item UUIDs to be added.
-            Either UUIDs or string representations of UUIDs are accepted.
+            storage_item_uuids: The list of storage item UUIDs to be added.
+                Either UUIDs or string representations of UUIDs are accepted.
 
         Returns:
             CollectionBulkItemResponse: The response after adding items to the collection.
@@ -247,8 +247,8 @@ class Collection:
         """Remove storage items from the collection.
 
         Args:
-            storage_item_uuids (Sequence[Union[UUID, str]]): The list of storage item UUIDs to be removed.
-            Either UUIDs or string representations of UUIDs are accepted.
+            storage_item_uuids: The list of storage item UUIDs to be removed.
+                Either UUIDs or string representations of UUIDs are accepted.
 
         Returns:
             CollectionBulkItemResponse: The response after removing items from the collection.
@@ -266,7 +266,7 @@ class Collection:
         """Async operation to add storage items matching a filter preset to the collection.
 
         Args:
-             filter_preset (Union[FilterPreset, UUID, str]): The filter preset or its UUID/ID used to filter items.
+            filter_preset: The filter preset or its UUID/ID used to filter items.
         """
         if isinstance(filter_preset, FilterPreset):
             preset_uuid = filter_preset.uuid
@@ -289,7 +289,7 @@ class Collection:
         """Async operation to remove storage items matching a filter preset from the collection.
 
         Args:
-            filter_preset (Union[FilterPreset, UUID, str]): The filter preset or its UUID/ID used to filter items.
+            filter_preset: The filter preset or its UUID/ID used to filter items.
         """
         if isinstance(filter_preset, FilterPreset):
             preset_uuid = filter_preset.uuid
@@ -467,8 +467,8 @@ class ProjectCollection:
         """Update the collection's name and/or description.
 
         Args:
-           name (Optional[str]): The new name for the collection.
-           description (Optional[str]): The new description for the collection.
+            name: The new name for the collection.
+            description: The new description for the collection.
         """
         payload = UpdateCollectionPayload(name=name, description=description)
         self._client.patch(
@@ -485,10 +485,10 @@ class ProjectCollection:
         """List frames in the collection.
 
         Args:
-            page_size (Optional[int]): The number of items to fetch per page.
+            page_size: The number of items to fetch per page.
 
         Returns:
-            Iterator[Tuple[LabelRowV2, List[ProjectDataCollectionInstance]]]: An list of tuples containing label
+            Iterator[Tuple[:class:`~encord.objects.LabelRowV2`, List[ProjectDataCollectionInstance]]]: An list of tuples containing label
             row and corresponding frame instances in the collection.
         """
         params = GetCollectionItemsParams(pageSize=page_size)
@@ -515,10 +515,10 @@ class ProjectCollection:
         """List annotations in the collection.
 
         Args:
-            page_size (Optional[int]): The number of items to fetch per page.
+            page_size: The number of items to fetch per page.
 
         Returns:
-            Iterator[Tuple[LabelRowV2, List[ProjectLabelCollectionInstance]]]: An list of tuples containing label
+            Iterator[Tuple[:class:`~encord.objects.LabelRowV2`, List[ProjectLabelCollectionInstance]]]: An list of tuples containing label
             row and corresponding label instances in the collection.
         """
         params = GetCollectionItemsParams(pageSize=page_size)
@@ -544,7 +544,7 @@ class ProjectCollection:
         """Add data items to the collection.
 
         Args:
-            items (Sequence[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]): The list of data items to be added.
+            items: The list of data items to be added.
 
         Returns:
             ProjectCollectionBulkItemResponse: The response after adding items to the collection.
@@ -563,7 +563,7 @@ class ProjectCollection:
         """Remove data items from the collection.
 
         Args:
-            items (Sequence[ProjectDataCollectionItemRequest | ProjectLabelCollectionItemRequest]): The list of data items to be removed.
+            items: The list of data items to be removed.
 
         Returns:
             ProjectCollectionBulkItemResponse: The response after removing items from the collection.
@@ -580,7 +580,7 @@ class ProjectCollection:
         """Async operation to add storage items matching a filter preset to the collection.
 
         Args:
-             filter_preset (Union[FilterPreset, UUID, str]): The filter preset or its UUID/ID used to filter items.
+            filter_preset: The filter preset or its UUID/ID used to filter items.
         """
         if isinstance(filter_preset, FilterPreset):
             preset_uuid = filter_preset.uuid
@@ -603,7 +603,7 @@ class ProjectCollection:
         """Async operation to remove storage items matching a filter preset from the collection.
 
         Args:
-            filter_preset (Union[FilterPreset, UUID, str]): The filter preset or its UUID/ID used to filter items.
+            filter_preset: The filter preset or its UUID/ID used to filter items.
         """
         if isinstance(filter_preset, FilterPreset):
             preset_uuid = filter_preset.uuid

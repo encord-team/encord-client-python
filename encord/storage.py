@@ -4,7 +4,7 @@ slug: "sdk-ref-storage"
 hidden: false
 metadata:
   title: "Storage"
-  description: "Encord SDK StorageFolder and StorageItem classes"
+  description: "Encord SDK StorageFolder and :class:`~encord.storage.StorageItem` classes"
 category: "64e481b57b6027003f20aaa0"
 ---
 """
@@ -151,18 +151,18 @@ class StorageFolder:
         """Lists items in the folder.
 
         Args:
-            search (Optional[str]): Search string to filter items by name.
-            is_in_dataset (Optional[bool]): Filter items by whether they are linked to any dataset.
-                                            `True` and `False` select only linked and only unlinked items, respectively.
-                                            `None` includes all items regardless of their dataset links.
-            item_types (Optional[List[StorageItemType]]): Filter items by type.
-            order (FoldersSortBy): Sort order. Defaults to FoldersSortBy.NAME.
-            get_signed_urls (bool): Whether to get signed URLs for the items. Defaults to False.
-            desc (bool): Sort in descending order. Defaults to False.
-            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+            search: Search string to filter items by name.
+            is_in_dataset: Filter items by whether they are linked to any dataset.
+                `True` and `False` select only linked and only unlinked items, respectively.
+                `None` includes all items regardless of their dataset links.
+            item_types: Filter items by type.
+            order: Sort order. Defaults to FoldersSortBy.NAME.
+            get_signed_urls: Whether to get signed URLs for the items. Defaults to False.
+            desc: Sort in descending order. Defaults to False.
+            page_size: Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
-            Iterable[StorageItem]: Iterable of items in the folder.
+            Iterable[:class:`~encord.storage.StorageItem`]: Iterable of items in the folder.
         """
         params = ListItemsParams(
             search=search,
@@ -198,19 +198,19 @@ class StorageFolder:
         """Uploads an image to a folder in Encord storage.
 
         Args:
-            file_path (Union[Path, str]): Path to the image file (e.g., '/home/user/data/image.png').
-            title (Optional[str]): The image title. If unspecified, this will be the file name.
-            client_metadata (Optional[Dict[str, Any]]): Optional arbitrary metadata to be associated with the image.
-                                                        Should be a dictionary that is JSON-serializable.
-            cloud_upload_settings (CloudUploadSettings): Settings for uploading data into the cloud. Change this object
-                                                        to overwrite the default values.
+            file_path: Path to the image file (e.g., '/home/user/data/image.png').
+            title: The image title. If unspecified, this will be the file name.
+            client_metadata: Optional arbitrary metadata to be associated with the image.
+                Should be a dictionary that is JSON-serializable.
+            cloud_upload_settings: Settings for uploading data into the cloud. Change this object
+                to overwrite the default values.
 
         Returns:
-            UUID: The UUID of the newly created image item.
+            The UUID of the newly created image item.
 
         Raises:
-            AuthorizationError: If the user is not authorized to access the folder.
-            EncordException: If the image could not be uploaded, e.g., due to being in an unsupported format.
+            :class:`~encord.exceptions.AuthorisationError`: If the user is not authorized to access the folder.
+            :class:`~encord.exceptions.EncordException`: If the image could not be uploaded, e.g., due to being in an unsupported format.
         """
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.IMAGE, count=1, frames_subfolder_name=None
@@ -257,24 +257,24 @@ class StorageFolder:
         """Uploads a video to a folder in Encord storage.
 
         Args:
-            file_path (Union[Path, str]): Path to the video file (e.g., '/home/user/data/video.mp4').
-            title (Optional[str]): The video title. If unspecified, this will be the file name. This title should include an extension.
-                                For example, "encord_video.mp4".
-            client_metadata (Optional[Dict[str, Any]]): Optional arbitrary metadata to be associated with the video.
-                                                        Should be a dictionary that is JSON-serializable.
-            video_metadata (Optional[CustomerProvidedVideoMetadata]): Optional media metadata for a video file; if provided,
-                                                                    Encord service will skip frame synchronization checks and
-                                                                    will use the values specified here to render the video
-                                                                    in the label editor.
-            cloud_upload_settings (CloudUploadSettings): Settings for uploading data into the cloud. Change this object to
-                                                        overwrite the default values.
+            file_path: Path to the video file (e.g., '/home/user/data/video.mp4').
+            title: The video title. If unspecified, this will be the file name. This title should include an extension.
+                For example, "encord_video.mp4".
+            client_metadata: Optional arbitrary metadata to be associated with the video.
+                Should be a dictionary that is JSON-serializable.
+            video_metadata: Optional media metadata for a video file; if provided,
+                Encord service will skip frame synchronization checks and
+                will use the values specified here to render the video
+                in the label editor.
+            cloud_upload_settings: Settings for uploading data into the cloud. Change this object to
+                overwrite the default values.
 
         Returns:
             UUID: The UUID of the newly created video item.
 
         Raises:
-            AuthorizationError: If the user is not authorized to access the folder.
-            EncordException: If the video could not be uploaded, e.g., due to being in an unsupported format.
+            :class:`~encord.exceptions.AuthorisationError`: If the user is not authorized to access the folder.
+            :class:`~encord.exceptions.EncordException`: If the video could not be uploaded, e.g., due to being in an unsupported format.
         """
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.VIDEO, count=1, frames_subfolder_name=None
@@ -319,12 +319,12 @@ class StorageFolder:
         """Re-encodes the specified video items.
 
         Args:
-            storage_items (List[UUID]): List of UUIDs representing the video items to be re-encoded.
-            process_title (str): Title for the re-encoding process.
-            force_full_reencoding (bool): Flag to force full re-encoding.
+            storage_items: List of UUIDs representing the video items to be re-encoded.
+            process_title: Title for the re-encoding process.
+            force_full_reencoding: Flag to force full re-encoding.
 
         Returns:
-            UUID: The UUID of the re-encoding process.
+            The UUID of the re-encoding process.
         """
         return self._api_client.post(
             "/storage/items/reencode",
@@ -342,10 +342,10 @@ class StorageFolder:
         """Retrieves the status of a re-encoding process.
 
         Args:
-            process_hash (UUID): The UUID of the re-encoding process.
+            process_hash: The UUID of the re-encoding process.
 
         Returns:
-            ReencodeVideoItemsResponse: Response object containing the status of the re-encoding process.
+            Response object containing the status of the re-encoding process.
         """
         return self._api_client.get(
             f"/storage/items/reencode/{process_hash}", params=None, result_type=ReencodeVideoItemsResponse
@@ -361,21 +361,21 @@ class StorageFolder:
         """Uploads a DICOM series to a folder in Encord storage.
 
         Args:
-            file_paths (Sequence[Union[str, Path]]): A list of paths to DICOM files, e.g.,
+            file_paths: A list of paths to DICOM files, e.g.,
                 ['/home/user/data/DICOM_1.dcm', '/home/user/data/DICOM_2.dcm'].
-            title (Optional[str]): The title of the DICOM series. If unspecified, this will be randomly generated.
+            title: The title of the DICOM series. If unspecified, this will be randomly generated.
                 This title should NOT include an extension. For example, "encord_image_group".
-            client_metadata (Optional[Dict[str, Any]]): Optional arbitrary metadata to be associated with the DICOM series.
+            client_metadata: Optional arbitrary metadata to be associated with the DICOM series.
                 Should be a dictionary that is JSON-serializable.
-            cloud_upload_settings (CloudUploadSettings): Settings for uploading data into the cloud. Change this object
+            cloud_upload_settings: Settings for uploading data into the cloud. Change this object
                 to overwrite the default values.
 
         Returns:
-            UUID: The UUID of the newly created DICOM series item.
+            The UUID of the newly created DICOM series item.
 
         Raises:
-            AuthorizationError: If the user is not authorized to access the folder.
-            EncordException: If the series could not be uploaded, e.g., due to being in an unsupported format.
+            :class:`~encord.exceptions.AuthorisationError`: If the user is not authorized to access the folder.
+            :class:`~encord.exceptions.EncordException`: If the series could not be uploaded, e.g., due to being in an unsupported format.
         """
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.DICOM_FILE, count=len(file_paths), frames_subfolder_name=None
@@ -434,21 +434,21 @@ class StorageFolder:
         and :meth:`encord.storage.StorageFolder.upload_image`.
 
         Args:
-            file_paths (Collection[Union[Path, str]]): A list of paths to images, e.g.,
+            file_paths: A list of paths to images, e.g.,
                 ['/home/user/data/img1.png', '/home/user/data/img2.png'].
-            title (Optional[str]): The title of the image group. If unspecified, this will be randomly generated.
+            title: The title of the image group. If unspecified, this will be randomly generated.
                 This title should NOT include an extension. For example, "encord_image_group".
-            client_metadata (Optional[Dict[str, Any]]): Optional arbitrary metadata to be associated with the image group.
+            client_metadata: Optional arbitrary metadata to be associated with the image group.
                 Should be a dictionary that is JSON-serializable.
-            cloud_upload_settings (CloudUploadSettings): Settings for uploading data into the cloud. Change this object
+            cloud_upload_settings: Settings for uploading data into the cloud. Change this object
                 to overwrite the default values.
 
         Returns:
-            UUID: The UUID of the newly created image group item.
+            The UUID of the newly created image group item.
 
         Raises:
-            AuthorizationError: If the user is not authorized to access the folder.
-            EncordException: If the images could not be uploaded, e.g., due to being in an unsupported format.
+            :class:`~encord.exceptions.AuthorisationError`: If the user is not authorized to access the folder.
+            :class:`~encord.exceptions.EncordException`: If the images could not be uploaded, e.g., due to being in an unsupported format.
         """
         return self._create_image_group_or_sequence(
             file_paths,
@@ -471,21 +471,21 @@ class StorageFolder:
         See also :meth:`encord.storage.StorageFolder.create_image_group` and :meth:`encord.storage.StorageFolder.upload_image`.
 
         Args:
-            file_paths (Collection[Union[Path, str]]): A list of paths to images, e.g.,
+            file_paths: A list of paths to images, e.g.,
                 ['/home/user/data/img1.png', '/home/user/data/img2.png'].
-            title (Optional[str]): The title of the image sequence. If unspecified, this will be randomly generated.
+            title: The title of the image sequence. If unspecified, this will be randomly generated.
                 This title should NOT include an extension. For example, "front camera 2024-04-01".
-            client_metadata (Optional[Dict[str, Any]]): Optional arbitrary metadata to be associated with the image sequence.
+            client_metadata: Optional arbitrary metadata to be associated with the image sequence.
                 Should be a dictionary that is JSON-serializable.
-            cloud_upload_settings (CloudUploadSettings): Settings for uploading data into the cloud. Change this object
+            cloud_upload_settings: Settings for uploading data into the cloud. Change this object
                 to overwrite the default values.
 
         Returns:
-            UUID: The UUID of the newly created image sequence item.
+            The UUID of the newly created image sequence item.
 
         Raises:
-            AuthorizationError: If the user is not authorized to access the folder.
-            EncordException: If the images could not be uploaded, e.g., due to being in an unsupported format.
+            :class:`~encord.exceptions.AuthorisationError`: If the user is not authorized to access the folder.
+            :class:`~encord.exceptions.EncordException`: If the images could not be uploaded, e.g., due to being in an unsupported format.
         """
         return self._create_image_group_or_sequence(
             file_paths,
@@ -560,25 +560,18 @@ class StorageFolder:
         Uploads a NIfTI file to an Encord Storage Folder.
 
         Args:
-            file_path (Union[Path, str]):
-                Path to the local NIfTI file (e.g., '/home/user/data/brain_scan.nii.gz').
-
-            title (Optional[str]):
-                Title of the NIfTI item in Encord. If not provided, the filename is used.
+            file_path: Path to the local NIfTI file (e.g., '/home/user/data/brain_scan.nii.gz').
+            title: Title of the NIfTI item in Encord. If not provided, the filename is used.
                 Must include the '.nii' or '.nii.gz' extension.
-
-            client_metadata (Optional[Dict[str, Any]]):
-                Custom metadata to associate with the NIfTI file. Must be JSON-serializable.
-
-            cloud_upload_settings (CloudUploadSettings):
-                Configuration for how the file is uploaded to the cloud. Use this to override default behavior.
+            client_metadata: Custom metadata to associate with the NIfTI file. Must be JSON-serializable.
+            cloud_upload_settings: Configuration for how the file is uploaded to the cloud. Use this to override default behavior.
 
         Returns:
-            UUID: UUID of the uploaded NIfTI item.
+            UUID of the uploaded NIfTI item.
 
         Raises:
-            AuthorizationError: If the user lacks permission to access the target folder.
-            EncordException: If the file cannot be uploaded (for example due to format or metadata issues).
+            :class:`~encord.exceptions.AuthorisationError`: If the user lacks permission to access the target folder.
+            :class:`~encord.exceptions.EncordException`: If the file cannot be uploaded (for example due to format or metadata issues).
         """
 
         upload_url_info = self._get_upload_signed_urls(
@@ -629,28 +622,19 @@ class StorageFolder:
         """Uploads an audio file to an Encord Storage Folder.
 
         Args:
-            file_path (Union[Path, str]):
-                Path to the local audio file (e.g., '/home/user/data/audio.mp3').
-
-            title (Optional[str]):
-                Title of the audio file in Encord. If not provided, the filename is used.
+            file_path: Path to the local audio file (e.g., '/home/user/data/audio.mp3').
+            title: Title of the audio file in Encord. If not provided, the filename is used.
                 The title must include a valid audio file extension (e.g., "encord_audio.mp3").
-
-            client_metadata (Optional[Dict[str, Any]]):
-                Custom metadata to associate with the audio. Must be JSON-serializable.
-
-            audio_metadata (Optional[CustomerProvidedAudioMetadata]):
-                Optional media metadata describing the audio file. If provided, the Encord skips scanning the file to extract media metadata.
-
-            cloud_upload_settings (CloudUploadSettings):
-                Configuration for cloud upload behavior. Override default settings using this parameter.
+            client_metadata: Custom metadata to associate with the audio. Must be JSON-serializable.
+            audio_metadata: Optional media metadata describing the audio file. If provided, the Encord skips scanning the file to extract media metadata.
+            cloud_upload_settings: Configuration for cloud upload behavior. Override default settings using this parameter.
 
         Returns:
-            UUID: UUID of the uploaded audio item.
+            UUID of the uploaded audio item.
 
         Raises:
-            AuthorizationError: If the user is not authorized to access the destination folder.
-            EncordException: If the upload fails (for example due to an unsupported audio format).
+            :class:`~encord.exceptions.AuthorisationError`: If the user is not authorized to access the destination folder.
+            :class:`~encord.exceptions.EncordException`: If the upload fails (for example due to an unsupported audio format).
 
         #### audio_metadata
 
@@ -724,8 +708,8 @@ class StorageFolder:
             UUID of the newly created text item.
 
         Raises:
-            AuthorizationError: If the user is not authorized to access the folder.
-            EncordException: If the audio could not be uploaded. For example, due to being in an unsupported format.
+            :class:`~encord.exceptions.AuthorisationError`: If the user is not authorized to access the folder.
+            :class:`~encord.exceptions.EncordException`: If the audio could not be uploaded. For example, due to being in an unsupported format.
 
         #### text_metadata
 
@@ -795,8 +779,8 @@ class StorageFolder:
             UUID of the newly created PDF item.
 
         Raises:
-            AuthorizationError: If the user is not authorized to access the folder.
-            EncordException: If the document could not be uploaded. For example, due to being in an unsupported format.
+            :class:`~encord.exceptions.AuthorisationError`: If the user is not authorized to access the folder.
+            :class:`~encord.exceptions.EncordException`: If the document could not be uploaded. For example, due to being in an unsupported format.
 
         #### pdf_metadata
 
@@ -853,14 +837,13 @@ class StorageFolder:
         """Starts the process of adding private data to a folder in Encord storage.
 
         Args:
-            integration_id (str): The integration ID for the folder.
-            private_files (Union[str, Dict, Path, TextIO, DataUploadItems]):
-                The specification of private files to be added. Can be either a JSON in Encord upload format
+            integration_id: The integration ID for the folder.
+            private_files: The specification of private files to be added. Can be either a JSON in Encord upload format
                 (see the relevant documentation), or an :class:`encord.orm.storage.DataUploadItems` object.
-            ignore_errors (bool): If True, errors will be ignored during the upload process.
+            ignore_errors: If True, errors will be ignored during the upload process.
 
         Returns:
-            UUID: The UUID of the upload job.
+            The UUID of the upload job.
         """
         return self._add_data_to_folder_start(integration_id, private_files, ignore_errors)
 
@@ -881,11 +864,11 @@ class StorageFolder:
 
         Returns:
             UUID: The unique identifier for the sync job that can be used with
-                 `sync_private_data_with_cloud_synced_folder_get_result` to poll for results.
+            `sync_private_data_with_cloud_synced_folder_get_result` to poll for results.
 
         Raises:
-            InvalidArgumentsError: If the folder is not a cloud-synced folder, or if there are
-               permission issues with the cloud storage bucket.
+            :class:`~encord.exceptions.InvalidArgumentsError`: If the folder is not a cloud-synced folder, or if there are
+                permission issues with the cloud storage bucket.
 
         Note:
             This method can only be used with folders created with cloud_synced_folder_params.
@@ -920,8 +903,8 @@ class StorageFolder:
         the job completes or the timeout is reached.
 
         Args:
-            sync_job_uuid (UUID): The UUID of the synchronization job to poll for results.
-            timeout_seconds (int): Maximum time in seconds to wait for the job to complete.
+            sync_job_uuid: The UUID of the synchronization job to poll for results.
+            timeout_seconds: Maximum time in seconds to wait for the job to complete.
                 Default is 7 days (604800 seconds).
 
         Returns:
@@ -929,7 +912,7 @@ class StorageFolder:
             the synchronization job.
 
         Raises:
-            InvalidArgumentsError: If the synchronization job UUID does not exist or is not associated
+            :class:`~encord.exceptions.InvalidArgumentsError`: If the synchronization job UUID does not exist or is not associated
                 with this folder.
 
         Note:
@@ -989,8 +972,8 @@ class StorageFolder:
         """Retrieves the result of adding private data to a folder in Encord storage.
 
         Args:
-            upload_job_id (UUID): The UUID of the upload job.
-            timeout_seconds (int): The timeout in seconds for the upload job.
+            upload_job_id: The UUID of the upload job.
+            timeout_seconds: The timeout in seconds for the upload job.
 
         Returns:
             UploadLongPollingState: The state of the upload job.
@@ -1009,12 +992,12 @@ class StorageFolder:
         """Lists subfolders of the current folder.
 
         Args:
-            search (Optional[str]): Search string to filter folders by name.
-            dataset_synced (Optional[bool]): Include or exclude folders that are mirrored by a dataset. If `None`,
+            search: Search string to filter folders by name.
+            dataset_synced: Include or exclude folders that are mirrored by a dataset. If `None`,
                 no filtering is applied.
-            order (FoldersSortBy): Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
-            desc (bool): If True, sort in descending order.
-            page_size (int): Number of folders to return per page.  Default if not specified is 100. Maximum value is 1000.
+            order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
+            desc: If True, sort in descending order.
+            page_size: Number of folders to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable[StorageFolder]: An iterable of :class:`encord.StorageFolder` objects.
@@ -1042,12 +1025,12 @@ class StorageFolder:
         """Recursively searches for storage folders, starting from this folder.
 
         Args:
-            search (Optional[str]): Search string to filter folders by name.
-            dataset_synced (Optional[bool]): Include or exclude folders that are mirrored by a dataset. If `None`,
+            search: Search string to filter folders by name.
+            dataset_synced: Include or exclude folders that are mirrored by a dataset. If `None`,
                 no filtering is applied.
-            order (FoldersSortBy): Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
-            desc (bool): If True, sort in descending order.
-            page_size (int): Number of folders to return per page.  Default if not specified is 100. Maximum value is 1000.
+            order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
+            desc: If True, sort in descending order.
+            page_size: Number of folders to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable[StorageFolder]: An iterable of :class:`encord.StorageFolder` objects.
@@ -1106,18 +1089,18 @@ class StorageFolder:
         Warning: This method is slow. We recommend using `storage_folder.list_items` instead.
 
         Args:
-            search (Optional[str]): Search string to filter items by name.
-            is_in_dataset (Optional[bool]): Filter items by whether they are linked to any dataset. `True` and `False` select
+            search: Search string to filter items by name.
+            is_in_dataset: Filter items by whether they are linked to any dataset. `True` and `False` select
                 only linked and only unlinked items, respectively. `None` includes all items regardless of their
                 dataset links.
-            item_types (Optional[List[StorageItemType]]): Filter items by type.
-            order (FoldersSortBy): Sort order.
-            desc (bool): Sort in descending order.
-            get_signed_urls (bool): If True, return signed URLs for the items.
-            page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
+            item_types: Filter items by type.
+            order: Sort order.
+            desc: Sort in descending order.
+            get_signed_urls: If True, return signed URLs for the items.
+            page_size: Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
-            Iterable[StorageItem]: An iterable of items in the folder and its subfolders.
+            Iterable[:class:`~encord.storage.StorageItem`]: An iterable of items in the folder and its subfolders.
 
         Raises:
             ValueError: If neither `search` nor `item_types` are provided.
@@ -1161,10 +1144,10 @@ class StorageFolder:
         """Update the folder's modifiable properties. Any parameters that are not provided will not be updated.
 
         Args:
-            name (Optional[str]): New folder name.
-            description (Optional[str]): New folder description.
-            client_metadata (Optional[Dict[str, Any]]): New client metadata.
-            bundle (Optional[Bundle]): Optional :class:`encord.http.Bundle` to use for the operation. If provided, the operation
+            name: New folder name.
+            description: New folder description.
+            client_metadata: New client metadata.
+            bundle: Optional :class:`encord.http.Bundle` to use for the operation. If provided, the operation
                 will be bundled into a single server call with other item updates using the same bundle.
 
         Returns:
@@ -1211,7 +1194,7 @@ class StorageFolder:
         """Move the folder to another folder (specify folder object or UUID), or to the root level if `target_folder` is None.
 
         Args:
-            target_folder (Optional[Union[StorageFolder, UUID]]): The target folder to move to, or `None` to move to the root level.
+            target_folder: The target folder to move to, or `None` to move to the root level.
 
         Returns:
             None
@@ -1238,9 +1221,9 @@ class StorageFolder:
         """Creates a data group storage item in this folder.
 
         Args:
-            params (Union[DataGroupInput, List[UUID]]): Parameters for the data group. When a list of UUIDs is provided,
+            params: Parameters for the data group. When a list of UUIDs is provided,
                 the group will be created with a grid layout. For custom layouts, use DataGroupGrid, DataGroupList or DataGroupCustom.
-            client_metadata (Optional[Dict[str, Any]]): Optional custom metadata to be associated with the data group.
+            client_metadata: Optional custom metadata to be associated with the data group.
                 Should be a dictionary that is JSON-serializable.
 
         Returns:
@@ -1264,13 +1247,13 @@ class StorageFolder:
         items_to_move: Sequence[Union[UUID, "StorageItem"]],
         allow_mirror_dataset_changes: bool = False,
     ) -> None:
-        """Move items (list of `StorageItem` objects or UUIDs) to another folder (specify folder object or UUID).
+        """Move items (list of `:class:`~encord.storage.StorageItem`` objects or UUIDs) to another folder (specify folder object or UUID).
 
         Args:
-            target_folder (Union[StorageFolder, UUID]): Target folder to move items to.
-            items_to_move (Sequence[Union[UUID, StorageItem]]): List of items to move. All the items should be immediate children
+            target_folder: Target folder to move items to.
+            items_to_move: List of items to move. All the items should be immediate children
                 of the current folder.
-            allow_mirror_dataset_changes (bool): If `True`, allow moving items that are linked to a mirror dataset. By default,
+            allow_mirror_dataset_changes: If `True`, allow moving items that are linked to a mirror dataset. By default,
                 moving such items is prohibited, as it would result in data units being removed from a dataset,
                 potentially deleting related annotations and other data.
 
@@ -1295,9 +1278,9 @@ class StorageFolder:
         """Delete storage items by their UUIDs.
 
         Args:
-            item_uuids (List[UUID]): List of UUIDs of items to delete. All the items should be immediate children
+            item_uuids: List of UUIDs of items to delete. All the items should be immediate children
                 of the current folder.
-            remove_unused_frames (bool): If `True` (default), remove individual images or DICOM files from image groups or
+            remove_unused_frames: If `True` (default), remove individual images or DICOM files from image groups or
                 DICOM series that are not used in any other item.
 
         Returns:
@@ -1576,7 +1559,7 @@ class StorageFolder:
         """Cancels a data upload in progress job, associated with this folder.
 
         Args:
-            upload_job_id (UUID): The unique identifier for the upload job.
+            upload_job_id: The unique identifier for the upload job.
 
         Returns:
             AddDataToFolderJobCancelResponse: A response indicating the result of the cancelled job.
@@ -1703,7 +1686,7 @@ class StorageItem:
 
     @property
     def item_type(self) -> StorageItemType:
-        """StorageItemType: The type of the storage item."""
+        """:class:`~encord.storage.StorageItem`Type: The type of the storage item."""
         return self._orm_item.item_type
 
     @property
@@ -1851,7 +1834,7 @@ class StorageItem:
         """Retrieve a summary of the item, including linked datasets and other information.
 
         Returns:
-            StorageItemSummary: Object containing summary information about the item.
+            :class:`~encord.storage.StorageItem`Summary: Object containing summary information about the item.
         """
         return self._api_client.get(
             f"storage/folders/{self.parent_folder_uuid}/items/{self.uuid}/summary",
@@ -1866,7 +1849,7 @@ class StorageItem:
             get_signed_urls: If `True`, include signed URLs for child items.
 
         Returns:
-            Iterable[StorageItem]: List of child items accessible to the user.
+            Iterable[:class:`~encord.storage.StorageItem`]: List of child items accessible to the user.
         """
         if self.item_type not in {
             StorageItemType.IMAGE_GROUP,

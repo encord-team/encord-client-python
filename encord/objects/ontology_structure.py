@@ -51,7 +51,7 @@ class OntologyStructure:
             type_: The expected type of the item. If the found child does not match the type, an error will be thrown.
 
         Raises:
-            OntologyError: If the item with the specified feature_node_hash is not found or if the type does not match.
+            :class:`~encord.exceptions.OntologyError`: If the item with the specified feature_node_hash is not found or if the type does not match.
         """
         for object_ in self.objects:
             if object_.feature_node_hash == feature_node_hash:
@@ -84,7 +84,7 @@ class OntologyStructure:
             type_: The expected type of the child node. Only a node that matches this type will be returned.
 
         Raises:
-            OntologyError: If no child node with the specified title and type is found, or if multiple matches are found.
+            :class:`~encord.exceptions.OntologyError`: If no child node with the specified title and type is found, or if multiple matches are found.
         """
         found_items = self.get_children_by_title(title, type_)
         _assert_singular_result_list(found_items, title, type_)
@@ -128,13 +128,13 @@ class OntologyStructure:
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> OntologyStructure:
-        """Create an OntologyStructure from a dictionary.
+        """Create an :class:`~encord.objects.OntologyStructure` from a dictionary.
 
         Args:
             d: A JSON blob of an "ontology structure" (e.g. from Encord web app)
 
         Returns:
-            OntologyStructure: The created OntologyStructure object.
+            :class:`~encord.objects.OntologyStructure`: The created :class:`~encord.objects.OntologyStructure` object.
 
         Raises:
             KeyError: If the dict is missing a required field.
@@ -153,7 +153,7 @@ class OntologyStructure:
         )
 
     def to_dict(self) -> Dict[str, List[Dict[str, Any]]]:
-        """Convert the OntologyStructure to a dictionary.
+        """Convert the :class:`~encord.objects.OntologyStructure` to a dictionary.
 
         Returns:
             Dict[str, List[Dict[str, Any]]]: The dictionary representation of the ontology.

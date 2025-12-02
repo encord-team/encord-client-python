@@ -179,16 +179,17 @@ class RadioAttribute(Attribute["NestableOption"]):
         local_uid: Optional[int] = None,
         feature_node_hash: Optional[str] = None,
     ) -> NestableOption:
-        """Args:
+        """
+        Args:
             label: user-visible name of the option
             value: internal unique value; optional; normally mechanically constructed from the label
             local_uid: integer identifier of the option. Normally auto-generated;
-                    omit this unless the aim is to create an exact clone of existing ontology
+                omit this unless the aim is to create an exact clone of existing ontology
             feature_node_hash: global identifier of the option. Normally auto-generated;
-                    omit this unless the aim is to create an exact clone of existing ontology
+                omit this unless the aim is to create an exact clone of existing ontology
 
         Returns:
-            a `NestableOption` instance attached to the attribute. This can be further specified by adding nested attributes.
+            A `NestableOption` instance attached to the attribute. This can be further specified by adding nested attributes.
         """
         return _add_option(self._options, NestableOption, label, self.uid, local_uid, feature_node_hash, value)
 
@@ -240,15 +241,17 @@ class ChecklistAttribute(Attribute["FlatOption"]):
         local_uid: Optional[int] = None,
         feature_node_hash: Optional[str] = None,
     ) -> FlatOption:
-        """Args:
+        """
+        Args:
             label: user-visible name of the option
             value: internal unique value; optional; normally mechanically constructed from the label
             local_uid: integer identifier of the option. Normally auto-generated;
-                    omit this unless the aim is to create an exact clone of existing ontology
+                omit this unless the aim is to create an exact clone of existing ontology
             feature_node_hash: global identifier of the option. Normally auto-generated;
-                    omit this unless the aim is to create an exact clone of existing ontology
+                omit this unless the aim is to create an exact clone of existing ontology
+
         Returns:
-            a `FlatOption` instance attached to the attribute.
+            A `FlatOption` instance attached to the attribute.
         """
         return _add_option(self._options, FlatOption, label, self.uid, local_uid, feature_node_hash, value)
 

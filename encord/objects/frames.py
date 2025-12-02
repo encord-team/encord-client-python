@@ -55,7 +55,7 @@ def frame_to_range(frame: int) -> Range:
     """Convert a single frame to a Range.
 
     Args:
-        frame (int): The single frame to be converted.
+        frame: The single frame to be converted.
 
     Returns:
         Range: A Range object with both start and end set to the input frame.
@@ -67,7 +67,7 @@ def frames_to_ranges(frames: Collection[int]) -> Ranges:
     """Create a sorted list (in ascending order) of non-overlapping run-length encoded ranges from a collection of frames.
 
     Args:
-        frames (Collection[int]): A collection of integers representing frames.
+        frames: A collection of integers representing frames.
 
     Returns:
         Ranges: A list of Range objects representing the non-overlapping ranges.
@@ -98,7 +98,7 @@ def ranges_to_list(ranges: Ranges) -> List[List[int]]:
     """Convert a list of Range objects to a list of lists (run-length encoded) of integers.
 
     Args:
-        ranges (Ranges): A list of Range objects.
+        ranges: A list of Range objects.
 
     Returns:
         List[List[int]]: A list of lists where each inner list contains two integers, the start and end of a range.
@@ -110,7 +110,7 @@ def range_to_ranges(range_: Range) -> Ranges:
     """Convert a single Range to a list of Ranges.
 
     Args:
-        range_ (Range): The single Range to be converted.
+        range_: The single Range to be converted.
 
     Returns:
         Ranges: A list containing the input Range as its only element.
@@ -122,7 +122,7 @@ def range_to_frames(range_: Range) -> List[int]:
     """Convert a single Range (run-length encoded) to a list of integers.
 
     Args:
-        range_ (Range): The single Range to be converted.
+        range_: The single Range to be converted.
 
     Returns:
         List[int]: A list of integers representing the frames within the range.
@@ -134,7 +134,7 @@ def ranges_to_frames(range_list: Ranges) -> List[int]:
     """Convert a list of Ranges (run-length encoded) to a list of integers.
 
     Args:
-        range_list (Ranges): A list of Range objects.
+        range_list: A list of Range objects.
 
     Returns:
         List[int]: A sorted list of integers representing all frames within the ranges.
@@ -149,7 +149,7 @@ def ranges_list_to_ranges(range_list: List[List[int]]) -> Ranges:
     """Convert a list of lists (run-length encoded) of integers to a list of Range objects.
 
     Args:
-        range_list (List[List[int]]): A list of lists where each inner list contains two integers, the start and end of a range.
+        range_list: A list of lists where each inner list contains two integers, the start and end of a range.
 
     Returns:
         Ranges: A list of Range objects created from the input list of lists.
@@ -161,7 +161,7 @@ def frames_class_to_frames_list(frames_class: Frames) -> List[int]:
     """Convert a Frames class (which can be an int, a list of ints, a Range, or a list of Ranges) to a list of integers.
 
     Args:
-        frames_class (Frames): A Frames class which can be a single int, a list of ints, a Range object, or a list of Range objects.
+        frames_class: A Frames class which can be a single int, a list of ints, a Range object, or a list of Range objects.
 
     Returns:
         List[int]: A sorted list of integers representing all frames within the input Frames class.

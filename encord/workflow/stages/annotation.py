@@ -64,17 +64,15 @@ class AnnotationStage(WorkflowStageBase):
     ) -> Iterable[AnnotationTask]:
         """Retrieves tasks for the AnnotationStage.
 
-        **Parameters**
+        Args:
+            assignee: A list of user emails or a single user email to filter tasks by assignee.
+            data_hash: A list of data unit UUIDs or a single data unit UUID to filter tasks by data hash.
+            dataset_hash: A list of dataset UUIDs or a single dataset UUID to filter tasks by dataset hash.
+            data_title: A string to filter tasks by data title.
+            status: A status or a list of statuses to filter tasks by their status.
 
-        - `assignee` (Union[List[str], str, None]): A list of user emails or a single user email to filter tasks by assignee.
-        - `data_hash` (Union[List[UUID], UUID, List[str], str, None]): A list of data unit UUIDs or a single data unit UUID to filter tasks by data hash.
-        - `dataset_hash` (Union[List[UUID], UUID, List[str], str, None]): A list of dataset UUIDs or a single dataset UUID to filter tasks by dataset hash.
-        - `data_title` (Optional[str]): A string to filter tasks by data title.
-        - `status` (Optional[AnnotationTaskStatus | List[AnnotationTaskStatus]]): A status or a list of statuses to filter tasks by their status.
-
-        **Returns**
-
-        An iterable of `AnnotationTask` instances from both non-Consensus and Consensus Projects.
+        Returns:
+            An iterable of :class:`~encord.workflow.stages.AnnotationTask` instances from both non-Consensus and Consensus Projects.
         """
         params = _AnnotationTasksQueryParams(
             user_emails=ensure_list(assignee),
@@ -145,11 +143,10 @@ class AnnotationTask(WorkflowTask):
     ) -> None:
         """Submits the task for review.
 
-        **Parameters**
-
-        - `assignee` (Optional[str]): User email to be assigned to the task whilst submitting the task.
-        - `retain_assignee` (bool): Retains the current assignee of the task. This is ignored if `assignee` is provided. An Error will occur if the task does not already have an assignee and `retain_assignee` is True.
-        - `bundle` (Optional[Bundle]): Optional bundle to be included with the submission.
+        Args:
+            assignee: User email to be assigned to the task whilst submitting the task.
+            retain_assignee: Retains the current assignee of the task. This is ignored if `assignee` is provided. An Error will occur if the task does not already have an assignee and `retain_assignee` is True.
+            bundle: Optional bundle to be included with the submission.
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -161,10 +158,9 @@ class AnnotationTask(WorkflowTask):
     def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
         """Assigns the task to a user.
 
-        **Parameters**
-
-        - `assignee` (str): The email of the user to assign the task to.
-        - `bundle` (Optional[Bundle]): Optional bundle to be included with the assignment.
+        Args:
+            assignee: The email of the user to assign the task to.
+            bundle: Optional bundle to be included with the assignment.
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -176,9 +172,8 @@ class AnnotationTask(WorkflowTask):
     def release(self, *, bundle: Optional[Bundle] = None) -> None:
         """Releases the task from the current user.
 
-        **Parameters**
-
-        - `bundle` (Optional[Bundle]): Optional bundle to be included with the release.
+        Args:
+            bundle: Optional bundle to be included with the release.
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -190,14 +185,12 @@ class AnnotationTask(WorkflowTask):
     def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
         """Moves the task from its current stage to another stage.
 
-        **Parameters**
+        Args:
+            destination_stage_uuid: Unique identifier of the stage to move the task to.
+            bundle: Optional bundle to be included with the move.
 
-        - `destination_stage_uuid` (UUID): Unique identifier of the stage to move the task to.
-        - `bundle` (Optional[Bundle]): Optional bundle to be included with the move.
-
-        **Returns**
-
-        None
+        Returns:
+            None
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.move(

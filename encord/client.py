@@ -12,7 +12,7 @@ and obtaining project info:
     client.get_project()
 
 Returns:
-        Project: A project record instance. See Project ORM for details.
+    Project: A project record instance. See Project ORM for details.
 
 """
 
@@ -192,9 +192,9 @@ class EncordClientDataset(EncordClient):
             OrmDataset: A dataset record instance.
 
         Raises:
-            AuthorisationError: If the dataset API key is invalid.
-            ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
-            UnknownError: If an error occurs while retrieving the dataset.
+            :class:`~encord.exceptions.AuthorisationError`: If the dataset API key is invalid.
+            :class:`~encord.exceptions.ResourceNotFoundError`: If no dataset exists by the specified dataset EntityId.
+            :class:`~encord.exceptions.UnknownError`: If an error occurs while retrieving the dataset.
         """
         res = self._querier.basic_getter(
             OrmDataset,
@@ -227,12 +227,12 @@ class EncordClientDataset(EncordClient):
             data_hashes: optional list of individual data unit hashes to include
 
         Returns:
-            List[DataRow]: A list of DataRows object that match the filter
+            List[:class:`~encord.orm.dataset.DataRow`]: A list of :class:`~encord.orm.dataset.DataRow`s object that match the filter
 
         Raises:
-            AuthorisationError: If the dataset API key is invalid.
-            ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
-            UnknownError: If an error occurs while retrieving the dataset.
+            :class:`~encord.exceptions.AuthorisationError`: If the dataset API key is invalid.
+            :class:`~encord.exceptions.ResourceNotFoundError`: If no dataset exists by the specified dataset EntityId.
+            :class:`~encord.exceptions.UnknownError`: If an error occurs while retrieving the dataset.
         """
         created_before = optional_datetime_to_iso_str("created_before", created_before)
         created_after = optional_datetime_to_iso_str("created_after", created_after)
@@ -803,9 +803,9 @@ class EncordClientProject(EncordClient):
             OrmProject: A project record instance.
 
         Raises:
-            AuthorisationError: If the project API key is invalid.
-            ResourceNotFoundError: If no project exists by the specified project EntityId.
-            UnknownError: If an error occurs while retrieving the project.
+            :class:`~encord.exceptions.AuthorisationError`: If the project API key is invalid.
+            :class:`~encord.exceptions.ResourceNotFoundError`: If no project exists by the specified project EntityId.
+            :class:`~encord.exceptions.UnknownError`: If an error occurs while retrieving the project.
         """
         return self._querier.basic_getter(
             OrmProject, payload={"include_labels_metadata": include_labels_metadata}, retryable=True
@@ -1021,6 +1021,7 @@ class EncordClientProject(EncordClient):
             uids: list of data uids where label_status is NOT_LABELLED.
             get_signed_url: bool whether to fetch the signed url for the internal label row
             branch_name: Optional[str] which branch name against which to create the label row
+
         Returns:
             List[LabelRow]: A list of created label rows
         """
@@ -1157,6 +1158,7 @@ class EncordClientProject(EncordClient):
 
     def __set_project_ontology(self, ontology: LegacyOntology) -> bool:
         """Save updated project ontology
+
         Args:
             ontology: the updated project ontology
 

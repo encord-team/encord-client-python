@@ -121,9 +121,9 @@ class Object(OntologyElement):
             cls: The attribute type, one of `RadioAttribute`, `ChecklistAttribute`, `TextAttribute`.
             name: The user-visible name of the attribute.
             local_uid: Integer identifier of the attribute. Normally auto-generated;
-                       omit this unless the aim is to create an exact clone of an existing ontology.
+                omit this unless the aim is to create an exact clone of an existing ontology.
             feature_node_hash: Global identifier of the attribute. Normally auto-generated;
-                               omit this unless the aim is to create an exact clone of an existing ontology.
+                omit this unless the aim is to create an exact clone of an existing ontology.
             required: Whether the label editor would mark this attribute as 'required'.
             dynamic: Whether the attribute can have a different answer for the same object across different frames.
 

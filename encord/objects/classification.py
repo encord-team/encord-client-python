@@ -32,8 +32,8 @@ class OntologyClassificationLevel(StringEnum):
 
     Attributes:
         GLOBAL (OntologyClassificationLevel): Indicates a global, whole-image
-            classification that applies to the entire data unit rather than
-            to a specific object or region.
+        classification that applies to the entire data unit rather than
+        to a specific object or region.
     """
 
     GLOBAL = "global"
@@ -41,7 +41,7 @@ class OntologyClassificationLevel(StringEnum):
 
 @dataclass
 class Classification(OntologyElement):
-    """Represents a whole-image classification as part of an Ontology structure.
+    """Represents a whole-image classification as part of an :class:`~encord.ontology.Ontology` structure.
 
     This class encapsulates an image-level classification that describes the
     entire data unit rather than individual labeled objects. Each classification
@@ -59,14 +59,14 @@ class Classification(OntologyElement):
             this classification (for example: `GLOBAL`). Optional: defaults to None.
 
     Example:
-    ```
-        >>> classification = Classification(
-        ...     uid=1,
-        ...     feature_node_hash="abc123",
-        ...     attributes=[Attribute(name="Scene Type", value="Indoor")],
-        ...     level=OntologyClassificationLevel.GLOBAL,
-        ... )
-    ```
+        ```
+            >>> classification = Classification(
+            ...     uid=1,
+            ...     feature_node_hash="abc123",
+            ...     attributes=[Attribute(name="Scene Type", value="Indoor")],
+            ...     level=OntologyClassificationLevel.GLOBAL,
+            ... )
+        ```
     """
 
     uid: int
@@ -111,7 +111,7 @@ class Classification(OntologyElement):
         return self.level == OntologyClassificationLevel.GLOBAL
 
     def create_instance(self, range_only: bool = False) -> ClassificationInstance:
-        """Create a ClassificationInstance to be used with a label row.
+        """Create a :class:`~encord.objects.ClassificationInstance` to be used with a label row.
 
         Returns:
             ClassificationInstance: An instance of ClassificationInstance.
@@ -123,7 +123,7 @@ class Classification(OntologyElement):
         """Create a Classification instance from a dictionary.
 
         Args:
-            d (dict): A dictionary containing classification information.
+            d: A dictionary containing classification information.
 
         Returns:
             Classification: An instance of Classification.
@@ -172,13 +172,13 @@ class Classification(OntologyElement):
         """Adds an attribute to the classification.
 
         Args:
-            cls (Type[AttributeType]): The attribute type, one of `RadioAttribute`, `ChecklistAttribute`, `TextAttribute`.
-            name (str): The user-visible name of the attribute.
-            local_uid (Optional[int]): Integer identifier of the attribute. Normally auto-generated; omit this unless
-                                       the aim is to create an exact clone of an existing ontology.
-            feature_node_hash (Optional[str]): Global identifier of the attribute. Normally auto-generated; omit this
-                                               unless the aim is to create an exact clone of an existing ontology.
-            required (bool): Whether the label editor would mark this attribute as 'required'.
+            cls: The attribute type, one of `RadioAttribute`, `ChecklistAttribute`, `TextAttribute`.
+            name: The user-visible name of the attribute.
+            local_uid: Integer identifier of the attribute. Normally auto-generated; omit this unless
+                the aim is to create an exact clone of an existing ontology.
+            feature_node_hash: Global identifier of the attribute. Normally auto-generated; omit this
+                unless the aim is to create an exact clone of an existing ontology.
+            required: Whether the label editor would mark this attribute as 'required'.
 
         Returns:
             AttributeType: The created attribute that can be further specified with Options, where appropriate.
