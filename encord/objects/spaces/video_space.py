@@ -5,7 +5,6 @@ from collections import defaultdict
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Literal, Optional, Sequence, Set, Tuple, Union, cast
 
-from encord.common.enum import StringEnum
 from encord.common.range_manager import RangeManager
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
@@ -75,7 +74,9 @@ class VideoSpace(Space):
         self._frames_to_classification_hash_to_annotation_data: defaultdict[int, dict[str, AnnotationData]] = (
             defaultdict(dict)
         )
-        self._classifications_to_ranges: defaultdict[Classification, RangeManager] = defaultdict(RangeManager)
+
+        # Used to track whether an instance of a classification_ontology exists on frames
+        self._classifications_ontology_to_ranges: defaultdict[Classification, RangeManager] = defaultdict(RangeManager)
 
         self._objects_map: dict[str, ObjectInstance] = dict()
         self._classification_map: dict[str, ClassificationInstance] = dict()
@@ -93,10 +94,10 @@ class VideoSpace(Space):
     def _is_classification_present_on_frames(
         self, classification: Classification, frames: Frames
     ) -> Tuple[bool, Ranges]:
-        if classification.is_global and classification in self._classifications_to_ranges:
+        if classification.is_global and classification in self._classifications_ontology_to_ranges:
             return True, []
         else:
-            range_manager = self._classifications_to_ranges.get(classification, RangeManager())
+            range_manager = self._classifications_ontology_to_ranges.get(classification, RangeManager())
             intersection = range_manager.intersection(frames)
             return len(intersection) > 0, intersection
 
@@ -461,22 +462,22 @@ class VideoSpace(Space):
             classification_instance._ontology_classification, frame_list
         )
 
-        if is_present and on_overlap == "error":
-            location_msg = (
-                "globally" if classification_instance.is_global() else f"on the ranges {conflicting_ranges}. "
-            )
-            raise LabelRowError(
-                f"The classification '{classification_instance.classification_hash}' already exists "
-                f"{location_msg}"
-                f"Set 'on_overlap' parameter to 'replace' to overwrite."
-            )
-
-        # If overwriting, remove conflicting classification entries from other classification instances
-        if is_present and on_overlap == "replace":
-            self._remove_conflicting_classifications_from_frames(
-                classification=classification_instance,
-                conflicting_ranges=conflicting_ranges,
-            )
+        if is_present:
+            if on_overlap == "error":
+                location_msg = (
+                    "globally" if classification_instance.is_global() else f"on the ranges {conflicting_ranges}. "
+                )
+                raise LabelRowError(
+                    f"The classification '{classification_instance.classification_hash}' already exists "
+                    f"{location_msg}"
+                    f"Set 'on_overlap' parameter to 'replace' to overwrite."
+                )
+            elif on_overlap == "replace":
+                # If overwriting, remove conflicting classification entries from other classification instances
+                self._remove_conflicting_classifications_from_frames(
+                    classification=classification_instance,
+                    conflicting_ranges=conflicting_ranges,
+                )
 
         for frame in frame_list:
             existing_frame_classification_annotation_data = self._get_frame_classification_annotation_data(
@@ -504,9 +505,11 @@ class VideoSpace(Space):
         range_manager = RangeManager(frame_class=frame_list)
         ranges_to_add = range_manager.get_ranges()
 
-        existing_range_manager = self._classifications_to_ranges.get(classification_instance._ontology_classification)
+        existing_range_manager = self._classifications_ontology_to_ranges.get(
+            classification_instance._ontology_classification
+        )
         if existing_range_manager is None:
-            self._classifications_to_ranges[classification_instance._ontology_classification] = range_manager
+            self._classifications_ontology_to_ranges[classification_instance._ontology_classification] = range_manager
         else:
             existing_range_manager.add_ranges(ranges_to_add)
 
@@ -518,8 +521,8 @@ class VideoSpace(Space):
         self._method_not_supported_for_classification_instance_with_frames(
             classification_instance=classification_instance
         )
+
         frame_list = frames_class_to_frames_list(frames)
-        # TODO: What if all frames are unplaaced?
         for frame in frame_list:
             self._frames_to_classification_hash_to_annotation_data[frame].pop(
                 classification_instance.classification_hash
@@ -528,9 +531,10 @@ class VideoSpace(Space):
         range_manager = RangeManager(frame_class=frames)
         ranges_to_remove = range_manager.get_ranges()
 
-        classification_range_manager = self._classifications_to_ranges.get(
+        classification_range_manager = self._classifications_ontology_to_ranges.get(
             classification_instance._ontology_classification
         )
+
         if classification_range_manager is not None:
             classification_range_manager.remove_ranges(ranges_to_remove)
 

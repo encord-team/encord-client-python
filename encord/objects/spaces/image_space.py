@@ -23,6 +23,7 @@ from encord.objects.spaces.annotation.geometric_annotation import (
 )
 from encord.objects.spaces.base_space import Space
 from encord.objects.spaces.types import ChildInfo, ImageSpaceInfo, SpaceInfo
+from encord.objects.spaces.video_space import FrameOverlapStrategy
 from encord.objects.types import (
     AttributeDict,
     ClassificationAnswer,
@@ -71,7 +72,7 @@ class ImageSpace(Space):
         object_instance: ObjectInstance,
         coordinates: GeometricCoordinates,
         *,
-        overwrite: bool = False,
+        on_overlap: FrameOverlapStrategy = "error",
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,
@@ -84,8 +85,10 @@ class ImageSpace(Space):
 
         already_exists = object_instance.object_hash in self._objects_map
 
-        if already_exists and not overwrite:
-            raise LabelRowError("Cannot overwrite existing data. Set `overwrite` to True` to overwrite.")
+        if already_exists and on_overlap == "error":
+            raise LabelRowError(
+                f"Annotation for object instance {object_instance.object_hash} already exists. Set 'on_overlap' to 'replace' to overwrite existing annotations."
+            )
 
         self._objects_map[object_instance.object_hash] = object_instance
         object_instance._add_to_space(self)
@@ -110,7 +113,7 @@ class ImageSpace(Space):
         self,
         classification_instance: ClassificationInstance,
         *,
-        overwrite: bool = False,
+        on_overlap: FrameOverlapStrategy = "error",
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,
@@ -122,30 +125,24 @@ class ImageSpace(Space):
             classification_instance=classification_instance
         )
 
-        is_classification_instance_present = classification_instance.classification_hash in self._classifications_map
         is_classification_of_same_ontology_present = (
             classification_instance._ontology_classification.feature_node_hash in self._classification_ontologies
         )
 
-        if is_classification_instance_present and not overwrite:
-            raise LabelRowError(
-                f"The classification '{classification_instance.classification_hash}' already exists. Set 'overwrite' parameter to True to overwrite."
-            )
-
         if is_classification_of_same_ontology_present:
-            if not overwrite:
+            if on_overlap == "error":
                 raise LabelRowError(
-                    f"A classification instance for the classification with feature hash '{classification_instance._ontology_classification.feature_node_hash}' already exists. Set 'overwrite' parameter to True to overwrite."
+                    f"A classification instance for the classification with feature hash '{classification_instance._ontology_classification.feature_node_hash}' already exists. Set 'on_overlap' parameter to 'replace' to overwrite."
                 )
-            else:
+            elif on_overlap == "replace":
                 # Remove classification instances of that ontology item
                 classification_hash_to_remove = None
-                for classification_instance in self._classifications_map.values():
+                for existing_classification_instance in self._classifications_map.values():
                     if (
-                        classification_instance._ontology_classification.feature_node_hash
+                        existing_classification_instance._ontology_classification.feature_node_hash
                         == classification_instance._ontology_classification.feature_node_hash
                     ):
-                        classification_hash_to_remove = classification_instance.classification_hash
+                        classification_hash_to_remove = existing_classification_instance.classification_hash
 
                 if classification_hash_to_remove is not None:
                     self._classifications_map.pop(classification_hash_to_remove)
@@ -158,6 +155,7 @@ class ImageSpace(Space):
         existing_frame_classification_annotation_data = self._classification_hash_to_annotation_data.get(
             classification_instance.classification_hash
         )
+
         if existing_frame_classification_annotation_data is None:
             existing_frame_classification_annotation_data = AnnotationData(
                 annotation_metadata=AnnotationMetadata(),

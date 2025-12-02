@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 from unittest.mock import Mock
 
@@ -120,7 +119,10 @@ def test_place_object_that_already_exists_image_space(ontology):
         )
 
     # Assert
-    assert e.value.message == "Cannot overwrite existing data. Set `overwrite` to True` to overwrite."
+    assert (
+        e.value.message
+        == f"Annotation for object instance {new_object_instance.object_hash} already exists. Set 'on_overlap' to 'replace' to overwrite existing annotations."
+    )
 
 
 def test_place_object_on_frames_with_overwrite_on_image_space(ontology):
@@ -141,7 +143,7 @@ def test_place_object_on_frames_with_overwrite_on_image_space(ontology):
     image_space_1.put_object_instance(
         object_instance=new_object_instance,
         coordinates=coordinates_2,
-        overwrite=True,
+        on_overlap="replace",
     )
 
     # Assert
@@ -507,7 +509,7 @@ def test_update_annotation_from_object_annotation(ontology):
     # Assert
     new_label_row_dict = label_row.to_encord_dict()
     new_frame_label_dict = new_label_row_dict["spaces"]["image-1-uuid"]["labels"]
-    print(json.dumps(new_label_row_dict, indent=2))
+
     EXPECTED_CURRENT_LABELS_DICT = {
         "0": {
             "objects": [
