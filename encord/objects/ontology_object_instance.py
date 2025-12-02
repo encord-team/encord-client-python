@@ -68,7 +68,7 @@ from encord.objects.types import (
     BaseFrameObject,
     DynamicAttributeObject,
 )
-from encord.objects.utils import check_email, short_uuid_str
+from encord.objects.utils import short_uuid_str
 
 if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2

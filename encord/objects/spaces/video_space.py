@@ -537,11 +537,10 @@ class VideoSpace(Space):
     def _get_object_annotation_on_frame(self, object_hash: str, frame: int = 0) -> GeometricFrameObjectAnnotation:
         return GeometricFrameObjectAnnotation(space=self, object_instance=self._objects_map[object_hash], frame=frame)
 
-    # TODO: Remove this
     def get_object_instance_annotations(
         self, filter_object_instances: Optional[list[str]] = None
-    ) -> list[GeometricFrameObjectAnnotation]:
-        res: list[GeometricFrameObjectAnnotation] = []
+    ) -> List[GeometricFrameObjectAnnotation]:
+        res: List[GeometricFrameObjectAnnotation] = []
 
         for frame, obj in dict(sorted(self._frames_to_object_hash_to_annotation_data.items())).items():
             for obj_hash, annotation in obj.items():
@@ -549,6 +548,17 @@ class VideoSpace(Space):
                     res.append(self._get_object_annotation_on_frame(object_hash=obj_hash, frame=frame))
 
         return res
+
+    def get_object_instance_annotations_by_frame(self) -> Dict[int, List[GeometricFrameObjectAnnotation]]:
+        ret: Dict[int, List[GeometricFrameObjectAnnotation]] = {}
+
+        for frame, object_to_annotation_data_map in sorted(self._frames_to_object_hash_to_annotation_data.items()):
+            ret[frame] = [
+                self._get_object_annotation_on_frame(frame=frame, object_hash=object_hash)
+                for object_hash in object_to_annotation_data_map.keys()
+            ]
+
+        return ret
 
     def get_classification_instance_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
