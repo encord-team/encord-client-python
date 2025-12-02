@@ -14,7 +14,7 @@ from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects.spaces.annotation.base_annotation import ClassificationAnnotation, ObjectAnnotation
 from encord.objects.spaces.types import SpaceInfo
-from encord.objects.types import ClassificationAnswer, ObjectAnswer, ObjectAnswerForNonGeometric
+from encord.objects.types import ClassificationAnswer, ObjectAnswerForGeometric, ObjectAnswerForNonGeometric
 
 if TYPE_CHECKING:
     from encord.objects import ClassificationInstance, ObjectInstance
@@ -74,7 +74,7 @@ class Space(ABC):
     def _parse_space_dict(
         self,
         space_info: SpaceInfo,
-        object_answers: dict[str, Union[ObjectAnswer, ObjectAnswerForNonGeometric]],
+        object_answers: dict[str, Union[ObjectAnswerForGeometric, ObjectAnswerForNonGeometric]],
         classification_answers: dict[str, ClassificationAnswer],
     ) -> None:
         pass
@@ -84,11 +84,15 @@ class Space(ABC):
         pass
 
     @abstractmethod
-    def _to_object_answers(self) -> Dict[str, Union[ObjectAnswer, ObjectAnswerForNonGeometric]]:
+    def _to_object_answers(
+        self, existing_object_answers: Dict[str, Union[ObjectAnswerForGeometric, ObjectAnswerForNonGeometric]]
+    ) -> Dict[str, Union[ObjectAnswerForGeometric, ObjectAnswerForNonGeometric]]:
         pass
 
     @abstractmethod
-    def _to_classification_answers(self) -> Dict[str, ClassificationAnswer]:
+    def _to_classification_answers(
+        self, existing_classification_answers: Dict[str, ClassificationAnswer]
+    ) -> Dict[str, ClassificationAnswer]:
         pass
 
     @staticmethod

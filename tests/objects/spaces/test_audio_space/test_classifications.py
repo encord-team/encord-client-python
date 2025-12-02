@@ -102,6 +102,7 @@ def test_place_classification_on_audio_space(ontology):
             "classificationHash": new_classification_instance.classification_hash,
             "featureHash": "jPOcEsbw",
             "range": [],
+            "spaces": {"audio-1-uuid": {"range": []}},
             "createdBy": None,
             "lastEditedBy": None,
             "manualAnnotation": True,
@@ -369,7 +370,7 @@ def test_get_classification_annotations_from_classification_instance(ontology):
     assert first_annotation_for_classification_2.last_edited_at == date2
 
 
-def test_update_annotation_from_object_annotation(ontology):
+def test_update_annotation_from_classification_annotation(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
@@ -398,6 +399,7 @@ def test_update_annotation_from_object_annotation(ontology):
             "classificationHash": classification_instance_1.classification_hash,
             "featureHash": text_classification.feature_node_hash,
             "range": [],
+            "spaces": {"audio-1-uuid": {"range": []}},
             "createdBy": None,
             "createdAt": format_datetime_to_long_string(date),
             "lastEditedBy": name,
@@ -434,6 +436,7 @@ def test_update_annotation_from_object_annotation(ontology):
             "classificationHash": classification_instance_1.classification_hash,
             "featureHash": text_classification.feature_node_hash,
             "range": [],
+            "spaces": {"audio-1-uuid": {"range": []}},
             "createdBy": new_name,
             "createdAt": format_datetime_to_long_string(new_date),
             "lastEditedBy": new_name,

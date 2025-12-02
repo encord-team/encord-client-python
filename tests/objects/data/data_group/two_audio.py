@@ -102,7 +102,6 @@ DATA_GROUP_WITH_TWO_AUDIO_LABELS = {
         "speaker1": {
             "objectHash": "speaker1",
             "classifications": [],
-            "range": [[100, 200]],
             "createdBy": "NlZNOzo0M5fqmHAPHiNiYs0UQYo2",
             "createdAt": "Thu, 05 Dec 2024 15:24:19 UTC",
             "lastEditedBy": "NlZNOzo0M5fqmHAPHiNiYs0UQYo2",
@@ -113,6 +112,15 @@ DATA_GROUP_WITH_TWO_AUDIO_LABELS = {
             "color": "#A4FF00",
             "shape": "audio",
             "value": "audio_object",
+            "range": [],
+            "spaces": {
+                "audio-1-uuid": {
+                    "range": [[100, 200]],
+                },
+                "audio-2-uuid": {
+                    "range": [[300, 500]],
+                },
+            },
         },
     },
     "classification_answers": {
@@ -128,12 +136,20 @@ DATA_GROUP_WITH_TWO_AUDIO_LABELS = {
                     "manualAnnotation": True,
                 },
             ],
-            "range": [],
             "createdBy": "user1Hash",
             "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
             "lastEditedBy": "user1Hash",
             "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
             "manualAnnotation": True,
+            "range": [],
+            "spaces": {
+                "audio-1-uuid": {
+                    "range": [],
+                },
+                "audio-2-uuid": {
+                    "range": [],
+                },
+            },
         },
     },
     "object_actions": {},
@@ -156,8 +172,12 @@ DATA_GROUP_WITH_TWO_AUDIO_LABELS = {
         DATA_GROUP_DATA_HASH: {
             "data_hash": DATA_GROUP_DATA_HASH,
             "data_title": "",
+            "data_sequence": 0,
             "data_type": DataType.GROUP,
-            "labels": {},
+            "labels": {
+                "objects": [],
+                "classifications": [],
+            },
         }
     },
 }

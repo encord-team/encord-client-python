@@ -205,11 +205,16 @@ class ClassificationAnswer(ClassificationAnswerRequired, total=False):
     lastEditedBy: Union[str, None]
     manualAnnotation: Union[bool, None]
     reviews: list[Any]  # TODO: Remove this as its deprecated
+    spaces: Dict[str, SpaceRange]  # Only exists if item is on a space
 
 
-class ObjectAnswer(TypedDict):
+class ObjectAnswerForGeometric(TypedDict):
     objectHash: str
     classifications: List[AttributeDict]
+
+
+class SpaceRange(TypedDict):
+    range: list[list[int]]
 
 
 class ObjectAnswerForNonGeometric(BaseFrameObject):
@@ -218,6 +223,17 @@ class ObjectAnswerForNonGeometric(BaseFrameObject):
     shape: Union[Literal[Shape.TEXT], Literal[Shape.AUDIO]]
     classifications: List[AttributeDict]
     range: Union[List[List[int]], None]
+    spaces: Dict[str, SpaceRange]  # Important for non-geometric shapes, where space info must live on ObjectAnswer
+
+
+class ObjectAnswerForHtml(BaseFrameObject):
+    shape: Literal[Shape.TEXT]
+    classifications: List[AttributeDict]
+    range_html: list[dict]
+    range: Union[List[List[int]], None]
+
+
+ObjectAnswer = Union[ObjectAnswerForGeometric, ObjectAnswerForNonGeometric, ObjectAnswerForHtml]
 
 
 class ObjectAction(TypedDict):
@@ -228,3 +244,8 @@ class ObjectAction(TypedDict):
 def is_containing_metadata(answer: ClassificationAnswer) -> bool:
     """Check if the classification answer contains necessary metadata fields."""
     return answer.get("createdBy") is not None
+
+
+def is_containing_spaces(answer: ClassificationAnswer) -> bool:
+    """Check if the classification answer contains spaces field."""
+    return answer.get("spaces") is not None

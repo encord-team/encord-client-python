@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import TYPE_CHECKING, List, Literal, Optional, Union, cast
+from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union, cast
 
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import format_datetime_to_long_string, format_datetime_to_long_string_optional
@@ -26,8 +26,9 @@ from encord.objects.types import (
     ClassificationAnswer,
     FrameClassification,
     LabelBlob,
-    ObjectAnswer,
+    ObjectAnswerForGeometric,
     ObjectAnswerForNonGeometric,
+    SpaceRange,
 )
 from encord.objects.utils import _lower_snake_case
 
@@ -154,6 +155,9 @@ class RangeSpace(Space):
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
     ) -> None:
+        self._method_not_supported_for_classification_instance_with_frames(
+            classification_instance=classification_instance
+        )
         is_classification_of_same_ontology_present = (
             classification_instance._ontology_classification.feature_node_hash in self._classification_ontologies
         )
@@ -289,58 +293,90 @@ class RangeSpace(Space):
         """For range-based annotations, labels are stored in objects/classifications index"""
         return {}
 
-    def _to_object_answers(self) -> dict[str, Union[ObjectAnswerForNonGeometric, ObjectAnswer]]:
-        ret: dict[str, ObjectAnswerForNonGeometric] = {}
+    def _to_object_answers(
+        self, existing_object_answers: Dict[str, Union[ObjectAnswerForGeometric, ObjectAnswerForNonGeometric]]
+    ) -> dict[str, Union[ObjectAnswerForNonGeometric, ObjectAnswerForGeometric]]:
+        ret: Dict[str, ObjectAnswerForNonGeometric] = {}
 
         for obj in self.get_object_instances():
-            shape = cast(Union[Literal[Shape.TEXT], Literal[Shape.AUDIO]], obj.ontology_item.shape.value)
-
-            all_static_answers = self._label_row._get_all_static_answers(obj)
             annotation = self._object_hash_to_annotation_data[obj.object_hash]
             annotation_metadata = annotation.annotation_metadata
-            object_index_element: ObjectAnswerForNonGeometric = {
-                "classifications": list(reversed(all_static_answers)),
-                "objectHash": obj.object_hash,
-                "createdBy": annotation_metadata.created_by,
-                "createdAt": format_datetime_to_long_string(annotation_metadata.created_at),
-                "lastEditedAt": format_datetime_to_long_string(annotation_metadata.last_edited_at),
-                "lastEditedBy": annotation_metadata.last_edited_by,
-                "manualAnnotation": annotation_metadata.manual_annotation,
-                "featureHash": obj.feature_hash,
-                "name": obj.ontology_item.name,
-                "color": obj.ontology_item.color,
-                "shape": shape,
-                "value": _lower_snake_case(obj.ontology_item.name),
-                "range": [[range.start, range.end] for range in annotation.range_manager.get_ranges()],
-            }
+            ranges = [[range.start, range.end] for range in annotation.range_manager.get_ranges()]
+            does_obj_exist = obj.object_hash in existing_object_answers
 
-            ret[obj.object_hash] = object_index_element
+            if does_obj_exist:
+                existing_object_answer = cast(ObjectAnswerForNonGeometric, existing_object_answers[obj.object_hash])
+                space_range_to_add: SpaceRange = {"range": ranges}
+                existing_object_answer["spaces"][self.space_id] = space_range_to_add
+            else:
+                shape = cast(Union[Literal[Shape.TEXT], Literal[Shape.AUDIO]], obj.ontology_item.shape.value)
+                all_static_answers = self._label_row._get_all_static_answers(obj)
 
-        return cast(dict[str, Union[ObjectAnswer, ObjectAnswerForNonGeometric]], ret)
+                object_answer: ObjectAnswerForNonGeometric = {
+                    "classifications": list(reversed(all_static_answers)),
+                    "objectHash": obj.object_hash,
+                    "createdBy": annotation_metadata.created_by,
+                    "createdAt": format_datetime_to_long_string(annotation_metadata.created_at),
+                    "lastEditedAt": format_datetime_to_long_string(annotation_metadata.last_edited_at),
+                    "lastEditedBy": annotation_metadata.last_edited_by,
+                    "manualAnnotation": annotation_metadata.manual_annotation,
+                    "featureHash": obj.feature_hash,
+                    "name": obj.ontology_item.name,
+                    "color": obj.ontology_item.color,
+                    "shape": shape,
+                    "value": _lower_snake_case(obj.ontology_item.name),
+                    "range": [],
+                    "spaces": {
+                        # TODO: Something here!
+                        self.space_id: {"range": ranges}
+                    },
+                }
 
-    def _to_classification_answers(self) -> dict[str, ClassificationAnswer]:
+                ret[obj.object_hash] = object_answer
+
+        return cast(dict[str, Union[ObjectAnswerForGeometric, ObjectAnswerForNonGeometric]], ret)
+
+    def _to_classification_answers(
+        self, existing_classification_answers: dict[str, ClassificationAnswer]
+    ) -> dict[str, ClassificationAnswer]:
         ret: dict[str, ClassificationAnswer] = {}
+
         for classification in self.get_classification_instances():
-            all_static_answers = classification.get_all_static_answers()
-            annotation = self._classification_hash_to_annotation_data[classification.classification_hash]
-            annotation_metadata = annotation.annotation_metadata
-            classification_attributes = [
-                answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()
-            ]
-            classification_attributes_without_none = cast(list[AttributeDict], classification_attributes)
+            does_classification_exist = classification.classification_hash in existing_classification_answers
 
-            classification_index_element: ClassificationAnswer = {
-                "classifications": list(reversed(classification_attributes_without_none)),
-                "classificationHash": classification.classification_hash,
-                "featureHash": classification.feature_hash,
-                "range": [],
-                "createdBy": annotation_metadata.created_by,
-                "createdAt": format_datetime_to_long_string_optional(annotation_metadata.created_at),
-                "lastEditedBy": annotation_metadata.last_edited_by,
-                "lastEditedAt": format_datetime_to_long_string_optional(annotation_metadata.last_edited_at),
-                "manualAnnotation": annotation_metadata.manual_annotation,
-            }
+            if does_classification_exist:
+                existing_classification_answer = existing_classification_answers[classification.classification_hash]
+                space_range_to_add: SpaceRange = {
+                    "range": [],
+                }
+                existing_classification_answer["spaces"][self.space_id] = space_range_to_add
+                ret[classification.classification_hash] = existing_classification_answer
+            else:
+                all_static_answers = classification.get_all_static_answers()
+                annotation = self._classification_hash_to_annotation_data[classification.classification_hash]
+                annotation_metadata = annotation.annotation_metadata
+                classification_attributes = [
+                    answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()
+                ]
+                classification_attributes_without_none = cast(list[AttributeDict], classification_attributes)
 
-            ret[classification.classification_hash] = classification_index_element
+                classification_answer: ClassificationAnswer = {
+                    "classifications": list(reversed(classification_attributes_without_none)),
+                    "classificationHash": classification.classification_hash,
+                    "featureHash": classification.feature_hash,
+                    "range": [],
+                    "createdBy": annotation_metadata.created_by,
+                    "createdAt": format_datetime_to_long_string_optional(annotation_metadata.created_at),
+                    "lastEditedBy": annotation_metadata.last_edited_by,
+                    "lastEditedAt": format_datetime_to_long_string_optional(annotation_metadata.last_edited_at),
+                    "manualAnnotation": annotation_metadata.manual_annotation,
+                    "spaces": {
+                        self.space_id: {
+                            "range": [],
+                        }
+                    },
+                }
+
+                ret[classification.classification_hash] = classification_answer
 
         return ret

@@ -160,7 +160,7 @@ def test_get_annotation_frames_throws_error_if_object_is_on_space(ontology):
     assert e.value.message == "This operation is not allowed for objects that exist on a space."
 
 
-def test_place_classification_on_image_space_throws_error_if_object_has_frames(ontology):
+def test_place_classification_on_audio_space_throws_error_if_object_has_frames(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)

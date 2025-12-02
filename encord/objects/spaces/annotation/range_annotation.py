@@ -50,6 +50,8 @@ class RangeObjectAnnotation(ObjectAnnotation):
 
     @property
     def coordinates(self) -> AudioCoordinates | TextCoordinates:
+        from encord.objects import Shape
+
         """This field is deprecated. It is only here for backwards compatibility. Use .ranges instead."""
         self._check_if_annotation_is_valid()
 

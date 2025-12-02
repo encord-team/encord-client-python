@@ -359,7 +359,8 @@ def test_update_attribute_for_object_which_exist_on_two_spaces(ontology):
             "value": "audio_object",
             "color": "#A4FF00",
             "shape": "audio",
-            "range": [[200, 300]],
+            "spaces": {"audio-1-uuid": {"range": [[0, 100]]}, "audio-2-uuid": {"range": [[200, 300]]}},
+            "range": [],
         }
     }
 
@@ -595,7 +596,12 @@ def test_update_annotation_from_object_annotation_using_coordinates(ontology):
             "manualAnnotation": True,
             "shape": "audio",
             "classifications": [],
-            "range": [[0, 100]],
+            "range": [],
+            "spaces": {
+                "audio-1-uuid": {
+                    "range": [[0, 100]],
+                }
+            },
         },
     }
 
@@ -631,7 +637,12 @@ def test_update_annotation_from_object_annotation_using_coordinates(ontology):
             "manualAnnotation": True,
             "shape": "audio",
             "classifications": [],
-            "range": [[200, 300]],
+            "range": [],
+            "spaces": {
+                "audio-1-uuid": {
+                    "range": [[200, 300]],
+                }
+            },
         },
     }
     assert not DeepDiff(new_object_answers_dict, EXPECTED_NEW_OBJECT_ANSWERS_DICT)
@@ -678,7 +689,12 @@ def test_update_annotation_from_object_annotation(ontology):
             "manualAnnotation": True,
             "shape": "audio",
             "classifications": [],
-            "range": [[0, 100]],
+            "range": [],
+            "spaces": {
+                "audio-1-uuid": {
+                    "range": [[0, 100]],
+                }
+            },
         },
     }
 
@@ -712,7 +728,12 @@ def test_update_annotation_from_object_annotation(ontology):
             "manualAnnotation": True,
             "shape": "audio",
             "classifications": [],
-            "range": [[200, 300]],
+            "range": [],
+            "spaces": {
+                "audio-1-uuid": {
+                    "range": [[200, 300]],
+                }
+            },
         },
     }
     assert not DeepDiff(new_object_answers_dict, EXPECTED_NEW_OBJECT_ANSWERS_DICT)

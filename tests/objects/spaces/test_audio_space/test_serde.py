@@ -5,9 +5,9 @@ from deepdiff import DeepDiff
 
 from encord.objects import LabelRowV2
 from tests.objects.data.all_types_ontology_structure import all_types_structure
-from tests.objects.data.data_group.two_videos import (
+from tests.objects.data.data_group.two_audio import (
     DATA_GROUP_METADATA,
-    DATA_GROUP_WITH_TWO_VIDEOS_LABELS,
+    DATA_GROUP_WITH_TWO_AUDIO_LABELS,
 )
 
 
@@ -30,44 +30,43 @@ def test_parse_spaces_before_initialise_labels(ontology):
     assert len(spaces) == 2
 
     # Check getting space by id
-    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
-    assert video_space_1.space_id == "video-1-uuid"
-    assert video_space_1.layout_key == "left-camera"
+    video_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
+    assert video_space_1.space_id == "audio-1-uuid"
+    assert video_space_1.layout_key == "english_transcription"
 
-    video_space_1 = label_row.get_space(layout_key="left-camera", type_="video")
-    assert video_space_1.space_id == "video-1-uuid"
-    assert video_space_1.layout_key == "left-camera"
+    video_space_1 = label_row.get_space(layout_key="english_transcription", type_="audio")
+    assert video_space_1.space_id == "audio-1-uuid"
+    assert video_space_1.layout_key == "english_transcription"
 
     # Check getting space by layout key
-    video_space_2 = label_row.get_space(id="video-2-uuid", type_="video")
-    assert video_space_2.space_id == "video-2-uuid"
-    assert video_space_2.layout_key == "right-camera"
+    video_space_2 = label_row.get_space(id="audio-2-uuid", type_="audio")
+    assert video_space_2.space_id == "audio-2-uuid"
+    assert video_space_2.layout_key == "french_transcription"
 
-    video_space_2 = label_row.get_space(layout_key="right-camera", type_="video")
-    assert video_space_2.space_id == "video-2-uuid"
-    assert video_space_2.layout_key == "right-camera"
+    video_space_2 = label_row.get_space(layout_key="french_transcription", type_="audio")
+    assert video_space_2.space_id == "audio-2-uuid"
+    assert video_space_2.layout_key == "french_transcription"
 
 
 def test_read_and_export_video_space_labels(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(DATA_GROUP_WITH_TWO_VIDEOS_LABELS)
+    label_row.from_labels_dict(DATA_GROUP_WITH_TWO_AUDIO_LABELS)
 
-    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
-    video_space_1_object_annotations = video_space_1.get_object_instance_annotations()
-    assert len(video_space_1_object_annotations) == 5
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
+    audio_space_1_object_annotations = audio_space_1.get_object_instance_annotations()
+    assert len(audio_space_1_object_annotations) == 1
 
-    video_space_1_object_entities = video_space_1.get_object_instances()
-    assert len(video_space_1_object_entities) == 3
+    audio_space_1_object_instances = audio_space_1.get_object_instances()
+    assert len(audio_space_1_object_instances) == 1
 
-    video_space_1_classification_annotations = video_space_1.get_classification_instance_annotations()
+    video_space_1_classification_annotations = audio_space_1.get_classification_instance_annotations()
     assert len(video_space_1_classification_annotations) == 1
-    classification_entities = video_space_1.get_classification_instances()
+    classification_entities = audio_space_1.get_classification_instances()
     assert len(classification_entities) == 1
 
     output_dict = label_row.to_encord_dict()
-
     assert not DeepDiff(
-        DATA_GROUP_WITH_TWO_VIDEOS_LABELS,
+        DATA_GROUP_WITH_TWO_AUDIO_LABELS,
         output_dict,
         exclude_regex_paths=[r".*\['trackHash'\]"],
         ignore_order_func=lambda x: x.path().endswith("['objects']"),

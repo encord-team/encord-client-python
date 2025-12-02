@@ -8,7 +8,7 @@ from encord.objects.frames import Range, Ranges
 from encord.objects.spaces.annotation.base_annotation import AnnotationMetadata
 from encord.objects.spaces.range_space.range_space import RangeSpace
 from encord.objects.spaces.types import AudioSpaceInfo, ChildInfo, SpaceInfo
-from encord.objects.types import BaseFrameObject, ObjectAnswer, ObjectAnswerForNonGeometric
+from encord.objects.types import BaseFrameObject, ObjectAnswerForGeometric, ObjectAnswerForNonGeometric
 
 if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
@@ -60,17 +60,25 @@ class AudioSpace(RangeSpace):
     def _parse_space_dict(
         self,
         space_info: SpaceInfo,
-        object_answers: dict[str, Union[ObjectAnswer, ObjectAnswerForNonGeometric]],
+        object_answers: dict[str, Union[ObjectAnswerForGeometric, ObjectAnswerForNonGeometric]],
         classification_answers: dict,
     ) -> None:
-        object_answers_for_non_geometric = cast(dict[str, ObjectAnswerForNonGeometric], object_answers)
-        for object_answer in object_answers_for_non_geometric.values():
-            ranges_in_object_answer = object_answer["range"] if object_answer["range"] is not None else []
-            ranges = [Range(range[0], range[1]) for range in ranges_in_object_answer]
+        for object_answer in object_answers.values():
+            if "spaces" not in object_answer:
+                # skip this object_answer, it is not on a space
+                continue
+
+            non_geometric_object_answer = cast(ObjectAnswerForNonGeometric, object_answer)
+            object_info_on_this_space = non_geometric_object_answer["spaces"].get(self.space_id)
+            if object_info_on_this_space is None:
+                continue
+
+            range_on_this_space = object_info_on_this_space["range"]
+            ranges = [Range(range[0], range[1]) for range in range_on_this_space]
 
             object_instance = self._create_new_object(
-                object_hash=object_answer["objectHash"],
-                feature_hash=object_answer["featureHash"],
+                object_hash=non_geometric_object_answer["objectHash"],
+                feature_hash=non_geometric_object_answer["featureHash"],
             )
 
             frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
@@ -93,6 +101,10 @@ class AudioSpace(RangeSpace):
             object_instance.set_answer_from_list(answer_list)
 
         for classification_answer in classification_answers.values():
+            if "spaces" not in classification_answer:
+                # skip this classification_answer, it is not on a space
+                continue
+
             classification_instance = self._label_row._create_new_classification_instance_with_ranges(
                 classification_answer
             )

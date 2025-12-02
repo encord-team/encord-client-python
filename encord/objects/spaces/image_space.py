@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional, Sequence, cast
+from typing import TYPE_CHECKING, Dict, Optional, Sequence, cast
 
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
@@ -30,7 +30,7 @@ from encord.objects.types import (
     FrameClassification,
     FrameObject,
     LabelBlob,
-    ObjectAnswer,
+    ObjectAnswerForGeometric,
 )
 
 logger = logging.getLogger(__name__)
@@ -453,7 +453,7 @@ class ImageSpace(Space):
     def _parse_space_dict(
         self,
         space_info: SpaceInfo,
-        object_answers: dict[str, ObjectAnswer],
+        object_answers: dict[str, ObjectAnswerForGeometric],
         classification_answers: dict[str, ClassificationAnswer],
     ) -> None:
         frame_label = space_info["labels"].get("0")
@@ -511,11 +511,13 @@ class ImageSpace(Space):
                 confidence=classification_frame_instance_info.confidence,
             )
 
-    def _to_object_answers(self) -> dict[str, ObjectAnswer]:
-        ret: dict[str, ObjectAnswer] = {}
+    def _to_object_answers(
+        self, existing_object_answers: Dict[str, ObjectAnswerForGeometric]
+    ) -> Dict[str, ObjectAnswerForGeometric]:
+        ret: dict[str, ObjectAnswerForGeometric] = {}
         for object_instance in self.get_object_instances():
             all_static_answers = self._label_row._get_all_static_answers(object_instance)
-            object_index_element: ObjectAnswer = {
+            object_index_element: ObjectAnswerForGeometric = {
                 "classifications": list(reversed(all_static_answers)),
                 "objectHash": object_instance.object_hash,
             }
@@ -523,7 +525,9 @@ class ImageSpace(Space):
 
         return ret
 
-    def _to_classification_answers(self) -> dict[str, ClassificationAnswer]:
+    def _to_classification_answers(
+        self, existing_classification_answers: Dict[str, ClassificationAnswer]
+    ) -> Dict[str, ClassificationAnswer]:
         ret: dict[str, ClassificationAnswer] = {}
         for classification in self.get_classification_instances():
             all_static_answers = classification.get_all_static_answers()
