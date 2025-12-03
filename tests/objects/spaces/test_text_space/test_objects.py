@@ -768,3 +768,116 @@ def test_update_annotation_from_object_annotation(ontology):
         },
     }
     assert not DeepDiff(new_object_answers_dict, EXPECTED_NEW_OBJECT_ANSWERS_DICT)
+
+
+def test_update_annotation_for_object_reflected_on_different_spaces(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_TEXT_NO_LABELS)
+    text_space_1 = label_row.get_space(id="text-1-uuid", type_="text")
+    text_space_2 = label_row.get_space(id="text-2-uuid", type_="text")
+    object_instance = text_obj_ontology_item.create_instance()
+
+    current_range = Range(start=0, end=100)
+    new_range = Range(start=200, end=300)
+
+    name = "james@encord.com"
+    new_name = "timmy@encord.com"
+
+    date = datetime(2020, 1, 1)
+    new_date = datetime(2020, 5, 5)
+
+    text_space_1.put_object_instance(
+        object_instance=object_instance,
+        ranges=current_range,
+        last_edited_by=name,
+        last_edited_at=date,
+        created_at=date,
+    )
+
+    text_space_2.put_object_instance(
+        object_instance=object_instance,
+        ranges=current_range,
+    )
+
+    current_label_row_dict = label_row.to_encord_dict()
+    current_object_answers_dict = current_label_row_dict["object_answers"]
+
+    EXPECTED_CURRENT_OBJECT_ANSWERS_DICT = {
+        object_instance.object_hash: {
+            "objectHash": object_instance.object_hash,
+            "featureHash": "textFeatureNodeHash",
+            "name": "text object",
+            "value": "text_object",
+            "color": "#A4FF00",
+            "createdBy": None,
+            "createdAt": format_datetime_to_long_string(date),
+            "lastEditedAt": format_datetime_to_long_string(date),
+            "lastEditedBy": name,
+            "manualAnnotation": True,
+            "shape": "text",
+            "classifications": [],
+            "range": [],
+            "spaces": {
+                "text-1-uuid": {
+                    "range": [[0, 100]],
+                },
+                "text-2-uuid": {
+                    "range": [[0, 100]],
+                },
+            },
+        },
+    }
+
+    assert not DeepDiff(current_object_answers_dict, EXPECTED_CURRENT_OBJECT_ANSWERS_DICT)
+
+    # Act
+    object_annotations = text_space_1.get_object_instance_annotations()
+    object_annotation = object_annotations[0]
+
+    object_annotation.created_by = new_name
+    object_annotation.created_at = new_date
+    object_annotation.last_edited_by = new_name
+    object_annotation.last_edited_at = new_date
+    object_annotation.ranges = new_range
+
+    # Assert
+    new_label_row_dict = label_row.to_encord_dict()
+    new_object_answers_dict = new_label_row_dict["object_answers"]
+
+    object_annotation_on_text_space_2 = text_space_2.get_object_instance_annotations()[0]
+
+    # Metadata of object on space is updated (because its the same object)
+    assert object_annotation_on_text_space_2.created_by == new_name
+    assert object_annotation_on_text_space_2.created_at == new_date
+    assert object_annotation_on_text_space_2.last_edited_by == new_name
+    assert object_annotation_on_text_space_2.last_edited_at == new_date
+
+    # But range is still the same
+    assert object_annotation_on_text_space_2.ranges == [current_range]
+    EXPECTED_NEW_OBJECT_ANSWERS_DICT = {
+        object_instance.object_hash: {
+            "objectHash": object_instance.object_hash,
+            "featureHash": "textFeatureNodeHash",
+            "name": "text object",
+            "value": "text_object",
+            "color": "#A4FF00",
+            "createdBy": new_name,
+            "createdAt": format_datetime_to_long_string(new_date),
+            "lastEditedAt": format_datetime_to_long_string(new_date),
+            "lastEditedBy": new_name,
+            "manualAnnotation": True,
+            "shape": "text",
+            "classifications": [],
+            "range": [],
+            "spaces": {
+                "text-1-uuid": {
+                    "range": [[200, 300]],
+                },
+                "text-2-uuid": {
+                    "range": [[0, 100]],
+                },
+            },
+        },
+    }
+    assert not DeepDiff(new_object_answers_dict, EXPECTED_NEW_OBJECT_ANSWERS_DICT)
