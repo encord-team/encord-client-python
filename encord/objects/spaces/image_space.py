@@ -331,7 +331,7 @@ class ImageSpace(Space):
         return ObjectInstance(ontology_object=label_class, object_hash=object_hash)
 
     def _create_new_classification_from_frame_label_dict(
-        self, frame_classification_label: FrameClassification, classification_answers: dict
+        self, frame_classification_label: FrameClassification, classification_answers: Dict[str, ClassificationAnswer]
     ) -> Optional[ClassificationInstance]:
         from encord.objects import Classification, ClassificationInstance
 
@@ -340,17 +340,17 @@ class ImageSpace(Space):
         classification_hash = frame_classification_label["classificationHash"]
         label_class = ontology.get_child_by_hash(feature_hash, type_=Classification)
 
-        # TODO: Probably can remove this check?
-        if classification_answer := classification_answers.get(classification_hash):
-            new_classification_instance = ClassificationInstance(
-                ontology_classification=label_class, classification_hash=classification_hash
-            )
-            answers_dict = classification_answer["classifications"]
-            self._label_row._add_static_answers_from_dict(new_classification_instance, answers_dict)
+        classification_answer = classification_answers.get(classification_hash)
+        if classification_answer is None:
+            raise LabelRowError("Classification exists in frame labels, but not in classification answers.")
 
-            return new_classification_instance
+        new_classification_instance = ClassificationInstance(
+            ontology_classification=label_class, classification_hash=classification_hash
+        )
+        answers_dict = classification_answer["classifications"]
+        self._label_row._add_static_answers_from_dict(new_classification_instance, answers_dict)
 
-        return None
+        return new_classification_instance
 
     def _to_encord_object(
         self,
