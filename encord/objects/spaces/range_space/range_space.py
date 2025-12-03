@@ -304,7 +304,6 @@ class RangeSpace(Space):
         ret: Dict[str, ObjectAnswerForNonGeometric] = {}
 
         for obj in self.get_object_instances():
-            # annotation = self._object_hash_to_annotation_data[obj.object_hash]
             range_manager = self._object_hash_to_range_manager[obj.object_hash]
             annotation_metadata = obj._instance_metadata
             ranges = [[range.start, range.end] for range in range_manager.get_ranges()]
@@ -332,10 +331,7 @@ class RangeSpace(Space):
                     "shape": shape,
                     "value": _lower_snake_case(obj.ontology_item.name),
                     "range": [],
-                    "spaces": {
-                        # TODO: Something here!
-                        self.space_id: {"range": ranges}
-                    },
+                    "spaces": {self.space_id: {"range": ranges}},
                 }
 
                 ret[obj.object_hash] = object_answer

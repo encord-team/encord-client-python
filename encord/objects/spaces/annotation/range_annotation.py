@@ -79,7 +79,7 @@ class RangeObjectAnnotation(ObjectAnnotation):
     def _check_if_annotation_is_valid(self) -> None:
         if self._object_instance.object_hash not in self._space._object_hash_to_range_manager:
             raise LabelRowError(
-                "Trying to use an ObjectInstance.FrameAnnotation for a VideoObjectInstance that is not on the frame"
+                "Trying to use a RangeObjectAnnotation for an ObjectInstance that is not on this space."
             )
 
 

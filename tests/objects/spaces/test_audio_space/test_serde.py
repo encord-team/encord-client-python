@@ -30,25 +30,25 @@ def test_parse_spaces_before_initialise_labels(ontology):
     assert len(spaces) == 2
 
     # Check getting space by id
-    video_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
-    assert video_space_1.space_id == "audio-1-uuid"
-    assert video_space_1.layout_key == "english_transcription"
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
+    assert audio_space_1.space_id == "audio-1-uuid"
+    assert audio_space_1.layout_key == "english_transcription"
 
-    video_space_1 = label_row.get_space(layout_key="english_transcription", type_="audio")
-    assert video_space_1.space_id == "audio-1-uuid"
-    assert video_space_1.layout_key == "english_transcription"
+    audio_space_1 = label_row.get_space(layout_key="english_transcription", type_="audio")
+    assert audio_space_1.space_id == "audio-1-uuid"
+    assert audio_space_1.layout_key == "english_transcription"
 
     # Check getting space by layout key
-    video_space_2 = label_row.get_space(id="audio-2-uuid", type_="audio")
-    assert video_space_2.space_id == "audio-2-uuid"
-    assert video_space_2.layout_key == "french_transcription"
+    audio_space_2 = label_row.get_space(id="audio-2-uuid", type_="audio")
+    assert audio_space_2.space_id == "audio-2-uuid"
+    assert audio_space_2.layout_key == "french_transcription"
 
-    video_space_2 = label_row.get_space(layout_key="french_transcription", type_="audio")
-    assert video_space_2.space_id == "audio-2-uuid"
-    assert video_space_2.layout_key == "french_transcription"
+    audio_space_2 = label_row.get_space(layout_key="french_transcription", type_="audio")
+    assert audio_space_2.space_id == "audio-2-uuid"
+    assert audio_space_2.layout_key == "french_transcription"
 
 
-def test_read_and_export_video_space_labels(ontology):
+def test_read_and_export_audio_space_labels(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_WITH_TWO_AUDIO_LABELS)
 
@@ -59,8 +59,8 @@ def test_read_and_export_video_space_labels(ontology):
     audio_space_1_object_instances = audio_space_1.get_object_instances()
     assert len(audio_space_1_object_instances) == 1
 
-    video_space_1_classification_annotations = audio_space_1.get_classification_instance_annotations()
-    assert len(video_space_1_classification_annotations) == 1
+    audio_space_1_classification_annotations = audio_space_1.get_classification_instance_annotations()
+    assert len(audio_space_1_classification_annotations) == 1
     classification_entities = audio_space_1.get_classification_instances()
     assert len(classification_entities) == 1
 

@@ -1069,16 +1069,7 @@ class LabelRowV2:
                             if object_.object_hash in space._objects_map:
                                 append = True
                                 break
-                        elif isinstance(space, AudioSpace):
-                            # For backwards compatibility, we treat text as being on frame=0
-                            if frame != 0:
-                                continue
-
-                            if object_.object_hash in space._objects_map:
-                                append = True
-                                break
-
-                        elif isinstance(space, TextSpace):
+                        elif isinstance(space, AudioSpace) or isinstance(space, TextSpace):
                             # For backwards compatibility, we treat text as being on frame=0
                             if frame != 0:
                                 continue

@@ -102,7 +102,7 @@ DATA_GROUP_WITH_TWO_TEXT_LABELS = {
         "text1": {
             "objectHash": "text1",
             "classifications": [],
-            "range": [[10, 50]],
+            "range": [],
             "createdBy": "NlZNOzo0M5fqmHAPHiNiYs0UQYo2",
             "createdAt": "Thu, 05 Dec 2024 15:24:19 UTC",
             "lastEditedBy": "NlZNOzo0M5fqmHAPHiNiYs0UQYo2",
@@ -113,6 +113,14 @@ DATA_GROUP_WITH_TWO_TEXT_LABELS = {
             "color": "#A4FF00",
             "shape": "text",
             "value": "text_object",
+            "spaces": {
+                "text-1-uuid": {
+                    "range": [[100, 200]],
+                },
+                "text-2-uuid": {
+                    "range": [[300, 500]],
+                },
+            },
         },
     },
     "classification_answers": {
