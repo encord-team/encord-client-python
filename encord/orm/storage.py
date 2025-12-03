@@ -8,7 +8,7 @@ from uuid import UUID
 
 from encord.common.deprecated import deprecated
 from encord.orm.analytics import CamelStrEnum
-from encord.orm.base_dto import BaseDTO, Field
+from encord.orm.base_dto import BaseDTO, Field, RootModelDTO
 from encord.orm.dataset import DataUnitError, LongPollingStatus
 
 try:
@@ -271,26 +271,30 @@ class DataGroupGrid(BaseDTO):
     """Grid-based layout for a data group.
 
     Args:
-        layout_contents:  Ordered list of item UUIDs to display in the grid.
+        layout_contents: Ordered list of item UUIDs to display in the grid.
         name: Optional name of the data group.
+        client_metadata: Optional custom metadata to associate with the data group.
     """
 
     layout_type: Literal["default-grid"] = "default-grid"
     layout_contents: List[UUID]
     name: Optional[str] = None
+    client_metadata: Optional[Dict[str, Any]] = None
 
 
 class DataGroupCarousel(BaseDTO):
     """Carousel layout for a data group.
 
     Args:
-        layout_contents:  Ordered list of item UUIDs to display in the carousel.
-        name:  Optional name of the data group.
+        layout_contents: Ordered list of item UUIDs to display in the carousel.
+        name: Optional name of the data group.
+        client_metadata: Optional custom metadata to associate with the data group.
     """
 
     layout_type: Literal["default-list"] = "default-list"
     layout_contents: List[UUID]
     name: Optional[str] = None
+    client_metadata: Optional[Dict[str, Any]] = None
 
 
 @deprecated(version=None, alternative="DataGroupCarousel")
@@ -308,6 +312,7 @@ class DataGroupCustom(BaseDTO):
         layout_contents: Mapping from arbitrary keys to item UUIDs.
         layout: Arbitrary layout configuration structure.
         settings: Optional extra settings for the layout.
+        client_metadata: Optional custom metadata to associate with the data group.
     """
 
     layout_type: Literal["custom"] = "custom"
@@ -315,6 +320,7 @@ class DataGroupCustom(BaseDTO):
     layout_contents: Dict[str, UUID]
     layout: Dict
     settings: Optional[Dict] = None
+    client_metadata: Optional[Dict[str, Any]] = None
 
 
 DataGroupInput = Union[DataGroupGrid, DataGroupCarousel, DataGroupCustom]
@@ -325,13 +331,28 @@ class CreateDataGroupPayload(BaseDTO):
 
     Args:
         item_type: Item type of the group. Must be ``"GROUP"``.
-        params: Layout and configuration for the data group.
-        client_metadata: Optional custom metadata to be associated with the data group.
+        params: Layout and configuration for the data group
     """
 
     item_type: Literal["GROUP"] = "GROUP"
     params: DataGroupInput
-    client_metadata: Optional[Dict[str, Any]] = None
+
+
+class CreateDataGroupsPayload(BaseDTO):
+    """Payload for creating multiple data groups in a folder.
+
+    Args:
+        groups: List of data group payloads to create.
+    """
+
+    groups: List[CreateDataGroupPayload]
+
+
+class CreateDataGroupsResponse(RootModelDTO[List[UUID]]):
+    """Response returned after creating multiple data groups.
+
+    The root value is a list of UUIDs of the created data group storage items.
+    """
 
 
 class UploadSignedUrlsPayload(BaseDTO):
