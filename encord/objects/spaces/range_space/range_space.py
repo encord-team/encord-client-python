@@ -129,11 +129,24 @@ class RangeSpace(Space):
         else:
             existing_annotation_range_manager.add_ranges(ranges)
 
-    def remove_object_instance_from_range(self, object: ObjectInstance, ranges: Ranges | Range) -> None:
+    def remove_object_instance_from_range(self, object_instance: ObjectInstance, ranges: Ranges | Range) -> Ranges:
+        if object_instance.object_hash not in self._object_hash_to_range_manager:
+            return []
+
         if isinstance(ranges, Range):
             ranges = [ranges]
 
-        self._object_hash_to_range_manager[object.object_hash].remove_ranges(ranges)
+        range_manager_for_object = self._object_hash_to_range_manager[object_instance.object_hash]
+
+        # Users might pass in ranges where the object does not actually exist on
+        actual_ranges_to_remove = range_manager_for_object.intersection(ranges)
+        range_manager_for_object.remove_ranges(actual_ranges_to_remove)
+
+        if len(range_manager_for_object.get_ranges()) == 0:
+            self._objects_map.pop(object_instance.object_hash)
+            self._object_hash_to_range_manager.pop(object_instance.object_hash)
+
+        return actual_ranges_to_remove
 
     def put_classification_instance(
         self,

@@ -210,7 +210,10 @@ def test_remove_object_from_ranges_on_audio_space(ontology):
     audio_space_1.put_object_instance(object_instance=new_object_instance, ranges=Range(start=100, end=500))
 
     # Act
-    audio_space_1.remove_object_instance_from_range(object=new_object_instance, ranges=Range(start=150, end=200))
+    removed_ranges = audio_space_1.remove_object_instance_from_range(
+        object_instance=new_object_instance, ranges=[Range(start=150, end=200), Range(start=600, end=700)]
+    )
+    assert removed_ranges == [Range(start=150, end=200)]
 
     # Assert
     object_instances = label_row.get_object_instances()
@@ -234,6 +237,36 @@ def test_remove_object_from_ranges_on_audio_space(ontology):
     # Also works for annotations obtained via object_instance
     annotations_on_object = new_object_instance.get_annotations()
     assert len(annotations_on_object) == 1
+
+
+def test_remove_object_from_all_ranges_on_audio_space(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
+    new_object_instance = audio_obj_ontology_item.create_instance()
+
+    audio_space_1.put_object_instance(object_instance=new_object_instance, ranges=Range(start=100, end=500))
+
+    # Act
+    removed_ranges = audio_space_1.remove_object_instance_from_range(
+        object_instance=new_object_instance, ranges=Range(start=100, end=500)
+    )
+    assert removed_ranges == [Range(start=100, end=500)]
+
+    # Assert
+    object_instances = label_row.get_object_instances()
+    assert len(object_instances) == 0
+
+    objects_on_space = audio_space_1.get_object_instances()
+    assert len(objects_on_space) == 0
+
+    annotations_on_space = audio_space_1.get_object_instance_annotations()
+    assert len(annotations_on_space) == 0
+
+    # Also works for annotations obtained via object_instance
+    annotations_on_object = new_object_instance.get_annotations()
+    assert len(annotations_on_object) == 0
 
 
 def test_remove_object_from_audio_space(ontology):
