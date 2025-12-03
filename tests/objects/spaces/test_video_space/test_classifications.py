@@ -56,7 +56,7 @@ def test_label_row_get_classification_instances_on_video_space(ontology):
     assert len(classification_instances_on_frame_1) == 1
 
 
-def test_place_classification_on_video_space(ontology):
+def test_put_classification_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
@@ -106,7 +106,7 @@ def test_place_classification_on_video_space(ontology):
     assert not DeepDiff(classification_answers_dict, expected_dict)
 
 
-def test_place_classification_on_frame_where_classification_exists_video_space(ontology):
+def test_put_classification_on_frame_where_classification_exists_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
@@ -133,7 +133,7 @@ def test_place_classification_on_frame_where_classification_exists_video_space(o
     )
 
 
-def test_place_classification_on_frames_with_overwrite_on_video_space(ontology):
+def test_put_classification_on_frames_with_overwrite_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
@@ -151,7 +151,7 @@ def test_place_classification_on_frames_with_overwrite_on_video_space(ontology):
 
     # Act
     video_space_1.put_classification_instance(
-        classification_instance=classification_instance_2, frames=[1], overwrite=True
+        classification_instance=classification_instance_2, frames=[1], on_overlap="replace"
     )
 
     annotations_on_classifications = video_space_1.get_classification_instance_annotations()
@@ -166,7 +166,7 @@ def test_place_classification_on_frames_with_overwrite_on_video_space(ontology):
     assert annotation_on_frame_1.classification_hash == classification_instance_2.classification_hash
 
 
-def test_place_classification_on_invalid_frames(ontology):
+def test_put_classification_on_invalid_frames(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
@@ -186,7 +186,7 @@ def test_place_classification_on_invalid_frames(ontology):
     assert exceed_frame_error.value.message == "Frame 100 is invalid. The max frame on this video is 9."
 
 
-def test_unplace_classification_from_frames_on_video_space(ontology):
+def test_remove_classification_from_frames_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
@@ -202,16 +202,50 @@ def test_unplace_classification_from_frames_on_video_space(ontology):
     assert annotation_to_be_removed.frame == 1
 
     # Act
-    video_space_1.remove_classification_instance_from_frames(
-        classification_instance=new_classification_instance, frames=[1]
+    frames_removed = video_space_1.remove_classification_instance_from_frames(
+        classification_instance=new_classification_instance, frames=[1, 10]
     )
 
     # Assert
+    assert frames_removed == [1]
+
     annotations_after_removing = video_space_1.get_classification_instance_annotations()
     assert len(annotations_after_removing) == 2
 
     annotations_on_classification_after_removing = new_classification_instance.get_annotations()
     assert len(annotations_on_classification_after_removing) == 2
+
+    with pytest.raises(LabelRowError):
+        assert annotation_to_be_removed.created_by
+
+
+def test_remove_classification_from_all_frames_on_video_space(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
+
+    new_classification_instance = text_classification.create_instance()
+    video_space_1.put_classification_instance(classification_instance=new_classification_instance, frames=[0, 1, 2])
+
+    annotations_before_removing = video_space_1.get_classification_instance_annotations()
+    annotation_to_be_removed = annotations_before_removing[1]
+
+    assert len(annotations_before_removing) == 3
+
+    # Act
+    frames_removed = video_space_1.remove_classification_instance_from_frames(
+        classification_instance=new_classification_instance, frames=[0, 1, 2, 10]
+    )
+
+    # Assert
+    assert frames_removed == [0, 1, 2]
+
+    annotations_after_removing = video_space_1.get_classification_instance_annotations()
+    assert len(annotations_after_removing) == 0
+
+    annotations_on_classification_after_removing = new_classification_instance.get_annotations()
+    assert len(annotations_on_classification_after_removing) == 0
 
     with pytest.raises(LabelRowError):
         assert annotation_to_be_removed.created_by
