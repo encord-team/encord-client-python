@@ -215,10 +215,20 @@ class VideoSpace(Space):
 
     @property
     def layout_key(self) -> str:
+        """Get the layout key for this video space.
+
+        Returns:
+            str: The layout key identifier.
+        """
         return self._layout_key
 
     @property
     def is_readonly(self) -> bool:
+        """Check if this video space is read-only.
+
+        Returns:
+            bool: True if the space is read-only, False otherwise.
+        """
         return self._is_readonly
 
     def put_object_instance(
@@ -235,6 +245,29 @@ class VideoSpace(Space):
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
     ) -> None:
+        """Add an object instance to specific frames in the video space.
+
+        Args:
+            object_instance: The object instance to add to the video space.
+            frames: Frame numbers or ranges where the object should appear. Can be:
+                - A single frame number (int)
+                - A list of frame numbers (List[int])
+                - A Range object, specifying the start and end of the range (Range)
+                - A list of Range objects for multiple ranges (List[Range])
+            coordinates: Geometric coordinates for the object (e.g., bounding box, polygon, polyline).
+            on_overlap: Strategy for handling existing annotations on the same frames.
+                - "error" (default): Raises an error if annotation already exists.
+                - "replace": Overwrites existing annotations on overlapping frames.
+            created_at: Optional timestamp when the annotation was created.
+            created_by: Optional identifier of who created the annotation.
+            last_edited_at: Optional timestamp when the annotation was last edited.
+            last_edited_by: Optional identifier of who last edited the annotation.
+            confidence: Optional confidence score for the annotation (0.0 to 1.0).
+            manual_annotation: Optional flag indicating if this was manually annotated.
+
+        Raises:
+            LabelRowError: If frames are invalid or if annotation already exists when on_overlap="error".
+        """
         self._method_not_supported_for_object_instance_with_frames(object_instance=object_instance)
         self._method_not_supported_for_object_instance_with_dynamic_attributes(object_instance=object_instance)
 
@@ -256,6 +289,23 @@ class VideoSpace(Space):
         object_instance: ObjectInstance,
         frames: Frames,
     ) -> List[int]:
+        """Remove an object instance from specific frames in the video space.
+
+        If the object is removed from all frames, it will be completely removed from the space.
+        All dynamic answers associated with the object on these frames will also be removed.
+
+        Args:
+            object_instance: The object instance to remove from frames.
+            frames: Frame numbers or ranges to remove the object from. Can be:
+                - A single frame number (int)
+                - A list of frame numbers (List[int])
+                - A Range object, specifying the start and end of the range (Range)
+                - A list of Range objects for multiple ranges (List[Range])
+
+        Returns:
+            List[int]: List of frame numbers where the object was actually removed.
+                Empty if the object didn't exist on any of the specified frames.
+        """
         self._method_not_supported_for_object_instance_with_frames(object_instance=object_instance)
 
         frame_list = frames_class_to_frames_list(frames)
@@ -392,6 +442,24 @@ class VideoSpace(Space):
         answer: Union[str, NumericAnswerValue, Option, Sequence[Option]],
         attribute: Optional[Attribute] = None,
     ) -> None:
+        """Set dynamic attribute answers for an object instance on specific frames.
+
+        This method is only for dynamic attributes. For static attributes, use `ObjectInstance.set_answer`.
+
+        Args:
+            object_instance: The object instance to set answers for.
+            frames: Frame numbers or ranges where the answer should be applied.
+            answer: The answer value. Can be:
+                - str: For text attributes
+                - float/int: For numeric attributes
+                - Option: For radio attributes
+                - Sequence[Option]: For checklist attributes
+            attribute: The attribute to set the answer for. If None, will be inferred from the answer type.
+
+        Raises:
+            LabelRowError: If the attribute is not dynamic, not a valid child of the object,
+                or if the object doesn't exist on the space yet.
+        """
         if attribute is None:
             attribute = _infer_attribute_from_answer(object_instance._ontology_object.attributes, answer)
         if not object_instance._is_attribute_valid_child_of_object_instance(attribute):
@@ -430,6 +498,18 @@ class VideoSpace(Space):
         frame: int,
         filter_answer: Optional[Union[str, Option, Iterable[Option]]] = None,
     ) -> None:
+        """Remove a dynamic attribute answer from an object instance on a specific frame.
+
+        Args:
+            object_instance: The object instance to remove the answer from.
+            attribute: The dynamic attribute whose answer should be removed.
+            frame: The frame number to remove the answer from.
+            filter_answer: Optional filter to remove only specific answer values.
+                For checklist attributes, can specify which options to remove.
+
+        Raises:
+            LabelRowError: If the attribute is not dynamic or if the object doesn't exist on the space.
+        """
         if not attribute.dynamic:
             raise LabelRowError("This method should not be called for non-dynamic attributes.")
 
@@ -448,6 +528,22 @@ class VideoSpace(Space):
         attribute: Attribute,
         filter_answer: Union[str, NumericAnswerValue, Option, Iterable[Option], None] = None,
     ) -> AnswersForFrames:
+        """Get dynamic attribute answers for an object instance on specific frames.
+
+        This method is only for dynamic attributes. For static attributes, use `ObjectInstance.get_answer`.
+
+        Args:
+            object_instance: The object instance to get answers from.
+            frames: Frame numbers or ranges to retrieve answers for.
+            attribute: The dynamic attribute to get answers for.
+            filter_answer: Optional filter to retrieve only specific answer values.
+
+        Returns:
+            AnswersForFrames: Dictionary mapping frames to their corresponding answers.
+
+        Raises:
+            LabelRowError: If the attribute is not dynamic or if the object doesn't exist on the space.
+        """
         dynamic_answer_manager = self._object_hash_to_dynamic_answer_manager.get(object_instance.object_hash)
         if dynamic_answer_manager is None:
             raise LabelRowError("This object does not exist on this space.")
@@ -470,6 +566,28 @@ class VideoSpace(Space):
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
     ) -> None:
+        """Add a classification instance to specific frames in the video space.
+
+        Args:
+            classification_instance: The classification instance to add to the video space.
+            frames: Frame numbers or ranges where the classification should appear. Can be:
+                - A single frame number (int)
+                - A list of frame numbers (List[int])
+                - A Range object, specifying the start and end of the range (Range)
+                - A list of Range objects for multiple ranges (List[Range])
+            on_overlap: Strategy for handling existing classifications on the same frames.
+                - "error" (default): Raises an error if classification already exists.
+                - "replace": Overwrites existing classifications on overlapping frames.
+            created_at: Optional timestamp when the annotation was created.
+            created_by: Optional identifier of who created the annotation.
+            last_edited_at: Optional timestamp when the annotation was last edited.
+            last_edited_by: Optional identifier of who last edited the annotation.
+            confidence: Optional confidence score for the annotation (0.0 to 1.0).
+            manual_annotation: Optional flag indicating if this was manually annotated.
+
+        Raises:
+            LabelRowError: If frames are invalid or if classification already exists when on_overlap="error".
+        """
         self._method_not_supported_for_classification_instance_with_frames(
             classification_instance=classification_instance
         )
@@ -544,6 +662,22 @@ class VideoSpace(Space):
         classification_instance: ClassificationInstance,
         frames: Frames,
     ) -> List[int]:
+        """Remove a classification instance from specific frames in the video space.
+
+        If the classification is removed from all frames, it will be completely removed from the space.
+
+        Args:
+            classification_instance: The classification instance to remove from frames.
+            frames: Frame numbers or ranges to remove the classification from. Can be:
+                - A single frame number (int)
+                - A list of frame numbers (List[int])
+                - A Range object, specifying the start and end of the range (Range)
+                - A list of Range objects for multiple ranges (List[Range])
+
+        Returns:
+            List[int]: List of frame numbers where the classification was actually removed.
+                Empty if the classification didn't exist on any of the specified frames.
+        """
         self._method_not_supported_for_classification_instance_with_frames(
             classification_instance=classification_instance
         )
@@ -584,6 +718,16 @@ class VideoSpace(Space):
     def get_object_instance_annotations(
         self, filter_object_instances: Optional[list[str]] = None
     ) -> List[GeometricFrameObjectAnnotation]:
+        """Get all object instance annotations in the video space.
+
+        Args:
+            filter_object_instances: Optional list of object hashes to filter by.
+                If provided, only annotations for these objects will be returned.
+
+        Returns:
+            List[GeometricFrameObjectAnnotation]: List of all object annotations across all frames,
+                sorted by frame number.
+        """
         res: List[GeometricFrameObjectAnnotation] = []
 
         for frame, obj in dict(sorted(self._frames_to_object_hash_to_annotation_data.items())).items():
@@ -594,6 +738,12 @@ class VideoSpace(Space):
         return res
 
     def get_object_instance_annotations_by_frame(self) -> Dict[int, List[GeometricFrameObjectAnnotation]]:
+        """Get all object instance annotations organized by frame number.
+
+        Returns:
+            Dict[int, List[GeometricFrameObjectAnnotation]]: Dictionary mapping frame numbers to lists of
+                object annotations on that frame.
+        """
         ret: Dict[int, List[GeometricFrameObjectAnnotation]] = {}
 
         for frame, object_to_annotation_data_map in sorted(self._frames_to_object_hash_to_annotation_data.items()):
@@ -607,6 +757,16 @@ class VideoSpace(Space):
     def get_classification_instance_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
     ) -> list[FrameClassificationAnnotation]:
+        """Get all classification instance annotations in the video space.
+
+        Args:
+            filter_classification_instances: Optional list of classification hashes to filter by.
+                If provided, only annotations for these classifications will be returned.
+
+        Returns:
+            list[FrameClassificationAnnotation]: List of all classification annotations across all frames,
+                sorted by frame number.
+        """
         res: list[FrameClassificationAnnotation] = []
 
         for frame, classification in dict(
@@ -625,12 +785,32 @@ class VideoSpace(Space):
         return res
 
     def get_object_instances(self) -> list[ObjectInstance]:
+        """Get all object instances in the video space.
+
+        Returns:
+            list[ObjectInstance]: List of all object instances present in the video space.
+        """
         return list(self._objects_map.values())
 
     def get_classification_instances(self) -> list[ClassificationInstance]:
+        """Get all classification instances in the video space.
+
+        Returns:
+            list[ClassificationInstance]: List of all classification instances present in the video space.
+        """
         return list(self._classification_map.values())
 
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
+        """Completely remove an object instance from all frames in the video space.
+
+        This removes the object from all frames it appears on and cleans up all associated data.
+
+        Args:
+            object_hash: The hash identifier of the object instance to remove.
+
+        Returns:
+            Optional[ObjectInstance]: The removed object instance, or None if the object wasn't found.
+        """
         object_instance = self._objects_map.pop(object_hash, None)
 
         if object_instance is None:
@@ -655,6 +835,16 @@ class VideoSpace(Space):
         return object_instance
 
     def remove_classification_instance(self, classification_hash: str) -> Optional[ClassificationInstance]:
+        """Completely remove a classification instance from all frames in the video space.
+
+        This removes the classification from all frames it appears on and cleans up all associated data.
+
+        Args:
+            classification_hash: The hash identifier of the classification instance to remove.
+
+        Returns:
+            Optional[ClassificationInstance]: The removed classification instance, or None if the classification wasn't found.
+        """
         classification_instance = self._classification_map.pop(classification_hash, None)
 
         if classification_instance is not None:
