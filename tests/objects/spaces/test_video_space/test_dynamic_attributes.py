@@ -117,7 +117,7 @@ def test_remove_dynamic_attributes_from_frame_on_video_space(ontology):
     assert first_answer.answer == answer
 
 
-def test_unplace_object_removes_dynamic_attributes_from_those_frames(ontology):
+def test_remove_object_from_frame_removes_dynamic_attributes_from_those_frames(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)

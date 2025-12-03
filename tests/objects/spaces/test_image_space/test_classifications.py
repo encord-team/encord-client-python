@@ -64,7 +64,7 @@ def test_label_row_get_classification_instances_on_image_space(ontology):
     assert len(classification_instances_on_frame_1) == 3
 
 
-def test_place_classification_on_image_space(ontology):
+def test_put_classification_on_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
@@ -113,7 +113,7 @@ def test_place_classification_on_image_space(ontology):
     assert not DeepDiff(classification_answers_dict, expected_dict)
 
 
-def test_place_classification_on_frame_where_classification_instance_exists_on_image_space(ontology):
+def test_put_classification_on_frame_where_classification_instance_exists_on_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
@@ -138,7 +138,7 @@ def test_place_classification_on_frame_where_classification_instance_exists_on_i
     )
 
 
-def test_place_classification_on_frame_where_classification_of_same_ontology_item_exists_on_image_space(ontology):
+def test_put_classification_on_frame_where_classification_of_same_ontology_item_exists_on_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
@@ -165,7 +165,7 @@ def test_place_classification_on_frame_where_classification_of_same_ontology_ite
     )
 
 
-def test_place_classification_on_frames_with_overwrite_on_image_space(ontology):
+def test_put_classification_on_frames_with_overwrite_on_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)

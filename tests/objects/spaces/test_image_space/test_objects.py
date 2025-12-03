@@ -57,7 +57,7 @@ def test_label_row_get_object_instances_on_space(ontology):
     assert len(object_instances_on_frame_1) == 0
 
 
-def test_place_object_on_image_space(ontology):
+def test_put_classification_on_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
@@ -100,7 +100,7 @@ def test_place_object_on_image_space(ontology):
     assert second_annotation.object_hash == object_instance_2.object_hash
 
 
-def test_place_object_that_already_exists_image_space(ontology):
+def test_put_classification_that_already_exists_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
@@ -125,7 +125,7 @@ def test_place_object_that_already_exists_image_space(ontology):
     )
 
 
-def test_place_object_on_frames_with_overwrite_on_image_space(ontology):
+def test_put_classification_on_frames_with_overwrite_on_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
