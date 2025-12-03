@@ -61,10 +61,20 @@ class ImageSpace(Space):
 
     @property
     def layout_key(self) -> str:
+        """Get the layout key for this image space.
+
+        Returns:
+            str: The layout key identifier.
+        """
         return self._layout_key
 
     @property
     def is_readonly(self) -> bool:
+        """Check if this image space is read-only.
+
+        Returns:
+            bool: True if the space is read-only, False otherwise.
+        """
         return self._is_readonly
 
     def put_object_instance(
@@ -80,6 +90,24 @@ class ImageSpace(Space):
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
     ) -> None:
+        """Add an object instance to the image space.
+
+        Args:
+            object_instance: The object instance to add to the image space.
+            coordinates: Geometric coordinates for the object (e.g., bounding box, polygon, polyline).
+            on_overlap: Strategy for handling existing annotations.
+                - "error" (default): Raises an error if annotation already exists.
+                - "replace": Overwrites existing annotations.
+            created_at: Optional timestamp when the annotation was created.
+            created_by: Optional identifier of who created the annotation.
+            last_edited_at: Optional timestamp when the annotation was last edited.
+            last_edited_by: Optional identifier of who last edited the annotation.
+            confidence: Optional confidence score for the annotation (0.0 to 1.0).
+            manual_annotation: Optional flag indicating if this was manually annotated.
+
+        Raises:
+            LabelRowError: If annotation already exists when on_overlap="error".
+        """
         self._method_not_supported_for_object_instance_with_frames(object_instance=object_instance)
         self._method_not_supported_for_object_instance_with_dynamic_attributes(object_instance=object_instance)
 
@@ -121,6 +149,23 @@ class ImageSpace(Space):
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
     ) -> None:
+        """Add a classification instance to the image space.
+
+        Args:
+            classification_instance: The classification instance to add to the image space.
+            on_overlap: Strategy for handling existing classifications.
+                - "error" (default): Raises an error if classification of the same ontology item already exists.
+                - "replace": Overwrites existing classifications.
+            created_at: Optional timestamp when the annotation was created.
+            created_by: Optional identifier of who created the annotation.
+            last_edited_at: Optional timestamp when the annotation was last edited.
+            last_edited_by: Optional identifier of who last edited the annotation.
+            confidence: Optional confidence score for the annotation (0.0 to 1.0).
+            manual_annotation: Optional flag indicating if this was manually annotated.
+
+        Raises:
+            LabelRowError: If classification already exists when on_overlap="error".
+        """
         self._method_not_supported_for_classification_instance_with_frames(
             classification_instance=classification_instance
         )
@@ -177,6 +222,15 @@ class ImageSpace(Space):
     def get_object_instance_annotations(
         self, filter_object_instances: Optional[list[str]] = None
     ) -> Sequence[GeometricObjectAnnotation]:
+        """Get all object instance annotations in the image space.
+
+        Args:
+            filter_object_instances: Optional list of object hashes to filter by.
+                If provided, only annotations for these objects will be returned.
+
+        Returns:
+            Sequence[GeometricObjectAnnotation]: Sequence of all object annotations in the image.
+        """
         res: list[GeometricObjectAnnotation] = []
 
         for obj_hash, annotation in self._object_hash_to_annotation_data.items():
@@ -188,6 +242,15 @@ class ImageSpace(Space):
     def get_classification_instance_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
     ) -> list[SingleFrameClassificationAnnotation]:
+        """Get all classification instance annotations in the image space.
+
+        Args:
+            filter_classification_instances: Optional list of classification hashes to filter by.
+                If provided, only annotations for these classifications will be returned.
+
+        Returns:
+            list[SingleFrameClassificationAnnotation]: List of all classification annotations in the image.
+        """
         res: list[SingleFrameClassificationAnnotation] = []
 
         for classification_hash, annotation_data in dict(self._classification_hash_to_annotation_data.items()).items():
@@ -202,12 +265,32 @@ class ImageSpace(Space):
         return res
 
     def get_object_instances(self) -> list[ObjectInstance]:
+        """Get all object instances in the image space.
+
+        Returns:
+            list[ObjectInstance]: List of all object instances present in the image space.
+        """
         return list(self._objects_map.values())
 
     def get_classification_instances(self) -> list[ClassificationInstance]:
+        """Get all classification instances in the image space.
+
+        Returns:
+            list[ClassificationInstance]: List of all classification instances present in the image space.
+        """
         return list(self._classifications_map.values())
 
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
+        """Remove an object instance from the image space.
+
+        This removes the object and all associated data from the image space.
+
+        Args:
+            object_hash: The hash identifier of the object instance to remove.
+
+        Returns:
+            Optional[ObjectInstance]: The removed object instance, or None if the object wasn't found.
+        """
         object_instance = self._objects_map.pop(object_hash, None)
         self._object_hash_to_annotation_data.pop(object_hash)
 
@@ -217,6 +300,16 @@ class ImageSpace(Space):
         return object_instance
 
     def remove_classification_instance(self, classification_hash: str) -> Optional[ClassificationInstance]:
+        """Remove a classification instance from the image space.
+
+        This removes the classification and all associated data from the image space.
+
+        Args:
+            classification_hash: The hash identifier of the classification instance to remove.
+
+        Returns:
+            Optional[ClassificationInstance]: The removed classification instance, or None if the classification wasn't found.
+        """
         classification_instance = self._classifications_map.pop(classification_hash, None)
 
         if classification_instance is not None:
