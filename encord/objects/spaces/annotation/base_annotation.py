@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
@@ -107,7 +107,7 @@ class AnnotationData:
     annotation_metadata: AnnotationMetadata
 
 
-class Annotation:
+class Annotation(ABC):
     """
     Class providing common annotation properties.
     """
@@ -135,13 +135,14 @@ class Annotation:
 
         Note:
             This is a legacy attribute. For new subclasses where frame
-            is not applicable, this returns 0.
+            is not applicable (e.g. audio and text), this returns 0.
         """
         pass
 
     @property
     @abstractmethod
     def space(self) -> Space:
+        """Get the space that this annotation is on."""
         pass
 
     @property
