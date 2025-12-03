@@ -13,7 +13,6 @@ class RangeManager:
 
     def __init__(self, frame_class: Optional[Frames] = None):
         self._range_set = IntegerRangeSet()
-
         if isinstance(frame_class, int):
             self._range_set.add(frame_class, frame_class)
         elif isinstance(frame_class, Range):

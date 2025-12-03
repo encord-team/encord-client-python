@@ -69,7 +69,7 @@ def test_label_row_get_object_instances_on_space(ontology):
     assert len(object_instances_on_frame_2) == 2
 
 
-def test_place_object_on_video_space(ontology):
+def test_put_object_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
@@ -106,7 +106,7 @@ def test_place_object_on_video_space(ontology):
     assert first_annotation.object_hash == new_object_instance.object_hash
 
 
-def test_place_object_on_frames_where_object_already_exists_video_space(ontology):
+def test_put_object_on_frames_where_object_already_exists_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
@@ -133,7 +133,7 @@ def test_place_object_on_frames_where_object_already_exists_video_space(ontology
     )
 
 
-def test_place_object_on_frames_with_overwrite_on_video_space(ontology):
+def test_put_object_on_frames_with_overwrite_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
@@ -156,7 +156,7 @@ def test_place_object_on_frames_with_overwrite_on_video_space(ontology):
     assert annotation_on_frame_1.coordinates == coordinates_2
 
 
-def test_place_object_on_invalid_frames(ontology):
+def test_put_object_on_invalid_frames(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
@@ -185,7 +185,7 @@ def test_place_object_on_invalid_frames(ontology):
     assert exceed_frame_error.value.message == "Frame 50000 is invalid. The max frame on this video is 9."
 
 
-def test_unplace_object_from_frames_on_video_space(ontology):
+def test_remove_object_from_frames_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
@@ -199,12 +199,14 @@ def test_unplace_object_from_frames_on_video_space(ontology):
     )
 
     # Act
-    video_space_1.remove_object_from_frames(
+    frames_removed = video_space_1.remove_object_instance_from_frames(
         object_instance=new_object_instance,
-        frames=[1],
+        frames=[1, 10],
     )
 
     # Assert
+    assert frames_removed == [1]
+
     object_instances = label_row.get_object_instances()
     assert len(object_instances) == 1
 
@@ -226,6 +228,38 @@ def test_unplace_object_from_frames_on_video_space(ontology):
     # Also works for annotations obtained via object_instance
     annotations_on_object = new_object_instance.get_annotations()
     assert len(annotations_on_object) == 2
+
+
+def test_remove_object_from_all_frames_on_video_space(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
+    new_object_instance = box_ontology_item.create_instance()
+    box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
+    video_space_1.put_object_instance(
+        object_instance=new_object_instance,
+        frames=[0, 1, 2],
+        coordinates=box_coordinates,
+    )
+
+    # Act
+    video_space_1.remove_object_instance_from_frames(
+        object_instance=new_object_instance,
+        frames=[0, 1, 2],
+    )
+
+    # Assert
+    object_instances = label_row.get_object_instances()
+    assert len(object_instances) == 0
+
+    # Still one object instance
+    objects_on_space = video_space_1.get_object_instances()
+    assert len(objects_on_space) == 0
+
+    # Also works for annotations obtained via object_instance
+    annotations_on_object = new_object_instance.get_annotations()
+    assert len(annotations_on_object) == 0
 
 
 def test_remove_object_from_video_space(ontology):

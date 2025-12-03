@@ -68,12 +68,19 @@ class VideoSpace(Space):
     ):
         super().__init__(space_id, label_row)
 
+        # Keeps track of object/classification annotation data on each frame
         self._frames_to_object_hash_to_annotation_data: defaultdict[int, dict[str, GeometricAnnotationData]] = (
             defaultdict(dict)
         )
         self._frames_to_classification_hash_to_annotation_data: defaultdict[int, dict[str, AnnotationData]] = (
             defaultdict(dict)
         )
+
+        # Keeps track of which frames each object/classification still exists on.
+        # Used primarily to completely remove object if someone has removed it from all frames via `remove_object_instance_from_frames` or
+        # `remove_classification_instance_from_frames`.
+        self._object_hash_to_range_manager: defaultdict[str, RangeManager] = defaultdict(RangeManager)
+        self._classification_hash_to_range_manager: defaultdict[str, RangeManager] = defaultdict(RangeManager)
 
         # Used to track whether an instance of a classification_ontology exists on frames
         self._classifications_ontology_to_ranges: defaultdict[Classification, RangeManager] = defaultdict(RangeManager)
@@ -167,6 +174,7 @@ class VideoSpace(Space):
 
         check_coordinate_type(coordinates, object_instance._ontology_object, self._label_row)
 
+        # Checks overlap
         for frame in frame_list:
             objects_on_frame = self._frames_to_object_hash_to_annotation_data.get(frame)
             if objects_on_frame is None:
@@ -177,6 +185,8 @@ class VideoSpace(Space):
                 raise LabelRowError(
                     f"Annotation already exists on frame {frame}. Set 'on_overlap' to 'replace' to overwrite existing annotations."
                 )
+
+        self._object_hash_to_range_manager[object_instance.object_hash].add_frame_class(frames)
 
         for frame in frame_list:
             existing_frame_annotation_data = self._get_frame_object_annotation_data(
@@ -240,11 +250,11 @@ class VideoSpace(Space):
             manual_annotation=manual_annotation,
         )
 
-    def remove_object_from_frames(
+    def remove_object_instance_from_frames(
         self,
         object_instance: ObjectInstance,
         frames: Frames,
-    ):
+    ) -> List[int]:
         self._method_not_supported_for_object_instance_with_frames(object_instance=object_instance)
 
         frame_list = frames_class_to_frames_list(frames)
@@ -252,11 +262,23 @@ class VideoSpace(Space):
         # Remove all dynamic answers from these frames
         self._remove_all_answers_from_frames(object_instance, frame_list)
 
-        # TODO: What if all frames are unplaced?
-        # Need to remove from objects_map
-        # Also need to remove from object_hash_to_dynamic_answer map
+        # Tracks frames that are actually removed. User might have passed in frames that object doesn't even exist on.
+        frames_removed: list[int] = []
+
         for frame in frame_list:
-            self._frames_to_object_hash_to_annotation_data[frame].pop(object_instance.object_hash)
+            object_removed_from_frame = self._frames_to_object_hash_to_annotation_data[frame].pop(
+                object_instance.object_hash, None
+            )
+            if object_removed_from_frame is not None:
+                frames_removed.append(frame)
+
+        range_manager_for_object_hash = self._object_hash_to_range_manager[object_instance.object_hash]
+        range_manager_for_object_hash.remove_frame_class(frames)
+        if len(range_manager_for_object_hash.get_ranges()) == 0:
+            self._objects_map.pop(object_instance.object_hash)
+            self._object_hash_to_dynamic_answer_manager.pop(object_instance.object_hash)
+
+        return frames_removed
 
     def _remove_all_answers_from_frames(self, object_instance: ObjectInstance, frames: List[int]) -> None:
         """Remove all dynamic answers from the specified frames for an object instance.
@@ -383,8 +405,6 @@ class VideoSpace(Space):
 
         frames_list = frames_class_to_frames_list(frames)
 
-        # Only set answer on frames where object exists
-        # TODO: Should we throw an error here instead?
         valid_frames = []
         for frame in frames_list:
             annotation_data = self._get_frame_object_annotation_data(
@@ -513,30 +533,48 @@ class VideoSpace(Space):
         else:
             existing_range_manager.add_ranges(ranges_to_add)
 
+        self._classification_hash_to_range_manager[classification_instance._classification_hash].add_ranges(
+            ranges_to_add
+        )
+
     def remove_classification_instance_from_frames(
         self,
         classification_instance: ClassificationInstance,
         frames: Frames,
-    ):
+    ) -> List[int]:
         self._method_not_supported_for_classification_instance_with_frames(
             classification_instance=classification_instance
         )
 
         frame_list = frames_class_to_frames_list(frames)
-        for frame in frame_list:
-            self._frames_to_classification_hash_to_annotation_data[frame].pop(
-                classification_instance.classification_hash
-            )
 
-        range_manager = RangeManager(frame_class=frames)
+        # Keeps track of frames that are actually removed. User might pass in frames that the classification does not exist on.
+        frames_removed: list[int] = []
+        for frame in frame_list:
+            classification_removed = self._frames_to_classification_hash_to_annotation_data[frame].pop(
+                classification_instance.classification_hash, None
+            )
+            if classification_removed is not None:
+                frames_removed.append(frame)
+
+        range_manager = RangeManager(frame_class=frames_removed)
         ranges_to_remove = range_manager.get_ranges()
 
-        classification_range_manager = self._classifications_ontology_to_ranges.get(
+        classification_ontology_range_manager = self._classifications_ontology_to_ranges.get(
             classification_instance._ontology_classification
         )
 
-        if classification_range_manager is not None:
-            classification_range_manager.remove_ranges(ranges_to_remove)
+        if classification_ontology_range_manager is not None:
+            classification_ontology_range_manager.remove_ranges(ranges_to_remove)
+
+        range_manager_for_classification_instance = self._classification_hash_to_range_manager[
+            classification_instance.classification_hash
+        ]
+        range_manager_for_classification_instance.remove_ranges(ranges_to_remove)
+        if len(range_manager_for_classification_instance.get_ranges()) == 0:
+            self._classification_map.pop(classification_instance.classification_hash)
+
+        return frames_removed
 
     def _get_object_annotation_on_frame(self, object_hash: str, frame: int = 0) -> GeometricFrameObjectAnnotation:
         return GeometricFrameObjectAnnotation(space=self, object_instance=self._objects_map[object_hash], frame=frame)
@@ -593,9 +631,12 @@ class VideoSpace(Space):
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         object_instance = self._objects_map.pop(object_hash, None)
 
-        if object_instance is not None:
-            object_instance._remove_from_space(self.space_id)
-            self._object_hash_to_dynamic_answer_manager.pop(object_instance.object_hash)
+        if object_instance is None:
+            return None
+
+        object_instance._remove_from_space(self.space_id)
+        self._object_hash_to_dynamic_answer_manager.pop(object_instance.object_hash)
+        self._object_hash_to_range_manager.pop(object_hash)
 
         frames_to_remove: list[int] = []
         for frame, object_to_annotation_data_map in self._frames_to_object_hash_to_annotation_data.items():
@@ -619,6 +660,8 @@ class VideoSpace(Space):
             for frame, classification in self._frames_to_classification_hash_to_annotation_data.items():
                 if classification_hash in classification:
                     classification.pop(classification_hash)
+
+            self._classification_hash_to_range_manager.pop(classification_instance.classification_hash)
 
         return classification_instance
 
