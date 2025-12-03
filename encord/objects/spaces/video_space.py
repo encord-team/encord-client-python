@@ -186,7 +186,8 @@ class VideoSpace(Space):
                     f"Annotation already exists on frame {frame}. Set 'on_overlap' to 'replace' to overwrite existing annotations."
                 )
 
-        self._object_hash_to_range_manager[object_instance.object_hash].add_frame_class(frames)
+        range_manager = RangeManager(frames)
+        self._object_hash_to_range_manager[object_instance.object_hash].add_ranges(range_manager.get_ranges())
 
         for frame in frame_list:
             existing_frame_annotation_data = self._get_frame_object_annotation_data(
@@ -273,7 +274,8 @@ class VideoSpace(Space):
                 frames_removed.append(frame)
 
         range_manager_for_object_hash = self._object_hash_to_range_manager[object_instance.object_hash]
-        range_manager_for_object_hash.remove_frame_class(frames)
+        temp_range_manager = RangeManager(frames)
+        range_manager_for_object_hash.remove_ranges(temp_range_manager.get_ranges())
         if len(range_manager_for_object_hash.get_ranges()) == 0:
             self._objects_map.pop(object_instance.object_hash)
             self._object_hash_to_dynamic_answer_manager.pop(object_instance.object_hash)
