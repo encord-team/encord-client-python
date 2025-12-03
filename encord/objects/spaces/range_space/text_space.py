@@ -38,10 +38,20 @@ class TextSpace(RangeSpace):
 
     @property
     def layout_key(self) -> str:
+        """Get the layout key for this text space.
+
+        Returns:
+            str: The layout key identifier.
+        """
         return self._layout_key
 
     @property
     def is_readonly(self) -> bool:
+        """Check if this text space is read-only.
+
+        Returns:
+            bool: True if the space is read-only, False otherwise.
+        """
         return self._is_readonly
 
     def _to_space_dict(self) -> SpaceInfo:

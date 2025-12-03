@@ -38,10 +38,20 @@ class AudioSpace(RangeSpace):
 
     @property
     def layout_key(self) -> str:
+        """Get the layout key for this audio space.
+
+        Returns:
+            str: The layout key identifier.
+        """
         return self._layout_key
 
     @property
     def is_readonly(self) -> bool:
+        """Check if this audio space is read-only.
+
+        Returns:
+            bool: True if the space is read-only, False otherwise.
+        """
         return self._is_readonly
 
     def _to_space_dict(self) -> SpaceInfo:
@@ -110,7 +120,6 @@ class AudioSpace(RangeSpace):
             )
             annotation_metadata = AnnotationMetadata.from_dict(classification_answer)
 
-            # TODO: Need to use global classifications here
             self.put_classification_instance(
                 classification_instance=classification_instance,
                 created_at=annotation_metadata.created_at,

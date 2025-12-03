@@ -59,7 +59,8 @@ class RangeSpace(Space):
     def _are_ranges_valid(self, ranges: Ranges) -> None:
         pass
 
-    def _get_start_and_end_of_ranges(self, ranges: Ranges) -> tuple[int, int]:
+    @staticmethod
+    def _get_start_and_end_of_ranges(ranges: Ranges) -> tuple[int, int]:
         if len(ranges) == 0:
             raise LabelRowError("The array of ranges is empty. Please specify at least one range.")
 
@@ -84,6 +85,27 @@ class RangeSpace(Space):
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
     ) -> None:
+        """Add an object instance to specific ranges in the space (audio, text, or HTML).
+
+        Args:
+            object_instance: The object instance to add to the space.
+            ranges: Time ranges where the object should appear. Can be:
+                - A single Range object (Range)
+                - A list of Range objects for multiple ranges (List[Range])
+            on_overlap: Strategy for handling existing annotations on overlapping ranges.
+                - "error" (default): Raises an error if annotation already exists on overlapping ranges.
+                - "merge": Adds the object to new ranges while keeping existing annotations.
+                - "replace": Removes object from existing ranges before adding to new ranges.
+            created_at: Optional timestamp when the annotation was created.
+            created_by: Optional identifier of who created the annotation.
+            last_edited_at: Optional timestamp when the annotation was last edited.
+            last_edited_by: Optional identifier of who last edited the annotation.
+            confidence: Optional confidence score for the annotation (0.0 to 1.0).
+            manual_annotation: Optional flag indicating if this was manually annotated.
+
+        Raises:
+            LabelRowError: If ranges are invalid or if annotation already exists when on_overlap="error".
+        """
         self._method_not_supported_for_object_instance_with_frames(object_instance=object_instance)
         self._method_not_supported_for_object_instance_with_dynamic_attributes(object_instance=object_instance)
 
@@ -130,6 +152,20 @@ class RangeSpace(Space):
             existing_annotation_range_manager.add_ranges(ranges)
 
     def remove_object_instance_from_range(self, object_instance: ObjectInstance, ranges: Ranges | Range) -> Ranges:
+        """Remove an object instance from specific ranges in the space.
+
+        If the object is removed from all ranges, it will be completely removed from the space.
+
+        Args:
+            object_instance: The object instance to remove from ranges.
+            ranges: Ranges to remove the object from. Can be:
+                - A single Range object (Range)
+                - A list of Range objects for multiple ranges (List[Range])
+
+        Returns:
+            Ranges: List of ranges where the object was actually removed.
+                Empty if the object didn't exist on any of the specified ranges.
+        """
         if object_instance.object_hash not in self._object_hash_to_range_manager:
             return []
 
@@ -160,6 +196,23 @@ class RangeSpace(Space):
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
     ) -> None:
+        """Add a classification instance to the space (audio, text, or HTML).
+
+        Args:
+            classification_instance: The classification instance to add to the space.
+            on_overlap: Strategy for handling existing classifications.
+                - "error" (default): Raises an error if classification of the same ontology item already exists.
+                - "replace": Overwrites existing classifications.
+            created_at: Optional timestamp when the annotation was created.
+            created_by: Optional identifier of who created the annotation.
+            last_edited_at: Optional timestamp when the annotation was last edited.
+            last_edited_by: Optional identifier of who last edited the annotation.
+            confidence: Optional confidence score for the annotation (0.0 to 1.0).
+            manual_annotation: Optional flag indicating if this was manually annotated.
+
+        Raises:
+            LabelRowError: If classification already exists when on_overlap="error".
+        """
         self._method_not_supported_for_classification_instance_with_frames(
             classification_instance=classification_instance
         )
@@ -216,6 +269,15 @@ class RangeSpace(Space):
     def get_object_instance_annotations(
         self, filter_object_instances: Optional[list[str]] = None
     ) -> list[RangeObjectAnnotation]:
+        """Get all object instance annotations in the space.
+
+        Args:
+            filter_object_instances: Optional list of object hashes to filter by.
+                If provided, only annotations for these objects will be returned.
+
+        Returns:
+            list[RangeObjectAnnotation]: List of all object annotations in the space.
+        """
         res: list[RangeObjectAnnotation] = []
 
         for obj_hash, annotation in self._object_hash_to_range_manager.items():
@@ -227,6 +289,15 @@ class RangeSpace(Space):
     def get_classification_instance_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
     ) -> list[RangeClassificationAnnotation]:
+        """Get all classification instance annotations in the space.
+
+        Args:
+            filter_classification_instances: Optional list of classification hashes to filter by.
+                If provided, only annotations for these classifications will be returned.
+
+        Returns:
+            list[RangeClassificationAnnotation]: List of all classification annotations in the space.
+        """
         res: list[RangeClassificationAnnotation] = []
 
         for classification_hash, annotation_data in self._classification_hash_to_annotation_data.items():
@@ -241,12 +312,32 @@ class RangeSpace(Space):
         return res
 
     def get_object_instances(self) -> list[ObjectInstance]:
+        """Get all object instances in the space.
+
+        Returns:
+            list[ObjectInstance]: List of all object instances present in the space.
+        """
         return list(self._objects_map.values())
 
     def get_classification_instances(self) -> list[ClassificationInstance]:
+        """Get all classification instances in the space.
+
+        Returns:
+            list[ClassificationInstance]: List of all classification instances present in the space.
+        """
         return list(self._classifications_map.values())
 
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
+        """Remove an object instance from all ranges in the space.
+
+        This completely removes the object and all associated data from the space.
+
+        Args:
+            object_hash: The hash identifier of the object instance to remove.
+
+        Returns:
+            Optional[ObjectInstance]: The removed object instance, or None if the object wasn't found.
+        """
         object_instance = self._objects_map.pop(object_hash, None)
         # self._object_hash_to_annotation_data.pop(object_hash)
         self._object_hash_to_range_manager.pop(object_hash)
@@ -256,6 +347,16 @@ class RangeSpace(Space):
         return object_instance
 
     def remove_classification_instance(self, classification_hash: str) -> Optional[ClassificationInstance]:
+        """Remove a classification instance from the space.
+
+        This completely removes the classification and all associated data from the space.
+
+        Args:
+            classification_hash: The hash identifier of the classification instance to remove.
+
+        Returns:
+            Optional[ClassificationInstance]: The removed classification instance, or None if the classification wasn't found.
+        """
         classification_instance = self._classifications_map.pop(classification_hash, None)
 
         if classification_instance is not None:
