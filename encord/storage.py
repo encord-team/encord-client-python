@@ -1229,34 +1229,32 @@ class StorageFolder:
 
         self.refetch_data()
 
-    def create_data_group(
-        self,
-        params: Union[DataGroupInput, List[UUID]],
-        *,
-        client_metadata: Optional[Dict[str, Any]] = None,
-    ) -> UUID:
+    def create_data_group(self, params: Union[DataGroupInput, List[UUID]]) -> UUID:
         """Creates a data group storage item in this folder.
 
         Args:
-            params (Union[DataGroupInput, List[UUID]]): Parameters for the data group. When a list of UUIDs is provided,
-                the group will be created with a grid layout. For custom layouts, use DataGroupGrid, DataGroupList or DataGroupCustom.
-            client_metadata (Optional[Dict[str, Any]]): Optional custom metadata to be associated with the data group.
-                Should be a dictionary that is JSON-serializable.
+            params: Parameters for the data group. Can be:
+                - DataGroupInput (DataGroupGrid, DataGroupCarousel, DataGroupCustom): Layout with optional client_metadata
+                - List[UUID]: List of item UUIDs (creates a carousel layout)
 
         Returns:
             UUID: The UUID of the data group storage item.
         """
-        if isinstance(params, list):
-            params = orm_storage.DataGroupGrid(layout_contents=params)
-        return self._api_client.post(
-            f"storage/folders/{self.uuid}/create-group-item",
-            params=None,
-            payload=orm_storage.CreateDataGroupPayload(
-                params=params,
-                client_metadata=client_metadata,
-            ),
-            result_type=UUID,
-        )
+        return self._create_data_groups([params])[0]
+
+    def create_data_groups(self, params: List[Union[DataGroupInput, List[UUID]]]) -> List[UUID]:
+        """Creates multiple data group storage items in this folder.
+
+        Args:
+            params: List of parameters for each data group. Each item can be:
+                - DataGroupInput (DataGroupGrid, DataGroupCarousel, DataGroupCustom): Layout with optional client_metadata
+                - List[UUID]: List of item UUIDs (creates a carousel layout)
+
+        Returns:
+            List[UUID]: List of UUIDs of the created data group storage items
+        """
+
+        return self._create_data_groups(params)
 
     def move_items_to_folder(
         self,
@@ -1361,6 +1359,17 @@ class StorageFolder:
         self._set_orm_folder(
             self._api_client.get(f"storage/folders/{self.uuid}", params=None, result_type=orm_storage.StorageFolder)
         )
+
+    def _create_data_groups(self, params: List[Union[DataGroupInput, List[UUID]]]) -> List[UUID]:
+        group_inputs = [self._normalize_data_group_params(p) for p in params]
+
+        response = self._api_client.post(
+            f"storage/folders/{self.uuid}/create-group-items",
+            params=None,
+            payload=group_inputs,
+            result_type=orm_storage.CreateDataGroupsResponse,
+        )
+        return list(response.root)
 
     def _set_orm_folder(self, orm_folder: orm_storage.StorageFolder) -> None:
         self._orm_folder = orm_folder
@@ -1665,6 +1674,12 @@ class StorageFolder:
             allow_retries=False,
         )
         return StorageFolder(api_client, folder_orm)
+
+    @staticmethod
+    def _normalize_data_group_params(params: Union[DataGroupInput, List[UUID]]) -> DataGroupInput:
+        if isinstance(params, list):
+            return orm_storage.DataGroupCarousel(layout_contents=params)
+        return params
 
 
 class StorageItemInaccessible:
