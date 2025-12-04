@@ -1122,7 +1122,7 @@ class VideoSpace(Space):
             number_of_frames=self._number_of_frames,
             width=self._width,
             height=self._height,
-            info={
+            child_info={
                 "is_readonly": self._is_readonly,
                 "layout_key": self._layout_key,
                 "file_name": self._file_name,

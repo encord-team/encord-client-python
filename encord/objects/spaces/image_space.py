@@ -443,7 +443,7 @@ class ImageSpace(Space):
             labels={
                 "0": frame_label,
             },
-            info={
+            child_info={
                 "is_readonly": self._is_readonly,
                 "layout_key": self._layout_key,
                 "file_name": self._file_name,

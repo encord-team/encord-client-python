@@ -2415,7 +2415,7 @@ class LabelRowV2:
                 video_space = VideoSpace(
                     space_id=space_id,
                     label_row=self,
-                    child_info=space_info["info"],
+                    child_info=space_info["child_info"],
                     number_of_frames=space_info["number_of_frames"],
                     width=space_info["width"],
                     height=space_info["height"],
@@ -2425,7 +2425,7 @@ class LabelRowV2:
                 image_space = ImageSpace(
                     space_id=space_id,
                     label_row=self,
-                    child_info=space_info["info"],
+                    child_info=space_info["child_info"],
                     width=space_info["width"],
                     height=space_info["height"],
                 )
@@ -2435,7 +2435,7 @@ class LabelRowV2:
                     space_id=space_id,
                     label_row=self,
                     duration_ms=space_info["duration_ms"],
-                    child_info=space_info["info"],
+                    child_info=space_info["child_info"],
                 )
                 res[space_id] = audio_space
             elif space_info["space_type"] == SpaceType.TEXT:
@@ -2443,7 +2443,7 @@ class LabelRowV2:
                     space_id=space_id,
                     label_row=self,
                     number_of_characters=space_info["number_of_characters"],
-                    child_info=space_info["info"],
+                    child_info=space_info["child_info"],
                 )
                 res[space_id] = text_space
 

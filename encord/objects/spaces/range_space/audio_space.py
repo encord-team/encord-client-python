@@ -60,7 +60,7 @@ class AudioSpace(RangeSpace):
             space_type=SpaceType.AUDIO,
             duration_ms=self._duration_ms,
             labels=labels,
-            info={
+            child_info={
                 "layout_key": self._layout_key,
                 "is_readonly": self._is_readonly,
                 "file_name": self._file_name,

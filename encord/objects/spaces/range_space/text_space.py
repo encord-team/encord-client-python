@@ -60,7 +60,7 @@ class TextSpace(RangeSpace):
             space_type=SpaceType.TEXT,
             number_of_characters=self._number_of_characters,
             labels=labels,
-            info={
+            child_info={
                 "layout_key": self._layout_key,
                 "is_readonly": self._is_readonly,
                 "file_name": self._file_name,

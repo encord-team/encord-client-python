@@ -29,6 +29,7 @@ def empty_audio_label_row() -> LabelRowV2:
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
     label_row_metadata_dict["data_type"] = "AUDIO"
+    label_row_metadata_dict["number_of_frames"] = label_row_metadata_dict["duration"] * label_row_metadata_dict["frames_per_second"]
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
     label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
@@ -42,6 +43,7 @@ def empty_html_text_label_row() -> LabelRowV2:
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
     label_row_metadata_dict["data_type"] = "plain_text"
     label_row_metadata_dict["file_type"] = "text/html"
+    label_row_metadata_dict["number_of_frames"] = label_row_metadata_dict["duration"] * label_row_metadata_dict["frames_per_second"]
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
     label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
@@ -55,6 +57,7 @@ def empty_plain_text_label_row() -> LabelRowV2:
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
     label_row_metadata_dict["data_type"] = "plain_text"
     label_row_metadata_dict["file_type"] = "text/plain"
+    label_row_metadata_dict["number_of_frames"] = label_row_metadata_dict["duration"] * label_row_metadata_dict["frames_per_second"]
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
     label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))

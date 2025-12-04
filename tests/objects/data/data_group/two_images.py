@@ -32,7 +32,7 @@ DATA_GROUP_METADATA = LabelRowMetadata(
     spaces={
         "image-1-uuid": {
             "space_type": SpaceType.IMAGE,
-            "info": {"layout_key": "front", "is_readonly": False, "file_name": "front.jpg"},
+            "child_info": {"layout_key": "front", "is_readonly": False, "file_name": "front.jpg"},
             "number_of_frames": 10,
             "width": 100,
             "height": 100,
@@ -40,7 +40,7 @@ DATA_GROUP_METADATA = LabelRowMetadata(
         },
         "image-2-uuid": {
             "space_type": SpaceType.IMAGE,
-            "info": {"layout_key": "back", "is_readonly": False, "file_name": "back.jpg"},
+            "child_info": {"layout_key": "back", "is_readonly": False, "file_name": "back.jpg"},
             "number_of_frames": 10,
             "width": 100,
             "height": 100,
@@ -149,7 +149,7 @@ DATA_GROUP_WITH_TWO_IMAGES_LABELS = {
     "spaces": {
         "image-1-uuid": {
             "space_type": SpaceType.IMAGE,
-            "info": {"layout_key": "front", "is_readonly": False, "file_name": "front.jpg"},
+            "child_info": {"layout_key": "front", "is_readonly": False, "file_name": "front.jpg"},
             "width": 100,
             "height": 100,
             "labels": {
@@ -189,7 +189,7 @@ DATA_GROUP_WITH_TWO_IMAGES_LABELS = {
         },
         "image-2-uuid": {
             "space_type": SpaceType.IMAGE,
-            "info": {"layout_key": "back", "is_readonly": False, "file_name": "back.jpg"},
+            "child_info": {"layout_key": "back", "is_readonly": False, "file_name": "back.jpg"},
             "width": 100,
             "height": 100,
             "labels": {
