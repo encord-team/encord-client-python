@@ -1870,7 +1870,7 @@ class StorageItem:
         """
         return self._api_client.get(
             f"storage/folders/{self.parent_folder_uuid}/items/{self.uuid}/summary",
-            params=None,
+            params=orm_storage.GetItemSummaryParams(include_group_layout=True),
             result_type=StorageItemSummary,
         )
 
