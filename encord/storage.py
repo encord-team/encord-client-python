@@ -1361,12 +1361,12 @@ class StorageFolder:
         )
 
     def _create_data_groups(self, params: List[Union[DataGroupInput, List[UUID]]]) -> List[UUID]:
-        groups = [orm_storage.CreateDataGroupPayload(params=self._normalize_data_group_params(p)) for p in params]
+        group_inputs = [self._normalize_data_group_params(p) for p in params]
 
         response = self._api_client.post(
             f"storage/folders/{self.uuid}/create-group-items",
             params=None,
-            payload=orm_storage.CreateDataGroupsPayload(groups=groups),
+            payload=group_inputs,
             result_type=orm_storage.CreateDataGroupsResponse,
         )
         return list(response.root)

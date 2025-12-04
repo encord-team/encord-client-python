@@ -326,28 +326,6 @@ class DataGroupCustom(BaseDTO):
 DataGroupInput = Union[DataGroupGrid, DataGroupCarousel, DataGroupCustom]
 
 
-class CreateDataGroupPayload(BaseDTO):
-    """Payload for creating a data group in a folder.
-
-    Args:
-        item_type: Item type of the group. Must be ``"GROUP"``.
-        params: Layout and configuration for the data group
-    """
-
-    item_type: Literal["GROUP"] = "GROUP"
-    params: DataGroupInput
-
-
-class CreateDataGroupsPayload(BaseDTO):
-    """Payload for creating multiple data groups in a folder.
-
-    Args:
-        groups: List of data group payloads to create.
-    """
-
-    groups: List[CreateDataGroupPayload]
-
-
 class CreateDataGroupsResponse(RootModelDTO[List[UUID]]):
     """Response returned after creating multiple data groups.
 
