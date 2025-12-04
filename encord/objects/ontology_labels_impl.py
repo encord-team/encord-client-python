@@ -2442,7 +2442,6 @@ class LabelRowV2:
                 text_space = TextSpace(
                     space_id=space_id,
                     label_row=self,
-                    number_of_characters=space_info["number_of_characters"],
                     child_info=space_info["child_info"],
                 )
                 res[space_id] = text_space

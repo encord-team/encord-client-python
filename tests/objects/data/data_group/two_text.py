@@ -33,13 +33,11 @@ DATA_GROUP_METADATA = LabelRowMetadata(
         "text-1-uuid": {
             "space_type": SpaceType.TEXT,
             "child_info": {"layout_key": "main transcript", "is_readonly": False, "file_name": "english.txt"},
-            "number_of_characters": 500,
             "labels": {},
         },
         "text-2-uuid": {
             "space_type": SpaceType.TEXT,
             "child_info": {"layout_key": "chinese translation", "is_readonly": False, "file_name": "chinese.txt"},
-            "number_of_characters": 500,
             "labels": {},
         },
     },
@@ -65,13 +63,11 @@ DATA_GROUP_TWO_TEXT_NO_LABELS = {
         "text-1-uuid": {
             "space_type": SpaceType.TEXT,
             "child_info": {"layout_key": "main transcript", "is_readonly": False, "file_name": "english.txt"},
-            "number_of_characters": 500,
             "labels": {},
         },
         "text-2-uuid": {
             "space_type": SpaceType.TEXT,
             "child_info": {"layout_key": "chinese translation", "is_readonly": False, "file_name": "chinese.txt"},
-            "number_of_characters": 500,
             "labels": {},
         },
     },
@@ -158,13 +154,11 @@ DATA_GROUP_WITH_TWO_TEXT_LABELS = {
         "text-1-uuid": {
             "space_type": SpaceType.TEXT,
             "child_info": {"layout_key": "main transcript", "is_readonly": False, "file_name": "english.txt"},
-            "number_of_characters": 500,
             "labels": {},
         },
         "text-2-uuid": {
             "space_type": SpaceType.TEXT,
             "child_info": {"layout_key": "chinese translation", "is_readonly": False, "file_name": "chinese.txt"},
-            "number_of_characters": 500,
             "labels": {},
         },
     },

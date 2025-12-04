@@ -33,7 +33,6 @@ class ImageSpaceInfo(BaseSpaceInfo):
 
 class TextSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.TEXT]
-    number_of_characters: int
     child_info: Optional[ChildInfo]
 
 

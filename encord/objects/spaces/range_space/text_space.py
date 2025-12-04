@@ -17,24 +17,18 @@ if TYPE_CHECKING:
 class TextSpace(RangeSpace):
     """Text space implementation for range-based annotations."""
 
-    def __init__(self, space_id: str, label_row: LabelRowV2, number_of_characters: int, child_info: ChildInfo):
+    def __init__(self, space_id: str, label_row: LabelRowV2, child_info: ChildInfo):
         super().__init__(space_id, label_row)
-        self._number_of_characters = number_of_characters
 
         self._layout_key = child_info["layout_key"]
         self._is_readonly = child_info["is_readonly"]
         self._file_name = child_info["file_name"]
 
     def _are_ranges_valid(self, ranges: Ranges) -> None:
-        start_of_range, end_of_range = self._get_start_and_end_of_ranges(ranges)
+        start_of_range, _end_of_range = self._get_start_and_end_of_ranges(ranges)
 
         if start_of_range < 0:
             raise LabelRowError(f"Range starting with {start_of_range} is invalid. Negative ranges are not supported.")
-
-        if end_of_range > self._number_of_characters:
-            raise LabelRowError(
-                f"Range ending with {end_of_range} is invalid. This text file has only {self._number_of_characters} characters."
-            )
 
     @property
     def layout_key(self) -> str:
@@ -58,7 +52,6 @@ class TextSpace(RangeSpace):
         labels = self._build_labels_dict()
         return TextSpaceInfo(
             space_type=SpaceType.TEXT,
-            number_of_characters=self._number_of_characters,
             labels=labels,
             child_info={
                 "layout_key": self._layout_key,

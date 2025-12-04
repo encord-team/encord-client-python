@@ -15,7 +15,6 @@ from encord.objects.spaces.annotation.base_annotation import AnnotationData, Ann
 from encord.objects.spaces.annotation.range_annotation import (
     RangeClassificationAnnotation,
     RangeObjectAnnotation,
-    RangeObjectAnnotationData,
 )
 from encord.objects.spaces.base_space import Space
 from encord.objects.types import (
