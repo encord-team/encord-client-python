@@ -1221,6 +1221,7 @@ def test_audio_object_can_be_added_edited_and_removed(all_types_ontology, empty_
     obj_instance.set_for_frames(AudioCoordinates(range=[Range(start=2000, end=2499)]), overwrite=True)
     range_list = obj_instance.range_list
     assert range_list is not None
+    print(range_list)
     assert len(range_list) == 1
     assert range_list[0].start == 2000
     assert range_list[0].end == 2499

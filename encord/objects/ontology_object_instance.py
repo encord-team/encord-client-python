@@ -63,6 +63,7 @@ from encord.objects.ontology_object import Object
 from encord.objects.options import Option
 from encord.objects.spaces.annotation.base_annotation import AnnotationData, AnnotationMetadata, ObjectAnnotation
 from encord.objects.spaces.annotation.geometric_annotation import GeometricAnnotationData
+from encord.objects.spaces.annotation.range_annotation import RangeObjectAnnotationData
 from encord.objects.types import (
     AnswerDict,
     AttributeDict,
@@ -586,7 +587,9 @@ class ObjectInstance:
 
             if existing_frame_data is None:
                 if isinstance(coordinates, (TextCoordinates, AudioCoordinates)):
-                    existing_frame_data = AnnotationData(annotation_metadata=AnnotationMetadata())
+                    existing_frame_data = RangeObjectAnnotationData(
+                        annotation_metadata=AnnotationMetadata(), range_manager=RangeManager()
+                    )
                 else:
                     geometric_coordinates = cast(GeometricCoordinates, coordinates)
                     existing_frame_data = GeometricAnnotationData(
@@ -607,6 +610,13 @@ class ObjectInstance:
             if isinstance(existing_frame_data, GeometricAnnotationData):
                 geometric_coordinates = cast(GeometricCoordinates, coordinates)
                 existing_frame_data.coordinates = geometric_coordinates
+            elif isinstance(existing_frame_data, RangeObjectAnnotationData):
+                non_geometric_coordinates = cast(Union[TextCoordinates, AudioCoordinates], coordinates)
+
+                # This is for backwards compatibility.
+                # When set_for_frames is called for non_geometric objects, we replace the entire range, instead of simply adding to the range.
+                existing_frame_data.range_manager.clear_ranges()
+                existing_frame_data.range_manager.add_ranges(non_geometric_coordinates.range)
 
             if self._parent:
                 self._parent.add_to_single_frame_to_hashes_map(self, frame)
@@ -772,9 +782,17 @@ class ObjectInstance:
             annotation_data = self._get_annotation_data()
             if isinstance(annotation_data, GeometricAnnotationData):
                 return annotation_data.coordinates
-            else:
+            elif isinstance(annotation_data, RangeObjectAnnotationData):
                 # TODO: Return ranges here from RangeAnnotationData
-                return AudioCoordinates(range=[Range(start=0, end=500)])
+                ranges = annotation_data.range_manager.get_ranges()
+                if self._object_instance._ontology_object.shape == Shape.TEXT:
+                    return TextCoordinates(range=ranges)
+                elif self._object_instance._ontology_object.shape == Shape.AUDIO:
+                    return AudioCoordinates(range=ranges)
+                else:
+                    raise LabelRowError("No coordinates for this annotation.")
+            else:
+                raise LabelRowError("Invalid annotation data found.")
 
         @coordinates.setter
         def coordinates(self, coordinates: Coordinates) -> None:
