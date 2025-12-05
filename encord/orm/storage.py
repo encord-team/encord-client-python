@@ -10,6 +10,7 @@ from encord.common.deprecated import deprecated
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO, Field, RootModelDTO
 from encord.orm.dataset import DataUnitError, LongPollingStatus
+from encord.orm.group_layout import DataGroupData, DataGroupLayout, LayoutSettings
 
 try:
     from typing import Literal
@@ -318,8 +319,8 @@ class DataGroupCustom(BaseDTO):
     layout_type: Literal["custom"] = "custom"
     name: Optional[str] = None
     layout_contents: Dict[str, UUID]
-    layout: Dict
-    settings: Optional[Dict] = None
+    layout: Union[Dict, DataGroupLayout]
+    settings: Optional[Union[Dict, LayoutSettings]] = None
     client_metadata: Optional[Dict[str, Any]] = None
 
 
@@ -997,6 +998,8 @@ class StorageItemSummary(BaseDTO):
     accessible_datasets: List[DatasetShortInfo]
     """List of datasets that contain this item as a `DataRow` (only those that the user has access to, so
     the length of this list can be less than `used_in_datasets`)"""
+    group_layout: Optional[DataGroupData] = None
+    """Data group layout information. Only populated when include_group_layout=True and item is a GROUP."""
 
 
 class DeleteItemsParams(BaseDTO):
@@ -1071,6 +1074,17 @@ class GetItemParams(BaseDTO):
     """
 
     sign_url: bool
+
+
+class GetItemSummaryParams(BaseDTO):
+    """Parameters for fetching item summary information.
+
+    Args:
+        include_group_layout: If ``True``, include the data group layout in the response.
+            Only applicable for GROUP item types.
+    """
+
+    include_group_layout: bool = False
 
 
 class GetChildItemsParams(BaseDTO):
