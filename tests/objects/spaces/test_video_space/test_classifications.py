@@ -6,8 +6,7 @@ from deepdiff import DeepDiff
 
 from encord.common.time_parser import format_datetime_to_long_string
 from encord.exceptions import LabelRowError
-from encord.objects import Classification, LabelRowV2, Object
-from encord.objects.attributes import Attribute
+from encord.objects import Classification, LabelRowV2
 from encord.objects.frames import Range
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.two_videos import (
@@ -15,9 +14,6 @@ from tests.objects.data.data_group.two_videos import (
     DATA_GROUP_TWO_VIDEOS_NO_LABELS,
 )
 
-box_ontology_item = all_types_structure.get_child_by_hash("MjI2NzEy", Object)
-box_with_attributes_ontology_item = all_types_structure.get_child_by_hash("MTA2MjAx", Object)
-box_text_attribute_ontology_item = box_with_attributes_ontology_item.get_child_by_hash("OTkxMjU1", type_=Attribute)
 text_classification = all_types_structure.get_child_by_hash("jPOcEsbw", Classification)
 checklist_classification = all_types_structure.get_child_by_hash("3DuQbFxo", Classification)
 

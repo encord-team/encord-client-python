@@ -103,6 +103,14 @@ AUDIO_OBJECT_1 = Object(
             dynamic=False,
             archived=False,
         ),
+        TextAttribute(
+            uid=[8, 2],
+            feature_node_hash="dynamicTranscriptFeatureHash",
+            name="Dynamic Transcript",
+            required=False,
+            dynamic=True,
+            archived=False,
+        ),
     ],
 )
 AUDIO_OBJECT_2 = dataclasses.replace(AUDIO_OBJECT_1, uid=9, name="audio object 2", feature_node_hash="bjvtzFgi")
@@ -116,11 +124,19 @@ TEXT_OBJECT = Object(
     archived=False,
     attributes=[
         TextAttribute(
-            uid=[9, 1],
+            uid=[11, 1],
             feature_node_hash="definitionFeatureHash",
             name="Definition",
             required=False,
             dynamic=False,
+            archived=False,
+        ),
+        TextAttribute(
+            uid=[11, 2],
+            feature_node_hash="dynamicDefinitionFeatureHash",
+            name="Dynamic definition",
+            required=False,
+            dynamic=True,
             archived=False,
         ),
     ],

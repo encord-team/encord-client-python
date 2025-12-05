@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional, Sequence, cast
+from typing import TYPE_CHECKING, Dict, Optional, Sequence, cast
 
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
@@ -30,7 +30,7 @@ from encord.objects.types import (
     FrameClassification,
     FrameObject,
     LabelBlob,
-    ObjectAnswer,
+    ObjectAnswerForGeometric,
 )
 
 logger = logging.getLogger(__name__)
@@ -253,7 +253,7 @@ class ImageSpace(Space):
         """
         res: list[SingleFrameClassificationAnnotation] = []
 
-        for classification_hash, annotation_data in dict(self._classification_hash_to_annotation_data.items()).items():
+        for classification_hash, annotation_data in self._classification_hash_to_annotation_data.items():
             if filter_classification_instances is None or classification_hash in filter_classification_instances:
                 res.append(
                     SingleFrameClassificationAnnotation(
@@ -331,7 +331,7 @@ class ImageSpace(Space):
         return ObjectInstance(ontology_object=label_class, object_hash=object_hash)
 
     def _create_new_classification_from_frame_label_dict(
-        self, frame_classification_label: FrameClassification, classification_answers: dict
+        self, frame_classification_label: FrameClassification, classification_answers: Dict[str, ClassificationAnswer]
     ) -> Optional[ClassificationInstance]:
         from encord.objects import Classification, ClassificationInstance
 
@@ -340,17 +340,17 @@ class ImageSpace(Space):
         classification_hash = frame_classification_label["classificationHash"]
         label_class = ontology.get_child_by_hash(feature_hash, type_=Classification)
 
-        # TODO: Probably can remove this check?
-        if classification_answer := classification_answers.get(classification_hash):
-            new_classification_instance = ClassificationInstance(
-                ontology_classification=label_class, classification_hash=classification_hash
-            )
-            answers_dict = classification_answer["classifications"]
-            self._label_row._add_static_answers_from_dict(new_classification_instance, answers_dict)
+        classification_answer = classification_answers.get(classification_hash)
+        if classification_answer is None:
+            raise LabelRowError("Classification exists in frame labels, but not in classification answers.")
 
-            return new_classification_instance
+        new_classification_instance = ClassificationInstance(
+            ontology_classification=label_class, classification_hash=classification_hash
+        )
+        answers_dict = classification_answer["classifications"]
+        self._label_row._add_static_answers_from_dict(new_classification_instance, answers_dict)
 
-        return None
+        return new_classification_instance
 
     def _to_encord_object(
         self,
@@ -443,7 +443,7 @@ class ImageSpace(Space):
             labels={
                 "0": frame_label,
             },
-            info={
+            child_info={
                 "is_readonly": self._is_readonly,
                 "layout_key": self._layout_key,
                 "file_name": self._file_name,
@@ -453,7 +453,7 @@ class ImageSpace(Space):
     def _parse_space_dict(
         self,
         space_info: SpaceInfo,
-        object_answers: dict[str, ObjectAnswer],
+        object_answers: dict[str, ObjectAnswerForGeometric],
         classification_answers: dict[str, ClassificationAnswer],
     ) -> None:
         frame_label = space_info["labels"].get("0")
@@ -511,11 +511,13 @@ class ImageSpace(Space):
                 confidence=classification_frame_instance_info.confidence,
             )
 
-    def _to_object_answers(self) -> dict[str, ObjectAnswer]:
-        ret: dict[str, ObjectAnswer] = {}
+    def _to_object_answers(
+        self, existing_object_answers: Dict[str, ObjectAnswerForGeometric]
+    ) -> Dict[str, ObjectAnswerForGeometric]:
+        ret: dict[str, ObjectAnswerForGeometric] = {}
         for object_instance in self.get_object_instances():
             all_static_answers = self._label_row._get_all_static_answers(object_instance)
-            object_index_element: ObjectAnswer = {
+            object_index_element: ObjectAnswerForGeometric = {
                 "classifications": list(reversed(all_static_answers)),
                 "objectHash": object_instance.object_hash,
             }
@@ -523,7 +525,9 @@ class ImageSpace(Space):
 
         return ret
 
-    def _to_classification_answers(self) -> dict[str, ClassificationAnswer]:
+    def _to_classification_answers(
+        self, existing_classification_answers: Dict[str, ClassificationAnswer]
+    ) -> Dict[str, ClassificationAnswer]:
         ret: dict[str, ClassificationAnswer] = {}
         for classification in self.get_classification_instances():
             all_static_answers = classification.get_all_static_answers()
