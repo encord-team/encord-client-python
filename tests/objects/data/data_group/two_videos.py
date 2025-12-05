@@ -32,7 +32,7 @@ DATA_GROUP_METADATA = LabelRowMetadata(
     spaces={
         "video-1-uuid": {
             "space_type": SpaceType.VIDEO,
-            "info": {"layout_key": "left-camera", "is_readonly": False, "file_name": "Left Camera.mp4"},
+            "child_info": {"layout_key": "left-camera", "is_readonly": False, "file_name": "Left Camera.mp4"},
             "number_of_frames": 10,
             "width": 100,
             "height": 100,
@@ -40,7 +40,7 @@ DATA_GROUP_METADATA = LabelRowMetadata(
         },
         "video-2-uuid": {
             "space_type": SpaceType.VIDEO,
-            "info": {"layout_key": "right-camera", "is_readonly": False, "file_name": "Right Camera.mp4"},
+            "child_info": {"layout_key": "right-camera", "is_readonly": False, "file_name": "Right Camera.mp4"},
             "number_of_frames": 10,
             "width": 100,
             "height": 100,
@@ -68,7 +68,7 @@ DATA_GROUP_TWO_VIDEOS_NO_LABELS = {
     "spaces": {
         "video-1-uuid": {
             "space_type": SpaceType.VIDEO,
-            "info": {"layout_key": "left-camera", "is_readonly": False, "file_name": "Left Camera.mp4"},
+            "child_info": {"layout_key": "left-camera", "is_readonly": False, "file_name": "Left Camera.mp4"},
             "number_of_frames": 10,
             "width": 100,
             "height": 100,
@@ -76,7 +76,7 @@ DATA_GROUP_TWO_VIDEOS_NO_LABELS = {
         },
         "video-2-uuid": {
             "space_type": SpaceType.VIDEO,
-            "info": {"layout_key": "right-camera", "is_readonly": False, "file_name": "Right Camera.mp4"},
+            "child_info": {"layout_key": "right-camera", "is_readonly": False, "file_name": "Right Camera.mp4"},
             "number_of_frames": 10,
             "width": 100,
             "height": 100,
@@ -173,7 +173,7 @@ DATA_GROUP_WITH_TWO_VIDEOS_LABELS = {
     "spaces": {
         "video-1-uuid": {
             "space_type": SpaceType.VIDEO,
-            "info": {"layout_key": "left-camera", "is_readonly": False, "file_name": "Left Camera.mp4"},
+            "child_info": {"layout_key": "left-camera", "is_readonly": False, "file_name": "Left Camera.mp4"},
             "number_of_frames": 10,
             "width": 100,
             "height": 100,
@@ -275,7 +275,7 @@ DATA_GROUP_WITH_TWO_VIDEOS_LABELS = {
         },
         "video-2-uuid": {
             "space_type": SpaceType.VIDEO,
-            "info": {"layout_key": "right-camera", "is_readonly": False, "file_name": "Right Camera.mp4"},
+            "child_info": {"layout_key": "right-camera", "is_readonly": False, "file_name": "Right Camera.mp4"},
             "number_of_frames": 10,
             "width": 100,
             "height": 100,
