@@ -28,4 +28,5 @@ labels = {
             "data_fps": 25.0,
         }
     },
+    "spaces": {},
 }

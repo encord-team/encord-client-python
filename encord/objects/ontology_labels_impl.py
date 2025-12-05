@@ -15,15 +15,19 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Type, Union, cast
+from typing import Any, Dict, Iterable, List, Literal, Optional, Sequence, Set, Tuple, Type, Union, cast, overload
 from uuid import UUID
 
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
 from encord.common.deprecated import deprecated
 from encord.common.range_manager import RangeManager
-from encord.common.time_parser import format_datetime_to_long_string_optional, parse_datetime_optional
-from encord.constants.enums import DataType, is_geometric
+from encord.common.time_parser import (
+    format_datetime_to_long_string,
+    format_datetime_to_long_string_optional,
+    parse_datetime_optional,
+)
+from encord.constants.enums import DataType, SpaceType, is_geometric
 from encord.exceptions import LabelRowError, WrongProjectTypeError
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
 from encord.http.limits import (
@@ -76,11 +80,18 @@ from encord.objects.frames import (
     ranges_list_to_ranges,
     ranges_to_list,
 )
-from encord.objects.html_node import HtmlRange
+from encord.objects.html_node import HtmlRange, HtmlRangeDict
 from encord.objects.metadata import DataGroupMetadata, DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
+from encord.objects.spaces.annotation.base_annotation import ClassificationAnnotation, ObjectAnnotation
+from encord.objects.spaces.base_space import Space, SpaceT
+from encord.objects.spaces.image_space import ImageSpace
+from encord.objects.spaces.range_space.audio_space import AudioSpace
+from encord.objects.spaces.range_space.text_space import TextSpace
+from encord.objects.spaces.types import SpaceInfo
+from encord.objects.spaces.video_space import VideoSpace
 from encord.objects.types import (
     AttributeDict,
     BaseFrameObject,
@@ -90,15 +101,17 @@ from encord.objects.types import (
     FrameObject,
     ObjectAction,
     ObjectAnswer,
+    ObjectAnswerForGeometric,
+    ObjectAnswerForHtml,
     ObjectAnswerForNonGeometric,
     is_containing_metadata,
+    is_containing_spaces,
 )
 from encord.objects.utils import _lower_snake_case
 from encord.ontology import Ontology
 from encord.orm import storage as orm_storage
 from encord.orm.label_row import (
     AnnotationTaskStatus,
-    LabelRow,
     LabelRowMetadata,
     LabelStatus,
     WorkflowGraphNode,
@@ -140,6 +153,12 @@ class LabelRowV2:
 
         self._metadata: Optional[Union[DICOMSeriesMetadata, DataGroupMetadata]] = None
         self._frame_metadata: defaultdict[int, Optional[DICOMSliceMetadata]] = defaultdict(lambda: None)
+
+        self._space_map: dict[str, Space] = self._initiate_spaces(
+            spaces_info=label_row_metadata.spaces,
+        )
+        self._space_objects_map: dict[str, ObjectInstance] = {}
+        self._space_classifications_map: dict[str, ClassificationInstance] = {}
 
         self._classifications_to_frames: defaultdict[Classification, Set[int]] = defaultdict(set)
         self._classifications_to_ranges: defaultdict[Classification, RangeManager] = defaultdict(RangeManager)
@@ -685,7 +704,19 @@ class LabelRowV2:
 
         self._objects_map = dict()
         self._classifications_map = dict()
+
+        # We need to do below three in order:
+        # 1. Parse labels on root
+        # 2. Parse labels on spaces
+        # 3. Add dynamic attributes to objects on root & spaces
         self._parse_labels_from_dict(label_row_dict)
+        spaces_dict = label_row_dict.get("spaces", {})
+        self._parse_space_labels(
+            spaces_info=spaces_dict,
+            object_answers=label_row_dict["object_answers"],
+            classification_answers=label_row_dict["classification_answers"],
+        )
+        self._add_action_answers(label_row_dict)
 
     def get_image_hash(self, frame_number: int) -> Optional[str]:
         """Get the corresponding image hash for the frame number.
@@ -723,6 +754,91 @@ class LabelRowV2:
         if self.data_type not in (DataType.IMAGE, DataType.IMG_GROUP):
             raise LabelRowError("This function is only supported for label rows of image or image group data types.")
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
+
+    def get_spaces(self) -> list[Space]:
+        return list(self._space_map.values())
+
+    @overload
+    def get_space(
+        self,
+        *,
+        id: str,
+        type_: Literal["video"],
+    ) -> VideoSpace:
+        pass
+
+    @overload
+    def get_space(self, *, id: str, type_: Literal["image"]) -> ImageSpace:
+        pass
+
+    @overload
+    def get_space(self, *, id: str, type_: Literal["audio"]) -> AudioSpace:
+        pass
+
+    @overload
+    def get_space(self, *, id: str, type_: Literal["text"]) -> TextSpace:
+        pass
+
+    @overload
+    def get_space(self, *, layout_key: str, type_: Literal["video"]) -> VideoSpace:
+        pass
+
+    @overload
+    def get_space(self, *, layout_key: str, type_: Literal["image"]) -> ImageSpace:
+        pass
+
+    @overload
+    def get_space(self, *, layout_key: str, type_: Literal["audio"]) -> AudioSpace:
+        pass
+
+    @overload
+    def get_space(self, *, layout_key: str, type_: Literal["text"]) -> TextSpace:
+        pass
+
+    def get_space(
+        self,
+        *,
+        id: Optional[str] = None,
+        layout_key: Optional[str] = None,
+        type_: Literal["video", "image", "audio", "text"],
+    ) -> Space:
+        """Retrieves a single space which matches the specified id and type.
+        Throws an exception if more than one or no space with the specified id and type is found.
+        Args:
+            id: The id of the space to find.
+            layout_key: The layout key of the data unit within its data group layout.
+            type_: Type to check the type of the space.
+        Returns:
+            The child node with the specified title and type.
+        Raises:
+            OntologyError: If more than one or no matching child is found.
+        """
+        if id is not None and layout_key is not None:
+            raise LabelRowError("Only one of id and layout_key can be specified.")
+
+        if id is not None:
+            for element in self._space_map.values():
+                if element.space_id == id:
+                    return element
+
+        if layout_key is not None:
+            for element in self._space_map.values():
+                if (
+                    isinstance(element, VideoSpace)
+                    or isinstance(element, ImageSpace)
+                    or isinstance(element, AudioSpace)
+                    or isinstance(element, TextSpace)
+                ):
+                    if element.layout_key == layout_key:
+                        return element
+
+        space_identifier_error_message = ""
+        if id is not None:
+            space_identifier_error_message = f"Could not find space with given id {id}."
+        elif layout_key is not None:
+            space_identifier_error_message = f"Could not find space with given layout key {layout_key}."
+
+        raise LabelRowError(space_identifier_error_message)
 
     def save(self, bundle: Optional[Bundle] = None, validate_before_saving: bool = False) -> None:
         """Upload the created labels to the Encord server.
@@ -873,6 +989,22 @@ class LabelRowV2:
         """
         self._check_labelling_is_initalised()
 
+        return self._get_object_instances(
+            include_spaces=True, filter_ontology_object=filter_ontology_object, filter_frames=filter_frames
+        )
+
+    def _get_object_instances(
+        self,
+        include_spaces: bool,
+        filter_ontology_object: Optional[Object] = None,
+        filter_frames: Optional[Frames] = None,
+    ) -> List[ObjectInstance]:
+        """
+        Internal method for getting all object instances that match the given filters.
+        Also allows filtering by spaces, which the public method does not yet support.
+        """
+        self._check_labelling_is_initalised()
+
         ret: List[ObjectInstance] = list()
 
         if filter_frames is not None:
@@ -880,6 +1012,7 @@ class LabelRowV2:
         else:
             filtered_frames_list = list()
 
+        # Objects on label row
         for object_ in self._objects_map.values():
             # filter by ontology object
             if not (
@@ -902,6 +1035,53 @@ class LabelRowV2:
             if append:
                 ret.append(object_)
 
+        # Objects in space
+        if include_spaces:
+            object_hashes: set[str] = (
+                set()
+            )  # Needed to filter out duplicate object instances that exist on multiple spaces
+            for space in self._space_map.values():
+                for object_ in space._objects_map.values():
+                    if object_.object_hash in object_hashes:
+                        continue
+
+                    # filter by ontology object
+                    if not (
+                        filter_ontology_object is None
+                        or object_.ontology_item.feature_node_hash == filter_ontology_object.feature_node_hash
+                    ):
+                        continue
+
+                    # filter by frame
+                    if filter_frames is None:
+                        append = True
+                    else:
+                        append = False
+                    for frame in filtered_frames_list:
+                        if isinstance(space, VideoSpace):
+                            object_hash_map_on_frame = space._frames_to_object_hash_to_annotation_data.get(frame, {})
+                            if object_.object_hash in object_hash_map_on_frame:
+                                append = True
+                                break
+                        elif isinstance(space, ImageSpace):
+                            if frame != 0:
+                                continue
+                            if object_.object_hash in space._objects_map:
+                                append = True
+                                break
+                        elif isinstance(space, AudioSpace) or isinstance(space, TextSpace):
+                            # For backwards compatibility, we treat text as being on frame=0
+                            if frame != 0:
+                                continue
+
+                            if object_.object_hash in space._objects_map:
+                                append = True
+                                break
+
+                    if append:
+                        object_hashes.add(object_.object_hash)
+                        ret.append(object_)
+
         return ret
 
     def add_object_instance(self, object_instance: ObjectInstance, force: bool = True) -> None:
@@ -918,7 +1098,13 @@ class LabelRowV2:
 
         self._check_labelling_is_initalised()
 
+        if object_instance._is_assigned_to_space():
+            raise LabelRowError(
+                "Object instance already exists on a space. It cannot be placed directly onto the label row. Please use Space.place_object instead."
+            )
+
         object_instance.is_valid()
+        object_hash = object_instance.object_hash
 
         # We want to ensure that we are only adding the object_instance to a label_row
         # IF AND ONLY IF the file type is text/html and the object_instance has range_html set
@@ -940,7 +1126,6 @@ class LabelRowV2:
                 "any LabelRowV2."
             )
 
-        object_hash = object_instance.object_hash
         if object_hash in self._objects_map and not force:
             raise LabelRowError(
                 "The supplied ObjectInstance was already previously added. (the object_hash is the same)."
@@ -965,6 +1150,11 @@ class LabelRowV2:
             LabelRowError: If the classification instance is already part of another LabelRowV2 or has overlapping frames.
         """
         self._check_labelling_is_initalised()
+
+        if classification_instance._is_assigned_to_space():
+            raise LabelRowError(
+                "Classification instance already exists on a space. It cannot be placed directly onto the label row. Please use Space.place_classification instead."
+            )
 
         classification_instance.is_valid()
 
@@ -1066,6 +1256,11 @@ class LabelRowV2:
         """
         self._check_labelling_is_initalised()
 
+        if classification_instance._is_assigned_to_space():
+            raise LabelRowError(
+                "Classification instance already exists on a space. It cannot be removed directly from the label row. Please use Space.remove_classification instead."
+            )
+
         classification_hash = classification_instance.classification_hash
         self._classifications_map.pop(classification_hash)
 
@@ -1113,6 +1308,23 @@ class LabelRowV2:
         """
         self._check_labelling_is_initalised()
 
+        return self._get_classification_instances(
+            include_spaces=True,
+            filter_ontology_classification=filter_ontology_classification,
+            filter_frames=filter_frames,
+        )
+
+    def _get_classification_instances(
+        self,
+        include_spaces: bool,
+        filter_ontology_classification: Optional[Classification] = None,
+        filter_frames: Optional[Frames] = None,
+    ) -> List[ClassificationInstance]:
+        """
+        Internal method for getting classification instances. Can choose whether to include classification instances on spaces in this.
+        """
+        self._check_labelling_is_initalised()
+
         ret: List[ClassificationInstance] = list()
 
         if filter_frames is not None:
@@ -1133,13 +1345,71 @@ class LabelRowV2:
                 append = True
             else:
                 append = False
-            for frame in filtered_frames_list:
-                if classification.is_on_frame(frame):
-                    append = True
-                    break
+
+            if classification.is_on_frame(filtered_frames_list):
+                append = True
 
             if append:
                 ret.append(classification)
+
+        if include_spaces:
+            # Needed to remove filter out duplicate classification instances across spaces
+            classification_hashes: set[str] = set()
+            for space in self._space_map.values():
+                for classification in space.get_classification_instances():
+                    if classification.classification_hash in classification_hashes:
+                        continue
+
+                    if not (
+                        filter_ontology_classification is None
+                        or classification.ontology_item.feature_node_hash
+                        == filter_ontology_classification.feature_node_hash
+                    ):
+                        continue
+
+                    # filter by frame
+                    if filter_frames is None:
+                        append = True
+                    else:
+                        append = False
+
+                    for frame in filtered_frames_list:
+                        if isinstance(space, VideoSpace):
+                            # TODO: In VideoSpace, track classificationHash to ranges to improve performance here.
+                            classifications_on_frames = space._frames_to_classification_hash_to_annotation_data.get(
+                                frame, {}
+                            )
+                            if classification.classification_hash in classifications_on_frames:
+                                append = True
+                                break
+                        elif isinstance(space, ImageSpace):
+                            if frame != 0:
+                                continue
+
+                            if classification.classification_hash in space._classifications_map:
+                                append = True
+                                break
+                        elif isinstance(space, AudioSpace):
+                            # For backwards compatibility, all audio classifications are treated as being on frame 0
+                            if frame != 0:
+                                continue
+
+                            if classification.classification_hash in space._classifications_map:
+                                append = True
+                                break
+                        elif isinstance(space, TextSpace):
+                            # For backwards compatibility, all text classifications are treated as being on frame 0
+                            if frame != 0:
+                                continue
+
+                            if classification.classification_hash in space._classifications_map:
+                                append = True
+                                break
+
+                    if append:
+                        classification_hashes.add(classification.classification_hash)
+                        ret.append(classification)
+
         return ret
 
     def remove_object(self, object_instance: ObjectInstance):
@@ -1149,6 +1419,11 @@ class LabelRowV2:
             object_instance: The object instance to remove.
         """
         self._check_labelling_is_initalised()
+
+        if object_instance._is_assigned_to_space():
+            raise LabelRowError(
+                "Object instance already exists on a space. It cannot be removed directly from the label row. Please use Space.remove_object instead."
+            )
 
         self._objects_map.pop(object_instance.object_hash)
         if not object_instance.is_range_only():
@@ -1187,6 +1462,7 @@ class LabelRowV2:
         ret["object_actions"] = self._to_object_actions()
         ret["label_status"] = read_only_data.label_status.value
         ret["data_units"] = self._to_encord_data_units()
+        ret["spaces"] = self._to_encord_spaces()
 
         return ret
 
@@ -1690,7 +1966,7 @@ class LabelRowV2:
         last_actioned_by_user_email: Optional[str] = None
 
     def _to_object_answers(self) -> Dict[str, Any]:
-        ret: Dict[str, Any] = {}
+        ret: Dict[str, ObjectAnswer] = {}
         for obj in self._objects_map.values():
             all_static_answers = self._get_all_static_answers(obj)
             ret[obj.object_hash] = {
@@ -1700,29 +1976,38 @@ class LabelRowV2:
 
             # At some point, we also want to add these to the other modalities
             if not is_geometric(self.data_type):
+                shape = cast(Literal[Shape.TEXT, Shape.AUDIO], obj.ontology_item.shape.value)
                 # For non-frame entities, all annotations exist only on one frame
                 annotation = obj.get_annotation(0)
                 object_answer_dict = ret[obj.object_hash]
-                object_answer_dict["createdBy"] = annotation.created_by
-                object_answer_dict["createdAt"] = format_datetime_to_long_string_optional(annotation.created_at)
-                object_answer_dict["lastEditedBy"] = annotation.last_edited_by
-                object_answer_dict["lastEditedAt"] = format_datetime_to_long_string_optional(annotation.last_edited_at)
-                object_answer_dict["manualAnnotation"] = annotation.manual_annotation
-                object_answer_dict["featureHash"] = obj.feature_hash
-                object_answer_dict["name"] = obj.ontology_item.name
-                object_answer_dict["color"] = obj.ontology_item.color
-                object_answer_dict["shape"] = obj.ontology_item.shape.value
-                object_answer_dict["value"] = _lower_snake_case(obj.ontology_item.name)
+                non_geometric_object_answer_dict = cast(ObjectAnswerForNonGeometric, object_answer_dict)
+                non_geometric_object_answer_dict["createdBy"] = annotation.created_by
+                non_geometric_object_answer_dict["createdAt"] = format_datetime_to_long_string(annotation.created_at)
+                non_geometric_object_answer_dict["lastEditedBy"] = annotation.last_edited_by
+                non_geometric_object_answer_dict["lastEditedAt"] = format_datetime_to_long_string(
+                    annotation.last_edited_at
+                )
+                non_geometric_object_answer_dict["manualAnnotation"] = annotation.manual_annotation
+                non_geometric_object_answer_dict["featureHash"] = obj.feature_hash
+                non_geometric_object_answer_dict["name"] = obj.ontology_item.name
+                non_geometric_object_answer_dict["color"] = obj.ontology_item.color
+                non_geometric_object_answer_dict["shape"] = shape
+                non_geometric_object_answer_dict["value"] = _lower_snake_case(obj.ontology_item.name)
 
                 if self.file_type == "text/html":
+                    html_object_answer_dict = cast(ObjectAnswerForHtml, non_geometric_object_answer_dict)
                     if obj.range_html is None:
                         raise LabelRowError("Html annotations should have range_html set within the TextCoordinates")
-                    object_answer_dict["range_html"] = [x.to_dict() for x in obj.range_html]
-                    object_answer_dict["range"] = []
+                    html_object_answer_dict["range_html"] = [x.to_dict() for x in obj.range_html]
+                    html_object_answer_dict["range"] = []
                 else:
                     if obj.range_list is None:
                         raise LabelRowError("Non-geometric annotations should have range set within the Coordinates")
-                    object_answer_dict["range"] = [[range.start, range.end] for range in obj.range_list]
+                    non_geometric_object_answer_dict["range"] = [[range.start, range.end] for range in obj.range_list]
+
+        for space in self._space_map.values():
+            space_object_answers = space._to_object_answers(existing_object_answers=ret)
+            ret.update(space_object_answers)
 
         return ret
 
@@ -1736,6 +2021,22 @@ class LabelRowV2:
                 "actions": list(reversed(all_static_answers)),
                 "objectHash": obj.object_hash,
             }
+
+        for space in self._space_map.values():
+            for obj in space._objects_map.values():
+                # Currently, dynamic attributes only available for VideoSpace
+                if isinstance(space, VideoSpace):
+                    all_static_answers = space._dynamic_answers_to_encord_dict(obj)
+                    if len(all_static_answers) == 0:
+                        continue
+
+                    if obj.object_hash in ret:
+                        ret[obj.object_hash]["actions"].extend(list(all_static_answers))
+                    else:
+                        ret[obj.object_hash] = {
+                            "actions": list(all_static_answers),
+                            "objectHash": obj.object_hash,
+                        }
         return ret
 
     def _to_classification_answers(self) -> Dict[str, ClassificationAnswer]:
@@ -1764,6 +2065,10 @@ class LabelRowV2:
                 )
                 ret[classification.classification_hash]["manualAnnotation"] = classification.manual_annotation
 
+        for space in self._space_map.values():
+            space_classification_answers = space._to_classification_answers(ret)
+            ret.update(space_classification_answers)
+
         return ret
 
     @staticmethod
@@ -1782,6 +2087,14 @@ class LabelRowV2:
             d_opt = answer.to_encord_dict(ranges)
             if d_opt is not None:
                 ret.append(cast(DynamicAttributeObject, d_opt))
+
+        return ret
+
+    def _to_encord_spaces(self) -> Dict[str, SpaceInfo]:
+        ret = {}
+        for space_id, space in self._space_map.items():
+            ret[space_id] = space._to_space_dict()
+
         return ret
 
     def _to_encord_data_units(self) -> Dict[str, Any]:
@@ -1837,9 +2150,10 @@ class LabelRowV2:
         elif self.data_type == DataType.PLAIN_TEXT:
             pass
         elif self.data_type == DataType.GROUP:
-            ret["width"] = 0
-            ret["height"] = 0
-            ret["data_link"] = ""
+            pass
+            # ret["width"] = 0
+            # ret["height"] = 0
+            # ret["data_link"] = ""
         elif self.data_type == DataType.SCENE:
             ret["width"] = 0
             ret["height"] = 0
@@ -1866,13 +2180,18 @@ class LabelRowV2:
 
         ret["labels"] = self._to_encord_labels(frame_level_data)
 
-        if self._label_row_read_only_data.duration is not None and self.data_type != DataType.PLAIN_TEXT:
+        if (
+            self._label_row_read_only_data.duration is not None
+            and self.data_type != DataType.PLAIN_TEXT
+            and self.data_type != DataType.GROUP
+        ):
             ret["data_duration"] = self._label_row_read_only_data.duration
 
         if (
             self._label_row_read_only_data.fps is not None
             and self.data_type != DataType.AUDIO
             and self.data_type != DataType.PLAIN_TEXT
+            and self.data_type != DataType.GROUP
         ):
             ret["data_fps"] = self._label_row_read_only_data.fps
 
@@ -1924,7 +2243,8 @@ class LabelRowV2:
         # Get objects for frame
         ret: List[dict] = []
 
-        objects = self.get_object_instances(filter_frames=frame)
+        # Spaces are excluded here, because we export them in their own spaces dict.
+        objects = self._get_object_instances(include_spaces=False, filter_frames=frame)
         for object_ in objects:
             encord_object = self._to_encord_object(object_, frame)
             ret.append(encord_object)
@@ -1996,7 +2316,7 @@ class LabelRowV2:
     def _to_encord_classifications_list(self, frame: int) -> List:
         ret: List[Dict[str, Any]] = []
 
-        classifications = self.get_classification_instances(filter_frames=frame)
+        classifications = self._get_classification_instances(include_spaces=False, filter_frames=frame)
         for classification in classifications:
             encord_classification = self._to_encord_classification(classification, frame)
             ret.append(encord_classification)
@@ -2080,6 +2400,81 @@ class LabelRowV2:
     def _remove_from_frame_to_hashes_map(self, frames: Iterable[int], item_hash: str):
         for frame in frames:
             self._frame_to_hashes[frame].remove(item_hash)
+
+    def _initiate_spaces(
+        self,
+        spaces_info: Optional[dict[str, SpaceInfo]],
+    ) -> dict[str, Space]:
+        res: dict[str, Space] = dict()
+
+        if spaces_info is None:
+            return res
+
+        for space_id, space_info in spaces_info.items():
+            if space_info["space_type"] == SpaceType.VIDEO:
+                video_space = VideoSpace(
+                    space_id=space_id,
+                    label_row=self,
+                    child_info=space_info["child_info"],
+                    number_of_frames=space_info["number_of_frames"],
+                    width=space_info["width"],
+                    height=space_info["height"],
+                )
+                res[space_id] = video_space
+            elif space_info["space_type"] == SpaceType.IMAGE:
+                image_space = ImageSpace(
+                    space_id=space_id,
+                    label_row=self,
+                    child_info=space_info["child_info"],
+                    width=space_info["width"],
+                    height=space_info["height"],
+                )
+                res[space_id] = image_space
+            elif space_info["space_type"] == SpaceType.AUDIO:
+                audio_space = AudioSpace(
+                    space_id=space_id,
+                    label_row=self,
+                    duration_ms=space_info["duration_ms"],
+                    child_info=space_info["child_info"],
+                )
+                res[space_id] = audio_space
+            elif space_info["space_type"] == SpaceType.TEXT:
+                text_space = TextSpace(
+                    space_id=space_id,
+                    label_row=self,
+                    child_info=space_info["child_info"],
+                )
+                res[space_id] = text_space
+
+        return res
+
+    def _parse_space_labels(
+        self,
+        spaces_info: dict[str, SpaceInfo],
+        object_answers: dict,
+        classification_answers: dict,
+    ) -> None:
+        for space_id, space_info in spaces_info.items():
+            if space_info["space_type"] == SpaceType.VIDEO:
+                video_space = self.get_space(id=space_id, type_="video")
+                video_space._parse_space_dict(
+                    space_info, object_answers=object_answers, classification_answers=classification_answers
+                )
+            elif space_info["space_type"] == SpaceType.IMAGE:
+                image_space = self.get_space(id=space_id, type_="image")
+                image_space._parse_space_dict(
+                    space_info, object_answers=object_answers, classification_answers=classification_answers
+                )
+            elif space_info["space_type"] == SpaceType.AUDIO:
+                audio_space = self.get_space(id=space_id, type_="audio")
+                audio_space._parse_space_dict(
+                    space_info, object_answers=object_answers, classification_answers=classification_answers
+                )
+            elif space_info["space_type"] == SpaceType.TEXT:
+                text_space = self.get_space(id=space_id, type_="text")
+                text_space._parse_space_dict(
+                    space_info, object_answers=object_answers, classification_answers=classification_answers
+                )
 
     def _parse_label_row_metadata(self, label_row_metadata: LabelRowMetadata) -> LabelRowV2.LabelRowReadOnlyData:
         data_type = DataType.from_upper_case_string(label_row_metadata.data_type)
@@ -2280,12 +2675,14 @@ class LabelRowV2:
                 self._add_objects_answers(object_answers)
 
             elif data_type == DataType.GROUP:
-                for frame, frame_data in labels.items():
-                    frame_num = int(frame)
-                    self._add_classification_instances_from_classifications(
-                        frame_data["classifications"], classification_answers, frame_num
-                    )
-                    self._add_frame_metadata(frame_num, frame_data.get("metadata"))
+                # TODO: Make this work for classifications
+                pass
+                # for frame, frame_data in labels.items():
+                #     frame_num = int(frame)
+                #     self._add_classification_instances_from_classifications(
+                #         frame_data["classifications"], classification_answers, frame_num
+                #     )
+                #     self._add_frame_metadata(frame_num, frame_data.get("metadata"))
 
             elif data_type == DataType.DICOM_STUDY:
                 pass  # TODO: _add_object_answers a NO-OP here as well?
@@ -2300,8 +2697,6 @@ class LabelRowV2:
                 exhaustive_guard(data_type)
 
             self._add_data_unit_metadata(data_type, data_unit.get("metadata"))
-
-        self._add_action_answers(label_row_dict)
 
     def _add_frame_metadata(self, frame: int, metadata: Optional[Dict[str, str]]):
         if metadata is not None:
@@ -2368,10 +2763,20 @@ class LabelRowV2:
     def _add_action_answers(self, label_row_dict: dict):
         for answer in label_row_dict["object_actions"].values():
             object_hash = answer["objectHash"]
-            object_instance = self._objects_map[object_hash]
+            object_instance = self._objects_map.get(object_hash)
 
-            answer_list = answer["actions"]
-            object_instance.set_answer_from_list(answer_list)
+            if object_instance is not None:
+                answer_list = answer["actions"]
+                object_instance.set_answer_from_list(answer_list)
+            else:
+                answer_list = answer["actions"]
+                for answer_dict in answer_list:
+                    space_id = answer_dict.get("spaceId")
+                    if space_id is None:
+                        raise LabelRowError("Object action does not contain spaceId")
+
+                    space = self.get_space(id=space_id, type_="video")
+                    space._set_answer_from_list(object_hash, answers_list=[answer_dict])
 
     def _create_new_object_instance(self, frame_object_label: FrameObject, frame: int) -> ObjectInstance:
         ontology = self._ontology.structure
@@ -2411,6 +2816,7 @@ class LabelRowV2:
 
         frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
         frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
+
         frame_object_dict = cast(BaseFrameObject, frame_info_dict)
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_dict)
 
@@ -2459,6 +2865,7 @@ class LabelRowV2:
 
         frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
         frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
+
         frame_object_dict = cast(BaseFrameObject, frame_info_dict)
         object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_dict)
 
@@ -2501,7 +2908,7 @@ class LabelRowV2:
             last_edited_by=object_frame_instance_info.last_edited_by,
             confidence=object_frame_instance_info.confidence,
             manual_annotation=object_frame_instance_info.manual_annotation,
-            reviews=object_frame_instance_info.reviews,
+            reviews=object_frame_instance_info.reviews,  # type: ignore
             is_deleted=object_frame_instance_info.is_deleted,
         )
 
@@ -2525,7 +2932,7 @@ class LabelRowV2:
         classification_answers: dict[str, ClassificationAnswer],
     ):
         for classification_answer in classification_answers.values():
-            if is_containing_metadata(classification_answer):
+            if is_containing_metadata(classification_answer) and not is_containing_spaces(classification_answer):
                 classification_instance = self._create_new_classification_instance_with_ranges(classification_answer)
                 self.add_classification_instance(classification_instance)
 
@@ -2645,6 +3052,14 @@ class LabelRowV2:
 
 
 def _frame_views_to_frame_numbers(
-    frame_views: Sequence[Union[ObjectInstance.Annotation, ClassificationInstance.Annotation, LabelRowV2.FrameView]],
+    frame_views: Sequence[
+        Union[
+            ObjectInstance.Annotation,
+            ClassificationInstance.Annotation,
+            LabelRowV2.FrameView,
+            ObjectAnnotation,  # Here for backwards compatibility
+            ClassificationAnnotation,  # Here for backwards compatibility
+        ]
+    ],
 ) -> List[int]:
     return [frame_view.frame for frame_view in frame_views]

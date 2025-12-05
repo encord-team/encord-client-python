@@ -12,6 +12,7 @@ labels: Dict[str, Any] = {
     "dataset_title": "Tracking bug dataset",
     "data_title": "failing_video_new.mp4",
     "data_type": "video",
+    "spaces": {},
     "data_units": {
         "cd63592b-a9e4-47d7-8563-aaed75c5afdc": {
             "data_hash": "cd63592b-a9e4-47d7-8563-aaed75c5afdc",
