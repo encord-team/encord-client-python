@@ -18,7 +18,7 @@ class ChildInfo(TypedDict):
 
 class VideoSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.VIDEO]
-    child_info: Optional[ChildInfo]
+    child_info: ChildInfo
     number_of_frames: int
     width: int
     height: int
@@ -26,19 +26,19 @@ class VideoSpaceInfo(BaseSpaceInfo):
 
 class ImageSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.IMAGE]
-    child_info: Optional[ChildInfo]
+    child_info: ChildInfo
     width: int
     height: int
 
 
 class TextSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.TEXT]
-    child_info: Optional[ChildInfo]
+    child_info: ChildInfo
 
 
 class AudioSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.AUDIO]
-    child_info: Optional[ChildInfo]
+    child_info: ChildInfo
     duration_ms: int
 
 
