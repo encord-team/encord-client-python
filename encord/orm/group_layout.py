@@ -92,8 +92,8 @@ class StorageItemGroupChild(BaseDTO):
     uuid: UUID
 
 
-class DataGroupData(BaseDTO):
-    """Data about a data group including its layout and child items.
+class DataGroupShortInfo(BaseDTO):
+    """Information about a data group, including its layout and child items.
 
     Args:
         layout_contents: Mapping from layout keys to child item UUIDs.

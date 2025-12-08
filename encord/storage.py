@@ -55,6 +55,8 @@ from encord.orm.storage import (
     StorageUserRole,
     UploadLongPollingState,
     UploadSignedUrlsPayload,
+    _StorageItemPrivateSummary,
+    _to_storage_item_summary,
 )
 
 logger = logging.getLogger(__name__)
@@ -1868,10 +1870,12 @@ class StorageItem:
         Returns:
             StorageItemSummary: Object containing summary information about the item.
         """
-        return self._api_client.get(
-            f"storage/folders/{self.parent_folder_uuid}/items/{self.uuid}/summary",
-            params=orm_storage.GetItemSummaryParams(include_group_layout=True),
-            result_type=StorageItemSummary,
+        return _to_storage_item_summary(
+            self._api_client.get(
+                f"storage/folders/{self.parent_folder_uuid}/items/{self.uuid}/summary",
+                params=orm_storage._GetItemSummaryParams(include_group_layout=True),
+                result_type=_StorageItemPrivateSummary,
+            )
         )
 
     def get_child_items(self, get_signed_urls: bool = False) -> Iterable["StorageItem"]:
