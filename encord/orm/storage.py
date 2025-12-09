@@ -10,6 +10,7 @@ from encord.common.deprecated import deprecated
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO, Field, RootModelDTO
 from encord.orm.dataset import DataUnitError, LongPollingStatus
+from encord.orm.group_layout import DataGroupLayout, DataGroupShortInfo, LayoutSettings
 
 try:
     from typing import Literal
@@ -318,8 +319,8 @@ class DataGroupCustom(BaseDTO):
     layout_type: Literal["custom"] = "custom"
     name: Optional[str] = None
     layout_contents: Dict[str, UUID]
-    layout: Dict
-    settings: Optional[Dict] = None
+    layout: Union[Dict, DataGroupLayout]
+    settings: Optional[Union[Dict, LayoutSettings]] = None
     client_metadata: Optional[Dict[str, Any]] = None
 
 
@@ -984,6 +985,14 @@ class DatasetShortInfo(BaseDTO):
     data_units_created_at: datetime
 
 
+class _StorageItemPrivateSummary(BaseDTO):
+    frame_in_groups: int
+    accessible_group_items: List[ItemShortInfo]
+    used_in_datasets: int
+    accessible_datasets: List[DatasetShortInfo]
+    group_layout: Optional[DataGroupShortInfo] = None
+
+
 class StorageItemSummary(BaseDTO):
     """A summary of item usage in the system"""
 
@@ -997,6 +1006,18 @@ class StorageItemSummary(BaseDTO):
     accessible_datasets: List[DatasetShortInfo]
     """List of datasets that contain this item as a `DataRow` (only those that the user has access to, so
     the length of this list can be less than `used_in_datasets`)"""
+    data_group: Optional[DataGroupShortInfo] = None
+    """Data group layout information. Only populated when the item is a GROUP."""
+
+
+def _to_storage_item_summary(private_summary: _StorageItemPrivateSummary) -> StorageItemSummary:
+    return StorageItemSummary(
+        frame_in_groups=private_summary.frame_in_groups,
+        accessible_group_items=private_summary.accessible_group_items,
+        used_in_datasets=private_summary.used_in_datasets,
+        accessible_datasets=private_summary.accessible_datasets,
+        data_group=private_summary.group_layout,
+    )
 
 
 class DeleteItemsParams(BaseDTO):
@@ -1071,6 +1092,17 @@ class GetItemParams(BaseDTO):
     """
 
     sign_url: bool
+
+
+class _GetItemSummaryParams(BaseDTO):
+    """Parameters for fetching item summary information.
+
+    Args:
+        include_group_layout: If ``True``, include the data group layout in the response.
+            Only applicable for GROUP item types.
+    """
+
+    include_group_layout: bool = False
 
 
 class GetChildItemsParams(BaseDTO):
