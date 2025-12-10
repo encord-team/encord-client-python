@@ -101,7 +101,15 @@ DATA_GROUP_WITH_TWO_AUDIO_LABELS = {
     "object_answers": {
         "speaker1": {
             "objectHash": "speaker1",
-            "classifications": [],
+            "classifications": [
+                {
+                    "name": "Transcript",
+                    "value": "transcript",
+                    "answers": "Hello my name is Arthur",
+                    "featureHash": "transcriptFeatureHash",
+                    "manualAnnotation": True,
+                }
+            ],
             "createdBy": "NlZNOzo0M5fqmHAPHiNiYs0UQYo2",
             "createdAt": "Thu, 05 Dec 2024 15:24:19 UTC",
             "lastEditedBy": "NlZNOzo0M5fqmHAPHiNiYs0UQYo2",
