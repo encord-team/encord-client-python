@@ -460,6 +460,12 @@ class ImageSpace(Space):
         if frame_label is not None:
             self._parse_frame_label_dict(frame_label=frame_label, classification_answers=classification_answers)
 
+        for answer in object_answers.values():
+            object_hash = answer["objectHash"]
+            if object_instance := self._objects_map.get(object_hash):
+                answer_list = answer["classifications"]
+                object_instance.set_answer_from_list(answer_list)
+
     def _parse_frame_label_dict(self, frame_label: LabelBlob, classification_answers: dict[str, ClassificationAnswer]):
         for frame_object_label in frame_label["objects"]:
             object_hash = frame_object_label["objectHash"]

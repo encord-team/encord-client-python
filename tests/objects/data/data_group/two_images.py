@@ -109,6 +109,18 @@ DATA_GROUP_WITH_TWO_IMAGES_LABELS = {
             "objectHash": "object1",
             "classifications": [],
         },
+        "object_with_attributes": {
+            "objectHash": "object_with_attributes",
+            "classifications": [
+                {
+                    "name": "First name",
+                    "value": "first_name",
+                    "answers": "Hello!",
+                    "featureHash": "OTkxMjU1",
+                    "manualAnnotation": True,
+                }
+            ],
+        },
     },
     "classification_answers": {
         "classification1": {
@@ -168,7 +180,21 @@ DATA_GROUP_WITH_TWO_IMAGES_LABELS = {
                             "featureHash": "MjI2NzEy",
                             "manualAnnotation": True,
                             "boundingBox": {"h": 0.1, "w": 0.1, "x": 0.1, "y": 0.1},
-                        }
+                        },
+                        {
+                            "name": "Nested Box",
+                            "color": "#FCDC00",
+                            "shape": "bounding_box",
+                            "value": "nested_box",
+                            "createdAt": "Tue, 17 Jan 2023 17:23:10 UTC",
+                            "createdBy": "denis@cord.tech",
+                            "confidence": 1,
+                            "objectHash": "object_with_attributes",
+                            "lastEditedAt": "Wed, 18 Jan 2023 17:23:24 UTC",
+                            "featureHash": "MTA2MjAx",
+                            "manualAnnotation": True,
+                            "boundingBox": {"h": 0.1, "w": 0.1, "x": 0.1, "y": 0.1},
+                        },
                     ],
                     "classifications": [
                         {

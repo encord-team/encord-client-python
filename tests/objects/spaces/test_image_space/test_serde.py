@@ -44,10 +44,10 @@ def test_read_and_export_image_space_labels(ontology):
 
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
     image_space_1_object_annotations = image_space_1.get_object_instance_annotations()
-    assert len(image_space_1_object_annotations) == 1
+    assert len(image_space_1_object_annotations) == 2
 
     image_space_1_object_entities = image_space_1.get_object_instances()
-    assert len(image_space_1_object_entities) == 1
+    assert len(image_space_1_object_entities) == 2
 
     image_space_1_classification_annotations = image_space_1.get_classification_instance_annotations()
     assert len(image_space_1_classification_annotations) == 1

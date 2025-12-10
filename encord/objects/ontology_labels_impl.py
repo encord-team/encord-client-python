@@ -2404,6 +2404,9 @@ class LabelRowV2:
             return res
 
         for space_id, space_info in spaces_info.items():
+            if space_id == "root":
+                # TODO: Enable reading root space info
+                continue
             if space_info["space_type"] == SpaceType.VIDEO:
                 video_space = VideoSpace(
                     space_id=space_id,
@@ -2673,12 +2676,6 @@ class LabelRowV2:
             elif data_type == DataType.GROUP:
                 # TODO: Make this work for classifications
                 pass
-                # for frame, frame_data in labels.items():
-                #     frame_num = int(frame)
-                #     self._add_classification_instances_from_classifications(
-                #         frame_data["classifications"], classification_answers, frame_num
-                #     )
-                #     self._add_frame_metadata(frame_num, frame_data.get("metadata"))
 
             elif data_type == DataType.DICOM_STUDY:
                 pass  # TODO: _add_object_answers a NO-OP here as well?

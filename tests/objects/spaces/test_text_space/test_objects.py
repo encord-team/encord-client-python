@@ -188,7 +188,7 @@ def test_place_object_on_invalid_ranges_on_space(ontology):
         )
 
     with pytest.raises(LabelRowError) as exceed_max_range_error:
-        text_space_1.put_object_instance(object_instance=new_object_instance, ranges=Range(start=0, end=6 * 60 * 1000))
+        text_space_1.put_object_instance(object_instance=new_object_instance, ranges=Range(start=0, end=10 * 60 * 1000))
 
     # Assert
     assert (

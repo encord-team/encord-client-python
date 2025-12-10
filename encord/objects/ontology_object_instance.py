@@ -543,7 +543,7 @@ class ObjectInstance:
             last_edited_by=last_edited_by,
             confidence=confidence,
             manual_annotation=manual_annotation,
-            reviews=None,
+            reviews=reviews,
             is_deleted=is_deleted,
         )
 
@@ -605,6 +605,7 @@ class ObjectInstance:
                 confidence=confidence,
                 manual_annotation=manual_annotation,
                 is_deleted=is_deleted,
+                reviews=reviews,
             )
 
             if isinstance(existing_frame_data, GeometricAnnotationData):
@@ -783,7 +784,6 @@ class ObjectInstance:
             if isinstance(annotation_data, GeometricAnnotationData):
                 return annotation_data.coordinates
             elif isinstance(annotation_data, RangeObjectAnnotationData):
-                # TODO: Return ranges here from RangeAnnotationData
                 ranges = annotation_data.range_manager.get_ranges()
                 if self._object_instance._ontology_object.shape == Shape.TEXT:
                     return TextCoordinates(range=ranges)
@@ -806,6 +806,11 @@ class ObjectInstance:
         @property
         def frame(self) -> int:
             return self._frame
+
+        @property
+        def reviews(self) -> Optional[List[Dict[str, Any]]]:
+            self._check_if_annotation_is_valid()
+            return self._get_annotation_data().annotation_metadata.reviews
 
         def _get_annotation_data(self) -> AnnotationData:
             return self._object_instance._frames_to_instance_data[self._frame]
@@ -854,7 +859,7 @@ class ObjectInstance:
                 last_edited_by=d.get("lastEditedBy", None),
                 confidence=d["confidence"],
                 manual_annotation=d.get("manualAnnotation", True),
-                reviews=None,
+                reviews=d.get("reviews"),
                 is_deleted=d.get("isDeleted"),
             )
 
@@ -1020,7 +1025,7 @@ def check_coordinate_type(coordinates: Coordinates, ontology_object: Object, par
     # Therefore, we need to further check the file type, to ensure that `HtmlCoordinates` are only used for
     # HTML files, and `TextCoordinates` are only used for plain text files.
     if isinstance(coordinates, TextCoordinates):
-        if parent is not None and parent == "text/html":
+        if parent is not None and parent.file_type == "text/html":
             raise LabelRowError(f"Expected coordinates of type {HtmlCoordinates}`, but got type `{type(coordinates)}`.")
     elif isinstance(coordinates, HtmlCoordinates):
         if parent is not None and parent.file_type != "text/html":

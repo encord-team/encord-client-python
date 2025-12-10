@@ -4,7 +4,7 @@ import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from encord.common.time_parser import parse_datetime
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
@@ -36,6 +36,7 @@ class AnnotationMetadata:
     manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
     # TODO: Classifications do not have this field
     is_deleted: Optional[bool] = None
+    reviews: Optional[List[dict[Any, Any]]] = None
 
     @staticmethod
     def from_dict(d: BaseFrameObject | FrameClassification) -> "AnnotationMetadata":
@@ -69,6 +70,7 @@ class AnnotationMetadata:
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
         is_deleted: Optional[bool] = None,
+        reviews: Optional[List[Dict[Any, Any]]] = None,  # This field is deprecated. Please do not use this field.
     ) -> None:
         """Update the AnnotationInfo fields with the specified values.
         Args:
@@ -93,6 +95,8 @@ class AnnotationMetadata:
             self.manual_annotation = manual_annotation
         if is_deleted is not None:
             self.is_deleted = is_deleted
+        if reviews is not None:
+            self.reviews = reviews
 
 
 @dataclass
@@ -232,7 +236,7 @@ class Annotation(ABC):
         self._get_annotation_data().annotation_metadata.manual_annotation = manual_annotation
 
     @property
-    def reviews(self) -> None:
+    def reviews(self) -> Optional[List[Dict[str, Any]]]:
         """This is merely here for backwards compatibility. It will always be None.
         Returns:
             Optional[List[Dict[str, Any]]]: A list of review dictionaries, if any.
