@@ -8,7 +8,7 @@ DATA_GROUP_DATA_HASH = "data-group-with-two-images-data-hash"
 
 IMAGE_SPACE_1_INFO: ImageSpaceInfo = {
     "space_type": SpaceType.IMAGE,
-    "child_info": {"layout_key": "front", "is_readonly": False, "file_name": "front.jpg"},
+    "child_info": {"layout_key": "front", "file_name": "front.jpg"},
     "width": 100,
     "height": 100,
     "labels": {},
@@ -16,7 +16,7 @@ IMAGE_SPACE_1_INFO: ImageSpaceInfo = {
 
 IMAGE_SPACE_2_INFO: ImageSpaceInfo = {
     "space_type": SpaceType.IMAGE,
-    "child_info": {"layout_key": "back", "is_readonly": False, "file_name": "back.jpg"},
+    "child_info": {"layout_key": "back", "file_name": "back.jpg"},
     "width": 100,
     "height": 100,
     "labels": {},
@@ -164,7 +164,7 @@ DATA_GROUP_WITH_TWO_IMAGES_LABELS = {
     "spaces": {
         "image-1-uuid": {
             "space_type": SpaceType.IMAGE,
-            "child_info": {"layout_key": "front", "is_readonly": False, "file_name": "front.jpg"},
+            "child_info": {"layout_key": "front", "file_name": "front.jpg"},
             "width": 100,
             "height": 100,
             "labels": {
@@ -218,7 +218,7 @@ DATA_GROUP_WITH_TWO_IMAGES_LABELS = {
         },
         "image-2-uuid": {
             "space_type": SpaceType.IMAGE,
-            "child_info": {"layout_key": "back", "is_readonly": False, "file_name": "back.jpg"},
+            "child_info": {"layout_key": "back", "file_name": "back.jpg"},
             "width": 100,
             "height": 100,
             "labels": {

@@ -22,7 +22,6 @@ class AudioSpace(RangeSpace):
         self._duration_ms = duration_ms
 
         self._layout_key = child_info["layout_key"]
-        self._is_readonly = child_info["is_readonly"]
         self._file_name = child_info["file_name"]
 
     def _are_ranges_valid(self, ranges: Ranges) -> None:
@@ -45,15 +44,6 @@ class AudioSpace(RangeSpace):
         """
         return self._layout_key
 
-    @property
-    def is_readonly(self) -> bool:
-        """Check if this audio space is read-only.
-
-        Returns:
-            bool: True if the space is read-only, False otherwise.
-        """
-        return self._is_readonly
-
     def _to_space_dict(self) -> SpaceInfo:
         labels = self._build_labels_dict()
         return AudioSpaceInfo(
@@ -62,7 +52,6 @@ class AudioSpace(RangeSpace):
             labels=labels,
             child_info={
                 "layout_key": self._layout_key,
-                "is_readonly": self._is_readonly,
                 "file_name": self._file_name,
             },
         )

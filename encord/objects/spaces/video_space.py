@@ -91,7 +91,6 @@ class VideoSpace(Space):
         self._object_hash_to_dynamic_answer_manager: dict[str, DynamicAnswerManager] = dict()
 
         self._layout_key = child_info["layout_key"]
-        self._is_readonly = child_info["is_readonly"]
         self._file_name = child_info["file_name"]
 
         # Need to check if this is 1-indexed
@@ -222,15 +221,6 @@ class VideoSpace(Space):
             str: The layout key identifier.
         """
         return self._layout_key
-
-    @property
-    def is_readonly(self) -> bool:
-        """Check if this video space is read-only.
-
-        Returns:
-            bool: True if the space is read-only, False otherwise.
-        """
-        return self._is_readonly
 
     def put_object_instance(
         self,
@@ -1123,7 +1113,6 @@ class VideoSpace(Space):
             width=self._width,
             height=self._height,
             child_info={
-                "is_readonly": self._is_readonly,
                 "layout_key": self._layout_key,
                 "file_name": self._file_name,
             },

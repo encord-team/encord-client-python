@@ -8,14 +8,14 @@ DATA_GROUP_DATA_HASH = "data-group-with-two-audio-data-hash"
 
 AUDIO_SPACE_1_INFO: AudioSpaceInfo = {
     "space_type": SpaceType.AUDIO,
-    "child_info": {"layout_key": "english_transcription", "is_readonly": False, "file_name": "english.mp4"},
+    "child_info": {"layout_key": "english_transcription", "file_name": "english.mp4"},
     "duration_ms": 5 * 60 * 1000,
     "labels": {},
 }
 
 AUDIO_SPACE_2_INFO: AudioSpaceInfo = {
     "space_type": SpaceType.AUDIO,
-    "child_info": {"layout_key": "french_transcription", "is_readonly": False, "file_name": "french.mp4"},
+    "child_info": {"layout_key": "french_transcription", "file_name": "french.mp4"},
     "duration_ms": 5 * 60 * 1000,
     "labels": {},
 }
@@ -161,13 +161,13 @@ DATA_GROUP_WITH_TWO_AUDIO_LABELS = {
     "spaces": {
         "audio-1-uuid": {
             "space_type": SpaceType.AUDIO,
-            "child_info": {"layout_key": "english_transcription", "is_readonly": False, "file_name": "english.mp4"},
+            "child_info": {"layout_key": "english_transcription", "file_name": "english.mp4"},
             "duration_ms": 5 * 60 * 1000,
             "labels": {},
         },
         "audio-2-uuid": {
             "space_type": SpaceType.AUDIO,
-            "child_info": {"layout_key": "french_transcription", "is_readonly": False, "file_name": "french.mp4"},
+            "child_info": {"layout_key": "french_transcription", "file_name": "french.mp4"},
             "duration_ms": 5 * 60 * 1000,
             "labels": {},
         },

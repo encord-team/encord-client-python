@@ -54,7 +54,6 @@ class ImageSpace(Space):
         self._classification_hash_to_annotation_data: dict[str, _AnnotationData] = dict()
 
         self._layout_key = child_info["layout_key"]
-        self._is_readonly = child_info["is_readonly"]
         self._file_name = child_info["file_name"]
 
         self._width = width
@@ -68,15 +67,6 @@ class ImageSpace(Space):
             str: The layout key identifier.
         """
         return self._layout_key
-
-    @property
-    def is_readonly(self) -> bool:
-        """Check if this image space is read-only.
-
-        Returns:
-            bool: True if the space is read-only, False otherwise.
-        """
-        return self._is_readonly
 
     def put_object_instance(
         self,
@@ -445,7 +435,6 @@ class ImageSpace(Space):
                 "0": frame_label,
             },
             child_info={
-                "is_readonly": self._is_readonly,
                 "layout_key": self._layout_key,
                 "file_name": self._file_name,
             },

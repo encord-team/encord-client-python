@@ -9,9 +9,6 @@ class BaseSpaceInfo(TypedDict):
 
 
 class ChildInfo(TypedDict):
-    """Information for child of a data group"""
-
-    is_readonly: bool
     layout_key: str
     file_name: str
 
