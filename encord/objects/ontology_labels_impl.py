@@ -84,7 +84,7 @@ from encord.objects.metadata import DataGroupMetadata, DICOMSeriesMetadata, DICO
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
-from encord.objects.spaces.annotation.base_annotation import ClassificationAnnotation, ObjectAnnotation
+from encord.objects.spaces.annotation.base_annotation import _ClassificationAnnotation, _ObjectAnnotation
 from encord.objects.spaces.base_space import Space, SpaceT
 from encord.objects.spaces.image_space import ImageSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
@@ -3057,8 +3057,8 @@ def _frame_views_to_frame_numbers(
             ObjectInstance.Annotation,
             ClassificationInstance.Annotation,
             LabelRowV2.FrameView,
-            ObjectAnnotation,  # Here for backwards compatibility
-            ClassificationAnnotation,  # Here for backwards compatibility
+            _ObjectAnnotation,  # Here for backwards compatibility
+            _ClassificationAnnotation,  # Here for backwards compatibility
         ]
     ],
 ) -> List[int]:

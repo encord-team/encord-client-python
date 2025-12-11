@@ -52,7 +52,7 @@ from encord.objects.internal_helpers import (
     _search_child_attributes,
 )
 from encord.objects.options import Option, _get_option_by_hash
-from encord.objects.spaces.annotation.base_annotation import ClassificationAnnotation
+from encord.objects.spaces.annotation.base_annotation import _ClassificationAnnotation
 from encord.objects.types import AttributeDict, ClassificationAnswer, FrameClassification
 from encord.objects.utils import check_email, short_uuid_str
 
@@ -360,12 +360,12 @@ class ClassificationInstance:
             self._parent._remove_frames_from_classification(self, frames)
 
     # TODO: Need to deprecate this old Annotation
-    def get_annotations(self) -> Union[List[Annotation], List[ClassificationAnnotation]]:
+    def get_annotations(self) -> Union[List[Annotation], List[_ClassificationAnnotation]]:
         """Returns:
         A list of `ClassificationInstance.Annotation` in order of available frames.
         """
         if self._is_assigned_to_space():
-            res: List[ClassificationAnnotation] = []
+            res: List[_ClassificationAnnotation] = []
             for space in self._spaces.values():
                 res.extend(
                     space.get_classification_instance_annotations(

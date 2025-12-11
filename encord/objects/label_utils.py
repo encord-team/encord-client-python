@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Dict
 
 from encord.common.time_parser import format_datetime_to_long_string, format_datetime_to_long_string_optional
 from encord.objects.attributes import Attribute
-from encord.objects.spaces.annotation.base_annotation import AnnotationMetadata
+from encord.objects.spaces.annotation.base_annotation import _AnnotationMetadata
 from encord.objects.types import BaseFrameObject, FrameClassification, FrameObject
 from encord.objects.utils import _lower_snake_case
 
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 def create_frame_object_dict(
-    ontology_object: Object, object_instance_annotation: AnnotationMetadata, object_hash: str
+    ontology_object: Object, object_instance_annotation: _AnnotationMetadata, object_hash: str
 ) -> BaseFrameObject:
     frame_object_dict: BaseFrameObject = {
         "objectHash": object_hash,
@@ -41,7 +41,7 @@ def create_frame_object_dict(
 
 def create_frame_classification_dict(
     ontology_classification: Classification,
-    classification_instance_annotation: AnnotationMetadata,
+    classification_instance_annotation: _AnnotationMetadata,
     classification_hash: str,
     attribute: Attribute,
 ) -> FrameClassification:

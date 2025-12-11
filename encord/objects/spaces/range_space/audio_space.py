@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Union, cast
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects.frames import Range, Ranges
-from encord.objects.spaces.annotation.base_annotation import AnnotationMetadata
+from encord.objects.spaces.annotation.base_annotation import _AnnotationMetadata
 from encord.objects.spaces.range_space.range_space import RangeSpace
 from encord.objects.spaces.types import AudioSpaceInfo, ChildInfo, SpaceInfo
 from encord.objects.types import BaseFrameObject, ObjectAnswerForGeometric, ObjectAnswerForNonGeometric
@@ -94,7 +94,7 @@ class AudioSpace(RangeSpace):
             frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
             frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
             frame_object_dict = cast(BaseFrameObject, frame_info_dict)
-            object_frame_instance_info = AnnotationMetadata.from_dict(frame_object_dict)
+            object_frame_instance_info = _AnnotationMetadata.from_dict(frame_object_dict)
 
             self.put_object_instance(
                 object_instance=object_instance,
@@ -118,7 +118,7 @@ class AudioSpace(RangeSpace):
             classification_instance = self._label_row._create_new_classification_instance_with_ranges(
                 classification_answer
             )
-            annotation_metadata = AnnotationMetadata.from_dict(classification_answer)
+            annotation_metadata = _AnnotationMetadata.from_dict(classification_answer)
 
             self.put_classification_instance(
                 classification_instance=classification_instance,

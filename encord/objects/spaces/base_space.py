@@ -11,7 +11,7 @@ from typing import (
 )
 
 from encord.exceptions import LabelRowError
-from encord.objects.spaces.annotation.base_annotation import ClassificationAnnotation, ObjectAnnotation
+from encord.objects.spaces.annotation.base_annotation import _ClassificationAnnotation, _ObjectAnnotation
 from encord.objects.spaces.types import SpaceInfo
 from encord.objects.types import ClassificationAnswer, ObjectAnswerForGeometric, ObjectAnswerForNonGeometric
 
@@ -60,13 +60,13 @@ class Space(ABC):
     @abstractmethod
     def get_object_instance_annotations(
         self, filter_object_instances: Optional[list[str]] = None
-    ) -> Sequence[ObjectAnnotation]:
+    ) -> Sequence[_ObjectAnnotation]:
         pass
 
     @abstractmethod
     def get_classification_instance_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
-    ) -> Sequence[ClassificationAnnotation]:
+    ) -> Sequence[_ClassificationAnnotation]:
         pass
 
     @abstractmethod

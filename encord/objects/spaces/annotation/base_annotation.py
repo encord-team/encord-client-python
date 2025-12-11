@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class AnnotationMetadata:
+class _AnnotationMetadata:
     """Contains metadata information about an annotation (on a frame or a range)"""
 
     created_at: datetime = field(default_factory=datetime.now)
@@ -39,7 +39,7 @@ class AnnotationMetadata:
     reviews: Optional[List[dict[Any, Any]]] = None
 
     @staticmethod
-    def from_dict(d: BaseFrameObject | FrameClassification) -> "AnnotationMetadata":
+    def from_dict(d: BaseFrameObject | FrameClassification) -> "_AnnotationMetadata":
         """Create a AnnotationInfo instance from a dictionary.
         Args:
             d: A dictionary containing information about the annotation.
@@ -51,7 +51,7 @@ class AnnotationMetadata:
         else:
             last_edited_at = datetime.now()
 
-        return AnnotationMetadata(
+        return _AnnotationMetadata(
             created_at=parse_datetime(d["createdAt"]),
             created_by=d.get("createdBy", None),
             last_edited_at=last_edited_at,
@@ -100,27 +100,27 @@ class AnnotationMetadata:
 
 
 @dataclass
-class AnnotationData:
+class _AnnotationData:
     """
     Data class for storing annotation data (e.g. coordinates, range) and metadata.
     Only metadata in the base class, but subclasses will have more.
     Attributes:
-        annotation_metadata (AnnotationMetadata): The annotation's metadata information.
+        annotation_metadata (_AnnotationMetadata): The annotation's metadata information.
     """
 
-    annotation_metadata: AnnotationMetadata
+    annotation_metadata: _AnnotationMetadata
 
 
-class Annotation(ABC):
+class _Annotation(ABC):
     """
     Class providing common annotation properties.
     """
 
     @abstractmethod
-    def _get_annotation_data(self) -> AnnotationData:
+    def _get_annotation_data(self) -> _AnnotationData:
         """Get the underlying annotation data.
         Returns:
-            AnnotationData: The annotation data, which contains information about the annotation (including metadata).
+            _AnnotationData: The annotation data, which contains information about the annotation (including metadata).
         """
         pass
 
@@ -254,7 +254,7 @@ class Annotation(ABC):
         return self._get_annotation_data().annotation_metadata.is_deleted
 
 
-class ObjectAnnotation(Annotation):
+class _ObjectAnnotation(_Annotation):
     """Represents an object annotation on a Space.
     Provides access to annotation metadata for a SpaceObject.
     """
@@ -280,7 +280,7 @@ class ObjectAnnotation(Annotation):
         pass
 
 
-class ClassificationAnnotation(Annotation):
+class _ClassificationAnnotation(_Annotation):
     """Represents a classification annotation on a Space.
     Allows setting or getting annotation data for the Classification.
     """

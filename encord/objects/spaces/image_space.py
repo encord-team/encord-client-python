@@ -14,13 +14,13 @@ from encord.objects.coordinates import (
 )
 from encord.objects.label_utils import create_frame_classification_dict, create_frame_object_dict
 from encord.objects.spaces.annotation.base_annotation import (
-    AnnotationData,
-    AnnotationMetadata,
+    _AnnotationData,
+    _AnnotationMetadata,
 )
 from encord.objects.spaces.annotation.geometric_annotation import (
-    GeometricAnnotationData,
-    GeometricObjectAnnotation,
-    SingleFrameClassificationAnnotation,
+    _GeometricAnnotationData,
+    _GeometricObjectAnnotation,
+    _SingleFrameClassificationAnnotation,
 )
 from encord.objects.spaces.base_space import Space
 from encord.objects.spaces.types import ChildInfo, ImageSpaceInfo, SpaceInfo
@@ -50,8 +50,8 @@ class ImageSpace(Space):
         self._objects_map: dict[str, ObjectInstance] = dict()
         self._classification_ontologies: set[str] = set()
         self._classifications_map: dict[str, ClassificationInstance] = dict()
-        self._object_hash_to_annotation_data: dict[str, GeometricAnnotationData] = dict()
-        self._classification_hash_to_annotation_data: dict[str, AnnotationData] = dict()
+        self._object_hash_to_annotation_data: dict[str, _GeometricAnnotationData] = dict()
+        self._classification_hash_to_annotation_data: dict[str, _AnnotationData] = dict()
 
         self._layout_key = child_info["layout_key"]
         self._is_readonly = child_info["is_readonly"]
@@ -122,8 +122,8 @@ class ImageSpace(Space):
         self._objects_map[object_instance.object_hash] = object_instance
         object_instance._add_to_space(self)
 
-        frame_annotation_data = GeometricAnnotationData(
-            annotation_metadata=AnnotationMetadata(),
+        frame_annotation_data = _GeometricAnnotationData(
+            annotation_metadata=_AnnotationMetadata(),
             coordinates=coordinates,
         )
 
@@ -203,8 +203,8 @@ class ImageSpace(Space):
         )
 
         if existing_frame_classification_annotation_data is None:
-            existing_frame_classification_annotation_data = AnnotationData(
-                annotation_metadata=AnnotationMetadata(),
+            existing_frame_classification_annotation_data = _AnnotationData(
+                annotation_metadata=_AnnotationMetadata(),
             )
 
             self._classification_hash_to_annotation_data[classification_instance.classification_hash] = (
@@ -222,7 +222,7 @@ class ImageSpace(Space):
 
     def get_object_instance_annotations(
         self, filter_object_instances: Optional[list[str]] = None
-    ) -> Sequence[GeometricObjectAnnotation]:
+    ) -> Sequence[_GeometricObjectAnnotation]:
         """Get all object instance annotations in the image space.
 
         Args:
@@ -230,19 +230,19 @@ class ImageSpace(Space):
                 If provided, only annotations for these objects will be returned.
 
         Returns:
-            Sequence[GeometricObjectAnnotation]: Sequence of all object annotations in the image.
+            Sequence[_GeometricObjectAnnotation]: Sequence of all object annotations in the image.
         """
-        res: list[GeometricObjectAnnotation] = []
+        res: list[_GeometricObjectAnnotation] = []
 
         for obj_hash, annotation in self._object_hash_to_annotation_data.items():
             if filter_object_instances is None or obj_hash in filter_object_instances:
-                res.append(GeometricObjectAnnotation(space=self, object_instance=self._objects_map[obj_hash]))
+                res.append(_GeometricObjectAnnotation(space=self, object_instance=self._objects_map[obj_hash]))
 
         return res
 
     def get_classification_instance_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
-    ) -> list[SingleFrameClassificationAnnotation]:
+    ) -> list[_SingleFrameClassificationAnnotation]:
         """Get all classification instance annotations in the image space.
 
         Args:
@@ -250,14 +250,14 @@ class ImageSpace(Space):
                 If provided, only annotations for these classifications will be returned.
 
         Returns:
-            list[SingleFrameClassificationAnnotation]: List of all classification annotations in the image.
+            list[_SingleFrameClassificationAnnotation]: List of all classification annotations in the image.
         """
-        res: list[SingleFrameClassificationAnnotation] = []
+        res: list[_SingleFrameClassificationAnnotation] = []
 
         for classification_hash, annotation_data in self._classification_hash_to_annotation_data.items():
             if filter_classification_instances is None or classification_hash in filter_classification_instances:
                 res.append(
-                    SingleFrameClassificationAnnotation(
+                    _SingleFrameClassificationAnnotation(
                         space=self,
                         classification_instance=self._classifications_map[classification_hash],
                     )
@@ -356,7 +356,7 @@ class ImageSpace(Space):
     def _to_encord_object(
         self,
         object_instance: ObjectInstance,
-        frame_object_annotation_data: GeometricAnnotationData,
+        frame_object_annotation_data: _GeometricAnnotationData,
     ) -> FrameObject:
         from encord.objects.ontology_object import Object
 
@@ -381,7 +381,7 @@ class ImageSpace(Space):
     def _to_encord_classification(
         self,
         classification_instance: ClassificationInstance,
-        frame_classification_annotation_data: AnnotationData,
+        frame_classification_annotation_data: _AnnotationData,
     ) -> FrameClassification:
         from encord.objects import Classification
         from encord.objects.attributes import Attribute
@@ -483,7 +483,7 @@ class ImageSpace(Space):
 
             coordinates: GeometricCoordinates = get_geometric_coordinates_from_frame_object_dict(frame_object_label)
 
-            object_frame_instance_info = AnnotationMetadata.from_dict(frame_object_label)
+            object_frame_instance_info = _AnnotationMetadata.from_dict(frame_object_label)
             self.put_object_instance(
                 object_instance=object_instance,
                 coordinates=coordinates,
@@ -508,7 +508,7 @@ class ImageSpace(Space):
             if entity is None:
                 continue
 
-            classification_frame_instance_info = AnnotationMetadata.from_dict(classification)
+            classification_frame_instance_info = _AnnotationMetadata.from_dict(classification)
             self.put_classification_instance(
                 entity,
                 created_at=classification_frame_instance_info.created_at,

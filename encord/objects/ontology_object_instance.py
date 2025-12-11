@@ -61,9 +61,9 @@ from encord.objects.internal_helpers import (
 )
 from encord.objects.ontology_object import Object
 from encord.objects.options import Option
-from encord.objects.spaces.annotation.base_annotation import AnnotationData, AnnotationMetadata, ObjectAnnotation
-from encord.objects.spaces.annotation.geometric_annotation import GeometricAnnotationData
-from encord.objects.spaces.annotation.range_annotation import RangeObjectAnnotationData
+from encord.objects.spaces.annotation.base_annotation import _AnnotationData, _AnnotationMetadata, _ObjectAnnotation
+from encord.objects.spaces.annotation.geometric_annotation import _GeometricAnnotationData
+from encord.objects.spaces.annotation.range_annotation import _RangeObjectAnnotationData
 from encord.objects.types import (
     AnswerDict,
     AttributeDict,
@@ -94,9 +94,9 @@ class ObjectInstance:
         self._non_geometric = ontology_object.shape in (Shape.AUDIO, Shape.TEXT)
 
         # Only for Range based modalities, where the ranged objects share the same metadata across all spaces
-        self._instance_metadata: AnnotationMetadata = AnnotationMetadata()
+        self._instance_metadata: _AnnotationMetadata = _AnnotationMetadata()
 
-        self._frames_to_instance_data: Dict[int, AnnotationData] = {}
+        self._frames_to_instance_data: Dict[int, _AnnotationData] = {}
         self._spaces: dict[str, Space] = dict()
 
     def _is_assigned_to_space(self) -> bool:
@@ -109,7 +109,7 @@ class ObjectInstance:
         self._spaces.pop(space_id)
         if not self._spaces:
             # Reset metadata if not on any space
-            self._instance_metadata = AnnotationMetadata()
+            self._instance_metadata = _AnnotationMetadata()
 
     def is_assigned_to_label_row(self) -> Optional[LabelRowV2]:
         """Checks if the object instance is assigned to a label row.
@@ -587,13 +587,13 @@ class ObjectInstance:
 
             if existing_frame_data is None:
                 if isinstance(coordinates, (TextCoordinates, AudioCoordinates)):
-                    existing_frame_data = RangeObjectAnnotationData(
-                        annotation_metadata=AnnotationMetadata(), range_manager=RangeManager()
+                    existing_frame_data = _RangeObjectAnnotationData(
+                        annotation_metadata=_AnnotationMetadata(), range_manager=RangeManager()
                     )
                 else:
                     geometric_coordinates = cast(GeometricCoordinates, coordinates)
-                    existing_frame_data = GeometricAnnotationData(
-                        coordinates=geometric_coordinates, annotation_metadata=AnnotationMetadata()
+                    existing_frame_data = _GeometricAnnotationData(
+                        coordinates=geometric_coordinates, annotation_metadata=_AnnotationMetadata()
                     )
                 self._frames_to_instance_data[frame] = existing_frame_data
 
@@ -608,10 +608,10 @@ class ObjectInstance:
                 reviews=reviews,
             )
 
-            if isinstance(existing_frame_data, GeometricAnnotationData):
+            if isinstance(existing_frame_data, _GeometricAnnotationData):
                 geometric_coordinates = cast(GeometricCoordinates, coordinates)
                 existing_frame_data.coordinates = geometric_coordinates
-            elif isinstance(existing_frame_data, RangeObjectAnnotationData):
+            elif isinstance(existing_frame_data, _RangeObjectAnnotationData):
                 non_geometric_coordinates = cast(Union[TextCoordinates, AudioCoordinates], coordinates)
 
                 # This is for backwards compatibility.
@@ -766,7 +766,7 @@ class ObjectInstance:
                 "have been set previously."
             )
 
-    class Annotation(ObjectAnnotation):
+    class Annotation(_ObjectAnnotation):
         """
         Represents an annotation for a specific frame of an ObjectInstance.
         Allows setting or getting data for the ObjectInstance on the given frame number.
@@ -781,9 +781,9 @@ class ObjectInstance:
         def coordinates(self) -> Coordinates:
             self._check_if_annotation_is_valid()
             annotation_data = self._get_annotation_data()
-            if isinstance(annotation_data, GeometricAnnotationData):
+            if isinstance(annotation_data, _GeometricAnnotationData):
                 return annotation_data.coordinates
-            elif isinstance(annotation_data, RangeObjectAnnotationData):
+            elif isinstance(annotation_data, _RangeObjectAnnotationData):
                 ranges = annotation_data.range_manager.get_ranges()
                 if self._object_instance._ontology_object.shape == Shape.TEXT:
                     return TextCoordinates(range=ranges)
@@ -812,7 +812,7 @@ class ObjectInstance:
             self._check_if_annotation_is_valid()
             return self._get_annotation_data().annotation_metadata.reviews
 
-        def _get_annotation_data(self) -> AnnotationData:
+        def _get_annotation_data(self) -> _AnnotationData:
             return self._object_instance._frames_to_instance_data[self._frame]
 
         def _check_if_annotation_is_valid(self) -> None:

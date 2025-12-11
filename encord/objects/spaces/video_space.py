@@ -26,11 +26,11 @@ from encord.objects.frames import Frames, Ranges, frames_class_to_frames_list, r
 from encord.objects.internal_helpers import _infer_attribute_from_answer
 from encord.objects.label_utils import create_frame_classification_dict, create_frame_object_dict
 from encord.objects.ontology_object_instance import AnswersForFrames, DynamicAnswerManager, check_coordinate_type
-from encord.objects.spaces.annotation.base_annotation import AnnotationData, AnnotationMetadata
+from encord.objects.spaces.annotation.base_annotation import _AnnotationData, _AnnotationMetadata
 from encord.objects.spaces.annotation.geometric_annotation import (
-    FrameClassificationAnnotation,
-    GeometricAnnotationData,
-    GeometricFrameObjectAnnotation,
+    _FrameClassificationAnnotation,
+    _GeometricAnnotationData,
+    _GeometricFrameObjectAnnotation,
 )
 from encord.objects.spaces.base_space import Space
 from encord.objects.spaces.types import ChildInfo, SpaceInfo, VideoSpaceInfo
@@ -70,10 +70,10 @@ class VideoSpace(Space):
         super().__init__(space_id, label_row)
 
         # Keeps track of object/classification annotation data on each frame
-        self._frames_to_object_hash_to_annotation_data: defaultdict[int, dict[str, GeometricAnnotationData]] = (
+        self._frames_to_object_hash_to_annotation_data: defaultdict[int, dict[str, _GeometricAnnotationData]] = (
             defaultdict(dict)
         )
-        self._frames_to_classification_hash_to_annotation_data: defaultdict[int, dict[str, AnnotationData]] = (
+        self._frames_to_classification_hash_to_annotation_data: defaultdict[int, dict[str, _AnnotationData]] = (
             defaultdict(dict)
         )
 
@@ -195,8 +195,8 @@ class VideoSpace(Space):
                 object_hash=object_instance.object_hash, frame=frame
             )
             if existing_frame_annotation_data is None:
-                existing_frame_annotation_data = GeometricAnnotationData(
-                    annotation_metadata=AnnotationMetadata(),
+                existing_frame_annotation_data = _GeometricAnnotationData(
+                    annotation_metadata=_AnnotationMetadata(),
                     coordinates=coordinates,
                 )
 
@@ -626,8 +626,8 @@ class VideoSpace(Space):
             )
 
             if existing_frame_classification_annotation_data is None:
-                existing_frame_classification_annotation_data = AnnotationData(
-                    annotation_metadata=AnnotationMetadata(),
+                existing_frame_classification_annotation_data = _AnnotationData(
+                    annotation_metadata=_AnnotationMetadata(),
                 )
 
                 self._frames_to_classification_hash_to_annotation_data[frame][
@@ -713,12 +713,12 @@ class VideoSpace(Space):
 
         return frames_removed
 
-    def _get_object_annotation_on_frame(self, object_hash: str, frame: int = 0) -> GeometricFrameObjectAnnotation:
-        return GeometricFrameObjectAnnotation(space=self, object_instance=self._objects_map[object_hash], frame=frame)
+    def _get_object_annotation_on_frame(self, object_hash: str, frame: int = 0) -> _GeometricFrameObjectAnnotation:
+        return _GeometricFrameObjectAnnotation(space=self, object_instance=self._objects_map[object_hash], frame=frame)
 
     def get_object_instance_annotations(
         self, filter_object_instances: Optional[list[str]] = None
-    ) -> List[GeometricFrameObjectAnnotation]:
+    ) -> List[_GeometricFrameObjectAnnotation]:
         """Get all object instance annotations in the video space.
 
         Args:
@@ -726,10 +726,10 @@ class VideoSpace(Space):
                 If provided, only annotations for these objects will be returned.
 
         Returns:
-            List[GeometricFrameObjectAnnotation]: List of all object annotations across all frames,
+            List[_GeometricFrameObjectAnnotation]: List of all object annotations across all frames,
                 sorted by frame number.
         """
-        res: List[GeometricFrameObjectAnnotation] = []
+        res: List[_GeometricFrameObjectAnnotation] = []
 
         for frame, obj in dict(sorted(self._frames_to_object_hash_to_annotation_data.items())).items():
             for obj_hash, annotation in obj.items():
@@ -738,14 +738,14 @@ class VideoSpace(Space):
 
         return res
 
-    def get_object_instance_annotations_by_frame(self) -> Dict[int, List[GeometricFrameObjectAnnotation]]:
+    def get_object_instance_annotations_by_frame(self) -> Dict[int, List[_GeometricFrameObjectAnnotation]]:
         """Get all object instance annotations organized by frame number.
 
         Returns:
-            Dict[int, List[GeometricFrameObjectAnnotation]]: Dictionary mapping frame numbers to lists of
+            Dict[int, List[_GeometricFrameObjectAnnotation]]: Dictionary mapping frame numbers to lists of
                 object annotations on that frame.
         """
-        ret: Dict[int, List[GeometricFrameObjectAnnotation]] = {}
+        ret: Dict[int, List[_GeometricFrameObjectAnnotation]] = {}
 
         for frame, object_to_annotation_data_map in sorted(self._frames_to_object_hash_to_annotation_data.items()):
             ret[frame] = [
@@ -757,7 +757,7 @@ class VideoSpace(Space):
 
     def get_classification_instance_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
-    ) -> list[FrameClassificationAnnotation]:
+    ) -> list[_FrameClassificationAnnotation]:
         """Get all classification instance annotations in the video space.
 
         Args:
@@ -765,10 +765,10 @@ class VideoSpace(Space):
                 If provided, only annotations for these classifications will be returned.
 
         Returns:
-            list[FrameClassificationAnnotation]: List of all classification annotations across all frames,
+            list[_FrameClassificationAnnotation]: List of all classification annotations across all frames,
                 sorted by frame number.
         """
-        res: list[FrameClassificationAnnotation] = []
+        res: list[_FrameClassificationAnnotation] = []
 
         for frame, classification in dict(
             sorted(self._frames_to_classification_hash_to_annotation_data.items())
@@ -776,7 +776,7 @@ class VideoSpace(Space):
             for classification_hash, annotation in classification.items():
                 if filter_classification_instances is None or classification_hash in filter_classification_instances:
                     res.append(
-                        FrameClassificationAnnotation(
+                        _FrameClassificationAnnotation(
                             space=self,
                             classification_instance=self._classification_map[classification_hash],
                             frame=frame,
@@ -891,7 +891,7 @@ class VideoSpace(Space):
 
         return new_classification_instance
 
-    def _get_frame_object_annotation_data(self, object_hash: str, frame: int) -> Optional[GeometricAnnotationData]:
+    def _get_frame_object_annotation_data(self, object_hash: str, frame: int) -> Optional[_GeometricAnnotationData]:
         object_to_frame_annotation_data = self._frames_to_object_hash_to_annotation_data.get(frame)
         if object_to_frame_annotation_data is None:
             return None
@@ -900,7 +900,7 @@ class VideoSpace(Space):
 
     def _get_frame_classification_annotation_data(
         self, classification_hash: str, frame: int
-    ) -> Optional[AnnotationData]:
+    ) -> Optional[_AnnotationData]:
         classification_to_frame_annotation_data = self._frames_to_classification_hash_to_annotation_data.get(frame)
         if classification_to_frame_annotation_data is None:
             return None
@@ -923,7 +923,7 @@ class VideoSpace(Space):
     def _to_encord_object(
         self,
         object_instance: ObjectInstance,
-        frame_object_annotation_data: GeometricAnnotationData,
+        frame_object_annotation_data: _GeometricAnnotationData,
     ) -> FrameObject:
         from encord.objects.ontology_object import Object
 
@@ -948,7 +948,7 @@ class VideoSpace(Space):
     def _to_encord_classification(
         self,
         classification_instance: ClassificationInstance,
-        frame_classification_annotation_data: AnnotationData,
+        frame_classification_annotation_data: _AnnotationData,
     ) -> FrameClassification:
         from encord.objects import Classification
         from encord.objects.attributes import Attribute
@@ -1064,7 +1064,7 @@ class VideoSpace(Space):
                 object_instance = self._create_new_object_from_frame_object_dict(frame_object_label=obj)
 
             coordinates = get_geometric_coordinates_from_frame_object_dict(frame_object_dict=obj)
-            object_frame_instance_info = AnnotationMetadata.from_dict(obj)
+            object_frame_instance_info = _AnnotationMetadata.from_dict(obj)
             self.put_object_instance(
                 object_instance=object_instance,
                 coordinates=coordinates,
@@ -1093,7 +1093,7 @@ class VideoSpace(Space):
                     classification_answers=classification_answers,
                 )
 
-            classification_frame_instance_info = AnnotationMetadata.from_dict(classification)
+            classification_frame_instance_info = _AnnotationMetadata.from_dict(classification)
             self.put_classification_instance(
                 classification_instance=classification_instance,
                 frames=frame,

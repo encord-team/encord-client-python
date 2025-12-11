@@ -11,10 +11,10 @@ from encord.exceptions import LabelRowError
 from encord.objects import ClassificationInstance, Shape
 from encord.objects.frames import Range, Ranges
 from encord.objects.ontology_object_instance import ObjectInstance
-from encord.objects.spaces.annotation.base_annotation import AnnotationData, AnnotationMetadata
+from encord.objects.spaces.annotation.base_annotation import _AnnotationData, _AnnotationMetadata
 from encord.objects.spaces.annotation.range_annotation import (
-    RangeClassificationAnnotation,
-    RangeObjectAnnotation,
+    _RangeClassificationAnnotation,
+    _RangeObjectAnnotation,
 )
 from encord.objects.spaces.base_space import Space
 from encord.objects.types import (
@@ -48,7 +48,7 @@ class RangeSpace(Space):
         super().__init__(space_id, label_row)
         self._objects_map: dict[str, ObjectInstance] = dict()
         self._classifications_map: dict[str, ClassificationInstance] = dict()
-        self._classification_hash_to_annotation_data: dict[str, AnnotationData] = dict()
+        self._classification_hash_to_annotation_data: dict[str, _AnnotationData] = dict()
         self._object_hash_to_range_manager: dict[str, RangeManager] = dict()
 
         # Since we can only have one classification of a particular class, this keeps track to make sure we don't add duplicates
@@ -246,8 +246,8 @@ class RangeSpace(Space):
         )
 
         if existing_annotation_data is None:
-            existing_annotation_data = AnnotationData(
-                annotation_metadata=AnnotationMetadata(),
+            existing_annotation_data = _AnnotationData(
+                annotation_metadata=_AnnotationMetadata(),
             )
 
             self._classification_hash_to_annotation_data[classification_instance.classification_hash] = (
@@ -267,7 +267,7 @@ class RangeSpace(Space):
 
     def get_object_instance_annotations(
         self, filter_object_instances: Optional[list[str]] = None
-    ) -> list[RangeObjectAnnotation]:
+    ) -> list[_RangeObjectAnnotation]:
         """Get all object instance annotations in the space.
 
         Args:
@@ -275,19 +275,19 @@ class RangeSpace(Space):
                 If provided, only annotations for these objects will be returned.
 
         Returns:
-            list[RangeObjectAnnotation]: List of all object annotations in the space.
+            list[_RangeObjectAnnotation]: List of all object annotations in the space.
         """
-        res: list[RangeObjectAnnotation] = []
+        res: list[_RangeObjectAnnotation] = []
 
         for obj_hash, annotation in self._object_hash_to_range_manager.items():
             if filter_object_instances is None or obj_hash in filter_object_instances:
-                res.append(RangeObjectAnnotation(space=self, object_instance=self._objects_map[obj_hash]))
+                res.append(_RangeObjectAnnotation(space=self, object_instance=self._objects_map[obj_hash]))
 
         return res
 
     def get_classification_instance_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
-    ) -> list[RangeClassificationAnnotation]:
+    ) -> list[_RangeClassificationAnnotation]:
         """Get all classification instance annotations in the space.
 
         Args:
@@ -295,14 +295,14 @@ class RangeSpace(Space):
                 If provided, only annotations for these classifications will be returned.
 
         Returns:
-            list[RangeClassificationAnnotation]: List of all classification annotations in the space.
+            list[_RangeClassificationAnnotation]: List of all classification annotations in the space.
         """
-        res: list[RangeClassificationAnnotation] = []
+        res: list[_RangeClassificationAnnotation] = []
 
         for classification_hash, annotation_data in self._classification_hash_to_annotation_data.items():
             if filter_classification_instances is None or classification_hash in filter_classification_instances:
                 res.append(
-                    RangeClassificationAnnotation(
+                    _RangeClassificationAnnotation(
                         space=self,
                         classification_instance=self._classifications_map[classification_hash],
                     )

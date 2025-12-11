@@ -7,7 +7,7 @@ from encord.common.range_manager import RangeManager
 from encord.exceptions import LabelRowError
 from encord.objects.coordinates import AudioCoordinates, TextCoordinates
 from encord.objects.frames import Range, Ranges
-from encord.objects.spaces.annotation.base_annotation import AnnotationData, ClassificationAnnotation, ObjectAnnotation
+from encord.objects.spaces.annotation.base_annotation import _AnnotationData, _ClassificationAnnotation, _ObjectAnnotation
 
 if TYPE_CHECKING:
     from encord.objects import ClassificationInstance, ObjectInstance, Shape
@@ -15,13 +15,13 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class RangeObjectAnnotationData(AnnotationData):
+class _RangeObjectAnnotationData(_AnnotationData):
     """Annotation Data for Range-based objects. Contains a range manager."""
 
     range_manager: RangeManager
 
 
-class RangeObjectAnnotation(ObjectAnnotation):
+class _RangeObjectAnnotation(_ObjectAnnotation):
     """Annotations for range-based modalities (e.g. Text, Audio)."""
 
     def __init__(self, space: RangeSpace, object_instance: ObjectInstance):
@@ -70,8 +70,8 @@ class RangeObjectAnnotation(ObjectAnnotation):
         new_range_manager = RangeManager(frame_class=coordinates.range)
         self._space._object_hash_to_range_manager[self._object_instance.object_hash] = new_range_manager
 
-    def _get_annotation_data(self) -> RangeObjectAnnotationData:
-        return RangeObjectAnnotationData(
+    def _get_annotation_data(self) -> _RangeObjectAnnotationData:
+        return _RangeObjectAnnotationData(
             annotation_metadata=self._object_instance._instance_metadata,
             range_manager=self._space._object_hash_to_range_manager[self._object_instance.object_hash],
         )
@@ -83,7 +83,7 @@ class RangeObjectAnnotation(ObjectAnnotation):
             )
 
 
-class RangeClassificationAnnotation(ClassificationAnnotation):
+class _RangeClassificationAnnotation(_ClassificationAnnotation):
     """Annotations for multi-frame classifications (e.g. Video)."""
 
     def __init__(self, space: RangeSpace, classification_instance: ClassificationInstance):
@@ -99,7 +99,7 @@ class RangeClassificationAnnotation(ClassificationAnnotation):
         """This field is deprecated. It is only here for backwards compatibility. It always returns 0."""
         return 0
 
-    def _get_annotation_data(self) -> AnnotationData:
+    def _get_annotation_data(self) -> _AnnotationData:
         return self._space._classification_hash_to_annotation_data[self._classification_instance.classification_hash]
 
     def _check_if_annotation_is_valid(self) -> None:
