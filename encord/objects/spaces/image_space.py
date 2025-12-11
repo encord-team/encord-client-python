@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from datetime import datetime
 from typing import TYPE_CHECKING, Dict, Optional, Sequence, cast
 
@@ -471,6 +472,7 @@ class ImageSpace(Space):
             object_hash = frame_object_label["objectHash"]
             object_instance = None
 
+            # TODO: Think about how to make this more efficient
             for space in self._label_row._space_map.values():
                 object_instance = space._objects_map.get(object_hash)
                 if object_instance is not None:

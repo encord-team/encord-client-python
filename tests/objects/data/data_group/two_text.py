@@ -1,9 +1,22 @@
 import datetime
 
 from encord.constants.enums import DataType, SpaceType
+from encord.objects.spaces.types import TextSpaceInfo
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
 
 DATA_GROUP_DATA_HASH = "data-group-with-two-text-data-hash"
+
+TEXT_SPACE_1_INFO: TextSpaceInfo = {
+    "space_type": SpaceType.TEXT,
+    "child_info": {"layout_key": "main transcript", "is_readonly": False, "file_name": "english.txt"},
+    "labels": {},
+}
+
+TEXT_SPACE_2_INFO: TextSpaceInfo = {
+    "space_type": SpaceType.TEXT,
+    "child_info": {"layout_key": "chinese translation", "is_readonly": False, "file_name": "chinese.txt"},
+    "labels": {},
+}
 
 DATA_GROUP_METADATA = LabelRowMetadata(
     label_hash="",
@@ -30,16 +43,8 @@ DATA_GROUP_METADATA = LabelRowMetadata(
     audio_num_channels=None,
     audio_sample_rate=None,
     spaces={
-        "text-1-uuid": {
-            "space_type": SpaceType.TEXT,
-            "child_info": {"layout_key": "main transcript", "is_readonly": False, "file_name": "english.txt"},
-            "labels": {},
-        },
-        "text-2-uuid": {
-            "space_type": SpaceType.TEXT,
-            "child_info": {"layout_key": "chinese translation", "is_readonly": False, "file_name": "chinese.txt"},
-            "labels": {},
-        },
+        "text-1-uuid": TEXT_SPACE_1_INFO,
+        "text-2-uuid": TEXT_SPACE_2_INFO,
     },
 )
 
@@ -60,16 +65,8 @@ DATA_GROUP_TWO_TEXT_NO_LABELS = {
     "object_actions": {},
     "label_status": "LABEL_IN_PROGRESS",
     "spaces": {
-        "text-1-uuid": {
-            "space_type": SpaceType.TEXT,
-            "child_info": {"layout_key": "main transcript", "is_readonly": False, "file_name": "english.txt"},
-            "labels": {},
-        },
-        "text-2-uuid": {
-            "space_type": SpaceType.TEXT,
-            "child_info": {"layout_key": "chinese translation", "is_readonly": False, "file_name": "chinese.txt"},
-            "labels": {},
-        },
+        "text-1-uuid": TEXT_SPACE_1_INFO,
+        "text-2-uuid": TEXT_SPACE_2_INFO,
     },
     "data_units": {
         DATA_GROUP_DATA_HASH: {

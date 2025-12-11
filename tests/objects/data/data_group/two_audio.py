@@ -1,9 +1,25 @@
 import datetime
 
 from encord.constants.enums import DataType, SpaceType
+from encord.objects.spaces.types import AudioSpaceInfo
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
 
 DATA_GROUP_DATA_HASH = "data-group-with-two-audio-data-hash"
+
+AUDIO_SPACE_1_INFO: AudioSpaceInfo = {
+    "space_type": SpaceType.AUDIO,
+    "child_info": {"layout_key": "english_transcription", "is_readonly": False, "file_name": "english.mp4"},
+    "duration_ms": 5 * 60 * 1000,
+    "labels": {},
+}
+
+AUDIO_SPACE_2_INFO: AudioSpaceInfo = {
+    "space_type": SpaceType.AUDIO,
+    "child_info": {"layout_key": "french_transcription", "is_readonly": False, "file_name": "french.mp4"},
+    "duration_ms": 5 * 60 * 1000,
+    "labels": {},
+}
+
 
 DATA_GROUP_METADATA = LabelRowMetadata(
     label_hash="",
@@ -30,18 +46,8 @@ DATA_GROUP_METADATA = LabelRowMetadata(
     audio_num_channels=None,
     audio_sample_rate=None,
     spaces={
-        "audio-1-uuid": {
-            "space_type": SpaceType.AUDIO,
-            "child_info": {"layout_key": "english_transcription", "is_readonly": False, "file_name": "english.mp4"},
-            "duration_ms": 5 * 60 * 1000,
-            "labels": {},
-        },
-        "audio-2-uuid": {
-            "space_type": SpaceType.AUDIO,
-            "child_info": {"layout_key": "french_transcription", "is_readonly": False, "file_name": "french.mp4"},
-            "duration_ms": 5 * 60 * 1000,
-            "labels": {},
-        },
+        "audio-1-uuid": AUDIO_SPACE_1_INFO,
+        "audio-2-uuid": AUDIO_SPACE_2_INFO,
     },
 )
 
@@ -62,18 +68,8 @@ DATA_GROUP_TWO_AUDIO_NO_LABELS = {
     "object_actions": {},
     "label_status": "LABEL_IN_PROGRESS",
     "spaces": {
-        "audio-1-uuid": {
-            "space_type": SpaceType.AUDIO,
-            "child_info": {"layout_key": "english_transcription", "is_readonly": False, "file_name": "english.mp4"},
-            "duration_ms": 5 * 60 * 1000,
-            "labels": {},
-        },
-        "audio-2-uuid": {
-            "space_type": SpaceType.AUDIO,
-            "child_info": {"layout_key": "french_transcription", "is_readonly": False, "file_name": "french.mp4"},
-            "duration_ms": 5 * 60 * 1000,
-            "labels": {},
-        },
+        "audio-1-uuid": AUDIO_SPACE_1_INFO,
+        "audio-2-uuid": AUDIO_SPACE_2_INFO,
     },
     "data_units": {
         DATA_GROUP_DATA_HASH: {

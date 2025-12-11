@@ -1,9 +1,29 @@
 import datetime
 
 from encord.constants.enums import DataType, SpaceType
+from encord.objects.spaces.types import VideoSpaceInfo
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
 
 DATA_GROUP_DATA_HASH = "28f0e9d2-51e0-459d-8ffa-2e214da653a9"
+
+VIDEO_SPACE_1_INFO: VideoSpaceInfo = {
+    "space_type": SpaceType.VIDEO,
+    "child_info": {"layout_key": "left-camera", "is_readonly": False, "file_name": "Left Camera.mp4"},
+    "number_of_frames": 10,
+    "width": 100,
+    "height": 100,
+    "labels": {},
+}
+
+VIDEO_SPACE_2_INFO: VideoSpaceInfo = {
+    "space_type": SpaceType.VIDEO,
+    "child_info": {"layout_key": "right-camera", "is_readonly": False, "file_name": "Right Camera.mp4"},
+    "number_of_frames": 10,
+    "width": 100,
+    "height": 100,
+    "labels": {},
+}
+
 
 DATA_GROUP_METADATA = LabelRowMetadata(
     label_hash="",
@@ -30,22 +50,8 @@ DATA_GROUP_METADATA = LabelRowMetadata(
     audio_num_channels=None,
     audio_sample_rate=None,
     spaces={
-        "video-1-uuid": {
-            "space_type": SpaceType.VIDEO,
-            "child_info": {"layout_key": "left-camera", "is_readonly": False, "file_name": "Left Camera.mp4"},
-            "number_of_frames": 10,
-            "width": 100,
-            "height": 100,
-            "labels": {},
-        },
-        "video-2-uuid": {
-            "space_type": SpaceType.VIDEO,
-            "child_info": {"layout_key": "right-camera", "is_readonly": False, "file_name": "Right Camera.mp4"},
-            "number_of_frames": 10,
-            "width": 100,
-            "height": 100,
-            "labels": {},
-        },
+        "video-1-uuid": VIDEO_SPACE_1_INFO,
+        "video-2-uuid": VIDEO_SPACE_2_INFO,
     },
 )
 
@@ -66,22 +72,8 @@ DATA_GROUP_TWO_VIDEOS_NO_LABELS = {
     "object_actions": {},
     "label_status": "LABEL_IN_PROGRESS",
     "spaces": {
-        "video-1-uuid": {
-            "space_type": SpaceType.VIDEO,
-            "child_info": {"layout_key": "left-camera", "is_readonly": False, "file_name": "Left Camera.mp4"},
-            "number_of_frames": 10,
-            "width": 100,
-            "height": 100,
-            "labels": {},
-        },
-        "video-2-uuid": {
-            "space_type": SpaceType.VIDEO,
-            "child_info": {"layout_key": "right-camera", "is_readonly": False, "file_name": "Right Camera.mp4"},
-            "number_of_frames": 10,
-            "width": 100,
-            "height": 100,
-            "labels": {},
-        },
+        "video-1-uuid": VIDEO_SPACE_1_INFO,
+        "video-2-uuid": VIDEO_SPACE_2_INFO,
     },
     "data_units": {
         DATA_GROUP_DATA_HASH: {

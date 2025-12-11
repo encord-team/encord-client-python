@@ -1,9 +1,26 @@
 import datetime
 
 from encord.constants.enums import DataType, SpaceType
+from encord.objects.spaces.types import ImageSpaceInfo
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
 
 DATA_GROUP_DATA_HASH = "data-group-with-two-images-data-hash"
+
+IMAGE_SPACE_1_INFO: ImageSpaceInfo = {
+    "space_type": SpaceType.IMAGE,
+    "child_info": {"layout_key": "front", "is_readonly": False, "file_name": "front.jpg"},
+    "width": 100,
+    "height": 100,
+    "labels": {},
+}
+
+IMAGE_SPACE_2_INFO: ImageSpaceInfo = {
+    "space_type": SpaceType.IMAGE,
+    "child_info": {"layout_key": "back", "is_readonly": False, "file_name": "back.jpg"},
+    "width": 100,
+    "height": 100,
+    "labels": {},
+}
 
 DATA_GROUP_METADATA = LabelRowMetadata(
     label_hash="",
@@ -30,22 +47,8 @@ DATA_GROUP_METADATA = LabelRowMetadata(
     audio_num_channels=None,
     audio_sample_rate=None,
     spaces={
-        "image-1-uuid": {
-            "space_type": SpaceType.IMAGE,
-            "child_info": {"layout_key": "front", "is_readonly": False, "file_name": "front.jpg"},
-            "number_of_frames": 10,
-            "width": 100,
-            "height": 100,
-            "labels": {},
-        },
-        "image-2-uuid": {
-            "space_type": SpaceType.IMAGE,
-            "child_info": {"layout_key": "back", "is_readonly": False, "file_name": "back.jpg"},
-            "number_of_frames": 10,
-            "width": 100,
-            "height": 100,
-            "labels": {},
-        },
+        "image-1-uuid": IMAGE_SPACE_1_INFO,
+        "image-2-uuid": IMAGE_SPACE_2_INFO,
     },
 )
 
