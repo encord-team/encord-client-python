@@ -5,7 +5,11 @@ from typing import TYPE_CHECKING
 
 from encord.exceptions import LabelRowError
 from encord.objects.coordinates import GeometricCoordinates
-from encord.objects.spaces.annotation.base_annotation import _AnnotationData, _ClassificationAnnotation, _ObjectAnnotation
+from encord.objects.spaces.annotation.base_annotation import (
+    _AnnotationData,
+    _ClassificationAnnotation,
+    _ObjectAnnotation,
+)
 
 if TYPE_CHECKING:
     from encord.objects import ClassificationInstance, ObjectInstance

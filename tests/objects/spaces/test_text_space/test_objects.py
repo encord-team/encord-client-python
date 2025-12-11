@@ -187,16 +187,9 @@ def test_place_object_on_invalid_ranges_on_space(ontology):
             ranges=Range(start=-20, end=100),
         )
 
-    with pytest.raises(LabelRowError) as exceed_max_range_error:
-        text_space_1.put_object_instance(object_instance=new_object_instance, ranges=Range(start=0, end=10 * 60 * 1000))
-
     # Assert
     assert (
         negative_range_error.value.message == "Range starting with -20 is invalid. Negative ranges are not supported."
-    )
-    assert (
-        exceed_max_range_error.value.message
-        == f"Range ending with {6 * 60 * 1000} is invalid. This text file has only {500} characters."
     )
 
 

@@ -7,7 +7,11 @@ from encord.common.range_manager import RangeManager
 from encord.exceptions import LabelRowError
 from encord.objects.coordinates import AudioCoordinates, TextCoordinates
 from encord.objects.frames import Range, Ranges
-from encord.objects.spaces.annotation.base_annotation import _AnnotationData, _ClassificationAnnotation, _ObjectAnnotation
+from encord.objects.spaces.annotation.base_annotation import (
+    _AnnotationData,
+    _ClassificationAnnotation,
+    _ObjectAnnotation,
+)
 
 if TYPE_CHECKING:
     from encord.objects import ClassificationInstance, ObjectInstance, Shape

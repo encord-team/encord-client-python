@@ -27,6 +27,7 @@ class TextSpace(RangeSpace):
     def _are_ranges_valid(self, ranges: Ranges) -> None:
         start_of_range, _end_of_range = self._get_start_and_end_of_ranges(ranges)
 
+        # We only check the start of the range, because we don't have a reliable value for the number of characters in the text file.
         if start_of_range < 0:
             raise LabelRowError(f"Range starting with {start_of_range} is invalid. Negative ranges are not supported.")
 
