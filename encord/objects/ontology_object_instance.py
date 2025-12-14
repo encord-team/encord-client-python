@@ -591,6 +591,8 @@ class ObjectInstance:
                         annotation_metadata=_AnnotationMetadata(), range_manager=RangeManager()
                     )
                 else:
+                    # Note here we pretend HTML coordinates are geometric coordinates. To remove when we implement
+                    # HTML space.
                     geometric_coordinates = cast(GeometricCoordinates, coordinates)
                     existing_frame_data = _GeometricAnnotationData(
                         coordinates=geometric_coordinates, annotation_metadata=_AnnotationMetadata()

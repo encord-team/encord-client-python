@@ -1221,7 +1221,7 @@ def test_audio_object_can_be_added_edited_and_removed(all_types_ontology, empty_
     obj_instance.set_for_frames(AudioCoordinates(range=[Range(start=2000, end=2499)]), overwrite=True)
     range_list = obj_instance.range_list
     assert range_list is not None
-    print(range_list)
+
     assert len(range_list) == 1
     assert range_list[0].start == 2000
     assert range_list[0].end == 2499
@@ -1265,6 +1265,8 @@ def test_get_annotations_from_html_text_object(all_types_ontology) -> None:
     assert annotation.last_edited_at == now
     assert annotation.last_edited_by == "user2"
     assert annotation.reviews is None
+    assert object_instance.range_html == [range]
+    assert annotation.coordinates == HtmlCoordinates(range=[range])
 
 
 def test_html_text_classification_can_be_added_removed(all_types_ontology, empty_html_text_label_row: LabelRowV2):
