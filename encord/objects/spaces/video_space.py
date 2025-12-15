@@ -85,8 +85,6 @@ class VideoSpace(Space):
         # Used to track whether an instance of a classification_ontology exists on frames
         self._classifications_ontology_to_ranges: defaultdict[Classification, RangeManager] = defaultdict(RangeManager)
 
-        self._objects_map: dict[str, ObjectInstance] = dict()
-        self._classification_map: dict[str, ClassificationInstance] = dict()
         self._object_hash_to_dynamic_answer_manager: dict[str, DynamicAnswerManager] = dict()
 
         # Need to check if this is 1-indexed
@@ -121,8 +119,8 @@ class VideoSpace(Space):
             # Find all classification_hashes on this frame that belong to the same ontology Classification
             hashes_to_remove = []
             for classification_hash in self._frames_to_classification_hash_to_annotation_data[frame].keys():
-                if classification_hash in self._classification_map:
-                    existing_classification = self._classification_map[classification_hash]
+                if classification_hash in self._classifications_map:
+                    existing_classification = self._classifications_map[classification_hash]
                     if existing_classification._ontology_classification == classification._ontology_classification:
                         hashes_to_remove.append(classification_hash)
 
@@ -573,7 +571,7 @@ class VideoSpace(Space):
         frame_list = frames_class_to_frames_list(frames)
         self._are_frames_valid(frame_list)
 
-        self._classification_map[classification_instance.classification_hash] = classification_instance
+        self._classifications_map[classification_instance.classification_hash] = classification_instance
         classification_instance._add_to_space(self)
 
         is_present, conflicting_ranges = self._is_classification_present_on_frames(
@@ -686,7 +684,7 @@ class VideoSpace(Space):
         ]
         range_manager_for_classification_instance.remove_ranges(ranges_to_remove)
         if len(range_manager_for_classification_instance.get_ranges()) == 0:
-            self._classification_map.pop(classification_instance.classification_hash)
+            self._classifications_map.pop(classification_instance.classification_hash)
 
         return frames_removed
 
@@ -755,28 +753,12 @@ class VideoSpace(Space):
                     res.append(
                         _FrameClassificationAnnotation(
                             space=self,
-                            classification_instance=self._classification_map[classification_hash],
+                            classification_instance=self._classifications_map[classification_hash],
                             frame=frame,
                         )
                     )
 
         return res
-
-    def get_object_instances(self) -> list[ObjectInstance]:
-        """Get all object instances in the video space.
-
-        Returns:
-            list[ObjectInstance]: List of all object instances present in the video space.
-        """
-        return list(self._objects_map.values())
-
-    def get_classification_instances(self) -> list[ClassificationInstance]:
-        """Get all classification instances in the video space.
-
-        Returns:
-            list[ClassificationInstance]: List of all classification instances present in the video space.
-        """
-        return list(self._classification_map.values())
 
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         """Completely remove an object instance from all frames in the video space.
@@ -823,7 +805,7 @@ class VideoSpace(Space):
         Returns:
             Optional[ClassificationInstance]: The removed classification instance, or None if the classification wasn't found.
         """
-        classification_instance = self._classification_map.pop(classification_hash, None)
+        classification_instance = self._classifications_map.pop(classification_hash, None)
 
         if classification_instance is not None:
             classification_instance._remove_from_space(self.space_id)
@@ -963,7 +945,7 @@ class VideoSpace(Space):
             )
 
         for classification_hash, frame_classification_annotation_data in classifications_to_annotation_data.items():
-            space_classification = self._classification_map[classification_hash]
+            space_classification = self._classifications_map[classification_hash]
             classification_list.append(
                 self._to_encord_classification(
                     classification_instance=space_classification,
@@ -994,7 +976,7 @@ class VideoSpace(Space):
         self, existing_classification_answers: dict[str, ClassificationAnswer]
     ) -> dict[str, ClassificationAnswer]:
         ret: dict[str, ClassificationAnswer] = {}
-        for classification_instance in self._classification_map.values():
+        for classification_instance in self._classifications_map.values():
             all_static_answers = classification_instance.get_all_static_answers()
             classifications = [
                 cast(AttributeDict, answer.to_encord_dict()) for answer in all_static_answers if answer.is_answered()

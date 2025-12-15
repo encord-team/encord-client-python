@@ -39,17 +39,21 @@ class Space(ABC):
         self._objects_map: dict[str, ObjectInstance] = dict()
         self._classifications_map: dict[str, ClassificationInstance] = dict()
 
-    @abstractmethod
-    def get_object_instances(
-        self,
-    ) -> list[ObjectInstance]:
-        pass
+    def get_object_instances(self) -> list[ObjectInstance]:
+        """Get all object instances in the space.
 
-    @abstractmethod
-    def get_classification_instances(
-        self,
-    ) -> list[ClassificationInstance]:
-        pass
+        Returns:
+            list[ObjectInstance]: List of all object instances present in the space.
+        """
+        return list(self._objects_map.values())
+
+    def get_classification_instances(self) -> list[ClassificationInstance]:
+        """Get all classification instances in the space.
+
+        Returns:
+            list[ClassificationInstance]: List of all classification instances present in the space.
+        """
+        return list(self._classifications_map.values())
 
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         pass
@@ -57,17 +61,47 @@ class Space(ABC):
     def remove_classification_instance(self, classification_hash: str) -> Optional[ClassificationInstance]:
         pass
 
-    @abstractmethod
     def get_object_instance_annotations(
         self, filter_object_instances: Optional[list[str]] = None
     ) -> Sequence[_ObjectAnnotation]:
-        pass
+        """Get all object instance annotations in the space.
 
-    @abstractmethod
+        Args:
+            filter_object_instances: Optional list of object hashes to filter by.
+                If provided, only annotations for these objects will be returned.
+
+        Returns:
+            Sequence[_ObjectAnnotation]: Sequence of all object annotations in the space.
+        """
+        res: list[_ObjectAnnotation] = []
+        for obj_hash in self._objects_map:
+            if filter_object_instances is None or obj_hash in filter_object_instances:
+                res.append(self._create_object_annotation(obj_hash))
+        return res
+
     def get_classification_instance_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
     ) -> Sequence[_ClassificationAnnotation]:
-        pass
+        """Get all classification instance annotations in the space.
+
+        Args:
+            filter_classification_instances: Optional list of classification hashes to filter by.
+                If provided, only annotations for these classifications will be returned.
+
+        Returns:
+            Sequence[_ClassificationAnnotation]: Sequence of all classification annotations in the space.
+        """
+        res: list[_ClassificationAnnotation] = []
+        for classification_hash in self._classifications_map:
+            if filter_classification_instances is None or classification_hash in filter_classification_instances:
+                res.append(self._create_classification_annotation(classification_hash))
+        return res
+
+    def _create_object_annotation(self, obj_hash: str) -> _ObjectAnnotation:
+        raise NotImplementedError("Subclass must implement _create_object_annotation")
+
+    def _create_classification_annotation(self, classification_hash: str) -> _ClassificationAnnotation:
+        raise NotImplementedError("Subclass must implement _create_classification_annotation")
 
     @abstractmethod
     def _parse_space_dict(

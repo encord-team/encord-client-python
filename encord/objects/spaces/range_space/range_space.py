@@ -265,66 +265,13 @@ class RangeSpace(Space):
 
         self._classification_ontologies.add(classification_instance._ontology_classification.feature_node_hash)
 
-    def get_object_instance_annotations(
-        self, filter_object_instances: Optional[list[str]] = None
-    ) -> list[_RangeObjectAnnotation]:
-        """Get all object instance annotations in the space.
+    def _create_object_annotation(self, obj_hash: str) -> _RangeObjectAnnotation:
+        return _RangeObjectAnnotation(space=self, object_instance=self._objects_map[obj_hash])
 
-        Args:
-            filter_object_instances: Optional list of object hashes to filter by.
-                If provided, only annotations for these objects will be returned.
-
-        Returns:
-            list[_RangeObjectAnnotation]: List of all object annotations in the space.
-        """
-        res: list[_RangeObjectAnnotation] = []
-
-        for obj_hash, annotation in self._object_hash_to_range_manager.items():
-            if filter_object_instances is None or obj_hash in filter_object_instances:
-                res.append(_RangeObjectAnnotation(space=self, object_instance=self._objects_map[obj_hash]))
-
-        return res
-
-    def get_classification_instance_annotations(
-        self, filter_classification_instances: Optional[list[str]] = None
-    ) -> list[_RangeClassificationAnnotation]:
-        """Get all classification instance annotations in the space.
-
-        Args:
-            filter_classification_instances: Optional list of classification hashes to filter by.
-                If provided, only annotations for these classifications will be returned.
-
-        Returns:
-            list[_RangeClassificationAnnotation]: List of all classification annotations in the space.
-        """
-        res: list[_RangeClassificationAnnotation] = []
-
-        for classification_hash, annotation_data in self._classification_hash_to_annotation_data.items():
-            if filter_classification_instances is None or classification_hash in filter_classification_instances:
-                res.append(
-                    _RangeClassificationAnnotation(
-                        space=self,
-                        classification_instance=self._classifications_map[classification_hash],
-                    )
-                )
-
-        return res
-
-    def get_object_instances(self) -> list[ObjectInstance]:
-        """Get all object instances in the space.
-
-        Returns:
-            list[ObjectInstance]: List of all object instances present in the space.
-        """
-        return list(self._objects_map.values())
-
-    def get_classification_instances(self) -> list[ClassificationInstance]:
-        """Get all classification instances in the space.
-
-        Returns:
-            list[ClassificationInstance]: List of all classification instances present in the space.
-        """
-        return list(self._classifications_map.values())
+    def _create_classification_annotation(self, classification_hash: str) -> _RangeClassificationAnnotation:
+        return _RangeClassificationAnnotation(
+            space=self, classification_instance=self._classifications_map[classification_hash]
+        )
 
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         """Remove an object instance from all ranges in the space.

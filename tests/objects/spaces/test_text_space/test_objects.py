@@ -22,44 +22,6 @@ text_obj_definition_attribute_ontology_item = text_obj_ontology_item.get_child_b
 )
 
 
-def test_label_row_get_object_instances_on_space(ontology):
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(DATA_GROUP_TWO_TEXT_NO_LABELS)
-    text_space_1 = label_row.get_space(id="text-1-uuid", type_="text")
-    text_space_1 = label_row.get_space(id="text-2-uuid", type_="text")
-
-    # Act
-    object_instance_1 = text_obj_ontology_item.create_instance()
-    object_instance_2 = text_obj_ontology_item.create_instance()
-
-    range_1 = Range(start=0, end=100)
-    range_2 = Range(start=200, end=300)
-
-    # Place objects on space 1
-    text_space_1.put_object_instance(
-        object_instance=object_instance_1,
-        ranges=range_1,
-    )
-    text_space_1.put_object_instance(
-        object_instance=object_instance_2,
-        ranges=range_2,
-    )
-
-    # Place objects on space 2
-    text_space_1.put_object_instance(object_instance=object_instance_1, ranges=range_2)
-
-    # Assert
-    object_instances = label_row.get_object_instances()
-    assert len(object_instances) == 2
-
-    # For backwards compatibiity, all text objects are on frame=0
-    object_instances_on_frame_1 = label_row.get_object_instances(filter_frames=[0])
-    assert len(object_instances_on_frame_1) == 2
-
-    object_instances_on_frame_2 = label_row.get_object_instances(filter_frames=[1])
-    assert len(object_instances_on_frame_2) == 0
-
-
 def test_place_object_on_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)

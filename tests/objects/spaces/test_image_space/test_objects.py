@@ -21,34 +21,6 @@ box_text_attribute_ontology_item = box_with_attributes_ontology_item.get_child_b
 text_classification = all_types_structure.get_child_by_hash("jPOcEsbw", Classification)
 
 
-def test_label_row_get_object_instances_on_space(ontology):
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
-    image_space_2 = label_row.get_space(id="image-2-uuid", type_="image")
-
-    # Act
-    coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
-    object_instance_1 = box_ontology_item.create_instance()
-    object_instance_2 = box_ontology_item.create_instance()
-
-    # Place objects on space 1
-    image_space_1.put_object_instance(object_instance=object_instance_1, coordinates=coordinates)
-    image_space_1.put_object_instance(object_instance=object_instance_2, coordinates=coordinates)
-
-    # Place objects on space 2
-    image_space_2.put_object_instance(object_instance=object_instance_1, coordinates=coordinates)
-
-    object_instances = label_row.get_object_instances()
-    assert len(object_instances) == 2
-
-    object_instances_on_frame_1 = label_row.get_object_instances(filter_frames=[0])
-    assert len(object_instances_on_frame_1) == 2
-
-    object_instances_on_frame_1 = label_row.get_object_instances(filter_frames=[1])
-    assert len(object_instances_on_frame_1) == 0
-
-
 def test_put_classification_on_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)

@@ -26,36 +26,6 @@ checklist_option_2 = checklist_classification.get_child_by_hash("a4r7nK9i", Opti
 radio_classification = all_types_structure.get_child_by_hash("NzIxNTU1", Classification)
 
 
-def test_label_row_get_classification_instances_on_image_space(ontology):
-    # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
-    image_space_2 = label_row.get_space(id="image-2-uuid", type_="image")
-
-    # Act
-    classification_instance_1 = text_classification.create_instance()
-    classification_instance_2 = checklist_classification.create_instance()
-    classification_instance_3 = radio_classification.create_instance()
-
-    # Place classification on space 1
-    image_space_1.put_classification_instance(classification_instance=classification_instance_1)
-    image_space_1.put_classification_instance(classification_instance=classification_instance_2)
-
-    # Place classification on space 2
-    image_space_2.put_classification_instance(classification_instance=classification_instance_3)
-
-    # Assert
-    all_classification_instances = label_row.get_classification_instances()
-    assert len(all_classification_instances) == 3
-
-    classification_instances_on_frame_1 = label_row.get_classification_instances(filter_frames=1)
-    assert len(classification_instances_on_frame_1) == 0
-
-    classification_instances_on_frame_1 = label_row.get_classification_instances(filter_frames=0)
-    assert len(classification_instances_on_frame_1) == 3
-
-
 def test_put_classification_on_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)

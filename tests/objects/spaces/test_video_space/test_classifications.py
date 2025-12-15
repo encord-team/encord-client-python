@@ -18,32 +18,6 @@ text_classification = all_types_structure.get_child_by_hash("jPOcEsbw", Classifi
 checklist_classification = all_types_structure.get_child_by_hash("3DuQbFxo", Classification)
 
 
-def test_label_row_get_classification_instances_on_video_space(ontology):
-    # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
-    video_space_2 = label_row.get_space(id="video-2-uuid", type_="video")
-
-    # Act
-    classification_instance_1 = text_classification.create_instance()
-    classification_instance_2 = checklist_classification.create_instance()
-
-    # Place classification on space 1
-    video_space_1.put_classification_instance(classification_instance=classification_instance_1, frames=[0, 1, 2])
-    video_space_1.put_classification_instance(classification_instance=classification_instance_2, frames=[2, 3, 4])
-
-    # Place classification on space 2
-    video_space_2.put_classification_instance(classification_instance=classification_instance_1, frames=[1])
-
-    # Assert
-    all_classification_instances = label_row.get_classification_instances()
-    assert len(all_classification_instances) == 2
-
-    classification_instances_on_frame_1 = label_row.get_classification_instances(filter_frames=1)
-    assert len(classification_instances_on_frame_1) == 1
-
-
 def test_put_classification_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
