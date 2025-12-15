@@ -310,7 +310,7 @@ class LabelRowMetadata(Formatter):
     audio_num_channels: Optional[int]
 
     """Information about spaces on this label row."""
-    spaces: Dict[str, SpaceInfo]  # Although no labels information here, just the space information
+    spaces: Dict[str, SpaceInfo]  # no labels information here, just the space information
 
     group_hash: Optional[str] = None
 

@@ -32,20 +32,16 @@ def test_parse_spaces_before_initialise_labels(ontology):
     # Check getting space by id
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     assert video_space_1.space_id == "video-1-uuid"
-    assert video_space_1.layout_key == "left-camera"
 
     video_space_1 = label_row.get_space(layout_key="left-camera", type_="video")
     assert video_space_1.space_id == "video-1-uuid"
-    assert video_space_1.layout_key == "left-camera"
 
     # Check getting space by layout key
     video_space_2 = label_row.get_space(id="video-2-uuid", type_="video")
     assert video_space_2.space_id == "video-2-uuid"
-    assert video_space_2.layout_key == "right-camera"
 
     video_space_2 = label_row.get_space(layout_key="right-camera", type_="video")
     assert video_space_2.space_id == "video-2-uuid"
-    assert video_space_2.layout_key == "right-camera"
 
 
 def test_read_and_export_video_space_labels(ontology):
@@ -69,6 +65,6 @@ def test_read_and_export_video_space_labels(ontology):
     assert not DeepDiff(
         DATA_GROUP_WITH_TWO_VIDEOS_LABELS,
         output_dict,
-        exclude_regex_paths=[r".*\['trackHash'\]"],
+        exclude_regex_paths=[r".*\['trackHash'\]", r".*\['child_info'\]"],
         ignore_order_func=lambda x: x.path().endswith("['objects']"),
     )

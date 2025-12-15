@@ -154,6 +154,7 @@ class LabelRowV2:
         self._metadata: Optional[Union[DICOMSeriesMetadata, DataGroupMetadata]] = None
         self._frame_metadata: defaultdict[int, Optional[DICOMSliceMetadata]] = defaultdict(lambda: None)
 
+        self._layout_key_to_space_id: dict[str, str] = {}
         self._space_map: dict[str, Space] = self._initiate_spaces(
             spaces_info=label_row_metadata.spaces,
         )
@@ -822,15 +823,9 @@ class LabelRowV2:
                     return element
 
         if layout_key is not None:
-            for element in self._space_map.values():
-                if (
-                    isinstance(element, VideoSpace)
-                    or isinstance(element, ImageSpace)
-                    or isinstance(element, AudioSpace)
-                    or isinstance(element, TextSpace)
-                ):
-                    if element.layout_key == layout_key:
-                        return element
+            space_id = self._layout_key_to_space_id.get(layout_key)
+            if space_id is not None:
+                return self._space_map[space_id]
 
         space_identifier_error_message = ""
         if id is not None:
@@ -2407,11 +2402,16 @@ class LabelRowV2:
             if space_id == "root":
                 # TODO: Enable reading root space info
                 continue
+
+            # Store layout_key -> space_id mapping if child_info is present
+            child_info = space_info.get("child_info")
+            if child_info is not None:
+                self._layout_key_to_space_id[child_info["layout_key"]] = space_id
+
             if space_info["space_type"] == SpaceType.VIDEO:
                 video_space = VideoSpace(
                     space_id=space_id,
                     label_row=self,
-                    child_info=space_info["child_info"],
                     number_of_frames=space_info["number_of_frames"],
                     width=space_info["width"],
                     height=space_info["height"],
@@ -2421,7 +2421,6 @@ class LabelRowV2:
                 image_space = ImageSpace(
                     space_id=space_id,
                     label_row=self,
-                    child_info=space_info["child_info"],
                     width=space_info["width"],
                     height=space_info["height"],
                 )
@@ -2431,14 +2430,12 @@ class LabelRowV2:
                     space_id=space_id,
                     label_row=self,
                     duration_ms=space_info["duration_ms"],
-                    child_info=space_info["child_info"],
                 )
                 res[space_id] = audio_space
             elif space_info["space_type"] == SpaceType.TEXT:
                 text_space = TextSpace(
                     space_id=space_id,
                     label_row=self,
-                    child_info=space_info["child_info"],
                 )
                 res[space_id] = text_space
 

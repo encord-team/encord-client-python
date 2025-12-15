@@ -1,4 +1,4 @@
-from typing import Literal, Optional, TypedDict, Union
+from typing import Literal, NotRequired, TypedDict, Union
 
 from encord.constants.enums import SpaceType
 from encord.objects.types import LabelBlob
@@ -15,7 +15,7 @@ class ChildInfo(TypedDict):
 
 class VideoSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.VIDEO]
-    child_info: ChildInfo
+    child_info: NotRequired[ChildInfo]
     number_of_frames: int
     width: int
     height: int
@@ -23,19 +23,19 @@ class VideoSpaceInfo(BaseSpaceInfo):
 
 class ImageSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.IMAGE]
-    child_info: ChildInfo
+    child_info: NotRequired[ChildInfo]
     width: int
     height: int
 
 
 class TextSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.TEXT]
-    child_info: ChildInfo
+    child_info: NotRequired[ChildInfo]
 
 
 class AudioSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.AUDIO]
-    child_info: ChildInfo
+    child_info: NotRequired[ChildInfo]
     duration_ms: int
 
 

@@ -32,20 +32,16 @@ def test_parse_spaces_before_initialise_labels(ontology):
     # Check getting space by id
     text_space_1 = label_row.get_space(id="text-1-uuid", type_="text")
     assert text_space_1.space_id == "text-1-uuid"
-    assert text_space_1.layout_key == "main transcript"
 
     text_space_1 = label_row.get_space(layout_key="main transcript", type_="text")
     assert text_space_1.space_id == "text-1-uuid"
-    assert text_space_1.layout_key == "main transcript"
 
     # Check getting space by layout key
     text_space_2 = label_row.get_space(id="text-2-uuid", type_="text")
     assert text_space_2.space_id == "text-2-uuid"
-    assert text_space_2.layout_key == "chinese translation"
 
     text_space_2 = label_row.get_space(layout_key="chinese translation", type_="text")
     assert text_space_2.space_id == "text-2-uuid"
-    assert text_space_2.layout_key == "chinese translation"
 
 
 def test_read_and_export_text_space_labels(ontology):
@@ -68,6 +64,6 @@ def test_read_and_export_text_space_labels(ontology):
     assert not DeepDiff(
         DATA_GROUP_WITH_TWO_TEXT_LABELS,
         output_dict,
-        exclude_regex_paths=[r".*\['trackHash'\]"],
+        exclude_regex_paths=[r".*\['trackHash'\]", r".*\['child_info'\]"],
         ignore_order_func=lambda x: x.path().endswith("['objects']"),
     )

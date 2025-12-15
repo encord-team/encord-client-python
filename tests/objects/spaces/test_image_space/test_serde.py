@@ -31,11 +31,9 @@ def test_parse_spaces_before_initialise_labels(ontology):
 
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
     assert image_space_1.space_id == "image-1-uuid"
-    assert image_space_1.layout_key == "front"
 
     image_space_2 = label_row.get_space(id="image-2-uuid", type_="image")
     assert image_space_2.space_id == "image-2-uuid"
-    assert image_space_2.layout_key == "back"
 
 
 def test_read_and_export_image_space_labels(ontology):
@@ -59,6 +57,6 @@ def test_read_and_export_image_space_labels(ontology):
     assert not DeepDiff(
         DATA_GROUP_WITH_TWO_IMAGES_LABELS,
         output_dict,
-        exclude_regex_paths=[r".*\['trackHash'\]"],
+        exclude_regex_paths=[r".*\['trackHash'\]", r".*\['child_info'\]"],
         ignore_order_func=lambda x: x.path().endswith("['objects']"),
     )

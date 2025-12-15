@@ -23,7 +23,7 @@ from encord.objects.spaces.annotation.geometric_annotation import (
     _SingleFrameClassificationAnnotation,
 )
 from encord.objects.spaces.base_space import Space
-from encord.objects.spaces.types import ChildInfo, ImageSpaceInfo, SpaceInfo
+from encord.objects.spaces.types import ImageSpaceInfo, SpaceInfo
 from encord.objects.spaces.video_space import FrameOverlapStrategy
 from encord.objects.types import (
     AttributeDict,
@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 class ImageSpace(Space):
     """Image space implementation for single-frame image annotations."""
 
-    def __init__(self, space_id: str, label_row: LabelRowV2, child_info: ChildInfo, width: int, height: int):
+    def __init__(self, space_id: str, label_row: LabelRowV2, width: int, height: int):
         super().__init__(space_id, label_row)
         self._objects_map: dict[str, ObjectInstance] = dict()
         self._classification_ontologies: set[str] = set()
@@ -53,20 +53,8 @@ class ImageSpace(Space):
         self._object_hash_to_annotation_data: dict[str, _GeometricAnnotationData] = dict()
         self._classification_hash_to_annotation_data: dict[str, _AnnotationData] = dict()
 
-        self._layout_key = child_info["layout_key"]
-        self._file_name = child_info["file_name"]
-
         self._width = width
         self._height = height
-
-    @property
-    def layout_key(self) -> str:
-        """Get the layout key for this image space.
-
-        Returns:
-            str: The layout key identifier.
-        """
-        return self._layout_key
 
     def put_object_instance(
         self,
@@ -433,10 +421,6 @@ class ImageSpace(Space):
             height=self._height,
             labels={
                 "0": frame_label,
-            },
-            child_info={
-                "layout_key": self._layout_key,
-                "file_name": self._file_name,
             },
         )
 

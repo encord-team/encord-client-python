@@ -32,20 +32,16 @@ def test_parse_spaces_before_initialise_labels(ontology):
     # Check getting space by id
     audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
     assert audio_space_1.space_id == "audio-1-uuid"
-    assert audio_space_1.layout_key == "english_transcription"
 
     audio_space_1 = label_row.get_space(layout_key="english_transcription", type_="audio")
     assert audio_space_1.space_id == "audio-1-uuid"
-    assert audio_space_1.layout_key == "english_transcription"
 
     # Check getting space by layout key
     audio_space_2 = label_row.get_space(id="audio-2-uuid", type_="audio")
     assert audio_space_2.space_id == "audio-2-uuid"
-    assert audio_space_2.layout_key == "french_transcription"
 
     audio_space_2 = label_row.get_space(layout_key="french_transcription", type_="audio")
     assert audio_space_2.space_id == "audio-2-uuid"
-    assert audio_space_2.layout_key == "french_transcription"
 
 
 def test_read_and_export_audio_space_labels(ontology):
@@ -68,6 +64,6 @@ def test_read_and_export_audio_space_labels(ontology):
     assert not DeepDiff(
         DATA_GROUP_WITH_TWO_AUDIO_LABELS,
         output_dict,
-        exclude_regex_paths=[r".*\['trackHash'\]"],
+        exclude_regex_paths=[r".*\['trackHash'\]", r".*\['child_info'\]"],
         ignore_order_func=lambda x: x.path().endswith("['objects']"),
     )

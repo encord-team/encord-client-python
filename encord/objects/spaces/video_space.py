@@ -33,7 +33,7 @@ from encord.objects.spaces.annotation.geometric_annotation import (
     _GeometricFrameObjectAnnotation,
 )
 from encord.objects.spaces.base_space import Space
-from encord.objects.spaces.types import ChildInfo, SpaceInfo, VideoSpaceInfo
+from encord.objects.spaces.types import SpaceInfo, VideoSpaceInfo
 from encord.objects.types import (
     AttributeDict,
     ClassificationAnswer,
@@ -62,7 +62,6 @@ class VideoSpace(Space):
         self,
         space_id: str,
         label_row: LabelRowV2,
-        child_info: ChildInfo,
         number_of_frames: int,
         width: int,
         height: int,
@@ -89,9 +88,6 @@ class VideoSpace(Space):
         self._objects_map: dict[str, ObjectInstance] = dict()
         self._classification_map: dict[str, ClassificationInstance] = dict()
         self._object_hash_to_dynamic_answer_manager: dict[str, DynamicAnswerManager] = dict()
-
-        self._layout_key = child_info["layout_key"]
-        self._file_name = child_info["file_name"]
 
         # Need to check if this is 1-indexed
         self._number_of_frames: int = number_of_frames
@@ -212,15 +208,6 @@ class VideoSpace(Space):
                 manual_annotation=manual_annotation,
             )
             existing_frame_annotation_data.coordinates = coordinates
-
-    @property
-    def layout_key(self) -> str:
-        """Get the layout key for this video space.
-
-        Returns:
-            str: The layout key identifier.
-        """
-        return self._layout_key
 
     def put_object_instance(
         self,
@@ -1112,8 +1099,4 @@ class VideoSpace(Space):
             number_of_frames=self._number_of_frames,
             width=self._width,
             height=self._height,
-            child_info={
-                "layout_key": self._layout_key,
-                "file_name": self._file_name,
-            },
         )

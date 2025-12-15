@@ -7,7 +7,7 @@ from encord.exceptions import LabelRowError
 from encord.objects.frames import Range, Ranges
 from encord.objects.spaces.annotation.base_annotation import _AnnotationMetadata
 from encord.objects.spaces.range_space.range_space import RangeSpace
-from encord.objects.spaces.types import ChildInfo, SpaceInfo, TextSpaceInfo
+from encord.objects.spaces.types import SpaceInfo, TextSpaceInfo
 from encord.objects.types import BaseFrameObject, ObjectAnswerForGeometric, ObjectAnswerForNonGeometric
 
 if TYPE_CHECKING:
@@ -17,11 +17,8 @@ if TYPE_CHECKING:
 class TextSpace(RangeSpace):
     """Text space implementation for range-based annotations."""
 
-    def __init__(self, space_id: str, label_row: LabelRowV2, child_info: ChildInfo):
+    def __init__(self, space_id: str, label_row: LabelRowV2):
         super().__init__(space_id, label_row)
-
-        self._layout_key = child_info["layout_key"]
-        self._file_name = child_info["file_name"]
 
     def _are_ranges_valid(self, ranges: Ranges) -> None:
         start_of_range, _end_of_range = self._get_start_and_end_of_ranges(ranges)
@@ -30,24 +27,11 @@ class TextSpace(RangeSpace):
         if start_of_range < 0:
             raise LabelRowError(f"Range starting with {start_of_range} is invalid. Negative ranges are not supported.")
 
-    @property
-    def layout_key(self) -> str:
-        """Get the layout key for this text space.
-
-        Returns:
-            str: The layout key identifier.
-        """
-        return self._layout_key
-
     def _to_space_dict(self) -> SpaceInfo:
         labels = self._build_labels_dict()
         return TextSpaceInfo(
             space_type=SpaceType.TEXT,
             labels=labels,
-            child_info={
-                "layout_key": self._layout_key,
-                "file_name": self._file_name,
-            },
         )
 
     def _parse_space_dict(
