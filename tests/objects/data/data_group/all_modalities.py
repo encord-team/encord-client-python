@@ -36,6 +36,61 @@ AUDIO_SPACE_INFO: AudioSpaceInfo = {
     "labels": {},
 }
 
+DATA_GROUP_NO_LABELS = {
+    "label_hash": "28f0e9d2-51e0-459d-8ffa-2e214da653a9",
+    "branch_name": "main",
+    "created_at": "Thu, 09 Feb 2023 14:12:03 UTC",
+    "last_edited_at": "Thu, 09 Feb 2023 14:12:03 UTC",
+    "data_hash": DATA_GROUP_DATA_HASH,
+    "dataset_hash": "b0d93919-a5e8-4418-8dd5-2c51e3977de8",
+    "dataset_title": "Dataset with all modalities",
+    "data_title": "all-modalities-group",
+    "data_type": "group",
+    "annotation_task_status": "QUEUED",
+    "is_shadow_data": False,
+    "object_answers": {},
+    "classification_answers": {},
+    "object_actions": {},
+    "label_status": "LABEL_IN_PROGRESS",
+    "spaces": {
+        "video-uuid": {
+            "space_type": SpaceType.VIDEO,
+            "title": "Video",
+            "width": 100,
+            "height": 100,
+            "number_of_frames": 10,
+            "labels": {},
+        },
+        "image-uuid": {
+            "space_type": SpaceType.IMAGE,
+            "title": "Image",
+            "width": 100,
+            "height": 100,
+            "labels": {},
+        },
+        "text-uuid": {
+            "space_type": SpaceType.TEXT,
+            "title": "Text",
+            "labels": {},
+        },
+        "audio-uuid": {
+            "space_type": SpaceType.AUDIO,
+            "title": "Audio",
+            "duration_ms": 10000,
+            "labels": {},
+        },
+    },
+    "data_units": {
+        DATA_GROUP_DATA_HASH: {
+            "data_hash": DATA_GROUP_DATA_HASH,
+            "data_sequence": 0,
+            "data_title": "",
+            "data_type": DataType.GROUP,
+            "labels": {},
+        }
+    },
+}
+
 
 DATA_GROUP_METADATA = LabelRowMetadata(
     label_hash="",
