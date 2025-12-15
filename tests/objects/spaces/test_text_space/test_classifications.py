@@ -17,14 +17,6 @@ text_classification = all_types_structure.get_child_by_hash("jPOcEsbw", Classifi
 checklist_classification = all_types_structure.get_child_by_hash("3DuQbFxo", Classification)
 
 
-@pytest.fixture
-def ontology():
-    ontology_structure = Mock()
-    ontology_structure.get_child_by_hash = all_types_structure.get_child_by_hash
-    ontology = Mock(structure=ontology_structure)
-    yield ontology
-
-
 def test_label_row_get_classification_instances_on_text_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)

@@ -7,9 +7,20 @@ from encord.objects import LabelRowV2
 from encord.orm.label_row import LabelRowMetadata
 from tests.objects.common import BASE_LABEL_ROW_METADATA
 from tests.objects.data import empty_video
+from tests.objects.data.all_ontology_types import all_ontology_types
+from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.audio_labels import EMPTY_AUDIO_LABELS
 from tests.objects.data.html_text_labels import EMPTY_HTML_TEXT_LABELS
 from tests.objects.data.plain_text import EMPTY_PLAIN_TEXT_LABELS
+
+
+@pytest.fixture
+def ontology():
+    """Mock ontology that uses all_types_structure for get_child_by_hash lookups."""
+    ontology_structure = Mock()
+    ontology_structure.get_child_by_hash = all_types_structure.get_child_by_hash
+    ontology = Mock(structure=ontology_structure)
+    yield ontology
 
 
 @pytest.fixture

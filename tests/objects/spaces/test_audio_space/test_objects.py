@@ -22,14 +22,6 @@ audio_obj_transcription_attribute_ontology_item = audio_obj_ontology_item.get_ch
 )
 
 
-@pytest.fixture
-def ontology():
-    ontology_structure = Mock()
-    ontology_structure.get_child_by_hash = all_types_structure.get_child_by_hash
-    ontology = Mock(structure=ontology_structure)
-    yield ontology
-
-
 def test_label_row_get_object_instances_on_space(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)

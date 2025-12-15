@@ -26,14 +26,6 @@ checklist_option_2 = checklist_classification.get_child_by_hash("a4r7nK9i", Opti
 radio_classification = all_types_structure.get_child_by_hash("NzIxNTU1", Classification)
 
 
-@pytest.fixture
-def ontology():
-    ontology_structure = Mock()
-    ontology_structure.get_child_by_hash = all_types_structure.get_child_by_hash
-    ontology = Mock(structure=ontology_structure)
-    yield ontology
-
-
 def test_label_row_get_classification_instances_on_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)

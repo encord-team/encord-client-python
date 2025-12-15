@@ -19,14 +19,6 @@ key_point_dynamic_text_attribute = keypoint_with_dynamic_attributes_ontology_ite
 )
 
 
-@pytest.fixture
-def ontology():
-    ontology_structure = Mock()
-    ontology_structure.get_child_by_hash = all_types_structure.get_child_by_hash
-    ontology = Mock(structure=ontology_structure)
-    yield ontology
-
-
 def test_add_dynamic_attributes_to_frames_on_object_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)

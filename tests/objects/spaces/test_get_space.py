@@ -1,18 +1,7 @@
 from unittest.mock import Mock
 
-import pytest
-
 from encord.objects import LabelRowV2
-from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.all_modalities import DATA_GROUP_METADATA
-
-
-@pytest.fixture
-def ontology():
-    ontology_structure = Mock()
-    ontology_structure.get_child_by_hash = all_types_structure.get_child_by_hash
-    ontology = Mock(structure=ontology_structure)
-    yield ontology
 
 
 def test_get_space_by_id(ontology):
