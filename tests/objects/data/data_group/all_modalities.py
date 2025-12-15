@@ -92,6 +92,260 @@ DATA_GROUP_NO_LABELS = {
 }
 
 
+DATA_GROUP_WITH_LABELS = {
+    "label_hash": "28f0e9d2-51e0-459d-8ffa-2e214da653a9",
+    "branch_name": "main",
+    "created_at": "Thu, 09 Feb 2023 14:12:03 UTC",
+    "last_edited_at": "Thu, 09 Feb 2023 14:12:03 UTC",
+    "data_hash": DATA_GROUP_DATA_HASH,
+    "dataset_hash": "b0d93919-a5e8-4418-8dd5-2c51e3977de8",
+    "dataset_title": "Dataset with all modalities",
+    "data_title": "all-modalities-group",
+    "data_type": "group",
+    "annotation_task_status": "QUEUED",
+    "is_shadow_data": False,
+    "object_answers": {
+        # Video/Image object (frame-based)
+        "video-box-object": {
+            "objectHash": "video-box-object",
+            "classifications": [],
+        },
+        "image-box-object": {
+            "objectHash": "image-box-object",
+            "classifications": [],
+        },
+        # Audio object (range-based)
+        "audio-object": {
+            "objectHash": "audio-object",
+            "classifications": [],
+            "range": [],
+            "createdBy": "user@example.com",
+            "createdAt": "Thu, 05 Dec 2024 15:24:19 UTC",
+            "lastEditedBy": "user@example.com",
+            "lastEditedAt": "Thu, 05 Dec 2024 15:24:44 UTC",
+            "manualAnnotation": True,
+            "featureHash": "KVfzNkFy",
+            "name": "audio object",
+            "color": "#A4FF00",
+            "shape": "audio",
+            "value": "audio_object",
+            "spaces": {
+                "audio-uuid": {
+                    "range": [[100, 200]],
+                },
+            },
+        },
+        # Text object (range-based)
+        "text-object": {
+            "objectHash": "text-object",
+            "classifications": [],
+            "range": [],
+            "createdBy": "user@example.com",
+            "createdAt": "Thu, 05 Dec 2024 15:24:19 UTC",
+            "lastEditedBy": "user@example.com",
+            "lastEditedAt": "Thu, 05 Dec 2024 15:24:44 UTC",
+            "manualAnnotation": True,
+            "featureHash": "textFeatureNodeHash",
+            "name": "text object",
+            "color": "#A4FF00",
+            "shape": "text",
+            "value": "text_object",
+            "spaces": {
+                "text-uuid": {
+                    "range": [[0, 4]],
+                },
+            },
+        },
+    },
+    "classification_answers": {
+        # Video classification (frame-based)
+        "video-classification": {
+            "classificationHash": "video-classification",
+            "featureHash": "jPOcEsbw",
+            "classifications": [
+                {
+                    "name": "Text classification",
+                    "value": "text_classification",
+                    "answers": "Video answer",
+                    "featureHash": "OxrtEM+v",
+                    "manualAnnotation": True,
+                }
+            ],
+        },
+        # Image classification (frame-based, uses checklist)
+        "image-classification": {
+            "classificationHash": "image-classification",
+            "featureHash": "3DuQbFxo",
+            "classifications": [
+                {
+                    "name": "Checklist classification",
+                    "value": "checklist_classification",
+                    "answers": [
+                        {
+                            "name": "Checklist classification answer 1",
+                            "value": "checklist_classification_answer_1",
+                            "featureHash": "fvLjF0qZ",
+                        }
+                    ],
+                    "featureHash": "9mwWr3OE",
+                    "manualAnnotation": True,
+                }
+            ],
+        },
+        # Audio classification (range-based)
+        "audio-classification": {
+            "classificationHash": "audio-classification",
+            "featureHash": "NzIxNTU1",
+            "classifications": [],
+            "createdBy": "user@example.com",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "lastEditedBy": "user@example.com",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "manualAnnotation": True,
+            "range": [],
+            "spaces": {
+                "audio-uuid": {
+                    "range": [],
+                },
+            },
+        },
+        # Text classification (range-based)
+        "text-classification": {
+            "classificationHash": "text-classification",
+            "featureHash": "textClass2",
+            "classifications": [
+                {
+                    "name": "Text classification 2",
+                    "value": "text_classification_2",
+                    "answers": "Text space answer",
+                    "featureHash": "textAttr2",
+                    "manualAnnotation": True,
+                }
+            ],
+            "createdBy": "user@example.com",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "lastEditedBy": "user@example.com",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "manualAnnotation": True,
+            "range": [],
+            "spaces": {
+                "text-uuid": {
+                    "range": [],
+                },
+            },
+        },
+    },
+    "object_actions": {},
+    "label_status": "LABEL_IN_PROGRESS",
+    "spaces": {
+        "video-uuid": {
+            "space_type": SpaceType.VIDEO,
+            "child_info": {"layout_key": "main-video", "file_name": "video.mp4"},
+            "number_of_frames": 10,
+            "width": 100,
+            "height": 100,
+            "labels": {
+                "0": {
+                    "objects": [
+                        {
+                            "name": "Box",
+                            "color": "#D33115",
+                            "shape": "bounding_box",
+                            "value": "box",
+                            "createdAt": "Tue, 17 Jan 2023 17:23:10 UTC",
+                            "createdBy": "user@example.com",
+                            "confidence": 1,
+                            "objectHash": "video-box-object",
+                            "lastEditedAt": "Wed, 18 Jan 2023 17:23:24 UTC",
+                            "featureHash": "MjI2NzEy",
+                            "manualAnnotation": True,
+                            "boundingBox": {"h": 0.1, "w": 0.1, "x": 0.1, "y": 0.1},
+                        },
+                    ],
+                    "classifications": [
+                        {
+                            "name": "Text classification",
+                            "value": "text_classification",
+                            "createdAt": "Tue, 17 Jan 2023 11:45:01 UTC",
+                            "createdBy": "user@example.com",
+                            "confidence": 1,
+                            "featureHash": "jPOcEsbw",
+                            "lastEditedAt": "Tue, 17 Jan 2023 11:45:01 UTC",
+                            "lastEditedBy": "user@example.com",
+                            "classificationHash": "video-classification",
+                            "manualAnnotation": True,
+                        },
+                    ],
+                },
+            },
+        },
+        "image-uuid": {
+            "space_type": SpaceType.IMAGE,
+            "child_info": {"layout_key": "main-image", "file_name": "image.png"},
+            "width": 100,
+            "height": 100,
+            "labels": {
+                "0": {
+                    "objects": [
+                        {
+                            "name": "Box",
+                            "color": "#D33115",
+                            "shape": "bounding_box",
+                            "value": "box",
+                            "createdAt": "Tue, 17 Jan 2023 17:23:10 UTC",
+                            "createdBy": "user@example.com",
+                            "confidence": 1,
+                            "objectHash": "image-box-object",
+                            "lastEditedAt": "Wed, 18 Jan 2023 17:23:24 UTC",
+                            "featureHash": "MjI2NzEy",
+                            "manualAnnotation": True,
+                            "boundingBox": {"h": 0.2, "w": 0.2, "x": 0.2, "y": 0.2},
+                        },
+                    ],
+                    "classifications": [
+                        {
+                            "name": "Checklist classification",
+                            "value": "checklist_classification",
+                            "createdAt": "Tue, 17 Jan 2023 11:45:01 UTC",
+                            "createdBy": "user@example.com",
+                            "confidence": 1,
+                            "featureHash": "3DuQbFxo",
+                            "lastEditedAt": "Tue, 17 Jan 2023 11:45:01 UTC",
+                            "lastEditedBy": "user@example.com",
+                            "classificationHash": "image-classification",
+                            "manualAnnotation": True,
+                        },
+                    ],
+                },
+            },
+        },
+        "text-uuid": {
+            "space_type": SpaceType.TEXT,
+            "child_info": {"layout_key": "main-text", "file_name": "text.txt"},
+            "labels": {},
+        },
+        "audio-uuid": {
+            "space_type": SpaceType.AUDIO,
+            "child_info": {"layout_key": "main-audio", "file_name": "audio.mp3"},
+            "duration_ms": 10000,
+            "labels": {},
+        },
+    },
+    "data_units": {
+        DATA_GROUP_DATA_HASH: {
+            "data_hash": DATA_GROUP_DATA_HASH,
+            "data_sequence": 0,
+            "data_title": "",
+            "data_type": DataType.GROUP,
+            "labels": {
+                "objects": [],
+                "classifications": [],
+            },
+        }
+    },
+}
+
+
 DATA_GROUP_METADATA = LabelRowMetadata(
     label_hash="",
     branch_name="main",

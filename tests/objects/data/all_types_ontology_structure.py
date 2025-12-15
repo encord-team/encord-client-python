@@ -454,6 +454,20 @@ all_types_structure = OntologyStructure(
                 )
             ],
         ),
+        Classification(
+            uid=5,
+            feature_node_hash="textClass2",
+            attributes=[
+                TextAttribute(
+                    uid=[5, 1],
+                    feature_node_hash="textAttr2",
+                    name="Text classification 2",
+                    required=False,
+                    archived=False,
+                    dynamic=False,
+                )
+            ],
+        ),
         GLOBAL_CLASSIFICATION,
     ],
 )
