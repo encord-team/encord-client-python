@@ -39,4 +39,9 @@ class AudioSpaceInfo(BaseSpaceInfo):
     duration_ms: int
 
 
-SpaceInfo = Union[VideoSpaceInfo, ImageSpaceInfo, AudioSpaceInfo, TextSpaceInfo]
+class HtmlSpaceInfo(BaseSpaceInfo):
+    space_type: Literal[SpaceType.HTML]
+    child_info: NotRequired[ChildInfo]
+
+
+SpaceInfo = Union[VideoSpaceInfo, ImageSpaceInfo, AudioSpaceInfo, TextSpaceInfo, HtmlSpaceInfo]

@@ -86,6 +86,7 @@ from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.spaces.annotation.base_annotation import _ClassificationAnnotation, _ObjectAnnotation
 from encord.objects.spaces.base_space import Space, SpaceT
+from encord.objects.spaces.html_space import HTMLSpace
 from encord.objects.spaces.image_space import ImageSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
@@ -796,12 +797,20 @@ class LabelRowV2:
     def get_space(self, *, layout_key: str, type_: Literal["text"]) -> TextSpace:
         pass
 
+    @overload
+    def get_space(self, *, id: str, type_: Literal["html"]) -> HTMLSpace:
+        pass
+
+    @overload
+    def get_space(self, *, layout_key: str, type_: Literal["html"]) -> HTMLSpace:
+        pass
+
     def get_space(
         self,
         *,
         id: Optional[str] = None,
         layout_key: Optional[str] = None,
-        type_: Literal["video", "image", "audio", "text"],
+        type_: Literal["video", "image", "audio", "text", "html"],
     ) -> Space:
         """Retrieves a single space which matches the specified id and type.
         Throws an exception if more than one or no space with the specified id and type is found.
@@ -2438,6 +2447,12 @@ class LabelRowV2:
                     label_row=self,
                 )
                 res[space_id] = text_space
+            elif space_info["space_type"] == SpaceType.HTML:
+                html_space = HTMLSpace(
+                    space_id=space_id,
+                    label_row=self,
+                )
+                res[space_id] = html_space
 
         return res
 
@@ -2466,6 +2481,11 @@ class LabelRowV2:
             elif space_info["space_type"] == SpaceType.TEXT:
                 text_space = self.get_space(id=space_id, type_="text")
                 text_space._parse_space_dict(
+                    space_info, object_answers=object_answers, classification_answers=classification_answers
+                )
+            elif space_info["space_type"] == SpaceType.HTML:
+                html_space = self.get_space(id=space_id, type_="html")
+                html_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
 

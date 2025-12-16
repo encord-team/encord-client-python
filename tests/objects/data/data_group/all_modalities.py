@@ -1,7 +1,7 @@
 import datetime
 
 from encord.constants.enums import DataType, SpaceType
-from encord.objects.spaces.types import AudioSpaceInfo, ImageSpaceInfo, TextSpaceInfo, VideoSpaceInfo
+from encord.objects.spaces.types import AudioSpaceInfo, HtmlSpaceInfo, ImageSpaceInfo, TextSpaceInfo, VideoSpaceInfo
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
 
 DATA_GROUP_DATA_HASH = "all-modalities-data-hash"
@@ -33,6 +33,12 @@ AUDIO_SPACE_INFO: AudioSpaceInfo = {
     "space_type": SpaceType.AUDIO,
     "child_info": {"layout_key": "main-audio", "file_name": "audio.mp3"},
     "duration_ms": 10000,
+    "labels": {},
+}
+
+HTML_SPACE_INFO: HtmlSpaceInfo = {
+    "space_type": SpaceType.HTML,
+    "child_info": {"layout_key": "main-html", "file_name": "document.html"},
     "labels": {},
 }
 
@@ -77,6 +83,11 @@ DATA_GROUP_NO_LABELS = {
             "space_type": SpaceType.AUDIO,
             "title": "Audio",
             "duration_ms": 10000,
+            "labels": {},
+        },
+        "html-uuid": {
+            "space_type": SpaceType.HTML,
+            "title": "HTML",
             "labels": {},
         },
     },
@@ -330,6 +341,11 @@ DATA_GROUP_WITH_LABELS = {
             "duration_ms": 10000,
             "labels": {},
         },
+        "html-uuid": {
+            "space_type": SpaceType.HTML,
+            "child_info": {"layout_key": "main-html", "file_name": "document.html"},
+            "labels": {},
+        },
     },
     "data_units": {
         DATA_GROUP_DATA_HASH: {
@@ -375,5 +391,6 @@ DATA_GROUP_METADATA = LabelRowMetadata(
         "image-uuid": IMAGE_SPACE_INFO,
         "text-uuid": TEXT_SPACE_INFO,
         "audio-uuid": AUDIO_SPACE_INFO,
+        "html-uuid": HTML_SPACE_INFO,
     },
 )
