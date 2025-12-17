@@ -1,4 +1,6 @@
-from typing import Literal, NotRequired, TypedDict, Union
+from typing import Literal, TypedDict, Union
+
+from typing_extensions import NotRequired
 
 from encord.constants.enums import SpaceType
 from encord.objects.types import LabelBlob
