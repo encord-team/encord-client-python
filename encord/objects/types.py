@@ -222,6 +222,27 @@ class ObjectAction(TypedDict):
     actions: List[DynamicAttributeObject]
 
 
+class LabelRowDict(TypedDict, total=False):
+    """Work in progress type definition of a label row"""
+
+    label_hash: str
+    branch_name: str
+    created_at: str
+    last_edited_at: str
+    data_hash: str
+    dataset_hash: str
+    dataset_title: str
+    data_title: str
+    data_type: str
+    annotation_task_status: str
+    is_shadow_data: bool
+    label_status: str
+    object_actions: Dict
+    object_answers: Dict
+    classification_answers: Dict[str, ClassificationAnswer]
+    data_units: Dict
+
+
 def _is_containing_metadata(answer: ClassificationAnswer) -> bool:
     """Check if the classification answer contains necessary metadata fields."""
     return answer.get("createdBy") is not None

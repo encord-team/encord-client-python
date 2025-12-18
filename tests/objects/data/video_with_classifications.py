@@ -1,6 +1,9 @@
+from copy import deepcopy
+
+from encord.objects.types import LabelRowDict
 from tests.objects.data.all_types_ontology_structure import RADIO_CLASSIFICATION
 
-labels = {
+labels: LabelRowDict = {
     "label_hash": "28f0e9d2-51e0-459d-8ffa-2e214da653a9",
     "branch_name": "main",
     "created_at": "Thu, 09 Feb 2023 14:12:03 UTC",
@@ -84,3 +87,12 @@ labels = {
         }
     },
 }
+
+labels_without_answer_meta = deepcopy(labels)
+for answer in labels_without_answer_meta["classification_answers"].values():
+    answer.pop("createdAt")
+    answer.pop("createdBy")
+    answer.pop("lastEditedAt")
+    answer.pop("lastEditedBy")
+    answer.pop("manualAnnotation")
+    answer.pop("range")
