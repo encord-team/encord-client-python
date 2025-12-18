@@ -64,7 +64,6 @@ from encord.objects.coordinates import (
     RotatableBoundingBoxCoordinates,
     SkeletonCoordinates,
     TextCoordinates,
-    Visibility,
     get_coordinates_from_frame_object_dict,
 )
 from encord.objects.frames import (
@@ -72,9 +71,7 @@ from encord.objects.frames import (
     Range,
     Ranges,
     frames_class_to_frames_list,
-    frames_to_ranges,
     ranges_list_to_ranges,
-    ranges_to_list,
 )
 from encord.objects.html_node import HtmlRange
 from encord.objects.metadata import DataGroupMetadata, DICOMSeriesMetadata, DICOMSliceMetadata
@@ -89,16 +86,14 @@ from encord.objects.types import (
     FrameClassification,
     FrameObject,
     ObjectAction,
-    ObjectAnswer,
     ObjectAnswerForNonGeometric,
-    is_containing_metadata,
+    _is_containing_metadata,
 )
 from encord.objects.utils import _lower_snake_case
 from encord.ontology import Ontology
 from encord.orm import storage as orm_storage
 from encord.orm.label_row import (
     AnnotationTaskStatus,
-    LabelRow,
     LabelRowMetadata,
     LabelStatus,
     WorkflowGraphNode,
@@ -2247,7 +2242,10 @@ class LabelRowV2:
         classification_answers = label_row_dict["classification_answers"]
         object_answers = label_row_dict["object_answers"]
 
-        self._add_classification_instances_from_classifications_without_frames(classification_answers)
+        # Attempt to instantiate all classifications - ranged only or with frames
+        for classification_answer in classification_answers.values():
+            if classification_instance := self._create_new_classification_instance_from_answer(classification_answer):
+                self.add_classification_instance(classification_instance)
 
         for data_unit in label_row_dict["data_units"].values():
             data_type = DataType(label_row_dict["data_type"])
@@ -2256,7 +2254,7 @@ class LabelRowV2:
             if data_type == DataType.IMG_GROUP or data_type == DataType.IMAGE:
                 frame = int(data_unit["data_sequence"])
                 self._add_object_instances_from_objects(labels.get("objects", []), frame)
-                self._add_classification_instances_from_classifications(
+                self._add_classification_instances_from_classifications_frame(
                     labels.get("classifications", []),
                     classification_answers,
                     frame,
@@ -2273,7 +2271,7 @@ class LabelRowV2:
                 for frame, frame_data in labels.items():
                     frame_num = int(frame)
                     self._add_object_instances_from_objects(frame_data["objects"], frame_num)
-                    self._add_classification_instances_from_classifications(
+                    self._add_classification_instances_from_classifications_frame(
                         frame_data["classifications"], classification_answers, frame_num
                     )
                     self._add_frame_metadata(frame_num, frame_data.get("metadata"))
@@ -2282,7 +2280,7 @@ class LabelRowV2:
             elif data_type == DataType.GROUP:
                 for frame, frame_data in labels.items():
                     frame_num = int(frame)
-                    self._add_classification_instances_from_classifications(
+                    self._add_classification_instances_from_classifications_frame(
                         frame_data["classifications"], classification_answers, frame_num
                     )
                     self._add_frame_metadata(frame_num, frame_data.get("metadata"))
@@ -2505,7 +2503,7 @@ class LabelRowV2:
             is_deleted=object_frame_instance_info.is_deleted,
         )
 
-    def _add_classification_instances_from_classifications(
+    def _add_classification_instances_from_classifications_frame(
         self,
         classifications_list: List[FrameClassification],
         classification_answers: Dict[str, ClassificationAnswer],
@@ -2515,18 +2513,9 @@ class LabelRowV2:
             classification_hash = frame_classification_label["classificationHash"]
             if classification_hash in self._classifications_map:
                 self._add_frames_to_classification_instance(frame_classification_label, frame)
-            elif classification_instance := self._create_new_classification_instance(
+            elif classification_instance := self._create_new_classification_instance_from_frame(
                 frame_classification_label, frame, classification_answers
             ):
-                self.add_classification_instance(classification_instance)
-
-    def _add_classification_instances_from_classifications_without_frames(
-        self,
-        classification_answers: dict[str, ClassificationAnswer],
-    ):
-        for classification_answer in classification_answers.values():
-            if is_containing_metadata(classification_answer):
-                classification_instance = self._create_new_classification_instance_with_ranges(classification_answer)
                 self.add_classification_instance(classification_instance)
 
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
@@ -2548,7 +2537,7 @@ class LabelRowV2:
             frame_level_data[frame_number] = frame_level_image_group_data
         return frame_level_data
 
-    def _create_new_classification_instance(
+    def _create_new_classification_instance_from_frame(
         self,
         frame_classification_label: FrameClassification,
         frame: int,
@@ -2582,24 +2571,27 @@ class LabelRowV2:
 
         return None
 
-    # This is only to be used by non-frame modalities (e.g. Audio)
-    def _create_new_classification_instance_with_ranges(
+    def _create_new_classification_instance_from_answer(
         self, classification_answer: ClassificationAnswer
-    ) -> ClassificationInstance:
+    ) -> ClassificationInstance | None:
+        """Create a ClassificationInstance from a classification answer if sufficient metadata is present"""
+        if not _is_containing_metadata(classification_answer):
+            return None
+
         feature_hash = classification_answer["featureHash"]
         classification_hash = classification_answer["classificationHash"]
 
         label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Classification)
 
         range_view = ClassificationInstance.FrameData.from_dict(classification_answer)
+        is_data_type_range_only = not is_geometric(self.data_type)
 
         classification_instance = ClassificationInstance(
-            label_class, classification_hash=classification_hash, range_only=True
+            label_class, classification_hash=classification_hash, range_only=is_data_type_range_only
         )
 
         frame_ranges = classification_answer.get("range", [])
         parsed_frame_ranges = ranges_list_to_ranges(frame_ranges or [])
-
         classification_instance.set_for_frames(
             frames=parsed_frame_ranges,
             created_at=range_view.created_at,
@@ -2611,6 +2603,7 @@ class LabelRowV2:
             reviews=range_view.reviews,
             overwrite=True,  # Always overwrite during label row dict parsing, as older dicts known to have duplicates
         )
+
         answers_list = classification_answer["classifications"]
         self._add_static_answers_from_dict(classification_instance, answers_list)
 

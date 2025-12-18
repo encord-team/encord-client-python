@@ -222,6 +222,6 @@ class ObjectAction(TypedDict):
     actions: List[DynamicAttributeObject]
 
 
-def is_containing_metadata(answer: ClassificationAnswer) -> bool:
+def _is_containing_metadata(answer: ClassificationAnswer) -> bool:
     """Check if the classification answer contains necessary metadata fields."""
     return answer.get("createdBy") is not None
