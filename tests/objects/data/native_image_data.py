@@ -1,3 +1,5 @@
+from tests.objects.data.all_types_ontology_structure import RADIO_CLASSIFICATION
+
 labels = {
     "label_hash": "66454013-7382-4418-a9ca-41c089d8997f",
     "branch_name": "main",
@@ -135,7 +137,7 @@ labels = {
                         "createdAt": "Tue, 17 Jan 2023 11:44:53 UTC",
                         "createdBy": "denis@cord.tech",
                         "confidence": 1,
-                        "featureHash": "NzIxNTU1",
+                        "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
                         "lastEditedAt": "Tue, 17 Jan 2023 11:44:53 UTC",
                         "lastEditedBy": "denis@cord.tech",
                         "classificationHash": "3AqiIPrF",
@@ -237,7 +239,7 @@ labels = {
     "classification_answers": {
         "3AqiIPrF": {
             "classificationHash": "3AqiIPrF",
-            "featureHash": "NzIxNTU1",
+            "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
             "classifications": [
                 {
                     "name": "cl 1 2 text",

@@ -33,7 +33,7 @@ from encord.objects.options import Option
 from encord.orm.label_row import LabelRowMetadata, LabelStatus
 from tests.objects.common import FAKE_LABEL_ROW_METADATA
 from tests.objects.data.all_ontology_types import all_ontology_types
-from tests.objects.data.all_types_ontology_structure import all_types_structure
+from tests.objects.data.all_types_ontology_structure import RADIO_CLASSIFICATION, all_types_structure
 from tests.objects.data.audio_labels import EMPTY_AUDIO_LABELS
 from tests.objects.data.empty_image_group import empty_image_group_labels
 from tests.objects.test_label_structure_converter import ontology_from_dict
@@ -76,7 +76,7 @@ dynamic_radio_option_2 = all_types_structure.get_child_by_hash("9TcxMjAy", Optio
 
 text_classification = all_types_structure.get_child_by_hash("jPOcEsbw", Classification)
 text_classification_attribute = all_types_structure.get_child_by_hash("OxrtEM+v", TextAttribute)
-radio_classification = all_types_structure.get_child_by_hash("NzIxNTU1", Classification)
+radio_classification = all_types_structure.get_child_by_hash(RADIO_CLASSIFICATION.feature_node_hash, Classification)
 radio_classification_option_1 = all_types_structure.get_child_by_hash("MTcwMjM5", Option)
 radio_classification_option_2 = all_types_structure.get_child_by_hash("MjUzMTg1", Option)
 radio_classification_option_2_text = all_types_structure.get_child_by_hash("MTg0MjIw", TextAttribute)
