@@ -2,7 +2,7 @@ import datetime
 
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
 
-FAKE_LABEL_ROW_METADATA = LabelRowMetadata(
+BASE_LABEL_ROW_METADATA = LabelRowMetadata(
     label_hash="",
     branch_name="main",
     created_at=datetime.datetime.now(),

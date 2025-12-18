@@ -13,7 +13,7 @@ from encord.objects import ClassificationInstance, OntologyStructure
 from encord.objects.ontology_labels_impl import LabelRowV2
 from encord.orm.label_row import LabelRowMetadata
 from encord.orm.skeleton_template import SkeletonTemplate
-from tests.objects.common import FAKE_LABEL_ROW_METADATA
+from tests.objects.common import BASE_LABEL_ROW_METADATA
 from tests.objects.data import (
     data_1,
     empty_video,
@@ -93,7 +93,7 @@ def assert_json_serializable(data: dict):
 
 
 def test_serialise_image_group_with_classifications():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = None
     label_row_metadata_dict["frames_per_second"] = None
     label_row_metadata_dict["number_of_frames"] = 5
@@ -118,7 +118,7 @@ def test_serialise_image_group_with_classifications():
 
 
 def test_serialise_video():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 153.16
     label_row_metadata_dict["frames_per_second"] = 25.0
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
@@ -137,7 +137,7 @@ def test_serialise_video():
 
 
 def test_serialise_image_with_object_answers():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = None
     label_row_metadata_dict["frames_per_second"] = None
     label_row_metadata_dict["number_of_frames"] = 1
@@ -155,7 +155,7 @@ def test_serialise_image_with_object_answers():
 
 
 def test_serialise_audio() -> None:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
     label_row_metadata_dict["data_type"] = "AUDIO"
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
@@ -172,7 +172,7 @@ def test_serialise_audio() -> None:
 
 
 def test_serialise_audio_objects() -> None:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
     label_row_metadata_dict["data_type"] = "AUDIO"
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
@@ -189,7 +189,7 @@ def test_serialise_audio_objects() -> None:
 
 
 def test_serialise_html_text():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
     label_row_metadata_dict["data_type"] = "plain_text"
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
@@ -206,7 +206,7 @@ def test_serialise_html_text():
 
 
 def test_serialise_plain_text():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
     label_row_metadata_dict["data_type"] = "plain_text"
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
@@ -223,7 +223,7 @@ def test_serialise_plain_text():
 
 
 def test_serialise_dicom_with_dynamic_classifications():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = None
     label_row_metadata_dict["frames_per_second"] = None
     label_row_metadata_dict["number_of_frames"] = 5
@@ -256,7 +256,7 @@ def test_serialise_dicom_with_dynamic_classifications():
 
 
 def test_dynamic_classifications():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 0.08
     label_row_metadata_dict["frames_per_second"] = 25.0
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
@@ -276,7 +276,7 @@ def test_dynamic_classifications():
 def test_dynamic_classification_with_multiple_checklist_answers_as_constructed_by_ui():
     # The way how UI and SDK represent the checklist answers is somewhat different,
     # So testing that SDK can deal with whatever UI throws at it.
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 0.08
     label_row_metadata_dict["frames_per_second"] = 25.0
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
@@ -294,7 +294,7 @@ def test_dynamic_classification_with_multiple_checklist_answers_as_constructed_b
 
 
 def test_uninitialised_label_row():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 0.08
     label_row_metadata_dict["frames_per_second"] = 25.0
     label_row_metadata_dict["label_hash"] = None
@@ -318,7 +318,7 @@ def test_uninitialised_label_row():
 
 
 def test_label_row_with_reviews():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = None
     label_row_metadata_dict["frames_per_second"] = None
     label_row_metadata_dict["number_of_frames"] = 5
@@ -345,7 +345,7 @@ def test_classifications_with_no_answers_equivalent_to_no_classification():
     # Testing backward compatibility with label rows that might have classifications with no answers
     # This is not a part of the current behaviour, but we still have label rows like that in the wild
 
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = None
     label_row_metadata_dict["frames_per_second"] = None
     label_row_metadata_dict["number_of_frames"] = 1
@@ -358,7 +358,7 @@ def test_classifications_with_no_answers_equivalent_to_no_classification():
 
 
 def test_skeleton_template_coordinates():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = None
     label_row_metadata_dict["frames_per_second"] = None
     label_row_metadata_dict["number_of_frames"] = 1
@@ -393,7 +393,7 @@ def test_parse_serialise_global_classification() -> None:
     """
     Test that we can parse and serialise a global classification to match the expected dict.
     """
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 0.08  # to match
     label_row_metadata_dict["frames_per_second"] = 25.0
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
@@ -412,7 +412,7 @@ def test_serialise_global_classification() -> None:
     """
     Test that we can serialise a global classification from scratch to match the expected dict.
     """
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 0.08  # to match
     label_row_metadata_dict["frames_per_second"] = 25.0
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
@@ -441,7 +441,7 @@ def test_serialise_global_classification() -> None:
 
 
 def test_classification_with_frames_and_answer() -> None:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 0.08  # update to match video_with_classifications.labels
     label_row_metadata_dict["frames_per_second"] = 25.0  # update to match video_with_classifications.labels
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
@@ -457,7 +457,7 @@ def test_classification_with_frames_and_answer() -> None:
 
 
 def test_classification_with_frames() -> None:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 0.08  # update to match video_with_classifications.labels
     label_row_metadata_dict["frames_per_second"] = 25.0  # update to match video_with_classifications.labels
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
