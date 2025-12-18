@@ -297,10 +297,11 @@ class ObjectInstance:
         grouped_answers = defaultdict(list)
 
         for answer_dict in answers_list:
-            attribute = _get_attribute_by_hash(answer_dict["featureHash"], self._ontology_object.attributes)
+            feature_hash = answer_dict["featureHash"]
+            attribute = _get_attribute_by_hash(feature_hash, self._ontology_object.attributes)
             if attribute is None:
                 raise LabelRowError(
-                    "One of the attributes does not exist in the ontology. Cannot create a valid LabelRow."
+                    f"Attribute with id [{feature_hash}] does not exist in the ontology. Cannot create a valid LabelRow."
                 )
             if not self._is_attribute_valid_child_of_object_instance(attribute):
                 raise LabelRowError(
@@ -369,6 +370,7 @@ class ObjectInstance:
     def _set_answer_from_grouped_list(
         self, attribute: Attribute, answers_list: List[AttributeDict | DynamicAttributeObject]
     ) -> None:
+        track_hash: str | None = None
         if isinstance(attribute, ChecklistAttribute):
             if not attribute.dynamic:
                 options = []
@@ -379,7 +381,7 @@ class ObjectInstance:
                         option = attribute.get_child_by_hash(feature_hash, type_=Option)
                         options.append(option)
 
-                self._set_answer_unsafe(options, attribute, None)
+                self._set_answer_unsafe(options, attribute, None, track_hash=track_hash)
             else:
                 dynamic_answers_list = cast(List[DynamicAttributeObject], answers_list)
                 all_feature_hashes: Set[str] = set()
@@ -387,6 +389,7 @@ class ObjectInstance:
                 for answer_dict in dynamic_answers_list:
                     # TODO: Pretty sure this was a bug before, because answers could also be a string
                     answers = answer_dict["answers"]
+                    track_hash = answer_dict.get("trackHash")
                     if isinstance(answers, list):
                         feature_hashes: Set[str] = {answer["featureHash"] for answer in answers}
                         all_feature_hashes.update(feature_hashes)
@@ -400,7 +403,7 @@ class ObjectInstance:
 
                 for frame_range, feature_hashes in self._merge_answers_to_non_overlapping_ranges(ranges):
                     options = [options_cache[feature_hash] for feature_hash in feature_hashes]
-                    self._set_answer_unsafe(options, attribute, [frame_range])
+                    self._set_answer_unsafe(options, attribute, [frame_range], track_hash=track_hash)
         else:
             for answer in answers_list:
                 self._set_answer_from_dict(answer, attribute)
@@ -617,6 +620,8 @@ class ObjectInstance:
 
         if self._parent:
             self._parent._remove_from_frame_to_hashes_map(frames_list, self.object_hash)
+            if len(self._frames_to_instance_data) == 0:
+                del self._parent._objects_map[self.object_hash]
 
     def is_valid(self) -> None:
         """Check if the ObjectInstance is valid.
@@ -796,7 +801,7 @@ class ObjectInstance:
 
             return ObjectInstance.FrameInfo(
                 created_at=parse_datetime(d["createdAt"]),
-                created_by=d["createdBy"],
+                created_by=d.get("createdBy"),
                 last_edited_at=last_edited_at,
                 last_edited_by=d.get("lastEditedBy"),
                 confidence=d["confidence"],
@@ -861,16 +866,21 @@ class ObjectInstance:
         answer: Union[str, NumericAnswerValue, Option, Iterable[Option]],
         attribute: Attribute,
         ranges: Optional[Ranges],
+        track_hash: Optional[str] = None,
     ) -> None:
         if attribute.dynamic:
-            self._dynamic_answer_manager.set_answer(answer, attribute, frames=ranges)
+            frames = sorted(self._frames_to_instance_data.keys()) if ranges is None else ranges
+
+            self._dynamic_answer_manager._set_answer(answer, attribute, frames=frames, track_hash=track_hash)
         else:
             static_answer = self._static_answer_map[attribute.feature_node_hash]
             static_answer.set(answer)
 
     def _set_answer_from_dict(self, answer_dict: AttributeDict | DynamicAttributeObject, attribute: Attribute) -> None:
+        track_hash: str | None = None
         if attribute.dynamic:
             dynamic_answer_dict = cast(DynamicAttributeObject, answer_dict)
+            track_hash = dynamic_answer_dict["trackHash"]
             ranges = ranges_list_to_ranges(dynamic_answer_dict["range"])
         else:
             ranges = None
@@ -878,13 +888,13 @@ class ObjectInstance:
         answers = answer_dict["answers"]
         if isinstance(attribute, TextAttribute):
             text_answer = cast(str, answers)
-            self._set_answer_unsafe(text_answer, attribute, ranges)
+            self._set_answer_unsafe(text_answer, attribute, ranges, track_hash=track_hash)
         elif isinstance(attribute, RadioAttribute):
             radio_option_answers = cast(List[AnswerDict], answers)
             if len(radio_option_answers) == 1:
                 feature_hash = radio_option_answers[0]["featureHash"]
                 option = attribute.get_child_by_hash(feature_hash, type_=Option)
-                self._set_answer_unsafe(option, attribute, ranges)
+                self._set_answer_unsafe(option, attribute, ranges, track_hash=track_hash)
         elif isinstance(attribute, ChecklistAttribute):
             checklist_answers = cast(List[AnswerDict], answers)
 
@@ -893,14 +903,14 @@ class ObjectInstance:
                 feature_hash = answer["featureHash"]
                 option = attribute.get_child_by_hash(feature_hash, type_=Option)
                 options.append(option)
-            self._set_answer_unsafe(options, attribute, ranges)
+            self._set_answer_unsafe(options, attribute, ranges, track_hash=track_hash)
         elif isinstance(attribute, NumericAttribute):
             value = cast(float, answer_dict["answers"])
 
             if not isinstance(value, float) and not isinstance(value, int):
                 raise LabelRowError(f"The answer for a numeric attribute must be a float or an int. Found {value}.")
 
-            self._set_answer_unsafe(value, attribute, ranges)
+            self._set_answer_unsafe(value, attribute, ranges, track_hash=track_hash)
         else:
             raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
 
@@ -1056,7 +1066,11 @@ class DynamicAnswerManager:
         self._set_answer(answer, attribute, frames)
 
     def _set_answer(
-        self, answer: Union[str, NumericAnswerValue, Option, Iterable[Option]], attribute: Attribute, frames: Frames
+        self,
+        answer: Union[str, NumericAnswerValue, Option, Iterable[Option]],
+        attribute: Attribute,
+        frames: Frames,
+        track_hash: str | None = None,
     ) -> None:
         frame_list = frames_class_to_frames_list(frames)
         for frame in frame_list:
@@ -1066,6 +1080,9 @@ class DynamicAnswerManager:
 
         default_answer = get_default_answer_from_attribute(attribute)
         default_answer.set(answer)
+
+        if track_hash:
+            default_answer._track_hash = track_hash
 
         frame_list = frames_class_to_frames_list(frames)
         for frame in frame_list:
