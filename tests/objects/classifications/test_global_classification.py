@@ -7,7 +7,7 @@ import pytest
 from encord.exceptions import LabelRowError
 from encord.objects import Classification, ClassificationInstance, FlatOption, LabelRowV2
 from encord.orm.label_row import LabelRowMetadata
-from tests.objects.common import FAKE_LABEL_ROW_METADATA
+from tests.objects.common import BASE_LABEL_ROW_METADATA
 from tests.objects.data.all_ontology_types import global_classification_dict
 from tests.objects.data.all_types_ontology_structure import GLOBAL_CLASSIFICATION, all_types_structure
 from tests.objects.data.empty_image_group import empty_image_group_labels
@@ -38,7 +38,7 @@ def test_ontology_level_serde() -> None:
 
 
 def test_global_classification_image_group(all_types_ontology) -> None:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = None  # not a thing in image groups
     label_row_metadata_dict["duration"] = None  # not a thing in image groups
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
@@ -78,7 +78,7 @@ def test_global_classification_image_group(all_types_ontology) -> None:
 
 
 def test_global_classification_override(all_types_ontology) -> None:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
     label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)

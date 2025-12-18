@@ -31,7 +31,7 @@ from encord.objects.frames import Range
 from encord.objects.html_node import HtmlNode, HtmlRange
 from encord.objects.options import Option
 from encord.orm.label_row import LabelRowMetadata, LabelStatus
-from tests.objects.common import FAKE_LABEL_ROW_METADATA
+from tests.objects.common import BASE_LABEL_ROW_METADATA
 from tests.objects.data.all_ontology_types import all_ontology_types
 from tests.objects.data.all_types_ontology_structure import RADIO_CLASSIFICATION, all_types_structure
 from tests.objects.data.audio_labels import EMPTY_AUDIO_LABELS
@@ -145,7 +145,7 @@ def test_create_object_instance_one_coordinate_multiframe():
 
 
 def test_create_a_label_row_from_empty_image_group_label_row_dict(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), ontology)
 
     with pytest.raises(LabelRowError):
         label_row.get_classification_instances()
@@ -157,7 +157,7 @@ def test_create_a_label_row_from_empty_image_group_label_row_dict(ontology):
 
 
 def test_add_object_instance_to_label_row(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     object_instance = ObjectInstance(box_ontology_item)
@@ -175,7 +175,7 @@ def test_add_object_instance_to_label_row(ontology):
 
 
 def test_add_remove_access_object_instances_in_label_row(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     object_instance_1 = ObjectInstance(box_ontology_item)
@@ -213,7 +213,7 @@ def test_add_remove_access_object_instances_in_label_row(ontology):
 
 
 def test_filter_for_objects(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     label_box = ObjectInstance(box_ontology_item)
@@ -264,7 +264,7 @@ def test_add_wrong_coordinates():
 
 
 def test_get_object_instances_by_frames(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     label_box = ObjectInstance(box_ontology_item)
@@ -303,10 +303,10 @@ def test_get_object_instances_by_frames(ontology):
 
 
 def test_adding_object_instance_to_multiple_frames_fails(ontology):
-    label_row_1 = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row_1 = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), ontology)
     label_row_1.from_labels_dict(empty_image_group_labels)
 
-    label_row_2 = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row_2 = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), ontology)
     label_row_2.from_labels_dict(empty_image_group_labels)
 
     label_box = ObjectInstance(box_ontology_item)
@@ -416,7 +416,7 @@ def test_update_remove_object_instance_coordinates():
 
 
 def test_removing_coordinates_from_object_removes_it_from_parent(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     label_box = ObjectInstance(box_ontology_item)
@@ -601,7 +601,7 @@ def test_classification_instances_frame_view():
 
 
 def test_add_and_get_classification_instances_to_label_row(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     classification_instance_1 = ClassificationInstance(text_classification)
@@ -654,7 +654,7 @@ def test_add_and_get_classification_instances_to_label_row(ontology):
 
 # TODO ED-302: Refactor to make more readable
 def test_add_and_get_classification_instances_to_audio_label_row(ontology):
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
     label_row_metadata_dict["data_type"] = "AUDIO"
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
@@ -970,7 +970,7 @@ def test_label_status_forwards_compatibility():
 
 
 def test_frame_view(ontology) -> None:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 25
     label_row_metadata_dict["duration"] = 0.2
     label_row_metadata_dict["number_of_frames"] = 5
@@ -1020,7 +1020,7 @@ def test_frame_view(ontology) -> None:
 
 
 def test_classification_can_be_added_edited_and_removed(ontology):
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 25
     label_row_metadata_dict["duration"] = 0.2
     label_row_metadata_dict["number_of_frames"] = 2
@@ -1094,7 +1094,7 @@ def test_both_polygons_supported(empty_video_label_row: LabelRowV2):
 
 
 def test_non_range_classification_cannot_be_added_to_audio_label_row(ontology):
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
     label_row_metadata_dict["data_type"] = "AUDIO"
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
