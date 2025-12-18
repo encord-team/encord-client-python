@@ -7,7 +7,7 @@ inputs:
     required: true
   uv-version:
     description: "UV version to use"
-    default: 0.7.12
+    default: 0.9.16
     required: false
 
 runs:

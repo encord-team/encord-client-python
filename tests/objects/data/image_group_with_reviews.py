@@ -1,3 +1,5 @@
+from tests.objects.data.all_types_ontology_structure import RADIO_CLASSIFICATION
+
 labels = {
     "label_hash": "6979f252-ba3a-4beb-89bd-f00d0ff5eb85",
     "branch_name": "main",
@@ -334,7 +336,7 @@ labels = {
                         "createdAt": "Fri, 10 Feb 2023 11:08:18 UTC",
                         "createdBy": "denis@cord.tech",
                         "confidence": 1,
-                        "featureHash": "NzIxNTU1",
+                        "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
                         "lastEditedAt": "Fri, 10 Feb 2023 11:08:18 UTC",
                         "classificationHash": "hLs1sDAr",
                         "manualAnnotation": True,
@@ -351,7 +353,7 @@ labels = {
                                     "name": "Radio classification 1",
                                     "range": [[0, 0]],
                                     "indexHash": "b55c46d5-54af-4cac-8e1f-25ba741925fa",
-                                    "featureHash": "NzIxNTU1",
+                                    "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
                                     "classifications": [
                                         {
                                             "name": "Radio classification 1",
@@ -396,7 +398,7 @@ labels = {
                                     "range": [[0, 0]],
                                     "actions": [],
                                     "indexHash": "b55c46d5-54af-4cac-8e1f-25ba741925fa",
-                                    "featureHash": "NzIxNTU1",
+                                    "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
                                     "classifications": [
                                         {
                                             "name": "cl 1 2 text",
@@ -437,7 +439,7 @@ labels = {
                                                 "name": "Radio classification 1",
                                                 "range": [[0, 0]],
                                                 "indexHash": "b55c46d5-54af-4cac-8e1f-25ba741925fa",
-                                                "featureHash": "NzIxNTU1",
+                                                "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
                                                 "classifications": [
                                                     {
                                                         "name": "Radio classification 1",
@@ -495,7 +497,7 @@ labels = {
                                     "range": [[0, 0]],
                                     "actions": [],
                                     "indexHash": "b55c46d5-54af-4cac-8e1f-25ba741925fa",
-                                    "featureHash": "NzIxNTU1",
+                                    "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
                                     "classifications": [
                                         {
                                             "name": "cl 1 2 text",
@@ -536,7 +538,7 @@ labels = {
                                                 "name": "Radio classification 1",
                                                 "range": [[0, 0]],
                                                 "indexHash": "b55c46d5-54af-4cac-8e1f-25ba741925fa",
-                                                "featureHash": "NzIxNTU1",
+                                                "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
                                                 "classifications": [
                                                     {
                                                         "name": "Radio classification 1",
@@ -581,7 +583,7 @@ labels = {
                                                 "range": [[0, 0]],
                                                 "actions": [],
                                                 "indexHash": "b55c46d5-54af-4cac-8e1f-25ba741925fa",
-                                                "featureHash": "NzIxNTU1",
+                                                "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
                                                 "classifications": [
                                                     {
                                                         "name": "cl 1 2 text",
@@ -622,7 +624,7 @@ labels = {
                                                             "name": "Radio classification 1",
                                                             "range": [[0, 0]],
                                                             "indexHash": "b55c46d5-54af-4cac-8e1f-25ba741925fa",
-                                                            "featureHash": "NzIxNTU1",
+                                                            "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
                                                             "classifications": [
                                                                 {
                                                                     "name": "Radio classification 1",
@@ -1227,7 +1229,7 @@ labels = {
     "classification_answers": {
         "hLs1sDAr": {
             "classificationHash": "hLs1sDAr",
-            "featureHash": "NzIxNTU1",
+            "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
             "classifications": [
                 {
                     "name": "cl 1 2 text",

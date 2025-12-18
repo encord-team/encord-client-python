@@ -1,3 +1,5 @@
+from tests.objects.data.all_types_ontology_structure import RADIO_CLASSIFICATION
+
 PLAIN_TEXT_LABELS = {
     "label_hash": "0aea5ac7-cbc0-4451-a242-e22445d2c9fa",
     "branch_name": "main",
@@ -59,7 +61,7 @@ PLAIN_TEXT_LABELS = {
         },
         "radioClassificationHash": {
             "classificationHash": "radioClassificationHash",
-            "featureHash": "NzIxNTU1",
+            "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
             "classifications": [
                 {
                     "name": "Radio classification 1",

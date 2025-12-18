@@ -11,6 +11,48 @@ from encord.objects.classification import OntologyClassificationLevel
 from encord.objects.common import Shape
 from encord.objects.ontology_labels_impl import Classification
 
+RADIO_CLASSIFICATION = Classification(
+    uid=1,
+    feature_node_hash="NzIxNTU1",
+    attributes=[
+        RadioAttribute(
+            uid=[1, 1],
+            feature_node_hash="MjI5MTA5",
+            name="Radio classification 1",
+            required=False,
+            archived=False,
+            dynamic=False,
+            options=[
+                NestableOption(
+                    uid=[1, 1, 1],
+                    feature_node_hash="MTcwMjM5",
+                    label="cl 1 option 1",
+                    value="cl_1_option_1",
+                    archived=False,
+                    nested_options=[],
+                ),
+                NestableOption(
+                    uid=[1, 1, 2],
+                    feature_node_hash="MjUzMTg1",
+                    label="cl 1 option 2",
+                    value="cl_1_option_2",
+                    archived=False,
+                    nested_options=[
+                        TextAttribute(
+                            uid=[1, 1, 2, 1],
+                            feature_node_hash="MTg0MjIw",
+                            name="cl 1 2 text",
+                            required=False,
+                            archived=False,
+                            dynamic=False,
+                        )
+                    ],
+                ),
+            ],
+        )
+    ],
+)
+
 GLOBAL_CLASSIFICATION = Classification(
     uid=4,
     feature_node_hash="3DuQbFx4",
@@ -325,47 +367,7 @@ all_types_structure = OntologyStructure(
         ),
     ],
     classifications=[
-        Classification(
-            uid=1,
-            feature_node_hash="NzIxNTU1",
-            attributes=[
-                RadioAttribute(
-                    uid=[1, 1],
-                    feature_node_hash="MjI5MTA5",
-                    name="Radio classification 1",
-                    required=False,
-                    archived=False,
-                    dynamic=False,
-                    options=[
-                        NestableOption(
-                            uid=[1, 1, 1],
-                            feature_node_hash="MTcwMjM5",
-                            label="cl 1 option 1",
-                            value="cl_1_option_1",
-                            archived=False,
-                            nested_options=[],
-                        ),
-                        NestableOption(
-                            uid=[1, 1, 2],
-                            feature_node_hash="MjUzMTg1",
-                            label="cl 1 option 2",
-                            value="cl_1_option_2",
-                            archived=False,
-                            nested_options=[
-                                TextAttribute(
-                                    uid=[1, 1, 2, 1],
-                                    feature_node_hash="MTg0MjIw",
-                                    name="cl 1 2 text",
-                                    required=False,
-                                    archived=False,
-                                    dynamic=False,
-                                )
-                            ],
-                        ),
-                    ],
-                )
-            ],
-        ),
+        RADIO_CLASSIFICATION,
         Classification(
             uid=2,
             feature_node_hash="jPOcEsbw",

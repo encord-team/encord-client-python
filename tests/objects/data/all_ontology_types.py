@@ -1,3 +1,5 @@
+from tests.objects.data.all_types_ontology_structure import RADIO_CLASSIFICATION
+
 global_classification_dict = {  # should match GLOBAL_CLASSIFICATION.to_dict()
     "id": "4",
     "featureNodeHash": "3DuQbFx4",
@@ -147,7 +149,7 @@ all_ontology_types = {
     "classifications": [
         {
             "id": "1",
-            "featureNodeHash": "NzIxNTU1",
+            "featureNodeHash": RADIO_CLASSIFICATION.feature_node_hash,
             "attributes": [
                 {
                     "id": "1.1",

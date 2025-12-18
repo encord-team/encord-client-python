@@ -6,7 +6,7 @@ from typing import Dict, List, Union
 from unittest.mock import Mock
 
 import pytest
-from deepdiff import DeepDiff
+from deepdiff import DeepDiff, helper
 
 from encord.common.time_parser import parse_datetime
 from encord.objects import ClassificationInstance, OntologyStructure
@@ -21,6 +21,7 @@ from tests.objects.data import (
     native_image_data,
     native_image_data_classification_with_no_answer,
     skeleton_coordinates,
+    video_with_classifications,
     video_with_dynamic_classifications,
     video_with_dynamic_classifications_ui_constructed,
 )
@@ -51,20 +52,34 @@ def ontology_from_dict(ontology_structure_dict: Dict):
     return ontology
 
 
-def deep_diff_enhanced(actual: Union[dict, list], expected: Union[dict, list], exclude_regex_paths: List[str] = None):
+def deep_diff_enhanced(
+    actual: Union[dict, list],
+    expected: Union[dict, list],
+    exclude_regex_paths: List[str] = None,
+    exclude_paths: List[str] = None,
+):
     """
     Deep comparison that uses DeepDiff for regex path exclusions and `assert` to get an easily comparable,
     human-readable diff in tools like PyCharm.
     """
-    if exclude_regex_paths is None:
-        exclude_regex_paths = []
+    exclude_paths = [] if exclude_paths is None else exclude_paths
+    exclude_regex_paths = [] if exclude_regex_paths is None else exclude_regex_paths
     if DeepDiff(
         expected,
         actual,
         ignore_order=True,
+        exclude_paths=exclude_paths,
         exclude_regex_paths=exclude_regex_paths,
     ):
-        print(DeepDiff(expected, actual, ignore_order=True, exclude_regex_paths=exclude_regex_paths))
+        print(
+            DeepDiff(
+                expected,
+                actual,
+                ignore_order=True,
+                exclude_regex_paths=exclude_regex_paths,
+                view=helper.COLORED_COMPACT_VIEW,
+            )
+        )
         assert actual == expected
 
 
@@ -395,7 +410,7 @@ def test_parse_serialise_global_classification() -> None:
 
     actual = label_row.to_encord_dict()
 
-    deep_diff_enhanced(actual, GLOBAL_CLASSIFICATION_LABELS, exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"])
+    deep_diff_enhanced(actual, GLOBAL_CLASSIFICATION_LABELS)
     assert_json_serializable(actual)
 
 
@@ -427,5 +442,33 @@ def test_serialise_global_classification() -> None:
     label_row.add_classification_instance(classification_instance)
 
     actual = label_row.to_encord_dict()
-    deep_diff_enhanced(actual, GLOBAL_CLASSIFICATION_LABELS, exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"])
+    deep_diff_enhanced(actual, GLOBAL_CLASSIFICATION_LABELS)
+    assert_json_serializable(actual)
+
+
+def test_classification_with_frames() -> None:
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["duration"] = 0.08  # update to match video_with_classifications.labels
+    label_row_metadata_dict["frames_per_second"] = 25.0  # update to match video_with_classifications.labels
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(video_with_classifications.labels)
+
+    actual = label_row.to_encord_dict()
+
+    deep_diff_enhanced(
+        actual,
+        video_with_classifications.labels,
+        # TODO - preserve classification answers metadata
+        exclude_paths=[
+            "root['classification_answers']['3AqiIPrF']['range']",
+            "root['classification_answers']['3AqiIPrF']['createdBy']",
+            "root['classification_answers']['3AqiIPrF']['createdAt']",
+            "root['classification_answers']['3AqiIPrF']['lastEditedBy']",
+            "root['classification_answers']['3AqiIPrF']['lastEditedAt']",
+            "root['classification_answers']['3AqiIPrF']['manualAnnotation']",
+        ],
+    )
+
     assert_json_serializable(actual)
