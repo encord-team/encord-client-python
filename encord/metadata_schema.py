@@ -60,6 +60,10 @@ class _ClientMetadataSchemaTypeEmbedding(BaseModel):
     api: Optional[_ClientMetadataSchemaTypeEmbeddingApi] = None
 
 
+class _ClientMetadataSchemaTypeGeospatial(BaseModel):
+    ty: Literal["geospatial"] = "geospatial"
+
+
 class _ClientMetadataSchemaTypeText(BaseModel):
     ty: Literal["text"] = "text"
 
@@ -128,6 +132,7 @@ class _ClientMetadataSchemaTypeTombstoneDeletedTy(
                 _ClientMetadataSchemaTypeUUID,
                 _ClientMetadataSchemaTypeVariant,
                 _ClientMetadataSchemaTypeUser,
+                _ClientMetadataSchemaTypeGeospatial,
             ],
             Field(discriminator="ty"),
         ]
@@ -156,6 +161,7 @@ class _ClientMetadataSchemaOption(
                 _ClientMetadataSchemaTypeVariant,
                 _ClientMetadataSchemaTypeUser,
                 _ClientMetadataSchemaTypeTombstone,
+                _ClientMetadataSchemaTypeGeospatial,
             ],
             Field(discriminator="ty"),
         ]
@@ -248,6 +254,23 @@ class MetadataSchema:
         self._schema[k] = _ClientMetadataSchemaOption(
             root=_ClientMetadataSchemaTypeEmbedding(size=size, api=embedding_api)
         )
+        self._dirty = True
+
+    def add_geospatial(self, k: str) -> None:
+        """Adds a new geospatial type to the metadata schema.
+
+        **Parameters:**
+
+        - k : str: The key under which the geospatial coordinates will be stored in the schema.
+
+        **Raises:**
+
+        MetadataSchemaError: If the key `k` is already defined in the schema.
+        """
+        if k in self._schema:
+            raise MetadataSchemaError(f"{k} is already defined")
+        _assert_valid_metadata_key(k)
+        self._schema[k] = _ClientMetadataSchemaOption(root=_ClientMetadataSchemaTypeGeospatial())
         self._dirty = True
 
     def add_enum(self, k: str, *, values: Sequence[str]) -> None:
@@ -454,7 +477,9 @@ class MetadataSchema:
 
     def get_key_type(
         self, k: str
-    ) -> Union[Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding", "enum"], None]:
+    ) -> Union[
+        Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding", "enum", "geospatial"], None
+    ]:
         """Retrieves the metadata type associated with a given key.
 
         **Parameters:**
@@ -463,7 +488,7 @@ class MetadataSchema:
 
         **Returns:**
 
-        Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding", "enum"]: The metadata type associated with the key `k`.
+        Literal["boolean", "datetime", "uuid", "number", "varchar", "text", "embedding", "enum", "geospatial"]: The metadata type associated with the key `k`.
 
         Raises:
         MetadataSchemaError: If the key `k` is not supported by the current SDK.
@@ -476,6 +501,8 @@ class MetadataSchema:
             return "embedding"
         elif isinstance(v, _ClientMetadataSchemaTypeEnum):
             return "enum"
+        elif isinstance(v, _ClientMetadataSchemaTypeGeospatial):
+            return "geospatial"
         elif isinstance(v, _ClientMetadataSchemaTypeVariant):
             return v.hint.to_simple_str()
         elif isinstance(v, _ClientMetadataSchemaTypeTombstone):
@@ -558,6 +585,8 @@ class MetadataSchema:
                 ty_hint_str = f"embedding(size={v.size})"
             elif isinstance(v, _ClientMetadataSchemaTypeEnum):
                 ty_hint_str = f"enum(values={sorted(v.values)})"
+            elif isinstance(v, _ClientMetadataSchemaTypeGeospatial):
+                ty_hint_str = "geospatial"
             elif isinstance(v, _ClientMetadataSchemaTypeVariant):
                 ty_hint_str = f"scalar(hint={v.hint.to_simple_str()})"
             elif isinstance(v, _ClientMetadataSchemaTypeTombstone):
