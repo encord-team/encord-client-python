@@ -12,6 +12,7 @@ from tests.objects.data.all_ontology_types import global_classification_dict
 from tests.objects.data.all_types_ontology_structure import GLOBAL_CLASSIFICATION, all_types_structure
 from tests.objects.data.empty_image_group import empty_image_group_labels
 from tests.objects.data.empty_video import labels
+from tests.objects.objects_test_utils import validate_label_row_serialisation
 
 global_classification = all_types_structure.get_child_by_hash(GLOBAL_CLASSIFICATION.feature_node_hash, Classification)
 
@@ -76,6 +77,8 @@ def test_global_classification_image_group(all_types_ontology) -> None:
         "The serialised dict should be the same as the original"
     )
 
+    validate_label_row_serialisation(label_row)
+
 
 def test_global_classification_override(all_types_ontology) -> None:
     label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
@@ -116,3 +119,5 @@ def test_global_classification_override(all_types_ontology) -> None:
     label_row.add_classification_instance(classification_instance_1, force=True)
     assert len(label_row.get_classification_instances()) == 1, "After force overwriting, we should be left with one"
     assert label_row.get_classification_instances()[0] == classification_instance_1, "It should be the second"
+
+    validate_label_row_serialisation(label_row)

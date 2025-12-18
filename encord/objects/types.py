@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Literal, Optional, TypedDict, Union
+from typing import Any, Dict, List, Literal, NotRequired, Optional, TypedDict, Union
 
 from encord.objects.common import Shape
 
@@ -245,4 +245,4 @@ class LabelRowDict(TypedDict, total=False):
 
 def _is_containing_metadata(answer: ClassificationAnswer) -> bool:
     """Check if the classification answer contains necessary metadata fields."""
-    return answer.get("createdBy") is not None
+    return "createdBy" in answer

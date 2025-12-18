@@ -1,4 +1,4 @@
-from tests.objects.data.all_types_ontology_structure import RADIO_CLASSIFICATION
+from tests.objects.data.all_types_ontology_structure import RADIO_CLASSIFICATION, TEXT_OBJECT
 
 HTML_TEXT_LABELS = {
     "label_hash": "0aea5ac7-cbc0-4451-a242-e22445d2c9fa",
@@ -25,7 +25,7 @@ HTML_TEXT_LABELS = {
     "object_answers": {
         "textObjectHash": {
             "objectHash": "textObjectHash",
-            "featureHash": "textObjectFeatureNodeHash",
+            "featureHash": TEXT_OBJECT.feature_node_hash,
             "classifications": [],
             "range": [],
             "range_html": [
@@ -47,7 +47,7 @@ HTML_TEXT_LABELS = {
             "manualAnnotation": True,
             "name": "text object",
             "value": "text_object",
-            "color": "#A4DD00",
+            "color": TEXT_OBJECT.color,
             "shape": "text",
         },
     },
