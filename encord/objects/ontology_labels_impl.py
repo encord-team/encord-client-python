@@ -15,7 +15,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Type, Union, cast
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple, Type, Union, cast
 from uuid import UUID
 
 from encord.client import EncordClientProject
@@ -72,6 +72,7 @@ from encord.objects.frames import (
     Ranges,
     frames_class_to_frames_list,
     ranges_list_to_ranges,
+    ranges_to_list,
 )
 from encord.objects.html_node import HtmlRange
 from encord.objects.metadata import DataGroupMetadata, DICOMSeriesMetadata, DICOMSliceMetadata
@@ -85,6 +86,7 @@ from encord.objects.types import (
     DynamicAttributeObject,
     FrameClassification,
     FrameObject,
+    LabelRowDict,
     ObjectAction,
     ObjectAnswerForNonGeometric,
     _is_containing_metadata,
@@ -1745,10 +1747,9 @@ class LabelRowV2:
                 "featureHash": classification.feature_hash,
             }
 
-            # At some point, we also want to add these to the other modalities
-            if classification.is_range_only() or not is_geometric(self.data_type):
-                # For non-geometric data, classifications apply to whole file
-                ret[classification.classification_hash]["range"] = []
+            # If the classification includes instance data
+            if classification._include_instance_data:
+                ret[classification.classification_hash]["range"] = ranges_to_list(classification.range_list)
                 ret[classification.classification_hash]["createdBy"] = classification.created_by
                 ret[classification.classification_hash]["createdAt"] = format_datetime_to_long_string_optional(
                     classification.created_at
@@ -2587,7 +2588,10 @@ class LabelRowV2:
         is_data_type_range_only = not is_geometric(self.data_type)
 
         classification_instance = ClassificationInstance(
-            label_class, classification_hash=classification_hash, range_only=is_data_type_range_only
+            label_class,
+            classification_hash=classification_hash,
+            range_only=is_data_type_range_only,
+            _created_with_answer=True,
         )
 
         frame_ranges = classification_answer.get("range", [])

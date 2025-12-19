@@ -2,7 +2,7 @@
 
 import json
 from dataclasses import asdict
-from typing import Dict, List, Union
+from typing import Dict, List, Mapping, Union
 from unittest.mock import Mock
 
 import pytest
@@ -54,7 +54,7 @@ def ontology_from_dict(ontology_structure_dict: Dict):
 
 def deep_diff_enhanced(
     actual: Union[dict, list],
-    expected: Union[dict, list],
+    expected: Union[Mapping, list],
     exclude_regex_paths: List[str] = None,
     exclude_paths: List[str] = None,
 ):
@@ -132,7 +132,6 @@ def test_serialise_video():
     deep_diff_enhanced(
         actual,
         data_1.labels,
-        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
     assert_json_serializable(actual)
 
@@ -151,7 +150,6 @@ def test_serialise_image_with_object_answers():
     deep_diff_enhanced(
         actual,
         native_image_data.labels,
-        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
     assert_json_serializable(actual)
 
@@ -169,7 +167,6 @@ def test_serialise_audio() -> None:
     deep_diff_enhanced(
         actual,
         AUDIO_LABELS,
-        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
     assert_json_serializable(actual)
 
@@ -187,7 +184,6 @@ def test_serialise_audio_objects() -> None:
     deep_diff_enhanced(
         actual,
         AUDIO_OBJECTS,
-        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
     assert_json_serializable(actual)
 
@@ -205,7 +201,6 @@ def test_serialise_html_text():
     deep_diff_enhanced(
         actual,
         HTML_TEXT_LABELS,
-        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
     assert_json_serializable(actual)
 
@@ -223,7 +218,6 @@ def test_serialise_plain_text():
     deep_diff_enhanced(
         actual,
         PLAIN_TEXT_LABELS,
-        exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
     assert_json_serializable(actual)
 
@@ -446,7 +440,7 @@ def test_serialise_global_classification() -> None:
     assert_json_serializable(actual)
 
 
-def test_classification_with_frames() -> None:
+def test_classification_with_frames_and_answer() -> None:
     label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 0.08  # update to match video_with_classifications.labels
     label_row_metadata_dict["frames_per_second"] = 25.0  # update to match video_with_classifications.labels
@@ -457,18 +451,22 @@ def test_classification_with_frames() -> None:
 
     actual = label_row.to_encord_dict()
 
-    deep_diff_enhanced(
-        actual,
-        video_with_classifications.labels,
-        # TODO - preserve classification answers metadata
-        exclude_paths=[
-            "root['classification_answers']['3AqiIPrF']['range']",
-            "root['classification_answers']['3AqiIPrF']['createdBy']",
-            "root['classification_answers']['3AqiIPrF']['createdAt']",
-            "root['classification_answers']['3AqiIPrF']['lastEditedBy']",
-            "root['classification_answers']['3AqiIPrF']['lastEditedAt']",
-            "root['classification_answers']['3AqiIPrF']['manualAnnotation']",
-        ],
-    )
+    deep_diff_enhanced(actual, video_with_classifications.labels)
+
+    assert_json_serializable(actual)
+
+
+def test_classification_with_frames() -> None:
+    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict["duration"] = 0.08  # update to match video_with_classifications.labels
+    label_row_metadata_dict["frames_per_second"] = 25.0  # update to match video_with_classifications.labels
+    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+
+    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row.from_labels_dict(video_with_classifications.labels_without_answer_meta)
+
+    actual = label_row.to_encord_dict()
+
+    deep_diff_enhanced(actual, video_with_classifications.labels_without_answer_meta)
 
     assert_json_serializable(actual)
