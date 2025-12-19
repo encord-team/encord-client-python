@@ -2,18 +2,20 @@
 
 import json
 from dataclasses import asdict
-from typing import Dict, List, Mapping, Union
-from unittest.mock import Mock
+from datetime import datetime
+from typing import Dict
+from unittest.mock import MagicMock, Mock
 
 import pytest
-from deepdiff import DeepDiff, helper
 
 from encord.common.time_parser import parse_datetime
 from encord.objects import ClassificationInstance, OntologyStructure
 from encord.objects.ontology_labels_impl import LabelRowV2
+from encord.ontology import Ontology
 from encord.orm.label_row import LabelRowMetadata
+from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.skeleton_template import SkeletonTemplate
-from tests.objects.common import FAKE_LABEL_ROW_METADATA
+from tests.objects.common import BASE_LABEL_ROW_METADATA
 from tests.objects.data import (
     data_1,
     empty_video,
@@ -44,43 +46,21 @@ from tests.objects.data.ontology_with_many_dynamic_classifications import (
     ontology as ontology_with_many_dynamic_classifications,
 )
 from tests.objects.data.plain_text import PLAIN_TEXT_LABELS
+from tests.objects.objects_test_utils import deep_diff_enhanced, validate_label_row_serialisation
 
 
-def ontology_from_dict(ontology_structure_dict: Dict):
-    ontology = Mock()
-    ontology.structure = OntologyStructure.from_dict(ontology_structure_dict)
-    return ontology
-
-
-def deep_diff_enhanced(
-    actual: Union[dict, list],
-    expected: Union[Mapping, list],
-    exclude_regex_paths: List[str] = None,
-    exclude_paths: List[str] = None,
-):
-    """
-    Deep comparison that uses DeepDiff for regex path exclusions and `assert` to get an easily comparable,
-    human-readable diff in tools like PyCharm.
-    """
-    exclude_paths = [] if exclude_paths is None else exclude_paths
-    exclude_regex_paths = [] if exclude_regex_paths is None else exclude_regex_paths
-    if DeepDiff(
-        expected,
-        actual,
-        ignore_order=True,
-        exclude_paths=exclude_paths,
-        exclude_regex_paths=exclude_regex_paths,
-    ):
-        print(
-            DeepDiff(
-                expected,
-                actual,
-                ignore_order=True,
-                exclude_regex_paths=exclude_regex_paths,
-                view=helper.COLORED_COMPACT_VIEW,
-            )
-        )
-        assert actual == expected
+def ontology_from_dict(ontology_structure_dict: Dict) -> Ontology:
+    structure = OntologyStructure.from_dict(ontology_structure_dict)
+    return Ontology(
+        OrmOntology(
+            title="ontology_from_dict ontology",
+            structure=structure,
+            ontology_hash="ontology-from-dict-hash",
+            created_at=datetime(2024, 1, 1),
+            last_edited_at=datetime(2024, 1, 1),
+        ),
+        MagicMock(),
+    )
 
 
 def assert_json_serializable(data: dict):
@@ -93,7 +73,7 @@ def assert_json_serializable(data: dict):
 
 
 def test_serialise_image_group_with_classifications():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = None
     label_row_metadata_dict["frames_per_second"] = None
     label_row_metadata_dict["number_of_frames"] = 5
@@ -115,10 +95,11 @@ def test_serialise_image_group_with_classifications():
         exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
     assert_json_serializable(actual)
+    validate_label_row_serialisation(label_row)
 
 
 def test_serialise_video():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 153.16
     label_row_metadata_dict["frames_per_second"] = 25.0
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
@@ -134,10 +115,11 @@ def test_serialise_video():
         data_1.labels,
     )
     assert_json_serializable(actual)
+    validate_label_row_serialisation(label_row)
 
 
 def test_serialise_image_with_object_answers():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = None
     label_row_metadata_dict["frames_per_second"] = None
     label_row_metadata_dict["number_of_frames"] = 1
@@ -152,15 +134,16 @@ def test_serialise_image_with_object_answers():
         native_image_data.labels,
     )
     assert_json_serializable(actual)
+    validate_label_row_serialisation(label_row)
 
 
-def test_serialise_audio() -> None:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+def test_serialise_audio(all_types_ontology) -> None:
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
     label_row_metadata_dict["data_type"] = "AUDIO"
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)
     label_row.from_labels_dict(AUDIO_LABELS)
 
     actual = label_row.to_encord_dict()
@@ -169,15 +152,16 @@ def test_serialise_audio() -> None:
         AUDIO_LABELS,
     )
     assert_json_serializable(actual)
+    validate_label_row_serialisation(label_row)
 
 
-def test_serialise_audio_objects() -> None:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+def test_serialise_audio_objects(all_types_ontology) -> None:
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
     label_row_metadata_dict["data_type"] = "AUDIO"
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)
     label_row.from_labels_dict(AUDIO_OBJECTS)
 
     actual = label_row.to_encord_dict()
@@ -186,15 +170,16 @@ def test_serialise_audio_objects() -> None:
         AUDIO_OBJECTS,
     )
     assert_json_serializable(actual)
+    validate_label_row_serialisation(label_row)
 
 
-def test_serialise_html_text():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+def test_serialise_html_text(all_types_ontology):
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
     label_row_metadata_dict["data_type"] = "plain_text"
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)
     label_row.from_labels_dict(HTML_TEXT_LABELS)
 
     actual = label_row.to_encord_dict()
@@ -203,15 +188,16 @@ def test_serialise_html_text():
         HTML_TEXT_LABELS,
     )
     assert_json_serializable(actual)
+    validate_label_row_serialisation(label_row)
 
 
-def test_serialise_plain_text():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+def test_serialise_plain_text(all_types_ontology):
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
     label_row_metadata_dict["data_type"] = "plain_text"
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)
     label_row.from_labels_dict(PLAIN_TEXT_LABELS)
 
     actual = label_row.to_encord_dict()
@@ -220,10 +206,11 @@ def test_serialise_plain_text():
         PLAIN_TEXT_LABELS,
     )
     assert_json_serializable(actual)
+    validate_label_row_serialisation(label_row)
 
 
 def test_serialise_dicom_with_dynamic_classifications():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = None
     label_row_metadata_dict["frames_per_second"] = None
     label_row_metadata_dict["number_of_frames"] = 5
@@ -253,10 +240,11 @@ def test_serialise_dicom_with_dynamic_classifications():
     # NOTE: likely we do not care about the trackHash. If we end up caring about it, we'll have to ensure that we can
     #  set it from parsing the data and keep it around when setting new answers for example.
     assert_json_serializable(actual)
+    validate_label_row_serialisation(label_row)
 
 
 def test_dynamic_classifications():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 0.08
     label_row_metadata_dict["frames_per_second"] = 25.0
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
@@ -271,12 +259,13 @@ def test_dynamic_classifications():
         exclude_regex_paths=[r"\['trackHash'\]"],
     )
     assert_json_serializable(actual)
+    validate_label_row_serialisation(label_row)
 
 
 def test_dynamic_classification_with_multiple_checklist_answers_as_constructed_by_ui():
     # The way how UI and SDK represent the checklist answers is somewhat different,
     # So testing that SDK can deal with whatever UI throws at it.
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 0.08
     label_row_metadata_dict["frames_per_second"] = 25.0
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
@@ -291,10 +280,11 @@ def test_dynamic_classification_with_multiple_checklist_answers_as_constructed_b
         exclude_regex_paths=[r"\['trackHash'\]"],
     )
     assert_json_serializable(actual)
+    validate_label_row_serialisation(label_row)
 
 
-def test_uninitialised_label_row():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+def test_uninitialised_label_row(all_types_ontology):
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 0.08
     label_row_metadata_dict["frames_per_second"] = 25.0
     label_row_metadata_dict["label_hash"] = None
@@ -302,7 +292,7 @@ def test_uninitialised_label_row():
     label_row_metadata_dict["last_edited_at"] = None
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)
 
     assert label_row.label_hash is None
     assert label_row.created_at is None
@@ -317,14 +307,14 @@ def test_uninitialised_label_row():
     assert label_row.is_labelling_initialised is True
 
 
-def test_label_row_with_reviews():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+def test_label_row_with_reviews(all_types_ontology):
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = None
     label_row_metadata_dict["frames_per_second"] = None
     label_row_metadata_dict["number_of_frames"] = 5
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)
     label_row.from_labels_dict(image_group_with_reviews.labels)
 
     first_object = label_row.get_object_instances()[0]
@@ -339,26 +329,27 @@ def test_label_row_with_reviews():
         exclude_regex_paths=[r"\['trackHash'\]", r"\['reviews'\]"],
     )
     assert_json_serializable(actual)
+    validate_label_row_serialisation(label_row)
 
 
-def test_classifications_with_no_answers_equivalent_to_no_classification():
+def test_classifications_with_no_answers_equivalent_to_no_classification(all_types_ontology):
     # Testing backward compatibility with label rows that might have classifications with no answers
     # This is not a part of the current behaviour, but we still have label rows like that in the wild
 
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = None
     label_row_metadata_dict["frames_per_second"] = None
     label_row_metadata_dict["number_of_frames"] = 1
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)
     label_row.from_labels_dict(native_image_data_classification_with_no_answer.labels)
 
     assert len(label_row.get_classification_instances()) == 0
 
 
 def test_skeleton_template_coordinates():
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = None
     label_row_metadata_dict["frames_per_second"] = None
     label_row_metadata_dict["number_of_frames"] = 1
@@ -389,16 +380,16 @@ def test_skeleton_template_coordinates():
     assert skeleton_dict["skeleton"] == expected_skeleton_dict["skeleton"]
 
 
-def test_parse_serialise_global_classification() -> None:
+def test_parse_serialise_global_classification(all_types_ontology) -> None:
     """
     Test that we can parse and serialise a global classification to match the expected dict.
     """
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 0.08  # to match
     label_row_metadata_dict["frames_per_second"] = 25.0
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)
 
     label_row.from_labels_dict(GLOBAL_CLASSIFICATION_LABELS)
 
@@ -406,17 +397,18 @@ def test_parse_serialise_global_classification() -> None:
 
     deep_diff_enhanced(actual, GLOBAL_CLASSIFICATION_LABELS)
     assert_json_serializable(actual)
+    validate_label_row_serialisation(label_row)
 
 
-def test_serialise_global_classification() -> None:
+def test_serialise_global_classification(all_types_ontology) -> None:
     """
     Test that we can serialise a global classification from scratch to match the expected dict.
     """
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 0.08  # to match
     label_row_metadata_dict["frames_per_second"] = 25.0
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)
 
     label_row.from_labels_dict(empty_video.labels)  # initialise as empty
 
@@ -438,15 +430,16 @@ def test_serialise_global_classification() -> None:
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(actual, GLOBAL_CLASSIFICATION_LABELS)
     assert_json_serializable(actual)
+    validate_label_row_serialisation(label_row)
 
 
-def test_classification_with_frames_and_answer() -> None:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+def test_classification_with_frames_and_answer(all_types_ontology) -> None:
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 0.08  # update to match video_with_classifications.labels
     label_row_metadata_dict["frames_per_second"] = 25.0  # update to match video_with_classifications.labels
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)
     label_row.from_labels_dict(video_with_classifications.labels)
 
     actual = label_row.to_encord_dict()
@@ -454,15 +447,16 @@ def test_classification_with_frames_and_answer() -> None:
     deep_diff_enhanced(actual, video_with_classifications.labels)
 
     assert_json_serializable(actual)
+    validate_label_row_serialisation(label_row)
 
 
-def test_classification_with_frames() -> None:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+def test_classification_with_frames(all_types_ontology) -> None:
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 0.08  # update to match video_with_classifications.labels
     label_row_metadata_dict["frames_per_second"] = 25.0  # update to match video_with_classifications.labels
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)
     label_row.from_labels_dict(video_with_classifications.labels_without_answer_meta)
 
     actual = label_row.to_encord_dict()
@@ -470,3 +464,4 @@ def test_classification_with_frames() -> None:
     deep_diff_enhanced(actual, video_with_classifications.labels_without_answer_meta)
 
     assert_json_serializable(actual)
+    validate_label_row_serialisation(label_row)

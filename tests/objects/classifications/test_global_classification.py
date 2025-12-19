@@ -7,11 +7,12 @@ import pytest
 from encord.exceptions import LabelRowError
 from encord.objects import Classification, ClassificationInstance, FlatOption, LabelRowV2
 from encord.orm.label_row import LabelRowMetadata
-from tests.objects.common import FAKE_LABEL_ROW_METADATA
+from tests.objects.common import BASE_LABEL_ROW_METADATA
 from tests.objects.data.all_ontology_types import global_classification_dict
 from tests.objects.data.all_types_ontology_structure import GLOBAL_CLASSIFICATION, all_types_structure
 from tests.objects.data.empty_image_group import empty_image_group_labels
 from tests.objects.data.empty_video import labels
+from tests.objects.objects_test_utils import validate_label_row_serialisation
 
 global_classification = all_types_structure.get_child_by_hash(GLOBAL_CLASSIFICATION.feature_node_hash, Classification)
 
@@ -38,7 +39,7 @@ def test_ontology_level_serde() -> None:
 
 
 def test_global_classification_image_group(all_types_ontology) -> None:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = None  # not a thing in image groups
     label_row_metadata_dict["duration"] = None  # not a thing in image groups
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
@@ -76,9 +77,11 @@ def test_global_classification_image_group(all_types_ontology) -> None:
         "The serialised dict should be the same as the original"
     )
 
+    validate_label_row_serialisation(label_row)
+
 
 def test_global_classification_override(all_types_ontology) -> None:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
     label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)
@@ -116,3 +119,5 @@ def test_global_classification_override(all_types_ontology) -> None:
     label_row.add_classification_instance(classification_instance_1, force=True)
     assert len(label_row.get_classification_instances()) == 1, "After force overwriting, we should be left with one"
     assert label_row.get_classification_instances()[0] == classification_instance_1, "It should be the second"
+
+    validate_label_row_serialisation(label_row)

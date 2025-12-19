@@ -1,3 +1,5 @@
+import dataclasses
+
 from encord.objects import (
     ChecklistAttribute,
     FlatOption,
@@ -85,6 +87,26 @@ GLOBAL_CLASSIFICATION = Classification(
     ],
 )
 
+AUDIO_OBJECT_1 = Object(
+    uid=8,
+    name="audio object 1",
+    color="#A4FF00",
+    shape=Shape.AUDIO,
+    feature_node_hash="KVfzNkFy",
+    archived=False,
+    attributes=[],
+)
+AUDIO_OBJECT_2 = dataclasses.replace(AUDIO_OBJECT_1, uid=9, name="audio object 2", feature_node_hash="bjvtzFgi")
+AUDIO_OBJECT_3 = dataclasses.replace(AUDIO_OBJECT_1, uid=10, name="audio object 3", feature_node_hash="9dt+r+op")
+TEXT_OBJECT = Object(
+    uid=11,
+    name="text object",
+    color="#A4FF00",
+    shape=Shape.TEXT,
+    feature_node_hash="textFeatureNodeHash",
+    archived=False,
+    attributes=[],
+)
 all_types_structure = OntologyStructure(
     objects=[
         Object(
@@ -347,24 +369,10 @@ all_types_structure = OntologyStructure(
             archived=False,
             attributes=[],
         ),
-        Object(
-            uid=8,
-            name="audio object",
-            color="#A4FF00",
-            shape=Shape.AUDIO,
-            feature_node_hash="KVfzNkFy",
-            archived=False,
-            attributes=[],
-        ),
-        Object(
-            uid=9,
-            name="text object",
-            color="#A4FF00",
-            shape=Shape.TEXT,
-            feature_node_hash="textFeatureNodeHash",
-            archived=False,
-            attributes=[],
-        ),
+        AUDIO_OBJECT_1,
+        AUDIO_OBJECT_2,
+        AUDIO_OBJECT_3,
+        TEXT_OBJECT,
     ],
     classifications=[
         RADIO_CLASSIFICATION,

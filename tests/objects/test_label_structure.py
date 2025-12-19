@@ -1,7 +1,7 @@
 import datetime
 import math
 from dataclasses import asdict
-from unittest.mock import Mock, PropertyMock
+from unittest.mock import Mock
 
 import pytest
 
@@ -31,12 +31,11 @@ from encord.objects.frames import Range
 from encord.objects.html_node import HtmlNode, HtmlRange
 from encord.objects.options import Option
 from encord.orm.label_row import LabelRowMetadata, LabelStatus
-from tests.objects.common import FAKE_LABEL_ROW_METADATA
-from tests.objects.data.all_ontology_types import all_ontology_types
+from tests.objects.common import BASE_LABEL_ROW_METADATA
 from tests.objects.data.all_types_ontology_structure import RADIO_CLASSIFICATION, all_types_structure
 from tests.objects.data.audio_labels import EMPTY_AUDIO_LABELS
 from tests.objects.data.empty_image_group import empty_image_group_labels
-from tests.objects.test_label_structure_converter import ontology_from_dict
+from tests.objects.objects_test_utils import validate_label_row_serialisation
 
 box_ontology_item = all_types_structure.get_child_by_hash("MjI2NzEy", Object)
 polygon_ontology_item = all_types_structure.get_child_by_hash("ODkxMzAx", Object)
@@ -103,13 +102,6 @@ POLYGON_COORDINATES = PolygonCoordinates(
 KEYPOINT_COORDINATES = PointCoordinate(x=0.2, y=0.1)
 
 
-@pytest.fixture
-def ontology():
-    ontology_structure = PropertyMock(return_value=all_types_structure)
-    ontology = Mock(structure=ontology_structure)
-    yield ontology
-
-
 def test_create_object_instance_one_coordinate():
     object_instance = box_ontology_item.create_instance()
 
@@ -144,8 +136,8 @@ def test_create_object_instance_one_coordinate_multiframe():
     assert annotated_frames == [6, 8, 12]
 
 
-def test_create_a_label_row_from_empty_image_group_label_row_dict(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+def test_create_a_label_row_from_empty_image_group_label_row_dict(all_types_ontology):
+    label_row = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), all_types_ontology)
 
     with pytest.raises(LabelRowError):
         label_row.get_classification_instances()
@@ -153,11 +145,11 @@ def test_create_a_label_row_from_empty_image_group_label_row_dict(ontology):
     label_row.from_labels_dict(empty_image_group_labels)
     assert label_row.get_classification_instances() == []
     assert label_row.get_object_instances() == []
-    # TODO: do more assertions
+    validate_label_row_serialisation(label_row)
 
 
-def test_add_object_instance_to_label_row(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+def test_add_object_instance_to_label_row(all_types_ontology):
+    label_row = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), all_types_ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     object_instance = ObjectInstance(box_ontology_item)
@@ -172,10 +164,11 @@ def test_add_object_instance_to_label_row(ontology):
     object_instance.set_for_frames(coordinates=coordinates, frames=1)
     label_row.add_object_instance(object_instance)
     assert label_row.get_object_instances()[0].object_hash == object_instance.object_hash
+    validate_label_row_serialisation(label_row)
 
 
-def test_add_remove_access_object_instances_in_label_row(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+def test_add_remove_access_object_instances_in_label_row(all_types_ontology):
+    label_row = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), all_types_ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     object_instance_1 = ObjectInstance(box_ontology_item)
@@ -210,10 +203,11 @@ def test_add_remove_access_object_instances_in_label_row(ontology):
     objects = label_row.get_object_instances()
     assert len(objects) == 1
     assert objects[0].object_hash == object_instance_2.object_hash
+    validate_label_row_serialisation(label_row)
 
 
-def test_filter_for_objects(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+def test_filter_for_objects(all_types_ontology):
+    label_row = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), all_types_ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     label_box = ObjectInstance(box_ontology_item)
@@ -255,6 +249,7 @@ def test_filter_for_objects(ontology):
 
     objects = label_row.get_object_instances(filter_ontology_object=polyline_ontology_item)
     assert len(objects) == 0
+    validate_label_row_serialisation(label_row)
 
 
 def test_add_wrong_coordinates():
@@ -263,8 +258,8 @@ def test_add_wrong_coordinates():
         label_box.set_for_frames(POLYGON_COORDINATES, frames=1)
 
 
-def test_get_object_instances_by_frames(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+def test_get_object_instances_by_frames(all_types_ontology):
+    label_row = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), all_types_ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     label_box = ObjectInstance(box_ontology_item)
@@ -300,13 +295,14 @@ def test_get_object_instances_by_frames(ontology):
     objects = list(label_row.get_object_instances(filter_frames=3))
     assert len(objects) == 1
     assert objects[0].object_hash == label_polygon.object_hash
+    validate_label_row_serialisation(label_row)
 
 
-def test_adding_object_instance_to_multiple_frames_fails(ontology):
-    label_row_1 = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+def test_adding_object_instance_to_multiple_frames_fails(all_types_ontology):
+    label_row_1 = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), all_types_ontology)
     label_row_1.from_labels_dict(empty_image_group_labels)
 
-    label_row_2 = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+    label_row_2 = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), all_types_ontology)
     label_row_2.from_labels_dict(empty_image_group_labels)
 
     label_box = ObjectInstance(box_ontology_item)
@@ -415,8 +411,8 @@ def test_update_remove_object_instance_coordinates():
     assert frame_4_view.manual_annotation == manual_annotation
 
 
-def test_removing_coordinates_from_object_removes_it_from_parent(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+def test_removing_coordinates_from_object_removes_it_from_parent(all_types_ontology):
+    label_row = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), all_types_ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     label_box = ObjectInstance(box_ontology_item)
@@ -437,6 +433,7 @@ def test_removing_coordinates_from_object_removes_it_from_parent(ontology):
     assert len(objects) == 1
     objects = label_row.get_object_instances(filter_frames=3)
     assert len(objects) == 0
+    validate_label_row_serialisation(label_row)
 
 
 def test_classification_index_answer_overwrite():
@@ -600,8 +597,8 @@ def test_classification_instances_frame_view():
         frame_view_1.created_by = "aphrodite@gmail.com"
 
 
-def test_add_and_get_classification_instances_to_label_row(ontology):
-    label_row = LabelRowV2(FAKE_LABEL_ROW_METADATA, Mock(), ontology)
+def test_add_and_get_classification_instances_to_label_row(all_types_ontology):
+    label_row = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), all_types_ontology)
     label_row.from_labels_dict(empty_image_group_labels)
 
     classification_instance_1 = ClassificationInstance(text_classification)
@@ -650,16 +647,17 @@ def test_add_and_get_classification_instances_to_label_row(ontology):
 
     classification_instance_2.remove_from_frames(3)
     overlapping_classification_instance.set_for_frames(3)
+    validate_label_row_serialisation(label_row)
 
 
 # TODO ED-302: Refactor to make more readable
-def test_add_and_get_classification_instances_to_audio_label_row(ontology):
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+def test_add_and_get_classification_instances_to_audio_label_row(all_types_ontology):
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
     label_row_metadata_dict["data_type"] = "AUDIO"
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology)
+    label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)
     label_row.from_labels_dict(EMPTY_AUDIO_LABELS)
 
     classification_instance_1 = ClassificationInstance(text_classification, range_only=True)
@@ -692,6 +690,7 @@ def test_add_and_get_classification_instances_to_audio_label_row(ontology):
 
     label_row.remove_classification(classification_instance_1)
     overlapping_classification_instance.set_for_frames(0)
+    validate_label_row_serialisation(label_row)
 
 
 def test_object_instance_answer_for_static_attributes():
@@ -969,14 +968,14 @@ def test_label_status_forwards_compatibility():
     assert LabelStatus("new-unknown-status").value == "_MISSING_LABEL_STATUS_"
 
 
-def test_frame_view(ontology) -> None:
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+def test_frame_view(all_types_ontology) -> None:
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 25
     label_row_metadata_dict["duration"] = 0.2
     label_row_metadata_dict["number_of_frames"] = 5
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology)
+    label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)
 
     assert label_row.number_of_frames == label_row_metadata.number_of_frames
 
@@ -1018,15 +1017,17 @@ def test_frame_view(ontology) -> None:
     assert frame_view.get_object_instances() == [object_instance]
     assert frame_view.get_classification_instances() == [classification_instance]
 
+    validate_label_row_serialisation(label_row)
 
-def test_classification_can_be_added_edited_and_removed(ontology):
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+
+def test_classification_can_be_added_edited_and_removed(all_types_ontology):
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 25
     label_row_metadata_dict["duration"] = 0.2
     label_row_metadata_dict["number_of_frames"] = 2
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology)
+    label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)
     label_row.from_labels_dict(empty_image_group_labels)  # initialise the labels.
 
     classification_instance = ClassificationInstance(checklist_classification)
@@ -1040,10 +1041,11 @@ def test_classification_can_be_added_edited_and_removed(ontology):
     label_row.remove_classification(classification_instance)
 
     assert len(label_row.get_classification_instances()) == 0
+    validate_label_row_serialisation(label_row)
 
 
 def test_non_geometric_label_rows_must_use_classification_instance_with_range_only(
-    ontology,
+    all_types_ontology,
     empty_audio_label_row: LabelRowV2,
     empty_plain_text_label_row: LabelRowV2,
     empty_html_text_label_row: LabelRowV2,
@@ -1091,15 +1093,16 @@ def test_both_polygons_supported(empty_video_label_row: LabelRowV2):
     assert isinstance(coords, PolygonCoordinates)
     assert coords.polygons == [[[PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)]]]
     assert coords.values == [PointCoordinate(x=0, y=0), PointCoordinate(x=1, y=1)]
+    validate_label_row_serialisation(empty_video_label_row)
 
 
-def test_non_range_classification_cannot_be_added_to_audio_label_row(ontology):
-    label_row_metadata_dict = asdict(FAKE_LABEL_ROW_METADATA)
+def test_non_range_classification_cannot_be_added_to_audio_label_row(all_types_ontology):
+    label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
     label_row_metadata_dict["data_type"] = "AUDIO"
     label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(all_ontology_types))
+    label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)
     label_row.from_labels_dict(EMPTY_AUDIO_LABELS)
 
     with pytest.raises(LabelRowError):
@@ -1111,8 +1114,10 @@ def test_non_range_classification_cannot_be_added_to_audio_label_row(ontology):
         classification_instance = checklist_classification.create_instance()
         label_row.add_classification_instance(classification_instance)
 
+    validate_label_row_serialisation(label_row)
 
-def test_audio_object_exceed_max_frames(ontology, empty_audio_label_row: LabelRowV2):
+
+def test_audio_object_exceed_max_frames(all_types_ontology, empty_audio_label_row: LabelRowV2):
     object_instance = ObjectInstance(audio_obj_ontology_item)
     object_instance.set_for_frames(AudioCoordinates(range=[Range(start=0, end=100)]))
     empty_audio_label_row.add_object_instance(object_instance)
@@ -1126,8 +1131,10 @@ def test_audio_object_exceed_max_frames(ontology, empty_audio_label_row: LabelRo
     assert range_list[0].start == 0
     assert range_list[0].end == 100
 
+    validate_label_row_serialisation(empty_audio_label_row)
 
-def test_get_annotations_from_non_geometric_classification(ontology) -> None:
+
+def test_get_annotations_from_non_geometric_classification(all_types_ontology) -> None:
     now = datetime.datetime.now()
 
     classification_instance = ClassificationInstance(checklist_classification, range_only=True)
@@ -1154,7 +1161,7 @@ def test_get_annotations_from_non_geometric_classification(ontology) -> None:
     assert annotation.reviews is None
 
 
-def test_get_annotations_from_audio_object(ontology) -> None:
+def test_get_annotations_from_audio_object(all_types_ontology) -> None:
     now = datetime.datetime.now()
 
     object_instance = ObjectInstance(audio_obj_ontology_item)
@@ -1180,7 +1187,7 @@ def test_get_annotations_from_audio_object(ontology) -> None:
     assert annotation.reviews is None
 
 
-def test_audio_classification_can_be_added_and_removed(ontology, empty_audio_label_row: LabelRowV2):
+def test_audio_classification_can_be_added_and_removed(all_types_ontology, empty_audio_label_row: LabelRowV2):
     label_row = empty_audio_label_row
     classification_instance = ClassificationInstance(checklist_classification, range_only=True)
     classification_instance.set_for_frames(Range(start=0, end=0))
@@ -1195,8 +1202,10 @@ def test_audio_classification_can_be_added_and_removed(ontology, empty_audio_lab
     label_row.remove_classification(classification_instance)
     assert len(label_row.get_classification_instances()) == 0
 
+    validate_label_row_serialisation(label_row)
 
-def test_audio_object_can_be_added_edited_and_removed(ontology, empty_audio_label_row: LabelRowV2):
+
+def test_audio_object_can_be_added_edited_and_removed(all_types_ontology, empty_audio_label_row: LabelRowV2):
     label_row = empty_audio_label_row
     obj_instance = ObjectInstance(audio_obj_ontology_item)
     obj_instance.set_for_frames(AudioCoordinates(range=[Range(start=0, end=1500)]))
@@ -1223,8 +1232,10 @@ def test_audio_object_can_be_added_edited_and_removed(ontology, empty_audio_labe
     label_row.remove_object(obj_instance)
     assert len(label_row.get_object_instances()) == 0
 
+    validate_label_row_serialisation(label_row)
 
-def test_get_annotations_from_html_text_object(ontology) -> None:
+
+def test_get_annotations_from_html_text_object(all_types_ontology) -> None:
     now = datetime.datetime.now()
 
     range = HtmlRange(
@@ -1255,7 +1266,7 @@ def test_get_annotations_from_html_text_object(ontology) -> None:
     assert annotation.reviews is None
 
 
-def test_html_text_classification_can_be_added_removed(ontology, empty_html_text_label_row: LabelRowV2):
+def test_html_text_classification_can_be_added_removed(all_types_ontology, empty_html_text_label_row: LabelRowV2):
     label_row = empty_html_text_label_row
     classification_instance = ClassificationInstance(checklist_classification, range_only=True)
     classification_instance.set_for_frames(Range(start=0, end=0))
@@ -1266,12 +1277,14 @@ def test_html_text_classification_can_be_added_removed(ontology, empty_html_text
 
     label_row.add_classification_instance(classification_instance)
     assert len(label_row.get_classification_instances()) == 1
+    validate_label_row_serialisation(label_row)
 
     label_row.remove_classification(classification_instance)
     assert len(label_row.get_classification_instances()) == 0
+    validate_label_row_serialisation(label_row)
 
 
-def test_html_text_object_can_be_added_edited_and_removed(ontology, empty_html_text_label_row: LabelRowV2):
+def test_html_text_object_can_be_added_edited_and_removed(all_types_ontology, empty_html_text_label_row: LabelRowV2):
     label_row = empty_html_text_label_row
     obj_instance = ObjectInstance(text_obj_ontology_item)
 
@@ -1295,6 +1308,7 @@ def test_html_text_object_can_be_added_edited_and_removed(ontology, empty_html_t
     label_row.add_object_instance(obj_instance)
     assert len(label_row.get_classification_instances()) == 0
     assert len(label_row.get_object_instances()) == 1
+    validate_label_row_serialisation(label_row)
 
     edited_range = [
         HtmlRange(
@@ -1325,9 +1339,11 @@ def test_html_text_object_can_be_added_edited_and_removed(ontology, empty_html_t
     range = obj_instance.range_html
     assert range is None
 
+    validate_label_row_serialisation(label_row)
+
 
 def test_html_text_object_cannot_be_added_to_non_html_label_row(
-    ontology, empty_audio_label_row: LabelRowV2, empty_plain_text_label_row: LabelRowV2
+    all_types_ontology, empty_audio_label_row: LabelRowV2, empty_plain_text_label_row: LabelRowV2
 ) -> None:
     obj_instance = ObjectInstance(text_obj_ontology_item)
 
@@ -1366,7 +1382,7 @@ def test_html_text_object_cannot_be_added_to_non_html_label_row(
 
 
 def test_set_for_frames_with_range_html_throws_error_if_used_incorrectly(
-    ontology, empty_html_text_label_row: LabelRowV2, empty_plain_text_label_row: LabelRowV2
+    all_types_ontology, empty_html_text_label_row: LabelRowV2, empty_plain_text_label_row: LabelRowV2
 ):
     range_html = [
         HtmlRange(
@@ -1399,7 +1415,7 @@ def test_set_for_frames_with_range_html_throws_error_if_used_incorrectly(
     )
 
 
-def test_get_annotations_from_plain_text_object(ontology) -> None:
+def test_get_annotations_from_plain_text_object(all_types_ontology) -> None:
     now = datetime.datetime.now()
 
     object_instance = ObjectInstance(text_obj_ontology_item)
@@ -1425,7 +1441,7 @@ def test_get_annotations_from_plain_text_object(ontology) -> None:
     assert annotation.reviews is None
 
 
-def test_plain_text_classification_can_be_added_and_removed(ontology, empty_plain_text_label_row: LabelRowV2):
+def test_plain_text_classification_can_be_added_and_removed(all_types_ontology, empty_plain_text_label_row: LabelRowV2):
     label_row = empty_plain_text_label_row
     classification_instance = ClassificationInstance(checklist_classification, range_only=True)
     classification_instance.set_for_frames(Range(start=0, end=0))
@@ -1440,8 +1456,10 @@ def test_plain_text_classification_can_be_added_and_removed(ontology, empty_plai
     label_row.remove_classification(classification_instance)
     assert len(label_row.get_classification_instances()) == 0
 
+    validate_label_row_serialisation(label_row)
 
-def test_plain_text_object_can_be_added_edited_and_removed(ontology, empty_plain_text_label_row: LabelRowV2):
+
+def test_plain_text_object_can_be_added_edited_and_removed(all_types_ontology, empty_plain_text_label_row: LabelRowV2):
     label_row = empty_plain_text_label_row
     obj_instance = ObjectInstance(text_obj_ontology_item)
 
@@ -1457,6 +1475,7 @@ def test_plain_text_object_can_be_added_edited_and_removed(ontology, empty_plain
     label_row.add_object_instance(obj_instance)
     assert len(label_row.get_classification_instances()) == 0
     assert len(label_row.get_object_instances()) == 1
+    validate_label_row_serialisation(label_row)
 
     edited_range = [Range(start=5, end=10)]
 
@@ -1466,13 +1485,18 @@ def test_plain_text_object_can_be_added_edited_and_removed(ontology, empty_plain
     assert len(range_list) == 1
     assert range_list[0].start == 5
     assert range_list[0].end == 10
+    validate_label_row_serialisation(label_row)
 
     obj_instance.remove_from_frames(frames=0)
     range_html = obj_instance.range_html
     assert range_html is None
 
+    validate_label_row_serialisation(label_row)
 
-def test_plain_text_object_cannot_be_added_to_html_label_row(ontology, empty_html_text_label_row: LabelRowV2) -> None:
+
+def test_plain_text_object_cannot_be_added_to_html_label_row(
+    all_types_ontology, empty_html_text_label_row: LabelRowV2
+) -> None:
     label_row = empty_html_text_label_row
     obj_instance = ObjectInstance(text_obj_ontology_item)
 

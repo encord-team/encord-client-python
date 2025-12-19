@@ -245,4 +245,4 @@ class LabelRowDict(TypedDict, total=False):
 
 def _is_containing_metadata(answer: ClassificationAnswer) -> bool:
     """Check if the classification answer contains necessary metadata fields."""
-    return answer.get("createdBy") is not None
+    return "createdBy" in answer

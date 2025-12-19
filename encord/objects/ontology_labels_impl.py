@@ -1147,7 +1147,7 @@ class LabelRowV2:
         """
         self._check_labelling_is_initalised()
 
-        self._objects_map.pop(object_instance.object_hash)
+        self._objects_map.pop(object_instance.object_hash, None)
         if not object_instance.is_range_only():
             self._remove_from_frame_to_hashes_map(
                 _frame_views_to_frame_numbers(object_instance.get_annotations()), object_instance.object_hash

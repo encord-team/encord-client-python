@@ -8,7 +8,7 @@ from encord.constants.enums import is_geometric
 from encord.exceptions import LabelRowError
 from encord.objects import Classification, LabelRowV2, Option
 from encord.orm.label_row import LabelRowMetadata
-from tests.objects.common import FAKE_LABEL_ROW_METADATA
+from tests.objects.common import BASE_LABEL_ROW_METADATA
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.audio_labels import EMPTY_AUDIO_LABELS
 from tests.objects.data.empty_image_group import empty_image_group_labels
@@ -18,9 +18,9 @@ from tests.objects.data.empty_video import labels
 @pytest.mark.parametrize(
     "metadata_label",
     [
-        pytest.param((FAKE_LABEL_ROW_METADATA, labels), id="empty_video"),
-        pytest.param((FAKE_LABEL_ROW_METADATA, empty_image_group_labels), id="empty_image_group"),
-        pytest.param((FAKE_LABEL_ROW_METADATA, EMPTY_AUDIO_LABELS), id="empty_audio"),
+        pytest.param((BASE_LABEL_ROW_METADATA, labels), id="empty_video"),
+        pytest.param((BASE_LABEL_ROW_METADATA, empty_image_group_labels), id="empty_image_group"),
+        pytest.param((BASE_LABEL_ROW_METADATA, EMPTY_AUDIO_LABELS), id="empty_audio"),
     ],
 )
 def test_classification_e2e(all_types_ontology, metadata_label: Tuple[LabelRowMetadata, dict]) -> None:

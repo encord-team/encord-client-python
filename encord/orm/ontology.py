@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import IntEnum
 from typing import Dict, Optional
 
 # pylint: disable=unused-import

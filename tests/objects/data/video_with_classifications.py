@@ -90,9 +90,9 @@ labels: LabelRowDict = {
 
 labels_without_answer_meta = deepcopy(labels)
 for answer in labels_without_answer_meta["classification_answers"].values():
-    answer.pop("createdAt")
-    answer.pop("createdBy")
-    answer.pop("lastEditedAt")
-    answer.pop("lastEditedBy")
-    answer.pop("manualAnnotation")
-    answer.pop("range")
+    answer.pop("createdAt", None)
+    answer.pop("createdBy", None)
+    answer.pop("lastEditedAt", None)
+    answer.pop("lastEditedBy", None)
+    answer.pop("manualAnnotation", None)
+    answer.pop("range", None)
