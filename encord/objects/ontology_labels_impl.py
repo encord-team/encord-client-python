@@ -964,6 +964,7 @@ class LabelRowV2:
         self._check_labelling_is_initalised()
 
         classification_instance.is_valid()
+        classification_hash = classification_instance.classification_hash
 
         # TODO: Need to update the docstring for this method, talk to Laverne.
         if not classification_instance.is_range_only() and not is_geometric(self.data_type):
@@ -974,22 +975,18 @@ class LabelRowV2:
                 "You can do ClassificationInstance(range_only=True) or "
                 "Classification.create_instance(range_only=True) to achieve this."
             )
-
-        if classification_instance.is_assigned_to_label_row():
+        elif classification_instance.is_assigned_to_label_row():
             raise LabelRowError(
                 "Provided ClassificationInstance object is already attached to a different LabelRowV2 object. "
                 "You can only add a ClassificationInstance to one label row. "
                 "You can do a ClassificationInstance.copy() to create an identical ClassificationInstance which is not part of any label row."
             )
-
-        classification_hash = classification_instance.classification_hash
-        if classification_hash in self._classifications_map and not force:
+        elif classification_hash in self._classifications_map and not force:
             raise LabelRowError(
                 f"A ClassificationInstance for classification hash '{classification_hash}' already exists on the label row object. "
                 f"Pass 'force=True' to override it."
             )
-
-        if is_geometric(self.data_type) and not classification_instance.is_range_only():
+        elif is_geometric(self.data_type) and not classification_instance.is_range_only():
             frames = set(_frame_views_to_frame_numbers(classification_instance.get_annotations()))
             is_present, already_present_ranges = self._is_classification_present_on_frames(
                 classification_instance.ontology_item,
@@ -1015,6 +1012,7 @@ class LabelRowV2:
             classification_instance=classification_instance,
             force=force,
         )
+        self._classifications_map[classification_hash] = classification_instance
 
     def _add_classification_instance_for_range(
         self,
@@ -1040,8 +1038,6 @@ class LabelRowV2:
                 f"classification does not yet exist."
             )
 
-        classification_instance._parent = self
-
         if force:
             # If it's a global classification, make sure to remove all other instances of the same ontology feature
             if classification_instance.is_global():
@@ -1049,10 +1045,7 @@ class LabelRowV2:
                     if c_instance.feature_hash == classification_instance.feature_hash:
                         self._classifications_map.pop(c_instance.classification_hash)
 
-            if classification_hash in self._classifications_map:
-                self._classifications_map.pop(classification_hash)
-
-        self._classifications_map[classification_hash] = classification_instance
+        classification_instance._parent = self
         self._classifications_to_ranges[classification_instance.ontology_item].add_ranges(ranges_to_add)
 
     def remove_classification(self, classification_instance: ClassificationInstance):
