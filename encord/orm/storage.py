@@ -400,7 +400,7 @@ class UploadLongPollingState(BaseDTO):
     """Number of upload job units that have error status."""
 
     units_cancelled_count: int
-    """Number of upload job units that have been cancelled."""
+    """Number of upload job units that have been canceled."""
 
     unit_errors: List[DataUnitError]
     """Structured list of per-item upload errors. See :class:`DataUnitError` for more details."""
@@ -1243,7 +1243,7 @@ class AddDataToFolderJobCancelResponse(BaseDTO):
     """Response returned after canceling an add-data-to-folder job.
 
     Arg:
-        units_cancelled_count: Number of individual job units that were cancelled.
+        units_cancelled_count: Number of individual job units that were canceled.
     """
 
     units_cancelled_count: int
@@ -1302,7 +1302,7 @@ class SyncPrivateDataWithCloudSyncedFolderStatus(CamelStrEnum):
 
     CANCELLED = auto()
     """
-    The synchronization job was manually cancelled.
+    The synchronization job was manually canceled.
 
     This status indicates that the job was explicitly terminated before completion.
     """
@@ -1329,7 +1329,7 @@ class SyncPrivateDataWithCloudSyncedFolderGetResultResponse(BaseDTO):
     """Number of bucket listing pages that failed during processing"""
 
     scan_pages_processing_cancelled: int
-    """Number of bucket listing pages that were cancelled during processing"""
+    """Number of bucket listing pages that were canceled during processing"""
 
     upload_jobs_pending: int
     """Number of upload jobs waiting to be processed"""
@@ -1350,4 +1350,4 @@ class SyncPrivateDataWithCloudSyncedFolderGetResultResponse(BaseDTO):
     """Number of individual files that failed to synchronize"""
 
     upload_jobs_units_cancelled: int
-    """Number of individual files that were cancelled during synchronization"""
+    """Number of individual files that were canceled during synchronization"""
