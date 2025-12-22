@@ -271,12 +271,12 @@ class ObjectInstance:
         Args:
             answer: The answer to set.
             attribute: The ontology attribute to set the answer for. If not set, this will be attempted to be
-                inferred.  For answers to :class:`encord.objects.common.RadioAttribute` or
-                :class:`encord.objects.common.ChecklistAttribute`, this can be inferred automatically.
-                For :class:`encord.objects.common.TextAttribute` or :class:`encord.objects.common.NumericAttribute`,
+                inferred.  For answers to :class:`encord.objects.attributes.RadioAttribute` or
+                :class:`encord.objects.attributes.ChecklistAttribute`, this can be inferred automatically.
+                For :class:`encord.objects.attributes.TextAttribute` or :class:`encord.objects.attributes.NumericAttribute`,
                 this will only be inferred if there is only one possible
                 TextAttribute or NumericAttribute to set for the entire object instance.
-                Otherwise, a :class:`encord.exceptionsLabelRowError` will be thrown.
+                Otherwise, a :class:`encord.exceptions.LabelRowError` will be thrown.
             frames: Only relevant for dynamic attributes. The frames to set the answer for. If `None`, the
                 answer is set for all frames that this object currently has set coordinates for (also overwriting
                 current answers). This will not automatically propagate the answer to new frames that are added in the
