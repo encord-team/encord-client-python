@@ -54,7 +54,7 @@ class AuthenticationError(EncordException):
 
 
 class AuthorisationError(EncordException):
-    """Exception thrown when access is unauthorised.
+    """Exception thrown when access is unauthorized.
     (E.g. access to a data asset or method).
     """
 
@@ -234,7 +234,7 @@ class InvalidArgumentsError(EncordException):
 
 
 class GenericServerError(EncordException):
-    """The server has reported an error which is not recognised by this SDK version. Try upgrading the SDK version to
+    """The server has reported an error which is not recognized by this SDK version. Try upgrading the SDK version to
     see the precise error that is reported.
     """
 

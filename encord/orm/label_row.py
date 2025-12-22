@@ -43,7 +43,7 @@ class LabelRow(base_orm.BaseORM):
       action) pairs.
     * ``label_status`` is a string indicating label status. It can take the values
       enumerated in :class:`encord.orm.label_row.LabelStatus`. *Note* that this does
-      *not* reflect thes status shown in the Projects->Labels section on the web-app.
+      *not* reflect the status shown in the Projects->Labels section on the web-app.
 
     A data unit, mentioned for the dictionary entry ``data_units`` above, has in the
     form::

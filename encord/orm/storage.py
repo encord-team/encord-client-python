@@ -1240,7 +1240,7 @@ class StorageItemsMigratePayload(BaseDTO):
 
 
 class AddDataToFolderJobCancelResponse(BaseDTO):
-    """Response returned after cancelling an add-data-to-folder job.
+    """Response returned after canceling an add-data-to-folder job.
 
     Arg:
         units_cancelled_count: Number of individual job units that were cancelled.
