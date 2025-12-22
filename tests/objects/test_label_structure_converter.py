@@ -334,7 +334,7 @@ def test_label_row_with_reviews(all_types_ontology):
 
 def test_classifications_with_no_answers_equivalent_to_no_classification(all_types_ontology):
     # Testing backward compatibility with label rows that might have classifications with no answers
-    # This is not a part of the current behaviour, but we still have label rows like that in the wild
+    # This is not a part of the current behavior, but we still have label rows like that in the wild
 
     label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = None

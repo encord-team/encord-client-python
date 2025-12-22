@@ -76,7 +76,7 @@ class DatasetUsers:
 
 
 class DataLinkDuplicatesBehavior(Enum):
-    """Behaviour when linking data that already exists in a dataset.
+    """Behavior when linking data that already exists in a dataset.
 
     **Values**:
 
@@ -413,7 +413,7 @@ class DataRow(dict, Formatter):
     @deprecated("0.1.98", ".is_image_sequence")
     def is_optimised_image_group(self) -> Optional[bool]:
         """If the data type is an :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
-        returns whether this is a performance optimised image group. Returns `None` for other data types.
+        returns whether this is a performance optimized image group. Returns `None` for other data types.
 
         DEPRECATED: This method is deprecated and will be removed in the upcoming library version.
         Please use :meth:`encord.orm.dataset.DataRow.is_image_sequence` instead
@@ -980,7 +980,7 @@ class ImageGroupOCR:
     """OCR results extracted from an image group.
 
     Args:
-        processed_texts: Mapping of identifiers to recognised text blocks produced by
+        processed_texts: Mapping of identifiers to recognized text blocks produced by
             the OCR pipeline.
     """
 
@@ -1167,7 +1167,7 @@ class CreateDatasetPayload(BaseDTO):
         title: Title of the dataset to create.
         description: Optional description of the dataset and its intended use.
         create_backing_folder: If ``True``, create a legacy “mirror” dataset together with a
-            backing storage folder in a single operation. This behaviour
+            backing storage folder in a single operation. This behavior
             is retained for backwards compatibility.
         legacy_call: Internal flag used for analytics to detect usage of legacy
             dataset creation flows. This field will be removed in a
