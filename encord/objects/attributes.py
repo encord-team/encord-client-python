@@ -140,6 +140,7 @@ class RadioAttribute(Attribute["NestableOption"]):
     Each option is represented by a `NestableOption`, which may itself
     contain nested attributes (up to 7 levels deep).
     """
+
     _options: List[NestableOption]
 
     def __init__(
@@ -205,6 +206,7 @@ class ChecklistAttribute(Attribute["FlatOption"]):
     An ontology attribute that allows selecting exactly one or more options
     from a list of options.
     """
+
     _options: List[FlatOption]
 
     def __init__(
@@ -268,6 +270,7 @@ class TextAttribute(Attribute["FlatOption"]):
     """
     An ontology attribute that allows users to type text strings in a text field.
     """
+
     def __init__(self, uid: NestedID, feature_node_hash: str, name: str, required: bool, archived: bool, dynamic: bool):
         super().__init__(
             uid=uid,
@@ -290,6 +293,7 @@ class NumericAttribute(Attribute["FlatOption"]):
     """
     An ontology attribute that allows users to type numerical values (float) in a numerical field.
     """
+
     def __init__(self, uid: NestedID, feature_node_hash: str, name: str, required: bool, archived: bool, dynamic: bool):
         super().__init__(
             uid=uid,
