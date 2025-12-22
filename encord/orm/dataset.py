@@ -1047,7 +1047,7 @@ class LongPollingStatus(str, Enum):
     This enum is stable and lists all possible job statuses returned
     by the long-polling API. Client code should use these values to determine
     whether a job is still running, has completed successfully, completed with
-    errors, or was explicitly cancelled.
+    errors, or was explicitly canceled.
 
     **PENDING**
 
@@ -1078,7 +1078,7 @@ class LongPollingStatus(str, Enum):
 
     **CANCELLED**
 
-    Job was cancelled explicitly by the user through the Encord UI or via the Encord
+    Job was canceled explicitly by the user through the Encord UI or via the Encord
     SDK using the `add_data_to_folder_job_cancel` method.
 
     In the context of this status:
@@ -1086,10 +1086,10 @@ class LongPollingStatus(str, Enum):
       before completion by a user action.
     - Cancellation can occur either manually through the Encord UI or programmatically
       using the SDK method `add_data_to_folder_job_cancel`.
-    - Once a job is cancelled, no further processing will occur, and any processed
+    - Once a job is canceled, no further processing will occur, and any processed
       data before the cancellation will be available.
-    - The presence of cancelled data units (`units_cancelled_count`) indicates that
-      some data upload units were interrupted and cancelled before completion.
+    - The presence of canceled data units (`units_cancelled_count`) indicates that
+      some data upload units were interrupted and canceled before completion.
     - If `ignore_errors` was set to `True`, the job may continue despite errors, and
       cancellation will only apply to the unprocessed units.
     """
@@ -1145,7 +1145,7 @@ class DatasetDataLongPolling(BaseDTO):
     """Number of upload job units that have error status."""
 
     units_cancelled_count: int
-    """Number of upload job units that have been cancelled."""
+    """Number of upload job units that have been canceled."""
 
 
 @dataclasses.dataclass(frozen=True)

@@ -196,7 +196,7 @@ class ProjectStatus(str, Enum):
      - **IN_PROGRESS:** The project is active and annotation/review work is ongoing.
      - **PAUSED:** The project is temporarily paused.
      - **COMPLETED:** All work on the project has been completed.
-     - **CANCELLED:** The project has been cancelled before completion.
+     - **CANCELLED:** The project has been canceled before completion.
     - **ARCHIVED:** The project is archived and no further work is expected.
     """
 

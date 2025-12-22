@@ -39,7 +39,7 @@ def update_storage_item_cloud_info(
         cloud integration of the item does not match this value. If `None`, the check will be skipped.
     :param verify_access: Whether to verify access to the item.
     :param skip_missing: if true, no error will be raised if the item is not found. Otherwise, the operation (and
-        the operations in the same bundle) will be cancelled and an error will be raised.
+        the operations in the same bundle) will be canceled and an error will be raised.
     :param bundle: The optional :class:`encord.http.bundle.Bundle` instance used to group updates into bulk calls.
     """
     if not bundle:
