@@ -76,7 +76,7 @@ class DatasetUsers:
 
 
 class DataLinkDuplicatesBehavior(Enum):
-    """Behaviour when linking data that already exists in a dataset.
+    """Behavior when linking data that already exists in a dataset.
 
     **Values**:
 
@@ -413,7 +413,7 @@ class DataRow(dict, Formatter):
     @deprecated("0.1.98", ".is_image_sequence")
     def is_optimised_image_group(self) -> Optional[bool]:
         """If the data type is an :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
-        returns whether this is a performance optimised image group. Returns `None` for other data types.
+        returns whether this is a performance optimized image group. Returns `None` for other data types.
 
         DEPRECATED: This method is deprecated and will be removed in the upcoming library version.
         Please use :meth:`encord.orm.dataset.DataRow.is_image_sequence` instead
@@ -980,7 +980,7 @@ class ImageGroupOCR:
     """OCR results extracted from an image group.
 
     Args:
-        processed_texts: Mapping of identifiers to recognised text blocks produced by
+        processed_texts: Mapping of identifiers to recognized text blocks produced by
             the OCR pipeline.
     """
 
@@ -1047,7 +1047,7 @@ class LongPollingStatus(str, Enum):
     This enum is stable and lists all possible job statuses returned
     by the long-polling API. Client code should use these values to determine
     whether a job is still running, has completed successfully, completed with
-    errors, or was explicitly cancelled.
+    errors, or was explicitly canceled.
 
     **PENDING**
 
@@ -1078,7 +1078,7 @@ class LongPollingStatus(str, Enum):
 
     **CANCELLED**
 
-    Job was cancelled explicitly by the user through the Encord UI or via the Encord
+    Job was canceled explicitly by the user through the Encord UI or via the Encord
     SDK using the `add_data_to_folder_job_cancel` method.
 
     In the context of this status:
@@ -1086,10 +1086,10 @@ class LongPollingStatus(str, Enum):
       before completion by a user action.
     - Cancellation can occur either manually through the Encord UI or programmatically
       using the SDK method `add_data_to_folder_job_cancel`.
-    - Once a job is cancelled, no further processing will occur, and any processed
+    - Once a job is canceled, no further processing will occur, and any processed
       data before the cancellation will be available.
-    - The presence of cancelled data units (`units_cancelled_count`) indicates that
-      some data upload units were interrupted and cancelled before completion.
+    - The presence of canceled data units (`units_cancelled_count`) indicates that
+      some data upload units were interrupted and canceled before completion.
     - If `ignore_errors` was set to `True`, the job may continue despite errors, and
       cancellation will only apply to the unprocessed units.
     """
@@ -1145,7 +1145,7 @@ class DatasetDataLongPolling(BaseDTO):
     """Number of upload job units that have error status."""
 
     units_cancelled_count: int
-    """Number of upload job units that have been cancelled."""
+    """Number of upload job units that have been canceled."""
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1167,7 +1167,7 @@ class CreateDatasetPayload(BaseDTO):
         title: Title of the dataset to create.
         description: Optional description of the dataset and its intended use.
         create_backing_folder: If ``True``, create a legacy “mirror” dataset together with a
-            backing storage folder in a single operation. This behaviour
+            backing storage folder in a single operation. This behavior
             is retained for backwards compatibility.
         legacy_call: Internal flag used for analytics to detect usage of legacy
             dataset creation flows. This field will be removed in a
