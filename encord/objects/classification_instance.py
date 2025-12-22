@@ -356,7 +356,7 @@ class ClassificationInstance:
                 :class:`encord.objects.common.ChecklistAttribute`, this can be inferred automatically. For
                 :class:`encord.objects.common.TextAttribute`, this will only be inferred if there is only one possible
                 TextAttribute to set for the entire classification instance. Otherwise, a
-                :class:`encord.exceptionsLabelRowError` will be thrown.
+                :class:`encord.exceptions.LabelRowError` will be thrown.
             overwrite: If `True`, the answer will be overwritten if it already exists. If `False`, this will throw
                 a LabelRowError if the answer already exists.
         """
