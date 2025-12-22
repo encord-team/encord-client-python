@@ -15,8 +15,22 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple, Type, Union, cast
-from typing import Any, Dict, Iterable, List, Literal, Optional, Sequence, Set, Tuple, Type, Union, cast, overload
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Type,
+    Union,
+    cast,
+    overload,
+)
 from uuid import UUID
 
 from encord.client import EncordClientProject
@@ -105,7 +119,7 @@ from encord.objects.types import (
     ObjectAnswerForGeometric,
     ObjectAnswerForHtml,
     ObjectAnswerForNonGeometric,
-    is_containing_metadata,
+    _is_containing_metadata,
     _is_containing_spaces,
 )
 from encord.objects.utils import _lower_snake_case
