@@ -316,7 +316,7 @@ text_classification_instance.set_answer(answer="This is a text classification.")
 assert text_classification_instance.get_answer() == "This is a text classification."
 
 # %%
-# We encourage you to read the `set_answer` and `get_answer` docstrings to understand the different behaviours and
+# We encourage you to read the `set_answer` and `get_answer` docstrings to understand the different behaviors and
 # possible options which you can set.
 #
 # Checklist attributes
