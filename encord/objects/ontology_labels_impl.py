@@ -35,6 +35,7 @@ from uuid import UUID
 
 from encord.client import EncordClientProject
 from encord.client import LabelRow as OrmLabelRow
+from encord.common.beta import beta
 from encord.common.deprecated import deprecated
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import (
@@ -771,6 +772,7 @@ class LabelRowV2:
             raise LabelRowError("This function is only supported for label rows of image or image group data types.")
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
+    @beta("The Space API is experimental and subject to change. Use with caution in production environments.")
     def get_spaces(self) -> list[Space]:
         return list(self._space_map.values())
 
@@ -819,6 +821,7 @@ class LabelRowV2:
     def get_space(self, *, layout_key: str, type_: Literal["html"]) -> HTMLSpace:
         pass
 
+    @beta("The Space API is experimental and subject to change. Use with caution in production environments.")
     def get_space(
         self,
         *,
@@ -827,7 +830,13 @@ class LabelRowV2:
         type_: Literal["video", "image", "audio", "text", "html"],
     ) -> Space:
         """Retrieves a single space which matches the specified id and type.
+
+        .. warning::
+            **BETA**: This feature is in beta. The Space API is experimental and may change
+            in future versions. Use with caution in production environments.
+
         Throws an exception if more than one or no space with the specified id and type is found.
+
         Args:
             id: The id of the space to find.
             layout_key: The layout key of the data unit within its data group layout.
@@ -2949,15 +2958,6 @@ class LabelRowV2:
             elif classification_instance := self._create_new_classification_instance_from_frame(
                 frame_classification_label, frame, classification_answers
             ):
-                self.add_classification_instance(classification_instance)
-
-    def _add_classification_instances_from_classifications_without_frames(
-        self,
-        classification_answers: dict[str, ClassificationAnswer],
-    ):
-        for classification_answer in classification_answers.values():
-            if is_containing_metadata(classification_answer) and not _is_containing_spaces(classification_answer):
-                classification_instance = self._create_new_classification_instance_with_ranges(classification_answer)
                 self.add_classification_instance(classification_instance)
 
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:

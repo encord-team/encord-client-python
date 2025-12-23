@@ -310,9 +310,11 @@ class HTMLSpace(Space):
             if self.space_id not in classification_answer["spaces"]:
                 continue
 
-            classification_instance = self._label_row._create_new_classification_instance_with_ranges(
+            classification_instance = self._label_row._create_new_classification_instance_from_answer(
                 classification_answer
             )
+            if classification_instance is None:
+                continue
             annotation_metadata = _AnnotationMetadata.from_dict(classification_answer)  # type: ignore[arg-type]
 
             self.put_classification_instance(
