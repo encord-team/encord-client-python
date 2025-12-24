@@ -12,6 +12,7 @@ from encord.objects.coordinates import (
     add_coordinates_to_frame_object_dict,
     get_geometric_coordinates_from_frame_object_dict,
 )
+from encord.objects.frames import ranges_to_list
 from encord.objects.label_utils import create_frame_classification_dict, create_frame_object_dict
 from encord.objects.spaces.annotation.base_annotation import (
     _AnnotationData,
@@ -466,6 +467,11 @@ class ImageSpace(Space):
                 "classifications": classifications,
                 "classificationHash": classification.classification_hash,
                 "featureHash": classification.feature_hash,
+                "spaces": {
+                    self.space_id: {
+                        "range": [[0, 0]]  # For images, there is only one frame
+                    }
+                },
             }
 
             ret[classification.classification_hash] = classification_index_element

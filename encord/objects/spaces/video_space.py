@@ -22,7 +22,7 @@ from encord.objects.coordinates import (
     add_coordinates_to_frame_object_dict,
     get_geometric_coordinates_from_frame_object_dict,
 )
-from encord.objects.frames import Frames, Ranges, frames_class_to_frames_list, ranges_list_to_ranges
+from encord.objects.frames import Frames, Ranges, frames_class_to_frames_list, ranges_list_to_ranges, ranges_to_list
 from encord.objects.internal_helpers import _infer_attribute_from_answer
 from encord.objects.label_utils import create_frame_classification_dict, create_frame_object_dict
 from encord.objects.ontology_object_instance import AnswersForFrames, DynamicAnswerManager, check_coordinate_type
@@ -977,6 +977,12 @@ class VideoSpace(Space):
     ) -> dict[str, ClassificationAnswer]:
         ret: dict[str, ClassificationAnswer] = {}
         for classification_instance in self._classifications_map.values():
+            classification_range_manager = self._classification_hash_to_range_manager.get(
+                classification_instance.classification_hash, None
+            )
+            if classification_range_manager is None:
+                continue
+
             all_static_answers = classification_instance.get_all_static_answers()
             classifications = [
                 cast(AttributeDict, answer.to_encord_dict()) for answer in all_static_answers if answer.is_answered()
@@ -985,6 +991,7 @@ class VideoSpace(Space):
                 "classifications": classifications,
                 "classificationHash": classification_instance.classification_hash,
                 "featureHash": classification_instance.feature_hash,
+                "spaces": {self.space_id: {"range": ranges_to_list(classification_range_manager.get_ranges())}},
             }
 
             ret[classification_instance.classification_hash] = classification_index_element

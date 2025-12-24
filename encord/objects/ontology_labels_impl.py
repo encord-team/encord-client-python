@@ -2701,6 +2701,10 @@ class LabelRowV2:
 
         # Attempt to instantiate all classifications - ranged only or with frames
         for classification_answer in classification_answers.values():
+            # Classifications belonging to a space will be parsed and created later
+            if classification_answer["spaces"] is not None:
+                continue
+
             if classification_instance := self._create_new_classification_instance_from_answer(classification_answer):
                 self.add_classification_instance(classification_instance)
 

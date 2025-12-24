@@ -136,10 +136,10 @@ DATA_GROUP_WITH_LABELS = {
             "lastEditedAt": "Thu, 05 Dec 2024 15:24:44 UTC",
             "manualAnnotation": True,
             "featureHash": "KVfzNkFy",
-            "name": "audio object",
+            "name": "audio object 1",
             "color": "#A4FF00",
             "shape": "audio",
-            "value": "audio_object",
+            "value": "audio_object_1",
             "spaces": {
                 "audio-uuid": {
                     "range": [[100, 200]],
@@ -182,6 +182,11 @@ DATA_GROUP_WITH_LABELS = {
                     "manualAnnotation": True,
                 }
             ],
+            "spaces": {
+                "video-uuid": {
+                    "range": [[0, 0]],
+                },
+            },
         },
         # Image classification (frame-based, uses checklist)
         "image-classification": {
@@ -202,6 +207,11 @@ DATA_GROUP_WITH_LABELS = {
                     "manualAnnotation": True,
                 }
             ],
+            "spaces": {
+                "image-uuid": {
+                    "range": [[0, 0]],
+                },
+            },
         },
         # Audio classification (range-based)
         "audio-classification": {

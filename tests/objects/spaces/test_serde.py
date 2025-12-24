@@ -1,3 +1,4 @@
+import json
 from unittest.mock import Mock
 
 from deepdiff import DeepDiff
@@ -51,6 +52,7 @@ def test_read_and_export_all_space_labels(ontology):
 
     # Verify round-trip serialization
     output_dict = label_row.to_encord_dict()
+    print(json.dumps(output_dict, indent=2))
     assert not DeepDiff(
         DATA_GROUP_WITH_LABELS,
         output_dict,

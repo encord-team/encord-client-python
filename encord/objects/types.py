@@ -260,6 +260,7 @@ class LabelRowDict(TypedDict, total=False):
     object_answers: Dict
     classification_answers: Dict[str, ClassificationAnswer]
     data_units: Dict
+    spaces: Dict
 
 
 def _is_containing_metadata(answer: ClassificationAnswer) -> bool:
