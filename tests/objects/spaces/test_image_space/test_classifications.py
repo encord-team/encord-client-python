@@ -69,6 +69,7 @@ def test_put_classification_on_image_space(ontology):
             ],
             "classificationHash": new_classification_instance.classification_hash,
             "featureHash": "jPOcEsbw",
+            "spaces": {"image-1-uuid": {"range": [[0, 0]]}},
         }
     }
 
