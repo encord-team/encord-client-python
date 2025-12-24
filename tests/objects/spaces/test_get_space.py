@@ -1,5 +1,8 @@
 from unittest.mock import Mock
 
+import pytest
+
+from encord.exceptions import LabelRowError
 from encord.objects import LabelRowV2
 from tests.objects.data.data_group.all_modalities import DATA_GROUP_METADATA
 
@@ -34,3 +37,18 @@ def test_get_space_by_layout_key(ontology):
 
     audio_space = label_row.get_space(layout_key="main-audio", type_="audio")
     assert audio_space.space_id == "audio-uuid"
+
+
+def test_get_space_that_do_not_exist(ontology):
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+
+    with pytest.raises(LabelRowError) as no_such_space_error:
+        label_row.get_space(id="non-existent-video", type_="video")
+    assert no_such_space_error.value.message == "Could not find space with given id 'non-existent-video'."
+
+    with pytest.raises(LabelRowError) as incorrect_type_error:
+        label_row.get_space(id="image-uuid", type_="video")
+    assert (
+        incorrect_type_error.value.message
+        == "Space with id 'image-uuid' is not of expected type 'video'. Found ImageSpace instead of VideoSpace."
+    )

@@ -140,6 +140,15 @@ log = logging.getLogger(__name__)
 OntologyTypes = Union[Type[Object], Type[Classification]]
 OntologyClasses = Union[Object, Classification]
 
+# Type mapping for runtime validation in get_space
+_SPACE_TYPE_TO_CLASS = {
+    "video": VideoSpace,
+    "image": ImageSpace,
+    "audio": AudioSpace,
+    "text": TextSpace,
+    "html": HTMLSpace,
+}
+
 
 class LabelRowV2:
     """This class represents a single label row. It corresponds to exactly one data row within a project and holds all
@@ -831,9 +840,8 @@ class LabelRowV2:
     ) -> Space:
         """Retrieves a single space which matches the specified id and type.
 
-        .. warning::
-            **BETA**: This feature is in beta. The Space API is experimental and may change
-            in future versions. Use with caution in production environments.
+        **BETA**: This feature is in beta. The Space API is experimental and may change
+        in future versions. Use with caution in production environments.
 
         Throws an exception if more than one or no space with the specified id and type is found.
 
@@ -849,23 +857,36 @@ class LabelRowV2:
         if id is not None and layout_key is not None:
             raise LabelRowError("Only one of id and layout_key can be specified.")
 
+        space = None
         if id is not None:
             for element in self._space_map.values():
                 if element.space_id == id:
-                    return element
+                    space = element
+                    break
 
-        if layout_key is not None:
+        if space is None and layout_key is not None:
             space_id = self._layout_key_to_space_id.get(layout_key)
             if space_id is not None:
-                return self._space_map[space_id]
+                space = self._space_map[space_id]
 
-        space_identifier_error_message = ""
-        if id is not None:
-            space_identifier_error_message = f"Could not find space with given id {id}."
-        elif layout_key is not None:
-            space_identifier_error_message = f"Could not find space with given layout key {layout_key}."
+        if space is None:
+            space_identifier_error_message = ""
+            if id is not None:
+                space_identifier_error_message = f"Could not find space with given id '{id}'."
+            elif layout_key is not None:
+                space_identifier_error_message = f"Could not find space with given layout key {layout_key}."
+            raise LabelRowError(space_identifier_error_message)
 
-        raise LabelRowError(space_identifier_error_message)
+        # Runtime type validation
+        expected_class = _SPACE_TYPE_TO_CLASS[type_]
+        if not isinstance(space, expected_class):
+            space_identifier = id if id is not None else layout_key
+            raise LabelRowError(
+                f"Space with {'id' if id is not None else 'layout_key'} '{space_identifier}' is not of expected type '{type_}'. "
+                f"Found {type(space).__name__} instead of {expected_class.__name__}."
+            )
+
+        return space
 
     def save(self, bundle: Optional[Bundle] = None, validate_before_saving: bool = False) -> None:
         """Upload the created labels to the Encord server.
