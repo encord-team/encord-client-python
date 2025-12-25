@@ -23,7 +23,7 @@ def test_add_dynamic_attributes_to_frames_on_object_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
 
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
     point_coordinates = PointCoordinate(x=0.5, y=0.5)
@@ -72,7 +72,7 @@ def test_remove_dynamic_attributes_from_frame_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
 
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
     point_coordinates = PointCoordinate(x=0.5, y=0.5)
@@ -113,7 +113,7 @@ def test_remove_object_from_frame_removes_dynamic_attributes_from_those_frames(o
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
 
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
     point_coordinates = PointCoordinate(x=0.5, y=0.5)
@@ -148,7 +148,7 @@ def test_remove_object_removes_dynamic_attributes_for_that_object(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
 
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
     point_coordinates = PointCoordinate(x=0.5, y=0.5)
@@ -179,7 +179,7 @@ def test_add_dynamic_attributes_to_frames_where_object_does_not_exist_on_video_s
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
 
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
     point_coordinates = PointCoordinate(x=0.5, y=0.5)
@@ -214,7 +214,7 @@ def test_add_dynamic_attributes_object_which_does_not_exist_on_video_space(ontol
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
 
     new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
 

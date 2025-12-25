@@ -24,8 +24,8 @@ def test_bitmask_dimension_validation():
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_NO_LABELS)
 
-    video_space = label_row.get_space(id="video-uuid", type_="video")
-    image_space = label_row.get_space(id="image-uuid", type_="image")
+    video_space = label_row._get_space(id="video-uuid", type_="video")
+    image_space = label_row._get_space(id="image-uuid", type_="image")
 
     # Correct dimensions (100x100) should succeed on both spaces
     correct_bitmask = BitmaskCoordinates(np.zeros((100, 100), dtype=bool))

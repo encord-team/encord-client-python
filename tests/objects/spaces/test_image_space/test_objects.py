@@ -25,7 +25,7 @@ def test_put_classification_on_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
+    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
     coordinates_1 = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     coordinates_2 = BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5)
 
@@ -68,7 +68,7 @@ def test_put_classification_that_already_exists_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
+    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
     new_object_instance = box_ontology_item.create_instance()
     image_space_1.put_object_instance(
         object_instance=new_object_instance,
@@ -93,7 +93,7 @@ def test_put_classification_on_frames_with_overwrite_on_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
+    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
     new_object_instance = box_ontology_item.create_instance()
 
     coordinates_1 = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
@@ -121,7 +121,7 @@ def test_remove_object_from_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
+    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     image_space_1.put_object_instance(
@@ -152,8 +152,8 @@ def test_add_object_to_two_spaces(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
-    image_space_2 = label_row.get_space(id="image-2-uuid", type_="image")
+    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
+    image_space_2 = label_row._get_space(id="image-2-uuid", type_="image")
 
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates_1 = BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5)
@@ -188,8 +188,8 @@ def test_update_attribute_for_object_which_exist_on_two_spaces(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
-    image_space_2 = label_row.get_space(id="image-2-uuid", type_="image")
+    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
+    image_space_2 = label_row._get_space(id="image-2-uuid", type_="image")
 
     new_object_instance = box_with_attributes_ontology_item.create_instance()
     box_coordinates_1 = BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5)
@@ -244,7 +244,7 @@ def test_get_object_annotations(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
+    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
     object_instance_1 = box_ontology_item.create_instance()
     object_instance_2 = box_ontology_item.create_instance()
 
@@ -298,7 +298,7 @@ def test_get_object_annotations_with_filter_objects(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
+    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
     object_instance_1 = box_ontology_item.create_instance()
     object_instance_2 = box_ontology_item.create_instance()
 
@@ -358,7 +358,7 @@ def test_get_object_annotations_from_object_instance(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
+    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
     object_instance_1 = box_ontology_item.create_instance()
     object_instance_2 = box_ontology_item.create_instance()
 
@@ -414,7 +414,7 @@ def test_update_annotation_from_object_annotation(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
+    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
     object_instance = box_ontology_item.create_instance()
 
     coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)

@@ -782,11 +782,11 @@ class LabelRowV2:
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
     @beta("The Space API is experimental and subject to change. Use with caution in production environments.")
-    def get_spaces(self) -> list[Space]:
+    def _get_spaces(self) -> list[Space]:
         return list(self._space_map.values())
 
     @overload
-    def get_space(
+    def _get_space(
         self,
         *,
         id: str,
@@ -795,43 +795,43 @@ class LabelRowV2:
         pass
 
     @overload
-    def get_space(self, *, id: str, type_: Literal["image"]) -> ImageSpace:
+    def _get_space(self, *, id: str, type_: Literal["image"]) -> ImageSpace:
         pass
 
     @overload
-    def get_space(self, *, id: str, type_: Literal["audio"]) -> AudioSpace:
+    def _get_space(self, *, id: str, type_: Literal["audio"]) -> AudioSpace:
         pass
 
     @overload
-    def get_space(self, *, id: str, type_: Literal["text"]) -> TextSpace:
+    def _get_space(self, *, id: str, type_: Literal["text"]) -> TextSpace:
         pass
 
     @overload
-    def get_space(self, *, layout_key: str, type_: Literal["video"]) -> VideoSpace:
+    def _get_space(self, *, layout_key: str, type_: Literal["video"]) -> VideoSpace:
         pass
 
     @overload
-    def get_space(self, *, layout_key: str, type_: Literal["image"]) -> ImageSpace:
+    def _get_space(self, *, layout_key: str, type_: Literal["image"]) -> ImageSpace:
         pass
 
     @overload
-    def get_space(self, *, layout_key: str, type_: Literal["audio"]) -> AudioSpace:
+    def _get_space(self, *, layout_key: str, type_: Literal["audio"]) -> AudioSpace:
         pass
 
     @overload
-    def get_space(self, *, layout_key: str, type_: Literal["text"]) -> TextSpace:
+    def _get_space(self, *, layout_key: str, type_: Literal["text"]) -> TextSpace:
         pass
 
     @overload
-    def get_space(self, *, id: str, type_: Literal["html"]) -> HTMLSpace:
+    def _get_space(self, *, id: str, type_: Literal["html"]) -> HTMLSpace:
         pass
 
     @overload
-    def get_space(self, *, layout_key: str, type_: Literal["html"]) -> HTMLSpace:
+    def _get_space(self, *, layout_key: str, type_: Literal["html"]) -> HTMLSpace:
         pass
 
     @beta("The Space API is experimental and subject to change. Use with caution in production environments.")
-    def get_space(
+    def _get_space(
         self,
         *,
         id: Optional[str] = None,
@@ -2508,27 +2508,27 @@ class LabelRowV2:
     ) -> None:
         for space_id, space_info in spaces_info.items():
             if space_info["space_type"] == SpaceType.VIDEO:
-                video_space = self.get_space(id=space_id, type_="video")
+                video_space = self._get_space(id=space_id, type_="video")
                 video_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.IMAGE:
-                image_space = self.get_space(id=space_id, type_="image")
+                image_space = self._get_space(id=space_id, type_="image")
                 image_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.AUDIO:
-                audio_space = self.get_space(id=space_id, type_="audio")
+                audio_space = self._get_space(id=space_id, type_="audio")
                 audio_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.TEXT:
-                text_space = self.get_space(id=space_id, type_="text")
+                text_space = self._get_space(id=space_id, type_="text")
                 text_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.HTML:
-                html_space = self.get_space(id=space_id, type_="html")
+                html_space = self._get_space(id=space_id, type_="html")
                 html_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
@@ -2833,7 +2833,7 @@ class LabelRowV2:
                     if space_id is None:
                         raise LabelRowError("Object action does not contain spaceId")
 
-                    space = self.get_space(id=space_id, type_="video")
+                    space = self._get_space(id=space_id, type_="video")
                     space._set_answer_from_list(object_hash, answers_list=[answer_dict])
 
     def _create_new_object_instance(self, frame_object_label: FrameObject, frame: int) -> ObjectInstance:
