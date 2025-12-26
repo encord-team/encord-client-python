@@ -42,7 +42,7 @@ def test_put_classification_on_image_space(ontology):
     )
 
     # Assert
-    object_instances = label_row.get_object_instances()
+    object_instances = label_row._get_object_instances(include_spaces=True)
     assert len(object_instances) == 2
 
     objects_on_space = image_space_1.get_object_instances()

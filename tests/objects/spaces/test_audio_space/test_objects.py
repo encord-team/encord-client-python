@@ -40,7 +40,7 @@ def test_place_object_on_audio_space(ontology):
     )
 
     # Assert
-    object_instances = label_row.get_object_instances()
+    object_instances = label_row._get_object_instances(include_spaces=True)
     assert len(object_instances) == 1
 
     objects_on_space = audio_space_1.get_object_instances()
@@ -170,7 +170,7 @@ def test_remove_object_from_ranges_on_audio_space(ontology):
     assert removed_ranges == [Range(start=150, end=200)]
 
     # Assert
-    object_instances = label_row.get_object_instances()
+    object_instances = label_row._get_object_instances(include_spaces=True)
     assert len(object_instances) == 1
 
     objects_on_space = audio_space_1.get_object_instances()

@@ -41,7 +41,7 @@ def test_put_object_on_video_space(ontology):
     )
 
     # Assert
-    object_instances = label_row.get_object_instances()
+    object_instances = label_row._get_object_instances(include_spaces=True)
     assert len(object_instances) == 1
 
     objects_on_space = video_space_1.get_object_instances()
@@ -159,7 +159,7 @@ def test_remove_object_from_frames_on_video_space(ontology):
     # Assert
     assert frames_removed == [1]
 
-    object_instances = label_row.get_object_instances()
+    object_instances = label_row._get_object_instances(include_spaces=True)
     assert len(object_instances) == 1
 
     # Still one object instance
