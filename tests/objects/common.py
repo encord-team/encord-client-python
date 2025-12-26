@@ -26,4 +26,5 @@ BASE_LABEL_ROW_METADATA = LabelRowMetadata(
     audio_bit_depth=None,
     audio_num_channels=None,
     audio_sample_rate=None,
+    spaces={},
 )

@@ -13,6 +13,7 @@ GLOBAL_CLASSIFICATION_LABELS = {
     "annotation_task_status": "QUEUED",
     "is_shadow_data": False,
     "label_status": "LABEL_IN_PROGRESS",
+    "spaces": {},
     "data_units": {
         "cd57cf5c-2541-4a46-a836-444540ee987a": {
             "data_hash": "cd57cf5c-2541-4a46-a836-444540ee987a",
