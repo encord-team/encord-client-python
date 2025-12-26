@@ -1038,7 +1038,7 @@ class LabelRowV2:
         self._check_labelling_is_initalised()
 
         return self._get_object_instances(
-            include_spaces=True, filter_ontology_object=filter_ontology_object, filter_frames=filter_frames
+            include_spaces=False, filter_ontology_object=filter_ontology_object, filter_frames=filter_frames
         )
 
     def _get_object_instances(
