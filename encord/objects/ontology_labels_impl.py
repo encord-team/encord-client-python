@@ -781,7 +781,7 @@ class LabelRowV2:
             raise LabelRowError("This function is only supported for label rows of image or image group data types.")
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
-    @beta("The Space API is experimental and subject to change. Use with caution in production environments.")
+    @beta("The Space API is experimental and subject to change. Do not use in production environments.")
     def _get_spaces(self) -> list[Space]:
         return list(self._space_map.values())
 
@@ -830,7 +830,7 @@ class LabelRowV2:
     def _get_space(self, *, layout_key: str, type_: Literal["html"]) -> HTMLSpace:
         pass
 
-    @beta("The Space API is experimental and subject to change. Use with caution in production environments.")
+    @beta("The Space API is experimental and subject to change. Do not use in production environments.")
     def _get_space(
         self,
         *,
