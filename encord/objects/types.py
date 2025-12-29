@@ -205,7 +205,7 @@ class ClassificationAnswer(ClassificationAnswerRequired, total=False):
     lastEditedBy: Union[str, None]
     manualAnnotation: Union[bool, None]
     reviews: list[Any]  # TODO: Remove this as its deprecated
-    spaces: Dict[str, SpaceRange]  # Only exists if item is on a space
+    spaces: Union[Dict[str, SpaceRange], None]  # Only exists if item is on a space
 
 
 class ObjectAnswerForGeometric(TypedDict):

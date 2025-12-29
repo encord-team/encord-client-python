@@ -2091,6 +2091,7 @@ class LabelRowV2:
                 "classifications": list(reversed(answered_classifications)),
                 "classificationHash": classification.classification_hash,
                 "featureHash": classification.feature_hash,
+                "spaces": None,
             }
 
             # If the classification includes instance data

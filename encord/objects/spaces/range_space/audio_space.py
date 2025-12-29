@@ -84,11 +84,8 @@ class AudioSpace(RangeSpace):
             object_instance.set_answer_from_list(answer_list)
 
         for classification_answer in classification_answers.values():
-            if "spaces" not in classification_answer:
-                # skip this classification_answer, it is not on a space
-                continue
-            if self.space_id not in classification_answer["spaces"]:
-                # skip this classification_answer, it is not on this space
+            spaces = classification_answer["spaces"]
+            if spaces is None or self.space_id not in spaces:
                 continue
 
             classification_instance = self._label_row._create_new_classification_instance_from_answer(
