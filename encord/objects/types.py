@@ -211,7 +211,6 @@ class ClassificationAnswer(ClassificationAnswerRequired, total=False):
 class ObjectAnswerForGeometric(TypedDict):
     objectHash: str
     classifications: List[AttributeDict]
-    spaces: Dict[str, SpaceRange]  # Empty if does not exist on a space
 
 
 class SpaceRange(TypedDict):

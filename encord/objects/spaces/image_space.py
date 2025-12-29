@@ -448,7 +448,6 @@ class ImageSpace(Space):
             object_index_element: ObjectAnswerForGeometric = {
                 "classifications": list(reversed(all_static_answers)),
                 "objectHash": object_instance.object_hash,
-                "spaces": {},
             }
             ret[object_instance.object_hash] = object_index_element
 

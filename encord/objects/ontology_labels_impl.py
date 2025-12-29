@@ -2012,7 +2012,6 @@ class LabelRowV2:
             object_answer_dict: ObjectAnswerForGeometric = {
                 "classifications": list(reversed(all_static_answers)),
                 "objectHash": obj.object_hash,
-                "spaces": {},
             }
 
             # At some point, we also want to add these to the other modalities
