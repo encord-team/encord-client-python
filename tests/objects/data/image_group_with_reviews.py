@@ -1231,7 +1231,7 @@ labels = {
         "hLs1sDAr": {
             "classificationHash": "hLs1sDAr",
             "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
-            "spaces": None,
+            "spaces": {},
             "classifications": [
                 {
                     "name": "cl 1 2 text",

@@ -424,7 +424,7 @@ image_group_labels = {
                 }
             ],
             "featureHash": "6nyvIs5W",
-            "spaces": None,
+            "spaces": {},
         },
         "mBR5wa0v": {
             "classificationHash": "mBR5wa0v",
@@ -438,7 +438,7 @@ image_group_labels = {
                 }
             ],
             "featureHash": "6nyvIs5W",
-            "spaces": None,
+            "spaces": {},
         },
         "TyZQ6kOO": {
             "classificationHash": "TyZQ6kOO",
@@ -452,7 +452,7 @@ image_group_labels = {
                 }
             ],
             "featureHash": "R0SMUli5",
-            "spaces": None,
+            "spaces": {},
         },
     },
     "object_actions": {},

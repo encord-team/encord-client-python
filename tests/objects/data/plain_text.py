@@ -44,7 +44,7 @@ PLAIN_TEXT_LABELS = {
         "textClassificationHash": {
             "classificationHash": "textClassificationHash",
             "featureHash": "jPOcEsbw",
-            "spaces": None,
+            "spaces": {},
             "classifications": [
                 {
                     "name": "Text classification",
@@ -64,7 +64,7 @@ PLAIN_TEXT_LABELS = {
         "radioClassificationHash": {
             "classificationHash": "radioClassificationHash",
             "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
-            "spaces": None,
+            "spaces": {},
             "classifications": [
                 {
                     "name": "Radio classification 1",
@@ -97,7 +97,7 @@ PLAIN_TEXT_LABELS = {
         "checklistClassificationHash": {
             "classificationHash": "checklistClassificationHash",
             "featureHash": "3DuQbFxo",
-            "spaces": None,
+            "spaces": {},
             "classifications": [
                 {
                     "name": "Checklist classification",

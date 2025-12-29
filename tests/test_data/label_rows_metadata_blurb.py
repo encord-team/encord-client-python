@@ -163,7 +163,7 @@ LABEL_ROW_BLURB = [
                         "manualAnnotation": True,
                     }
                 ],
-                "spaces": None,
+                "spaces": {},
             }
         },
         "object_actions": {},
@@ -710,7 +710,7 @@ LABEL_ROW_BLURB = [
                         "manualAnnotation": True,
                     }
                 ],
-                "spaces": None,
+                "spaces": {},
             }
         },
         "object_actions": {},
