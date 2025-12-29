@@ -114,14 +114,12 @@ from encord.objects.types import (
     DynamicAttributeObject,
     FrameClassification,
     FrameObject,
-    LabelRowDict,
     ObjectAction,
     ObjectAnswer,
     ObjectAnswerForGeometric,
     ObjectAnswerForHtml,
     ObjectAnswerForNonGeometric,
     _is_containing_metadata,
-    _is_containing_spaces,
 )
 from encord.objects.utils import _lower_snake_case
 from encord.ontology import Ontology
@@ -2011,9 +2009,10 @@ class LabelRowV2:
         ret: Dict[str, ObjectAnswer] = {}
         for obj in self._objects_map.values():
             all_static_answers = self._get_all_static_answers(obj)
-            ret[obj.object_hash] = {
+            object_answer_dict: ObjectAnswerForGeometric = {
                 "classifications": list(reversed(all_static_answers)),
                 "objectHash": obj.object_hash,
+                "spaces": {},
             }
 
             # At some point, we also want to add these to the other modalities
@@ -2021,7 +2020,6 @@ class LabelRowV2:
                 shape = cast(Literal[Shape.TEXT, Shape.AUDIO], obj.ontology_item.shape.value)
                 # For non-frame entities, all annotations exist only on one frame
                 annotation = obj.get_annotation(0)
-                object_answer_dict = ret[obj.object_hash]
                 non_geometric_object_answer_dict = cast(ObjectAnswerForNonGeometric, object_answer_dict)
                 non_geometric_object_answer_dict["createdBy"] = annotation.created_by
                 non_geometric_object_answer_dict["createdAt"] = format_datetime_to_long_string(annotation.created_at)
@@ -2046,6 +2044,8 @@ class LabelRowV2:
                     if obj.range_list is None:
                         raise LabelRowError("Non-geometric annotations should have range set within the Coordinates")
                     non_geometric_object_answer_dict["range"] = [[range.start, range.end] for range in obj.range_list]
+
+            ret[obj.object_hash] = object_answer_dict
 
         for space in self._space_map.values():
             space_object_answers = space._to_object_answers(existing_object_answers=ret)
@@ -2091,7 +2091,7 @@ class LabelRowV2:
                 "classifications": list(reversed(answered_classifications)),
                 "classificationHash": classification.classification_hash,
                 "featureHash": classification.feature_hash,
-                "spaces": None,
+                "spaces": {},
             }
 
             # If the classification includes instance data

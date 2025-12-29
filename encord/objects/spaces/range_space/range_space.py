@@ -22,6 +22,7 @@ from encord.objects.types import (
     ClassificationAnswer,
     FrameClassification,
     LabelBlob,
+    ObjectAnswer,
     ObjectAnswerForGeometric,
     ObjectAnswerForNonGeometric,
     SpaceRange,
@@ -345,9 +346,7 @@ class RangeSpace(Space):
         """For range-based annotations, labels are stored in objects/classifications index"""
         return {}
 
-    def _to_object_answers(
-        self, existing_object_answers: Dict[str, Union[ObjectAnswerForGeometric, ObjectAnswerForNonGeometric]]
-    ) -> dict[str, Union[ObjectAnswerForNonGeometric, ObjectAnswerForGeometric]]:
+    def _to_object_answers(self, existing_object_answers: Dict[str, ObjectAnswer]) -> dict[str, ObjectAnswer]:
         ret: Dict[str, ObjectAnswerForNonGeometric] = {}
 
         for obj in self.get_object_instances():
@@ -383,7 +382,7 @@ class RangeSpace(Space):
 
                 ret[obj.object_hash] = object_answer
 
-        return cast(dict[str, Union[ObjectAnswerForGeometric, ObjectAnswerForNonGeometric]], ret)
+        return cast(dict[str, ObjectAnswer], ret)
 
     def _to_classification_answers(
         self, existing_classification_answers: dict[str, ClassificationAnswer]

@@ -28,7 +28,7 @@ labels: LabelRowDict = {
             "lastEditedBy": "user1Hash",
             "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
             "manualAnnotation": True,
-            "spaces": None,
+            "spaces": {},
             "classifications": [
                 {
                     "name": "Radio classification 1",

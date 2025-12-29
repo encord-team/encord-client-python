@@ -13,7 +13,12 @@ from typing import (
 from encord.exceptions import LabelRowError
 from encord.objects.spaces.annotation.base_annotation import _ClassificationAnnotation, _ObjectAnnotation
 from encord.objects.spaces.types import SpaceInfo
-from encord.objects.types import ClassificationAnswer, ObjectAnswerForGeometric, ObjectAnswerForNonGeometric
+from encord.objects.types import (
+    ClassificationAnswer,
+    ObjectAnswer,
+    ObjectAnswerForGeometric,
+    ObjectAnswerForNonGeometric,
+)
 
 if TYPE_CHECKING:
     from encord.objects import ClassificationInstance, ObjectInstance
@@ -117,9 +122,7 @@ class Space(ABC):
         pass
 
     @abstractmethod
-    def _to_object_answers(
-        self, existing_object_answers: Dict[str, Union[ObjectAnswerForGeometric, ObjectAnswerForNonGeometric]]
-    ) -> Dict[str, Union[ObjectAnswerForGeometric, ObjectAnswerForNonGeometric]]:
+    def _to_object_answers(self, existing_object_answers: Dict[str, ObjectAnswer]) -> Dict[str, ObjectAnswer]:
         pass
 
     @abstractmethod

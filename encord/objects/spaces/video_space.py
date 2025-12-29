@@ -41,6 +41,7 @@ from encord.objects.types import (
     FrameClassification,
     FrameObject,
     LabelBlob,
+    ObjectAnswer,
     ObjectAnswerForGeometric,
     ObjectAnswerForNonGeometric,
 )
@@ -958,19 +959,18 @@ class VideoSpace(Space):
             classifications=classification_list,
         )
 
-    def _to_object_answers(
-        self, existing_object_answers: dict[str, ObjectAnswerForGeometric]
-    ) -> Dict[str, ObjectAnswerForGeometric]:
+    def _to_object_answers(self, existing_object_answers: dict[str, ObjectAnswer]) -> Dict[str, ObjectAnswer]:
         ret: dict[str, ObjectAnswerForGeometric] = {}
         for object_instance in self._objects_map.values():
             all_static_answers = self._label_row._get_all_static_answers(object_instance)
             object_index_element: ObjectAnswerForGeometric = {
                 "classifications": list(reversed(all_static_answers)),
                 "objectHash": object_instance.object_hash,
+                "spaces": {},
             }
             ret[object_instance.object_hash] = object_index_element
 
-        return ret
+        return cast(Dict[str, ObjectAnswer], ret)
 
     def _to_classification_answers(
         self, existing_classification_answers: dict[str, ClassificationAnswer]

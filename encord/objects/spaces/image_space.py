@@ -32,6 +32,7 @@ from encord.objects.types import (
     FrameClassification,
     FrameObject,
     LabelBlob,
+    ObjectAnswer,
     ObjectAnswerForGeometric,
 )
 
@@ -440,19 +441,18 @@ class ImageSpace(Space):
                 confidence=classification_frame_instance_info.confidence,
             )
 
-    def _to_object_answers(
-        self, existing_object_answers: Dict[str, ObjectAnswerForGeometric]
-    ) -> Dict[str, ObjectAnswerForGeometric]:
+    def _to_object_answers(self, existing_object_answers: Dict[str, ObjectAnswer]) -> Dict[str, ObjectAnswer]:
         ret: dict[str, ObjectAnswerForGeometric] = {}
         for object_instance in self.get_object_instances():
             all_static_answers = self._label_row._get_all_static_answers(object_instance)
             object_index_element: ObjectAnswerForGeometric = {
                 "classifications": list(reversed(all_static_answers)),
                 "objectHash": object_instance.object_hash,
+                "spaces": {},
             }
             ret[object_instance.object_hash] = object_index_element
 
-        return ret
+        return cast(Dict[str, ObjectAnswer], ret)
 
     def _to_classification_answers(
         self, existing_classification_answers: Dict[str, ClassificationAnswer]

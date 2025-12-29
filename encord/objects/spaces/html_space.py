@@ -22,6 +22,7 @@ from encord.objects.types import (
     AttributeDict,
     ClassificationAnswer,
     LabelBlob,
+    ObjectAnswer,
     ObjectAnswerForGeometric,
     ObjectAnswerForNonGeometric,
     SpaceRange,
@@ -352,9 +353,7 @@ class HTMLSpace(Space):
             for html_range in coordinates.range
         ]
 
-    def _to_object_answers(
-        self, existing_object_answers: Dict[str, Union[ObjectAnswerForGeometric, ObjectAnswerForNonGeometric]]
-    ) -> dict[str, Union[ObjectAnswerForNonGeometric, ObjectAnswerForGeometric]]:
+    def _to_object_answers(self, existing_object_answers: Dict[str, ObjectAnswer]) -> dict[str, ObjectAnswer]:
         ret: Dict[str, ObjectAnswerForNonGeometric] = {}
 
         for obj in self.get_object_instances():
@@ -390,7 +389,7 @@ class HTMLSpace(Space):
 
                 ret[obj.object_hash] = object_answer
 
-        return cast(dict[str, Union[ObjectAnswerForGeometric, ObjectAnswerForNonGeometric]], ret)
+        return cast(dict[str, ObjectAnswer], ret)
 
     def _to_classification_answers(
         self, existing_classification_answers: dict[str, ClassificationAnswer]

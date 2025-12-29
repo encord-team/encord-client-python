@@ -205,12 +205,13 @@ class ClassificationAnswer(ClassificationAnswerRequired, total=False):
     lastEditedBy: Union[str, None]
     manualAnnotation: Union[bool, None]
     reviews: list[Any]  # TODO: Remove this as its deprecated
-    spaces: Union[Dict[str, SpaceRange], None]  # Only exists if item is on a space
+    spaces: Dict[str, SpaceRange]  # Empty dict if no spaces
 
 
 class ObjectAnswerForGeometric(TypedDict):
     objectHash: str
     classifications: List[AttributeDict]
+    spaces: Dict[str, SpaceRange]  # Empty if does not exist on a space
 
 
 class SpaceRange(TypedDict):
@@ -266,8 +267,3 @@ class LabelRowDict(TypedDict, total=False):
 def _is_containing_metadata(answer: ClassificationAnswer) -> bool:
     """Check if the classification answer contains necessary metadata fields."""
     return "createdBy" in answer
-
-
-def _is_containing_spaces(answer: ClassificationAnswer) -> bool:
-    """Check if the classification answer contains spaces field."""
-    return "spaces" in answer
