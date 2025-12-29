@@ -92,7 +92,7 @@ class Answer(ABC, Generic[ValueType, AttributeType]):
         return self._value
 
     def to_encord_dict(
-        self, ranges: Optional[Ranges] = None, spaceId: Optional[str] = None
+        self, ranges: Optional[Ranges] = None, space_id: Optional[str] = None
     ) -> Optional[AttributeDict | DynamicAttributeObject]:
         """A low level helper to convert to the Encord JSON format.
         For most use cases the `get_answer` function should be used instead.
@@ -104,7 +104,7 @@ class Answer(ABC, Generic[ValueType, AttributeType]):
         if self.is_dynamic:
             if ranges is None:
                 raise ValueError("Frame range should be set for dynamic answers")
-            dynamic_ret = self._add_dynamic_fields(ret, ranges, spaceId)
+            dynamic_ret = self._add_dynamic_fields(ret, ranges, space_id)
             return dynamic_ret
 
         return ret

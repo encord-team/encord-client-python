@@ -405,7 +405,12 @@ class HTMLSpace(Space):
                 space_range_to_add: SpaceRange = {
                     "range": [],
                 }
-                existing_classification_answer["spaces"][self.space_id] = space_range_to_add
+                spaces = existing_classification_answer["spaces"]
+
+                if spaces is None:
+                    spaces = {}
+
+                spaces[self.space_id] = space_range_to_add
                 ret[classification.classification_hash] = existing_classification_answer
             else:
                 all_static_answers = classification.get_all_static_answers()

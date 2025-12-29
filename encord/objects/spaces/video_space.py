@@ -874,7 +874,7 @@ class VideoSpace(Space):
             raise LabelRowError("No dynamic answers found for this object instance on this space.")
 
         for answer, ranges in dynamic_answer_manager.get_all_answers():
-            d_opt = answer.to_encord_dict(ranges, spaceId=self.space_id)
+            d_opt = answer.to_encord_dict(ranges, space_id=self.space_id)
             if d_opt is not None:
                 ret.append(cast(DynamicAttributeObject, d_opt))
         return ret
