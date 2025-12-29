@@ -34,6 +34,7 @@ GLOBAL_CLASSIFICATION_LABELS = {
         "globalClassificationHash": {
             "classificationHash": "globalClassificationHash",
             "featureHash": global_classification_dict["featureNodeHash"],
+            "spaces": None,
             "classifications": [
                 {
                     "name": "Global classification",

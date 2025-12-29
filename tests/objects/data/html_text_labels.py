@@ -56,6 +56,7 @@ HTML_TEXT_LABELS = {
         "textClassificationHash": {
             "classificationHash": "textClassificationHash",
             "featureHash": "jPOcEsbw",
+            "spaces": None,
             "classifications": [
                 {
                     "name": "Text classification",
@@ -75,6 +76,7 @@ HTML_TEXT_LABELS = {
         "radioClassificationHash": {
             "classificationHash": "radioClassificationHash",
             "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
+            "spaces": None,
             "classifications": [
                 {
                     "name": "Radio classification 1",
@@ -107,6 +109,7 @@ HTML_TEXT_LABELS = {
         "checklistClassificationHash": {
             "classificationHash": "checklistClassificationHash",
             "featureHash": "3DuQbFxo",
+            "spaces": None,
             "classifications": [
                 {
                     "name": "Checklist classification",
