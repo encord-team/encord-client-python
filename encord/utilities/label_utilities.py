@@ -62,7 +62,7 @@ def add_answers_to_items(items, classification_answers, object_answers):
         if OBJECT_HASH in item:
             object_hash = item.get(OBJECT_HASH)
             if object_hash not in object_answers:
-                object_answers[object_hash] = {OBJECT_HASH: object_hash, CLASSIFICATIONS: [], SPACES: None}
+                object_answers[object_hash] = {OBJECT_HASH: object_hash, CLASSIFICATIONS: [], SPACES: {}}
 
         if CLASSIFICATION_HASH in item:
             classification_hash = item.get(CLASSIFICATION_HASH)
@@ -70,5 +70,5 @@ def add_answers_to_items(items, classification_answers, object_answers):
                 classification_answers[classification_hash] = {
                     CLASSIFICATION_HASH: classification_hash,
                     CLASSIFICATIONS: [],
-                    SPACES: None,
+                    SPACES: {},
                 }
