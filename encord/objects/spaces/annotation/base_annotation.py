@@ -110,7 +110,7 @@ class _AnnotationMetadata:
 class _AnnotationData:
     """
     Data class for storing annotation data (e.g. coordinates, range) and metadata.
-    Only metadata in the base class, but subclasses will have more.
+    Only metadata in the base class, but subclasses will have more. E.g. GeometricAnnotationData has coordinates.
     Attributes:
         annotation_metadata (_AnnotationMetadata): The annotation's metadata information.
     """
@@ -241,24 +241,6 @@ class _Annotation(ABC):
         """Set whether this annotation was created manually."""
         self._check_if_annotation_is_valid()
         self._get_annotation_data().annotation_metadata.manual_annotation = manual_annotation
-
-    # @property
-    # def reviews(self) -> Optional[List[Dict[str, Any]]]:
-    #     """This is merely here for backwards compatibility. It will always be None, unless overriden.
-    #     Returns:
-    #         Optional[List[Dict[str, Any]]]: A list of review dictionaries, if any.
-    #     """
-    #     self._check_if_annotation_is_valid()
-    #     return None
-    #
-    # @property
-    # def is_deleted(self) -> Optional[bool]:
-    #     """This is merely here for backwards compatibility. It will always be None, unless overriden.
-    #     Returns:
-    #         Optional[bool]: `True` if deleted, `False` otherwise, or `None` if not set.
-    #     """
-    #     self._check_if_annotation_is_valid()
-    #     return None
 
 
 class _ObjectAnnotation(_Annotation):
