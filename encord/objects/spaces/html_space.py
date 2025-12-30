@@ -33,7 +33,6 @@ logger = logging.getLogger(__name__)
 
 
 if TYPE_CHECKING:
-    from encord.objects import Object
     from encord.objects.ontology_labels_impl import LabelRowV2
 
 HtmlOverlapStrategy = Union[Literal["error"], Literal["replace"]]
@@ -364,7 +363,7 @@ class HTMLSpace(Space):
 
             if does_obj_exist:
                 existing_object_answer = cast(ObjectAnswerForNonGeometric, existing_object_answers[obj.object_hash])
-                space_range_to_add: SpaceRange = {"range": ranges}
+                space_range_to_add: SpaceRange = {"range": ranges, "type": "html"}
                 existing_object_answer["spaces"][self.space_id] = space_range_to_add
             else:
                 shape = cast(Literal[Shape.TEXT], obj.ontology_item.shape.value)
@@ -384,7 +383,7 @@ class HTMLSpace(Space):
                     "shape": shape,
                     "value": _lower_snake_case(obj.ontology_item.name),
                     "range": [],
-                    "spaces": {self.space_id: {"range": ranges}},
+                    "spaces": {self.space_id: {"range": ranges, "type": "html"}},
                 }
 
                 ret[obj.object_hash] = object_answer
@@ -401,9 +400,7 @@ class HTMLSpace(Space):
 
             if does_classification_exist:
                 existing_classification_answer = existing_classification_answers[classification.classification_hash]
-                space_range_to_add: SpaceRange = {
-                    "range": [],
-                }
+                space_range_to_add: SpaceRange = {"range": [], "type": "html"}
                 spaces = existing_classification_answer["spaces"]
 
                 if spaces is None:
@@ -430,11 +427,7 @@ class HTMLSpace(Space):
                     "lastEditedBy": annotation_metadata.last_edited_by,
                     "lastEditedAt": format_datetime_to_long_string_optional(annotation_metadata.last_edited_at),
                     "manualAnnotation": annotation_metadata.manual_annotation,
-                    "spaces": {
-                        self.space_id: {
-                            "range": [],
-                        }
-                    },
+                    "spaces": {self.space_id: {"range": [], "type": "html"}},
                 }
 
                 ret[classification.classification_hash] = classification_answer

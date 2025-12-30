@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Literal, Optional, TypedDict, Union
 
 from encord.objects.common import Shape
+from encord.objects.html_node import HtmlNode
 
 """ Typed Dicts for Shape Coordinates """
 
@@ -213,8 +214,17 @@ class ObjectAnswerForGeometric(TypedDict):
     classifications: List[AttributeDict]
 
 
-class SpaceRange(TypedDict):
-    range: list[list[int]]
+class SpaceHtmlData(TypedDict):
+    type: Literal["html"]
+    range: List[List[HtmlNode]]
+
+
+class SpaceFrameData(TypedDict):
+    type: Literal["frame"]
+    range: List[List[int]]
+
+
+SpaceRange = Union[SpaceHtmlData, SpaceFrameData]
 
 
 class ObjectAnswerForNonGeometric(BaseFrameObject):

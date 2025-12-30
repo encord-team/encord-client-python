@@ -346,7 +346,7 @@ def test_update_attribute_for_object_which_exist_on_two_spaces(ontology):
             "value": "audio_object_1",
             "color": "#A4FF00",
             "shape": "audio",
-            "spaces": {"audio-1-uuid": {"range": [[0, 100]]}, "audio-2-uuid": {"range": [[200, 300]]}},
+            "spaces": {"audio-1-uuid": {"range": [[0, 100]], "type": "frame"}, "audio-2-uuid": {"range": [[200, 300]], "type": "frame"}},
             "range": [],
         }
     }
@@ -587,6 +587,7 @@ def test_update_annotation_from_object_annotation_using_coordinates(ontology):
             "spaces": {
                 "audio-1-uuid": {
                     "range": [[0, 100]],
+                    "type": "frame",
                 }
             },
         },
@@ -628,6 +629,7 @@ def test_update_annotation_from_object_annotation_using_coordinates(ontology):
             "spaces": {
                 "audio-1-uuid": {
                     "range": [[200, 300]],
+                    "type": "frame",
                 }
             },
         },
@@ -680,6 +682,7 @@ def test_update_annotation_from_object_annotation(ontology):
             "spaces": {
                 "audio-1-uuid": {
                     "range": [[0, 100]],
+                    "type": "frame",
                 }
             },
         },
@@ -719,6 +722,7 @@ def test_update_annotation_from_object_annotation(ontology):
             "spaces": {
                 "audio-1-uuid": {
                     "range": [[200, 300]],
+                    "type": "frame",
                 }
             },
         },
@@ -777,9 +781,11 @@ def test_update_annotation_for_object_reflected_on_different_spaces(ontology):
             "spaces": {
                 "audio-1-uuid": {
                     "range": [[0, 100]],
+                    "type": "frame",
                 },
                 "audio-2-uuid": {
                     "range": [[0, 100]],
+                    "type": "frame",
                 },
             },
         },
@@ -830,9 +836,11 @@ def test_update_annotation_for_object_reflected_on_different_spaces(ontology):
             "spaces": {
                 "audio-1-uuid": {
                     "range": [[200, 300]],
+                    "type": "frame",
                 },
                 "audio-2-uuid": {
                     "range": [[0, 100]],  # Range is now different from `audio-1-uuid` space
+                    "type": "frame",
                 },
             },
         },

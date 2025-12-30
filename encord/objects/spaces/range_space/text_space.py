@@ -47,7 +47,7 @@ class TextSpace(RangeSpace):
 
             non_geometric_object_answer = cast(ObjectAnswerForNonGeometric, object_answer)
             object_info_on_this_space = non_geometric_object_answer["spaces"].get(self.space_id)
-            if object_info_on_this_space is None:
+            if object_info_on_this_space is None or object_info_on_this_space["type"] != "frame":
                 continue
 
             range_on_this_space = object_info_on_this_space["range"]

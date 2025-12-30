@@ -468,7 +468,8 @@ class ImageSpace(Space):
                 "featureHash": classification.feature_hash,
                 "spaces": {
                     self.space_id: {
-                        "range": [[0, 0]]  # For images, there is only one frame
+                        "range": [[0, 0]],  # For images, there is only one frame
+                        "type": "frame",
                     }
                 },
             }

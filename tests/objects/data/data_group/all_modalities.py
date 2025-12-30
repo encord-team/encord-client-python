@@ -143,6 +143,7 @@ DATA_GROUP_WITH_LABELS = {
             "spaces": {
                 "audio-uuid": {
                     "range": [[100, 200]],
+                    "type": "frame",
                 },
             },
         },
@@ -164,6 +165,7 @@ DATA_GROUP_WITH_LABELS = {
             "spaces": {
                 "text-uuid": {
                     "range": [[0, 4]],
+                    "type": "frame",
                 },
             },
         },
@@ -185,6 +187,7 @@ DATA_GROUP_WITH_LABELS = {
             "spaces": {
                 "video-uuid": {
                     "range": [[0, 0]],
+                    "type": "frame",
                 },
             },
         },
@@ -210,6 +213,7 @@ DATA_GROUP_WITH_LABELS = {
             "spaces": {
                 "image-uuid": {
                     "range": [[0, 0]],
+                    "type": "frame",
                 },
             },
         },
@@ -227,6 +231,7 @@ DATA_GROUP_WITH_LABELS = {
             "spaces": {
                 "audio-uuid": {
                     "range": [],
+                    "type": "frame",
                 },
             },
         },
@@ -252,6 +257,7 @@ DATA_GROUP_WITH_LABELS = {
             "spaces": {
                 "text-uuid": {
                     "range": [],
+                    "type": "frame",
                 },
             },
         },

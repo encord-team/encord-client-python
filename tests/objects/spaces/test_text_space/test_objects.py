@@ -337,7 +337,7 @@ def test_update_attribute_for_object_which_exist_on_two_spaces(ontology):
             "value": "text_object",
             "color": "#A4FF00",
             "shape": "text",
-            "spaces": {"text-1-uuid": {"range": [[0, 100]]}, "text-2-uuid": {"range": [[200, 300]]}},
+            "spaces": {"text-1-uuid": {"range": [[0, 100]], "type": "frame"}, "text-2-uuid": {"range": [[200, 300]], "type": "frame"}},
             "range": [],
         }
     }
@@ -578,6 +578,7 @@ def test_update_annotation_from_object_annotation_using_coordinates(ontology):
             "spaces": {
                 "text-1-uuid": {
                     "range": [[0, 100]],
+                    "type": "frame",
                 }
             },
         },
@@ -619,6 +620,7 @@ def test_update_annotation_from_object_annotation_using_coordinates(ontology):
             "spaces": {
                 "text-1-uuid": {
                     "range": [[200, 300]],
+                    "type": "frame",
                 }
             },
         },
@@ -671,6 +673,7 @@ def test_update_annotation_from_object_annotation(ontology):
             "spaces": {
                 "text-1-uuid": {
                     "range": [[0, 100]],
+                    "type": "frame",
                 }
             },
         },
@@ -710,6 +713,7 @@ def test_update_annotation_from_object_annotation(ontology):
             "spaces": {
                 "text-1-uuid": {
                     "range": [[200, 300]],
+                    "type": "frame",
                 }
             },
         },
@@ -768,9 +772,11 @@ def test_update_annotation_for_object_reflected_on_different_spaces(ontology):
             "spaces": {
                 "text-1-uuid": {
                     "range": [[0, 100]],
+                    "type": "frame",
                 },
                 "text-2-uuid": {
                     "range": [[0, 100]],
+                    "type": "frame",
                 },
             },
         },
@@ -820,9 +826,11 @@ def test_update_annotation_for_object_reflected_on_different_spaces(ontology):
             "spaces": {
                 "text-1-uuid": {
                     "range": [[200, 300]],
+                    "type": "frame",
                 },
                 "text-2-uuid": {
                     "range": [[0, 100]],
+                    "type": "frame",
                 },
             },
         },

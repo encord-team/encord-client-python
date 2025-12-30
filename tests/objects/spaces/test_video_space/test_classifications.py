@@ -62,7 +62,7 @@ def test_put_classification_on_video_space(ontology):
             ],
             "classificationHash": new_classification_instance.classification_hash,
             "featureHash": "jPOcEsbw",
-            "spaces": {"video-1-uuid": {"range": [[0, 3]]}},
+            "spaces": {"video-1-uuid": {"range": [[0, 3]], "type": "frame"}},
         }
     }
 

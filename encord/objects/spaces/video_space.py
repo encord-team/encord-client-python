@@ -990,7 +990,14 @@ class VideoSpace(Space):
                 "classifications": classifications,
                 "classificationHash": classification_instance.classification_hash,
                 "featureHash": classification_instance.feature_hash,
-                "spaces": {self.space_id: {"range": ranges_to_list(classification_range_manager.get_ranges())}},
+                "spaces": {
+                    self.space_id: {
+                        "range": ranges_to_list(
+                            classification_range_manager.get_ranges(),
+                        ),
+                        "type": "frame",
+                    }
+                },
             }
 
             ret[classification_instance.classification_hash] = classification_index_element

@@ -357,7 +357,7 @@ class RangeSpace(Space):
 
             if does_obj_exist:
                 existing_object_answer = cast(ObjectAnswerForNonGeometric, existing_object_answers[obj.object_hash])
-                space_range_to_add: SpaceRange = {"range": ranges}
+                space_range_to_add: SpaceRange = {"range": ranges, "type": "frame"}
                 existing_object_answer["spaces"][self.space_id] = space_range_to_add
             else:
                 shape = cast(Union[Literal[Shape.TEXT], Literal[Shape.AUDIO]], obj.ontology_item.shape.value)
@@ -377,7 +377,7 @@ class RangeSpace(Space):
                     "shape": shape,
                     "value": _lower_snake_case(obj.ontology_item.name),
                     "range": [],
-                    "spaces": {self.space_id: {"range": ranges}},
+                    "spaces": {self.space_id: {"range": ranges, "type": "frame"}},
                 }
 
                 ret[obj.object_hash] = object_answer
@@ -394,9 +394,7 @@ class RangeSpace(Space):
 
             if does_classification_exist:
                 existing_classification_answer = existing_classification_answers[classification.classification_hash]
-                space_range_to_add: SpaceRange = {
-                    "range": [],
-                }
+                space_range_to_add: SpaceRange = {"range": [], "type": "frame"}
                 spaces = existing_classification_answer["spaces"]
 
                 if spaces is None:
@@ -423,11 +421,7 @@ class RangeSpace(Space):
                     "lastEditedBy": annotation_metadata.last_edited_by,
                     "lastEditedAt": format_datetime_to_long_string_optional(annotation_metadata.last_edited_at),
                     "manualAnnotation": annotation_metadata.manual_annotation,
-                    "spaces": {
-                        self.space_id: {
-                            "range": [],
-                        }
-                    },
+                    "spaces": {self.space_id: {"range": [], "type": "frame"}},
                 }
 
                 ret[classification.classification_hash] = classification_answer
