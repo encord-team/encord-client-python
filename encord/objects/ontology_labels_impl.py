@@ -3020,7 +3020,7 @@ class LabelRowV2:
         label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Classification)
         classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash)
 
-        frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
+        frame_view = _AnnotationMetadata.from_dict(frame_classification_label)
         classification_instance.set_for_frames(
             frame,
             created_at=frame_view.created_at,
@@ -3054,7 +3054,7 @@ class LabelRowV2:
 
         label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Classification)
 
-        range_view = ClassificationInstance.FrameData.from_dict(classification_answer)
+        range_view = _AnnotationMetadata.from_dict(classification_answer)
         is_data_type_range_only = not is_geometric(self.data_type)
 
         classification_instance = ClassificationInstance(
@@ -3093,7 +3093,7 @@ class LabelRowV2:
     ) -> None:
         object_hash = frame_classification_label["classificationHash"]
         classification_instance = self._classifications_map[object_hash]
-        frame_view = ClassificationInstance.FrameData.from_dict(frame_classification_label)
+        frame_view = _AnnotationMetadata.from_dict(frame_classification_label)
         classification_instance.set_frame_data(frame_view, frame)
 
     def _check_labelling_is_initalised(self):

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, cast
 from encord.common.time_parser import parse_datetime
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import Coordinates
-from encord.objects.types import BaseFrameObject, FrameClassification
+from encord.objects.types import BaseFrameObject, ClassificationAnswer, FrameClassification
 from encord.objects.utils import check_email
 
 if TYPE_CHECKING:
@@ -40,7 +40,7 @@ class _AnnotationMetadata:
     reviews: Optional[List[dict[Any, Any]]] = None
 
     @staticmethod
-    def from_dict(d: BaseFrameObject | FrameClassification) -> "_AnnotationMetadata":
+    def from_dict(d: BaseFrameObject | FrameClassification | ClassificationAnswer) -> "_AnnotationMetadata":
         """Create a AnnotationInfo instance from a dictionary.
         Args:
             d: A dictionary containing information about the annotation.
@@ -52,13 +52,16 @@ class _AnnotationMetadata:
         else:
             last_edited_at = datetime.now()
 
+        confidence = d.get("confidence", None)
+        manual_annotation = d.get("manualAnnotation", None)
+
         return _AnnotationMetadata(
             created_at=parse_datetime(d["createdAt"]),
             created_by=d.get("createdBy", None),
             last_edited_at=last_edited_at,
             last_edited_by=d.get("lastEditedBy", None),
-            confidence=d.get("confidence", DEFAULT_CONFIDENCE),
-            manual_annotation=d.get("manualAnnotation", DEFAULT_MANUAL_ANNOTATION),
+            confidence=confidence if confidence is not None else DEFAULT_CONFIDENCE,
+            manual_annotation=manual_annotation if manual_annotation is not None else DEFAULT_MANUAL_ANNOTATION,
             reviews=d.get("reviews", None),  # Only here for backwards compatibility, do not use this
             is_deleted=cast(
                 Optional[bool], d.get("isDeleted", None)

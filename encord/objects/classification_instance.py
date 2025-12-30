@@ -11,7 +11,6 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
-from collections import defaultdict
 from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -52,7 +51,11 @@ from encord.objects.internal_helpers import (
     _search_child_attributes,
 )
 from encord.objects.options import Option, _get_option_by_hash
-from encord.objects.spaces.annotation.base_annotation import _ClassificationAnnotation
+from encord.objects.spaces.annotation.base_annotation import (
+    _AnnotationData,
+    _AnnotationMetadata,
+    _ClassificationAnnotation,
+)
 from encord.objects.types import AttributeDict, ClassificationAnswer, FrameClassification
 from encord.objects.utils import check_email, short_uuid_str
 
@@ -80,11 +83,11 @@ class ClassificationInstance:
 
         # Only used for non-frame entities, global classifications are frame only by definition
 
-        self._instance_data = self.FrameData()
+        self._instance_data = _AnnotationData(annotation_metadata=_AnnotationMetadata())
         self._range_manager: RangeManager = RangeManager()
 
         # Only used for frame entities
-        self._frames_to_data: Dict[int, ClassificationInstance.FrameData] = defaultdict(self.FrameData)
+        self._frames_to_data: Dict[int, _AnnotationData] = {}
 
         # If it's a range-only classification, or it was created from a classification answer, we want to include that information back when serialising
         self._include_instance_data = self.is_range_only() or _created_with_answer
@@ -135,57 +138,57 @@ class ClassificationInstance:
 
     @property
     def created_at(self) -> datetime:
-        return self._instance_data.created_at
+        return self._instance_data.annotation_metadata.created_at
 
     @created_at.setter
     def created_at(self, created_at: datetime) -> None:
-        self._instance_data.created_at = created_at
+        self._instance_data.annotation_metadata.created_at = created_at
 
     @property
     def created_by(self) -> Optional[str]:
-        return self._instance_data.created_by
+        return self._instance_data.annotation_metadata.created_by
 
     @created_by.setter
     def created_by(self, created_by: Optional[str]) -> None:
         """Set the created_by field with a user email or None if it should default to the current user of the SDK."""
         if created_by is not None:
             check_email(created_by)
-        self._instance_data.created_by = created_by
+        self._instance_data.annotation_metadata.created_by = created_by
 
     @property
     def last_edited_at(self) -> datetime:
-        return self._instance_data.last_edited_at
+        return self._instance_data.annotation_metadata.last_edited_at
 
     @last_edited_at.setter
     def last_edited_at(self, last_edited_at: datetime) -> None:
-        self._instance_data.last_edited_at = last_edited_at
+        self._instance_data.annotation_metadata.last_edited_at = last_edited_at
 
     @property
     def last_edited_by(self) -> Optional[str]:
-        return self._instance_data.last_edited_by
+        return self._instance_data.annotation_metadata.last_edited_by
 
     @last_edited_by.setter
     def last_edited_by(self, last_edited_by: Optional[str]) -> None:
         """Set the last_edited_by field with a user email or None if it should default to the current user of the SDK."""
         if last_edited_by is not None:
             check_email(last_edited_by)
-        self._instance_data.last_edited_by = last_edited_by
+        self._instance_data.annotation_metadata.last_edited_by = last_edited_by
 
     @property
     def confidence(self) -> float:
-        return self._instance_data.confidence
+        return self._instance_data.annotation_metadata.confidence
 
     @confidence.setter
     def confidence(self, confidence: float) -> None:
-        self._instance_data.confidence = confidence
+        self._instance_data.annotation_metadata.confidence = confidence
 
     @property
     def manual_annotation(self) -> bool:
-        return self._instance_data.manual_annotation
+        return self._instance_data.annotation_metadata.manual_annotation
 
     @manual_annotation.setter
     def manual_annotation(self, manual_annotation: bool) -> None:
-        self._instance_data.manual_annotation = manual_annotation
+        self._instance_data.annotation_metadata.manual_annotation = manual_annotation
 
     def is_on_frame(self, frame: Frames) -> bool:
         intersection = self._range_manager.intersection(frame)
@@ -270,8 +273,14 @@ class ClassificationInstance:
         if last_edited_at is None:
             last_edited_at = datetime.now()
 
-        self._instance_data.update_from_optional_fields(
-            created_at, created_by, confidence, manual_annotation, last_edited_at, last_edited_by, reviews
+        self._instance_data.annotation_metadata.update_from_optional_fields(
+            created_at=created_at,
+            created_by=created_by,
+            confidence=confidence,
+            manual_annotation=manual_annotation,
+            last_edited_at=last_edited_at,
+            last_edited_by=last_edited_by,
+            reviews=reviews,
         )
 
         if not self.is_range_only():
@@ -309,13 +318,17 @@ class ClassificationInstance:
 
         self._set_for_frames(frames=frames, overwrite=overwrite)
 
-    def set_frame_data(self, frame_data: FrameData, frames: Frames) -> None:
+    # We extracted out the old FrameData class into a separate file.
+    # Leaving this here for backwards compatibility.
+    FrameData = _AnnotationMetadata
+
+    def set_frame_data(self, frame_data: _AnnotationMetadata, frames: Frames) -> None:
         frames_list = frames_class_to_frames_list(frames)
 
         self._set_for_frames(frames, overwrite=True)
 
         for frame in frames_list:
-            self._frames_to_data[frame] = frame_data
+            self._frames_to_data[frame] = _AnnotationData(annotation_metadata=frame_data)
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """Args:
@@ -524,9 +537,11 @@ class ClassificationInstance:
         """A low level helper function."""
         return list(self._static_answer_map.values())
 
-    class Annotation:
-        """This class can be used to set or get data for a specific annotation (i.e. the ClassificationInstance for a given
-        frame number).
+    class Annotation(_ClassificationAnnotation):
+        """
+        Represents an annotation for a specific frame of a ClassficationInstance.
+        Allows setting or getting data for the ClassificationInstance on the given frame number.
+        This is deprecated, we will be using the ClassificationAnnotation that this inherits from.
         """
 
         def __init__(self, classification_instance: ClassificationInstance, frame: int):
@@ -538,78 +553,16 @@ class ClassificationInstance:
             return self._frame
 
         @property
-        def created_at(self) -> datetime:
-            self._check_if_frame_view_valid()
-            return self._get_object_frame_instance_data().created_at
-
-        @created_at.setter
-        def created_at(self, created_at: datetime) -> None:
-            self._check_if_frame_view_valid()
-            self._get_object_frame_instance_data().created_at = created_at
-
-        @property
-        def created_by(self) -> Optional[str]:
-            self._check_if_frame_view_valid()
-            return self._get_object_frame_instance_data().created_by
-
-        @created_by.setter
-        def created_by(self, created_by: Optional[str]) -> None:
-            """Set the created_by field with a user email or None if it should default to the current user of the SDK."""
-            self._check_if_frame_view_valid()
-            if created_by is not None:
-                check_email(created_by)
-            self._get_object_frame_instance_data().created_by = created_by
-
-        @property
-        def last_edited_at(self) -> datetime:
-            self._check_if_frame_view_valid()
-            return self._get_object_frame_instance_data().last_edited_at
-
-        @last_edited_at.setter
-        def last_edited_at(self, last_edited_at: datetime) -> None:
-            self._check_if_frame_view_valid()
-            self._get_object_frame_instance_data().last_edited_at = last_edited_at
-
-        @property
-        def last_edited_by(self) -> Optional[str]:
-            self._check_if_frame_view_valid()
-            return self._get_object_frame_instance_data().last_edited_by
-
-        @last_edited_by.setter
-        def last_edited_by(self, last_edited_by: Optional[str]) -> None:
-            """Set the last_edited_by field with a user email or None if it should default to the current user of the SDK."""
-            self._check_if_frame_view_valid()
-            if last_edited_by is not None:
-                check_email(last_edited_by)
-            self._get_object_frame_instance_data().last_edited_by = last_edited_by
-
-        @property
-        def confidence(self) -> float:
-            self._check_if_frame_view_valid()
-            return self._get_object_frame_instance_data().confidence
-
-        @confidence.setter
-        def confidence(self, confidence: float) -> None:
-            self._check_if_frame_view_valid()
-            self._get_object_frame_instance_data().confidence = confidence
-
-        @property
-        def manual_annotation(self) -> bool:
-            self._check_if_frame_view_valid()
-            return self._get_object_frame_instance_data().manual_annotation
-
-        @manual_annotation.setter
-        def manual_annotation(self, manual_annotation: bool) -> None:
-            self._check_if_frame_view_valid()
-            self._get_object_frame_instance_data().manual_annotation = manual_annotation
+        def space(self) -> Space:
+            raise LabelRowError("This annotation does not exist on a space")
 
         @property
         def reviews(self) -> Optional[List[dict]]:
             """A read only property about the reviews that happened for this object on this frame."""
-            self._check_if_frame_view_valid()
-            return self._get_object_frame_instance_data().reviews
+            self._check_if_annotation_is_valid()
+            return self._get_annotation_data().annotation_metadata.reviews
 
-        def _check_if_frame_view_valid(self) -> None:
+        def _check_if_annotation_is_valid(self) -> None:
             if (
                 not self._classification_instance.is_on_frame(self.frame)
                 and not self._classification_instance.is_global()
@@ -618,75 +571,11 @@ class ClassificationInstance:
                     "Trying to use a ClassificationInstance.Annotation for a ClassificationInstance that is not on the frame."
                 )
 
-        def _get_object_frame_instance_data(self) -> ClassificationInstance.FrameData:
+        def _get_annotation_data(self) -> _AnnotationData:
             if self._classification_instance.is_range_only():
                 return self._classification_instance._instance_data
             else:
                 return self._classification_instance._frames_to_data[self._frame]
-
-    @dataclass
-    class FrameData:
-        created_at: datetime = field(default_factory=datetime.now)
-        created_by: Optional[str] = None
-        confidence: float = DEFAULT_CONFIDENCE
-        manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
-        last_edited_at: datetime = field(default_factory=datetime.now)
-        last_edited_by: Optional[str] = None
-        """ This field is deprecated. It will always be None """
-        reviews: Optional[List[dict]] = None
-
-        @staticmethod
-        def from_dict(d: FrameClassification | ClassificationAnswer) -> ClassificationInstance.FrameData:
-            """Frame data can also be obtained from ClassificationAnswer for Audio/Text classifications."""
-            if "lastEditedAt" in d and d["lastEditedAt"] is not None:
-                last_edited_at = parse_datetime(d["lastEditedAt"])
-            else:
-                last_edited_at = datetime.now()
-
-            if "createdAt" in d and d["createdAt"] is not None:
-                created_at = parse_datetime(d["createdAt"])
-            else:
-                created_at = datetime.now()
-
-            manual_annotation = d.get("manualAnnotation")
-            # If the manual annotation is not set, we to infer it from the classifications answers≠
-            if not manual_annotation:
-                classification_attributes = cast(List[AttributeDict], d.get("classifications", []))
-                manual_annotation = any(attribute.get("manualAnnotation") for attribute in classification_attributes)
-
-            return ClassificationInstance.FrameData(
-                created_at=created_at,
-                created_by=d["createdBy"],
-                confidence=d.get("confidence") or DEFAULT_CONFIDENCE,
-                manual_annotation=manual_annotation,
-                last_edited_at=last_edited_at,
-                last_edited_by=d.get("lastEditedBy"),
-                reviews=None,
-            )
-
-        def update_from_optional_fields(
-            self,
-            created_at: Optional[datetime] = None,
-            created_by: Optional[str] = None,
-            confidence: Optional[float] = None,
-            manual_annotation: Optional[bool] = None,
-            last_edited_at: Optional[datetime] = None,
-            last_edited_by: Optional[str] = None,
-            reviews: Optional[List[dict]] = None,
-        ) -> None:
-            self.created_at = created_at or self.created_at
-            self.last_edited_at = last_edited_at or self.last_edited_at
-
-            if created_by is not None:
-                self.created_by = created_by
-            if last_edited_by is not None:
-                self.last_edited_by = last_edited_by
-            if confidence is not None:
-                self.confidence = confidence
-            if manual_annotation is not None:
-                self.manual_annotation = manual_annotation
-            if reviews is not None:
-                self.reviews = reviews
 
     def _set_frame_data(
         self,
@@ -708,11 +597,17 @@ class ClassificationInstance:
             )
 
         if existing_frame_data is None:
-            existing_frame_data = self.FrameData()
+            existing_frame_data = _AnnotationData(annotation_metadata=_AnnotationMetadata())
             self._frames_to_data[frame] = existing_frame_data
 
-        existing_frame_data.update_from_optional_fields(
-            created_at, created_by, confidence, manual_annotation, last_edited_at, last_edited_by, reviews
+        existing_frame_data.annotation_metadata.update_from_optional_fields(
+            created_at=created_at,
+            created_by=created_by,
+            confidence=confidence,
+            manual_annotation=manual_annotation,
+            last_edited_at=last_edited_at,
+            last_edited_by=last_edited_by,
+            reviews=reviews,
         )
 
     def _set_answer_unsafe(self, answer: ValueType, attribute: Attribute) -> None:
