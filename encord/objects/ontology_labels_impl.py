@@ -99,7 +99,11 @@ from encord.objects.metadata import DataGroupMetadata, DICOMSeriesMetadata, DICO
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.ontology_structure import OntologyStructure
-from encord.objects.spaces.annotation.base_annotation import _ClassificationAnnotation, _ObjectAnnotation
+from encord.objects.spaces.annotation.base_annotation import (
+    _AnnotationMetadata,
+    _ClassificationAnnotation,
+    _ObjectAnnotation,
+)
 from encord.objects.spaces.base_space import Space, SpaceT
 from encord.objects.spaces.html_space import HTMLSpace
 from encord.objects.spaces.image_space import ImageSpace
@@ -2845,7 +2849,7 @@ class LabelRowV2:
         object_instance = ObjectInstance(label_class, object_hash=object_hash)
 
         coordinates = get_coordinates_from_frame_object_dict(frame_object_label)
-        object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_label)
+        object_frame_instance_info = _AnnotationMetadata.from_dict(frame_object_label)
 
         object_instance.set_for_frames(
             coordinates=coordinates,
@@ -2876,7 +2880,7 @@ class LabelRowV2:
         frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
 
         frame_object_dict = cast(BaseFrameObject, frame_info_dict)
-        object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_dict)
+        object_frame_instance_info = _AnnotationMetadata.from_dict(frame_object_dict)
 
         expected_shape: Shape
         coordinates: Union[AudioCoordinates, TextCoordinates]
@@ -2925,7 +2929,7 @@ class LabelRowV2:
         frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
 
         frame_object_dict = cast(BaseFrameObject, frame_info_dict)
-        object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_dict)
+        object_frame_instance_info = _AnnotationMetadata.from_dict(frame_object_dict)
 
         object_instance = ObjectInstance(label_class, object_hash=object_hash)
         object_instance.set_for_frames(
@@ -2955,7 +2959,7 @@ class LabelRowV2:
         object_instance = self._objects_map[object_hash]
 
         coordinates = get_coordinates_from_frame_object_dict(frame_object_label)
-        object_frame_instance_info = ObjectInstance.FrameInfo.from_dict(frame_object_label)
+        object_frame_instance_info = _AnnotationMetadata.from_dict(frame_object_label)
 
         object_instance.set_for_frames(
             coordinates=coordinates,

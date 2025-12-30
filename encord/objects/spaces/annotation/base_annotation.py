@@ -73,7 +73,7 @@ class _AnnotationMetadata:
         last_edited_by: Optional[str] = None,
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
-        is_deleted: Optional[bool] = None,
+        is_deleted: Optional[bool] = None,  # This field is deprecated. Please do not use this field.
         reviews: Optional[List[Dict[Any, Any]]] = None,  # This field is deprecated. Please do not use this field.
     ) -> None:
         """Update the AnnotationInfo fields with the specified values.

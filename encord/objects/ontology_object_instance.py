@@ -834,96 +834,16 @@ class ObjectInstance:
                 )
 
     @dataclass
-    class FrameInfo:
-        """Contains metadata information about a frame."""
-
-        created_at: datetime = field(default_factory=datetime.now)
-        created_by: Optional[str] = None
-        """None defaults to the user of the SDK once uploaded to the server."""
-        last_edited_at: datetime = field(default_factory=datetime.now)
-        last_edited_by: Optional[str] = None
-        """None defaults to the user of the SDK once uploaded to the server."""
-        confidence: float = DEFAULT_CONFIDENCE
-        manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
-        """This is deprecated and will always be None"""
-        reviews: Optional[List[dict[Any, Any]]] = None
-        is_deleted: Optional[bool] = None
-
-        @staticmethod
-        def from_dict(d: BaseFrameObject) -> ObjectInstance.FrameInfo:
-            """Create a FrameInfo instance from a dictionary.
-
-            Args:
-                d: A dictionary containing frame information.
-
-            Returns:
-                ObjectInstance.FrameInfo: An instance of FrameInfo.
-            """
-            if "lastEditedAt" in d and d["lastEditedAt"] is not None:
-                last_edited_at = parse_datetime(d["lastEditedAt"])
-            else:
-                last_edited_at = datetime.now()
-
-            return ObjectInstance.FrameInfo(
-                created_at=parse_datetime(d["createdAt"]),
-                created_by=d.get("createdBy"),
-                last_edited_at=last_edited_at,
-                last_edited_by=d.get("lastEditedBy", None),
-                confidence=d["confidence"],
-                manual_annotation=d.get("manualAnnotation", True),
-                reviews=d.get("reviews"),
-                is_deleted=d.get("isDeleted"),
-            )
-
-        def update_from_optional_fields(
-            self,
-            created_at: Optional[datetime] = None,
-            created_by: Optional[str] = None,
-            last_edited_at: Optional[datetime] = None,
-            last_edited_by: Optional[str] = None,
-            confidence: Optional[float] = None,
-            manual_annotation: Optional[bool] = None,
-            reviews: Optional[List[Dict[str, Any]]] = None,
-            is_deleted: Optional[bool] = None,
-        ) -> None:
-            """Update the FrameInfo fields with the specified values.
-
-            Args:
-                created_at: Optional creation time.
-                created_by: Optional creator identifier.
-                last_edited_at: Optional last edited time.
-                last_edited_by: Optional last editor identifier.
-                confidence: Optional confidence value.
-                manual_annotation: Optional manual annotation flag.
-                reviews: Optional list of reviews.
-                is_deleted: Optional deleted flag.
-            """
-            self.created_at = created_at or self.created_at
-            if created_by is not None:
-                self.created_by = created_by
-            self.last_edited_at = last_edited_at or self.last_edited_at
-            if last_edited_by is not None:
-                self.last_edited_by = last_edited_by
-            if confidence is not None:
-                self.confidence = confidence
-            if manual_annotation is not None:
-                self.manual_annotation = manual_annotation
-            if reviews is not None:
-                self.reviews = reviews
-            if is_deleted is not None:
-                self.is_deleted = is_deleted
-
-    @dataclass
     class FrameData:
         """Data class for storing frame-specific data.
 
         Attributes:
             coordinates (Coordinates): The coordinates associated with the frame.
-            object_frame_instance_info (ObjectInstance.FrameInfo): The frame's metadata information.
+            annotation_metadata (_AnnotationMetadata): The frame's metadata information.
         """
 
         coordinates: Coordinates
-        object_frame_instance_info: ObjectInstance.FrameInfo
+        annotation_metadata: _AnnotationMetadata
         # Probably the above can be flattened out into this class.
 
     def _set_answer_unsafe(
