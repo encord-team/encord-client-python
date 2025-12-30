@@ -346,7 +346,10 @@ def test_update_attribute_for_object_which_exist_on_two_spaces(ontology):
             "value": "audio_object_1",
             "color": "#A4FF00",
             "shape": "audio",
-            "spaces": {"audio-1-uuid": {"range": [[0, 100]], "type": "frame"}, "audio-2-uuid": {"range": [[200, 300]], "type": "frame"}},
+            "spaces": {
+                "audio-1-uuid": {"range": [[0, 100]], "type": "frame"},
+                "audio-2-uuid": {"range": [[200, 300]], "type": "frame"},
+            },
             "range": [],
         }
     }
