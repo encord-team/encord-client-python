@@ -4,7 +4,7 @@ import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, cast
 
 from encord.common.time_parser import parse_datetime
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
@@ -34,8 +34,9 @@ class _AnnotationMetadata:
     """None defaults to the user of the SDK once uploaded to the server."""
     confidence: float = DEFAULT_CONFIDENCE
     manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
-    # TODO: Classifications do not have this field
+    # TODO: Classifications do not have this field. We also want to deprecate this field.
     is_deleted: Optional[bool] = None
+    # TODO: We want tod deprecate this field.
     reviews: Optional[List[dict[Any, Any]]] = None
 
     @staticmethod
@@ -58,7 +59,10 @@ class _AnnotationMetadata:
             last_edited_by=d.get("lastEditedBy", None),
             confidence=d.get("confidence", DEFAULT_CONFIDENCE),
             manual_annotation=d.get("manualAnnotation", DEFAULT_MANUAL_ANNOTATION),
-            # is_deleted=d.get("isDeleted"), # TODO: Can we remove this?
+            reviews=d.get("reviews", None),  # Only here for backwards compatibility, do not use this
+            is_deleted=cast(
+                Optional[bool], d.get("isDeleted", None)
+            ),  # Only here for backwards compatibility, do not use this
         )
 
     def update_from_optional_fields(
@@ -235,23 +239,23 @@ class _Annotation(ABC):
         self._check_if_annotation_is_valid()
         self._get_annotation_data().annotation_metadata.manual_annotation = manual_annotation
 
-    @property
-    def reviews(self) -> Optional[List[Dict[str, Any]]]:
-        """This is merely here for backwards compatibility. It will always be None.
-        Returns:
-            Optional[List[Dict[str, Any]]]: A list of review dictionaries, if any.
-        """
-        self._check_if_annotation_is_valid()
-        return None
-
-    @property
-    def is_deleted(self) -> Optional[bool]:
-        """Check if the annotation is marked as deleted.
-        Returns:
-            Optional[bool]: `True` if deleted, `False` otherwise, or `None` if not set.
-        """
-        self._check_if_annotation_is_valid()
-        return self._get_annotation_data().annotation_metadata.is_deleted
+    # @property
+    # def reviews(self) -> Optional[List[Dict[str, Any]]]:
+    #     """This is merely here for backwards compatibility. It will always be None, unless overriden.
+    #     Returns:
+    #         Optional[List[Dict[str, Any]]]: A list of review dictionaries, if any.
+    #     """
+    #     self._check_if_annotation_is_valid()
+    #     return None
+    #
+    # @property
+    # def is_deleted(self) -> Optional[bool]:
+    #     """This is merely here for backwards compatibility. It will always be None, unless overriden.
+    #     Returns:
+    #         Optional[bool]: `True` if deleted, `False` otherwise, or `None` if not set.
+    #     """
+    #     self._check_if_annotation_is_valid()
+    #     return None
 
 
 class _ObjectAnnotation(_Annotation):

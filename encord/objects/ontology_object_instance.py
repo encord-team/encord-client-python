@@ -29,6 +29,7 @@ from typing import (
     cast,
 )
 
+from encord.common.deprecated import deprecated
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
@@ -813,6 +814,15 @@ class ObjectInstance:
         def reviews(self) -> Optional[List[Dict[str, Any]]]:
             self._check_if_annotation_is_valid()
             return self._get_annotation_data().annotation_metadata.reviews
+
+        @property
+        def is_deleted(self) -> Optional[bool]:
+            """This is merely here for backwards compatibility.
+            Returns:
+                Optional[List[Dict[str, Any]]]: A list of review dictionaries, if any.
+            """
+            self._check_if_annotation_is_valid()
+            return self._get_annotation_data().annotation_metadata.is_deleted
 
         def _get_annotation_data(self) -> _AnnotationData:
             return self._object_instance._frames_to_instance_data[self._frame]
