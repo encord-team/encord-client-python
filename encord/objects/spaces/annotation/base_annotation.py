@@ -54,9 +54,9 @@ class _AnnotationMetadata:
 
         confidence = d.get("confidence", None)
         manual_annotation = d.get("manualAnnotation", None)
-
+        created_at = d["createdAt"]
         return _AnnotationMetadata(
-            created_at=parse_datetime(d["createdAt"]),
+            created_at=parse_datetime(created_at) if created_at is not None else datetime.now(),
             created_by=d.get("createdBy", None),
             last_edited_at=last_edited_at,
             last_edited_by=d.get("lastEditedBy", None),
