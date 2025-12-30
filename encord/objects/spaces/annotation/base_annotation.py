@@ -70,6 +70,7 @@ class _AnnotationMetadata:
 
     def update_from_optional_fields(
         self,
+        *,
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,
