@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, Iterable, List, NoReturn, Optional, Set, TypeVar, Union
+from typing import Any, Dict, Generic, Iterable, List, NoReturn, Optional, Set, TypeVar, Union, cast
 
 from encord.common.deprecated import deprecated
 from encord.objects.attributes import (
@@ -91,7 +91,9 @@ class Answer(ABC, Generic[ValueType, AttributeType]):
         assert self._value is not None, "Value can't be none for the answered Answer object"
         return self._value
 
-    def to_encord_dict(self, ranges: Optional[Ranges] = None) -> Optional[AttributeDict | DynamicAttributeObject]:
+    def to_encord_dict(
+        self, ranges: Optional[Ranges] = None, space_id: Optional[str] = None
+    ) -> Optional[AttributeDict | DynamicAttributeObject]:
         """A low level helper to convert to the Encord JSON format.
         For most use cases the `get_answer` function should be used instead.
         """
@@ -102,7 +104,7 @@ class Answer(ABC, Generic[ValueType, AttributeType]):
         if self.is_dynamic:
             if ranges is None:
                 raise ValueError("Frame range should be set for dynamic answers")
-            dynamic_ret = self._add_dynamic_fields(ret, ranges)
+            dynamic_ret = self._add_dynamic_fields(ret, ranges, space_id)
             return dynamic_ret
 
         return ret
@@ -115,7 +117,9 @@ class Answer(ABC, Generic[ValueType, AttributeType]):
     def from_dict(self, d: Dict[str, Any]) -> None:
         pass
 
-    def _add_dynamic_fields(self, base_answer: AttributeDict, ranges: Ranges) -> DynamicAttributeObject:
+    def _add_dynamic_fields(
+        self, base_answer: AttributeDict, ranges: Ranges, spaceId: Optional[str] = None
+    ) -> DynamicAttributeObject:
         ret: DynamicAttributeObject = {
             "name": base_answer["name"],
             "value": base_answer["value"],
@@ -127,6 +131,9 @@ class Answer(ABC, Generic[ValueType, AttributeType]):
             "shouldPropagate": self._should_propagate,
             "trackHash": self._track_hash,
         }
+
+        if spaceId is not None:
+            ret["spaceId"] = spaceId
 
         return ret
 

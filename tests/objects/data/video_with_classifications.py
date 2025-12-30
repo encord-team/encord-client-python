@@ -28,6 +28,7 @@ labels: LabelRowDict = {
             "lastEditedBy": "user1Hash",
             "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
             "manualAnnotation": True,
+            "spaces": {},
             "classifications": [
                 {
                     "name": "Radio classification 1",
@@ -39,6 +40,7 @@ labels: LabelRowDict = {
             ],
         },
     },
+    "spaces": {},
     "data_units": {
         "cd57cf5c-2541-4a46-a836-444540ee987a": {
             "data_hash": "cd57cf5c-2541-4a46-a836-444540ee987a",

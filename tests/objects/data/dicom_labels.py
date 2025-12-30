@@ -10,6 +10,7 @@ dicom_labels = {
     "dataset_title": "DICOM dataset",
     "data_title": "cd53",
     "data_type": "dicom",
+    "spaces": {},
     "data_units": {
         "cd53f484-c9ab-4fd1-9c14-5b34d4e42ba2": {
             "data_hash": "cd53f484-c9ab-4fd1-9c14-5b34d4e42ba2",

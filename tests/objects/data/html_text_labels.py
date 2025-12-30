@@ -12,6 +12,7 @@ HTML_TEXT_LABELS = {
     "dataset_title": "Text Dataset",
     "data_title": "airbnb.html",
     "data_type": "plain_text",
+    "spaces": {},
     "data_units": {
         "cd53f484-c9ab-4fd1-9c14-5b34d4e42ba2": {
             "data_hash": "cd53f484-c9ab-4fd1-9c14-5b34d4e42ba2",
@@ -55,6 +56,7 @@ HTML_TEXT_LABELS = {
         "textClassificationHash": {
             "classificationHash": "textClassificationHash",
             "featureHash": "jPOcEsbw",
+            "spaces": {},
             "classifications": [
                 {
                     "name": "Text classification",
@@ -74,6 +76,7 @@ HTML_TEXT_LABELS = {
         "radioClassificationHash": {
             "classificationHash": "radioClassificationHash",
             "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
+            "spaces": {},
             "classifications": [
                 {
                     "name": "Radio classification 1",
@@ -106,6 +109,7 @@ HTML_TEXT_LABELS = {
         "checklistClassificationHash": {
             "classificationHash": "checklistClassificationHash",
             "featureHash": "3DuQbFxo",
+            "spaces": {},
             "classifications": [
                 {
                     "name": "Checklist classification",

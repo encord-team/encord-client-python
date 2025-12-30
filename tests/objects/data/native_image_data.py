@@ -12,6 +12,7 @@ labels = {
     "dataset_title": "Dataset with one single image annotated",
     "data_title": "rousseau_2.jpg",
     "data_type": "image",
+    "spaces": {},
     "data_units": {
         "649aba74-365b-45fa-a375-3036ee0eda78": {
             "data_hash": "649aba74-365b-45fa-a375-3036ee0eda78",
@@ -240,6 +241,7 @@ labels = {
         "3AqiIPrF": {
             "classificationHash": "3AqiIPrF",
             "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
+            "spaces": {},
             "classifications": [
                 {
                     "name": "cl 1 2 text",
@@ -260,6 +262,7 @@ labels = {
         "HVwOV4hB": {
             "classificationHash": "HVwOV4hB",
             "featureHash": "jPOcEsbw",
+            "spaces": {},
             "classifications": [
                 {
                     "name": "Text classification",
@@ -273,6 +276,7 @@ labels = {
         "37vDK5u0": {
             "classificationHash": "37vDK5u0",
             "featureHash": "3DuQbFxo",
+            "spaces": {},
             "classifications": [
                 {
                     "name": "Checklist classification",

@@ -23,6 +23,7 @@ LABEL_ROW_METADATA_BLURB = [
         "is_optimised_image_group": "None",
         "is_image_sequence": "None",
         "annotation_task_status": "ASSIGNED",
+        "spaces": {},
     },
     {
         "label_hash": "2321fd7d-99cd-4d85-b371-9a9f59cf79a7",
@@ -48,6 +49,7 @@ LABEL_ROW_METADATA_BLURB = [
         "is_optimised_image_group": "None",
         "is_image_sequence": "None",
         "annotation_task_status": "QUEUED",
+        "spaces": {},
     },
     {
         "label_hash": "f6dcda1a-8e0a-45b2-a3c5-d7ebfe93ad8a",
@@ -73,6 +75,7 @@ LABEL_ROW_METADATA_BLURB = [
         "is_optimised_image_group": False,
         "is_image_sequence": False,
         "annotation_task_status": "QUEUED",
+        "spaces": {},
     },
 ]
 
@@ -89,6 +92,7 @@ LABEL_ROW_BLURB = [
         "data_type": "image",
         "is_image_sequence": "None",
         "video_link": "None",
+        "spaces": {},
         "data_units": {
             "b13c4f55-1eae-4832-93e8-83b030ef17b0": {
                 "data_hash": "b13c4f55-1eae-4832-93e8-83b030ef17b0",
@@ -159,6 +163,7 @@ LABEL_ROW_BLURB = [
                         "manualAnnotation": True,
                     }
                 ],
+                "spaces": {},
             }
         },
         "object_actions": {},
@@ -186,6 +191,7 @@ LABEL_ROW_BLURB = [
         "data_type": "img_group",
         "is_image_sequence": False,
         "video_link": "None",
+        "spaces": {},
         "data_units": {
             "b06893e3-d7d2-4aa9-83b0-d91c9acc51be": {
                 "data_hash": "b06893e3-d7d2-4aa9-83b0-d91c9acc51be",
@@ -249,6 +255,7 @@ LABEL_ROW_BLURB = [
         "data_type": "video",
         "is_image_sequence": "None",
         "video_link": "https://storage.googleapis.com/encord-local-dev.appspot.com/cord-videos-dev/CcJU09GkdjcLCslKtd6bEqi48ZA2/9b45984a-0046-4389-ba0d-b73b6b35ee82?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=firebase-adminsdk-efw44%40encord-local-dev.iam.gserviceaccount.com%2F20230328%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230328T153208Z&X-Goog-Expires=604800&X-Goog-SignedHeaders=host&X-Goog-Signature=07aa2e0a51f13576be1be021072fd283f080b1bd26fb839a56b06165338bf3733b0051cce21eb27656728dcf8785f682d432781f3d1d638aa3bb150a492a62a20990449eaf2e02059d0ab835f67e9449c8637e47f36fbc1c0610eb06905a5b4cd1788df76228cf98f8beaf2e8b960374b5d40c90a062ecd9d49420829a6c4c78ee2ede62af00d2addc988488ffd638f633493fb4a14bf2067a6a036f90af728aef32700b5254d52026c69b30524cbe70959fae66ee5b6265579cfc6074ded8db9bfa8ca5ed432c2ad8ae9c1996a3b29efbcabf5cde024cce0a3ed25a69ff52b3c593bade583ef305a2f023585732e8c4362939d4e5a572faeb0492a41d574a2d",
+        "spaces": {},
         "data_units": {
             "9b45984a-0046-4389-ba0d-b73b6b35ee82": {
                 "data_hash": "9b45984a-0046-4389-ba0d-b73b6b35ee82",
@@ -703,6 +710,7 @@ LABEL_ROW_BLURB = [
                         "manualAnnotation": True,
                     }
                 ],
+                "spaces": {},
             }
         },
         "object_actions": {},

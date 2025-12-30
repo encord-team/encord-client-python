@@ -11,6 +11,7 @@ labels = {
     "dataset_title": "One image group",
     "data_title": "image-group-8375e",
     "data_type": "img_group",
+    "spaces": {},
     "data_units": {
         "f850dfb4-7146-49e0-9afc-2b9434a64a9f": {
             "data_hash": "f850dfb4-7146-49e0-9afc-2b9434a64a9f",
@@ -1230,6 +1231,7 @@ labels = {
         "hLs1sDAr": {
             "classificationHash": "hLs1sDAr",
             "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
+            "spaces": {},
             "classifications": [
                 {
                     "name": "cl 1 2 text",

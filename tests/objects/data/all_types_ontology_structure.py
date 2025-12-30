@@ -94,7 +94,24 @@ AUDIO_OBJECT_1 = Object(
     shape=Shape.AUDIO,
     feature_node_hash="KVfzNkFy",
     archived=False,
-    attributes=[],
+    attributes=[
+        TextAttribute(
+            uid=[8, 1],
+            feature_node_hash="transcriptFeatureHash",
+            name="Transcript",
+            required=False,
+            dynamic=False,
+            archived=False,
+        ),
+        TextAttribute(
+            uid=[8, 2],
+            feature_node_hash="dynamicTranscriptFeatureHash",
+            name="Dynamic Transcript",
+            required=False,
+            dynamic=True,
+            archived=False,
+        ),
+    ],
 )
 AUDIO_OBJECT_2 = dataclasses.replace(AUDIO_OBJECT_1, uid=9, name="audio object 2", feature_node_hash="bjvtzFgi")
 AUDIO_OBJECT_3 = dataclasses.replace(AUDIO_OBJECT_1, uid=10, name="audio object 3", feature_node_hash="9dt+r+op")
@@ -105,7 +122,24 @@ TEXT_OBJECT = Object(
     shape=Shape.TEXT,
     feature_node_hash="textFeatureNodeHash",
     archived=False,
-    attributes=[],
+    attributes=[
+        TextAttribute(
+            uid=[11, 1],
+            feature_node_hash="definitionFeatureHash",
+            name="Definition",
+            required=False,
+            dynamic=False,
+            archived=False,
+        ),
+        TextAttribute(
+            uid=[11, 2],
+            feature_node_hash="dynamicDefinitionFeatureHash",
+            name="Dynamic definition",
+            required=False,
+            dynamic=True,
+            archived=False,
+        ),
+    ],
 )
 all_types_structure = OntologyStructure(
     objects=[
@@ -417,6 +451,20 @@ all_types_structure = OntologyStructure(
                             archived=False,
                         ),
                     ],
+                )
+            ],
+        ),
+        Classification(
+            uid=5,
+            feature_node_hash="textClass2",
+            attributes=[
+                TextAttribute(
+                    uid=[5, 1],
+                    feature_node_hash="textAttr2",
+                    name="Text classification 2",
+                    required=False,
+                    archived=False,
+                    dynamic=False,
                 )
             ],
         ),

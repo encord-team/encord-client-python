@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Literal, Optional, TypedDict, Union
 
 from encord.objects.common import Shape
+from encord.objects.html_node import HtmlNode
 
 """ Typed Dicts for Shape Coordinates """
 
@@ -92,7 +93,7 @@ class BaseFrameObject(BaseFrameObjectRequired, total=False):
     """
 
     createdBy: Optional[str]  # This is optional because we set the default to the current user on the BE
-    lastEditedBy: str
+    lastEditedBy: Optional[str]  # This is optional because we set the default to the current user on the BE
     lastEditedAt: str
     confidence: float
     manualAnnotation: bool
@@ -184,6 +185,8 @@ class DynamicAttributeObjectRequired(AttributeDict):
 class DynamicAttributeObject(DynamicAttributeObjectRequired, total=False):
     """All fields for dynamic attribute object in object_actions."""
 
+    spaceId: str
+
 
 class ClassificationAnswerRequired(TypedDict):
     classificationHash: str
@@ -203,18 +206,44 @@ class ClassificationAnswer(ClassificationAnswerRequired, total=False):
     lastEditedBy: Union[str, None]
     manualAnnotation: Union[bool, None]
     reviews: list[Any]  # TODO: Remove this as its deprecated
+    spaces: Dict[str, SpaceRange]  # Empty dict if no spaces
 
 
-class ObjectAnswer(TypedDict):
+class ObjectAnswerForGeometric(TypedDict):
     objectHash: str
     classifications: List[AttributeDict]
+
+
+class SpaceHtmlData(TypedDict):
+    type: Literal["html"]
+    range: List[List[HtmlNode]]
+
+
+class SpaceFrameData(TypedDict):
+    type: Literal["frame"]
+    range: List[List[int]]
+
+
+SpaceRange = Union[SpaceHtmlData, SpaceFrameData]
 
 
 class ObjectAnswerForNonGeometric(BaseFrameObject):
     """For non-geometric modalities, metadata is contained in object answers, instead of frame"""
 
+    shape: Union[Literal[Shape.TEXT], Literal[Shape.AUDIO]]
     classifications: List[AttributeDict]
     range: Union[List[List[int]], None]
+    spaces: Dict[str, SpaceRange]  # Important for non-geometric shapes, where space info must live on ObjectAnswer
+
+
+class ObjectAnswerForHtml(BaseFrameObject):
+    shape: Literal[Shape.TEXT]
+    classifications: List[AttributeDict]
+    range_html: list[dict]
+    range: Union[List[List[int]], None]
+
+
+ObjectAnswer = Union[ObjectAnswerForGeometric, ObjectAnswerForNonGeometric, ObjectAnswerForHtml]
 
 
 class ObjectAction(TypedDict):
@@ -241,6 +270,7 @@ class LabelRowDict(TypedDict, total=False):
     object_answers: Dict
     classification_answers: Dict[str, ClassificationAnswer]
     data_units: Dict
+    spaces: Dict
 
 
 def _is_containing_metadata(answer: ClassificationAnswer) -> bool:

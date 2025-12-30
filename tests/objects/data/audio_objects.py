@@ -93,6 +93,7 @@ AUDIO_OBJECTS = {
     "classification_answers": {},
     "object_actions": {},
     "label_status": "LABELLED",
+    "spaces": {},
     "data_units": {
         "cd53f484-c9ab-4fd1-9c14-5b34d4e42ba2": {
             "data_hash": "cd53f484-c9ab-4fd1-9c14-5b34d4e42ba2",

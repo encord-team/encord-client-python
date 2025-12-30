@@ -29,6 +29,7 @@ from typing import (
     cast,
 )
 
+from encord.common.deprecated import deprecated
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DataType
@@ -42,6 +43,7 @@ from encord.objects.coordinates import (
     NON_GEOMETRIC_COORDINATES,
     AudioCoordinates,
     Coordinates,
+    GeometricCoordinates,
     HtmlCoordinates,
     TextCoordinates,
 )
@@ -60,16 +62,20 @@ from encord.objects.internal_helpers import (
 )
 from encord.objects.ontology_object import Object
 from encord.objects.options import Option
+from encord.objects.spaces.annotation.base_annotation import _AnnotationData, _AnnotationMetadata, _ObjectAnnotation
+from encord.objects.spaces.annotation.geometric_annotation import _GeometricAnnotationData
+from encord.objects.spaces.annotation.range_annotation import _RangeObjectAnnotationData
 from encord.objects.types import (
     AnswerDict,
     AttributeDict,
     BaseFrameObject,
     DynamicAttributeObject,
 )
-from encord.objects.utils import check_email, short_uuid_str
+from encord.objects.utils import short_uuid_str
 
 if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
+    from encord.objects.spaces.base_space import Space
 
 
 class ObjectInstance:
@@ -88,7 +94,23 @@ class ObjectInstance:
         # Only used for non-frame entities
         self._non_geometric = ontology_object.shape in (Shape.AUDIO, Shape.TEXT)
 
-        self._frames_to_instance_data: Dict[int, ObjectInstance.FrameData] = {}
+        # Only for Range based modalities, where the ranged objects share the same metadata across all spaces
+        self._instance_metadata: _AnnotationMetadata = _AnnotationMetadata()
+
+        self._frames_to_instance_data: Dict[int, _AnnotationData] = {}
+        self._spaces: dict[str, Space] = dict()
+
+    def _is_assigned_to_space(self) -> bool:
+        return bool(self._spaces)
+
+    def _add_to_space(self, space: Space) -> None:
+        self._spaces[space.space_id] = space
+
+    def _remove_from_space(self, space_id: str) -> None:
+        self._spaces.pop(space_id)
+        if not self._spaces:
+            # Reset metadata if not on any space
+            self._instance_metadata = _AnnotationMetadata()
 
     def is_assigned_to_label_row(self) -> Optional[LabelRowV2]:
         """Checks if the object instance is assigned to a label row.
@@ -220,6 +242,9 @@ class ObjectInstance:
             )
 
         if attribute.dynamic:
+            self._operation_not_allowed_for_objects_on_space(
+                extended_message="For getting dynamic attributes for objects on a space, use VideoSpace.get_answer_on_frames."
+            )
             return self._dynamic_answer_manager.get_answer(attribute, filter_answer, filter_frame)
 
         static_answer = self._static_answer_map[attribute.feature_node_hash]
@@ -273,6 +298,10 @@ class ObjectInstance:
             )
         elif frames is not None and attribute.dynamic is False:
             raise LabelRowError("Setting frames is only possible for dynamic attributes.")
+        elif attribute.dynamic:
+            self._operation_not_allowed_for_objects_on_space(
+                extended_message="For setting dynamic attributes for objects on a space, use VideoSpace.set_answer_on_frames."
+            )
 
         if attribute.dynamic:
             self._dynamic_answer_manager.set_answer(answer, attribute, frames)
@@ -367,6 +396,12 @@ class ObjectInstance:
 
         return list(result_ranges.values())
 
+    def _operation_not_allowed_for_objects_on_space(self, extended_message: Optional[str] = None) -> None:
+        base_message = "This operation is not allowed for objects that exist on a space."
+        error_message = base_message + extended_message if extended_message is not None else base_message
+        if self._is_assigned_to_space():
+            raise LabelRowError(error_message)
+
     def _set_answer_from_grouped_list(
         self, attribute: Attribute, answers_list: List[AttributeDict | DynamicAttributeObject]
     ) -> None:
@@ -387,7 +422,6 @@ class ObjectInstance:
                 all_feature_hashes: Set[str] = set()
                 ranges = []
                 for answer_dict in dynamic_answers_list:
-                    # TODO: Pretty sure this was a bug before, because answers could also be a string
                     answers = answer_dict["answers"]
                     track_hash = answer_dict.get("trackHash")
                     if isinstance(answers, list):
@@ -423,6 +457,9 @@ class ObjectInstance:
             filter_frame: A filter for a specific frame. Only applies to dynamic attributes.
         """
         if attribute.dynamic:
+            self._operation_not_allowed_for_objects_on_space(
+                extended_message="For removing dynamic attributes for objects on a space, use VideoSpace.remove_answer_from_frame."
+            )
             self._dynamic_answer_manager.delete_answer(attribute, filter_frame, filter_answer)
             return
 
@@ -455,7 +492,7 @@ class ObjectInstance:
         last_edited_by: Optional[str] = None,
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
-        reviews: Optional[List[dict]] = None,
+        reviews: Optional[List[dict]] = None,  # This field is deprecated. It will always be None.
         is_deleted: Optional[bool] = None,
     ) -> None:
         """Place the object onto the specified frame(s).
@@ -493,8 +530,46 @@ class ObjectInstance:
                     f"There is only one frame. Please ensure `set_for_frames` is called with `frames=0`."
                 )
 
-        frames_list = frames_class_to_frames_list(frames)
+        self._operation_not_allowed_for_objects_on_space(
+            extended_message="For adding the object to different frames on a space, use Space.place_object."
+        )
 
+        self._set_for_frames(
+            coordinates=coordinates,
+            frames=frames,
+            overwrite=overwrite,
+            created_at=created_at,
+            created_by=created_by,
+            last_edited_at=last_edited_at,
+            last_edited_by=last_edited_by,
+            confidence=confidence,
+            manual_annotation=manual_annotation,
+            reviews=reviews,
+            is_deleted=is_deleted,
+        )
+
+    def _set_for_frames(
+        self,
+        coordinates: Coordinates,
+        frames: Frames = 0,
+        *,
+        overwrite: bool = False,
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        confidence: Optional[float] = None,
+        manual_annotation: Optional[bool] = None,
+        reviews: Optional[List[dict]] = None,  # This field is deprecated. It will always be None.
+        is_deleted: Optional[bool] = None,
+    ):
+        """
+        Used internally to set the frames on the object instance itself
+        This is only when the object instance is NOT attached to a space.
+        We also call this when we're detaching the object instance from a space,
+        and therefore need to transfer frames data back to the object instance.
+        """
+        frames_list = frames_class_to_frames_list(frames)
         for frame in frames_list:
             existing_frame_data = self._frames_to_instance_data.get(frame)
 
@@ -512,22 +587,40 @@ class ObjectInstance:
                 self.check_within_range(frame)
 
             if existing_frame_data is None:
-                existing_frame_data = ObjectInstance.FrameData(
-                    coordinates=coordinates, object_frame_instance_info=ObjectInstance.FrameInfo()
-                )
+                if isinstance(coordinates, (TextCoordinates, AudioCoordinates)):
+                    existing_frame_data = _RangeObjectAnnotationData(
+                        annotation_metadata=_AnnotationMetadata(), range_manager=RangeManager()
+                    )
+                else:
+                    # Note here we pretend HTML coordinates are geometric coordinates. To remove when we implement
+                    # HTML space.
+                    geometric_coordinates = cast(GeometricCoordinates, coordinates)
+                    existing_frame_data = _GeometricAnnotationData(
+                        coordinates=geometric_coordinates, annotation_metadata=_AnnotationMetadata()
+                    )
                 self._frames_to_instance_data[frame] = existing_frame_data
 
-            existing_frame_data.object_frame_instance_info.update_from_optional_fields(
+            existing_frame_data.annotation_metadata.update_from_optional_fields(
                 created_at=created_at,
                 created_by=created_by,
                 last_edited_at=last_edited_at,
                 last_edited_by=last_edited_by,
                 confidence=confidence,
                 manual_annotation=manual_annotation,
-                reviews=reviews,
                 is_deleted=is_deleted,
+                reviews=reviews,
             )
-            existing_frame_data.coordinates = coordinates
+
+            if isinstance(existing_frame_data, _GeometricAnnotationData):
+                geometric_coordinates = cast(GeometricCoordinates, coordinates)
+                existing_frame_data.coordinates = geometric_coordinates
+            elif isinstance(existing_frame_data, _RangeObjectAnnotationData):
+                non_geometric_coordinates = cast(Union[TextCoordinates, AudioCoordinates], coordinates)
+
+                # This is for backwards compatibility.
+                # When set_for_frames is called for non_geometric objects, we replace the entire range, instead of simply adding to the range.
+                existing_frame_data.range_manager.clear_ranges()
+                existing_frame_data.range_manager.add_ranges(non_geometric_coordinates.range)
 
             if self._parent:
                 self._parent.add_to_single_frame_to_hashes_map(self, frame)
@@ -552,11 +645,14 @@ class ObjectInstance:
         Raises:
             LabelRowError: If the frame is not present in the label row.
         """
+        self._operation_not_allowed_for_objects_on_space()
+
         if self._non_geometric and frame != 0:
             raise LabelRowError(
                 'This annotation data for this object instance is stored on only one "frame". '
                 "Use `get_annotation(0)` to get the frame data of the first frame."
             )
+
         if isinstance(frame, str):
             # TODO: this check should be consistent for both string and integer frames,
             #       but currently it is not possible due to the parsing logic
@@ -592,7 +688,19 @@ class ObjectInstance:
         Returns:
             List[Annotation]: A list of `ObjectInstance.Annotation` in order of available frames.
         """
-        return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_instance_data.keys())]
+        if self._is_assigned_to_space():
+            res: List[ObjectInstance.Annotation] = []
+            for space in self._spaces.values():
+                # We can cast here, because our ObjectAnnotation is built to mimic `ObjectInstance.Annotation`
+                res.extend(
+                    cast(
+                        List[ObjectInstance.Annotation],
+                        space.get_object_instance_annotations(filter_object_instances=[self.object_hash]),
+                    )
+                )
+            return res
+        else:
+            return [self.get_annotation(frame_num) for frame_num in sorted(self._frames_to_instance_data.keys())]
 
     def get_annotation_frames(self) -> set[int]:
         """Get all annotations for the object instance on all frames it has been placed on.
@@ -600,6 +708,8 @@ class ObjectInstance:
         Returns:
             List[Annotation]: A list of `ObjectInstance.Annotation` in order of available frames.
         """
+        self._operation_not_allowed_for_objects_on_space()
+
         return {self.get_annotation(frame_num).frame for frame_num in sorted(self._frames_to_instance_data.keys())}
 
     def remove_from_frames(self, frames: Frames) -> None:
@@ -612,6 +722,15 @@ class ObjectInstance:
             raise LabelRowError(
                 f"For objects with a non-geometric shape (e.g. {Shape.TEXT} and {Shape.AUDIO}), "
                 f"There is only one frame. Please ensure `remove_from_frames` is called with `frames=0`."
+            )
+
+        self._operation_not_allowed_for_objects_on_space(
+            extended_message="For removing the object from different frames on a space, use Space.unplace_object."
+        )
+
+        if self._is_assigned_to_space():
+            raise LabelRowError(
+                "This method is not allowed when the object instance already exists on a space. Instead use `Space.unplace_object`"
             )
 
         frames_list = frames_class_to_frames_list(frames)
@@ -650,10 +769,11 @@ class ObjectInstance:
                 "have been set previously."
             )
 
-    class Annotation:
-        """Represents an annotation for a specific frame of an ObjectInstance.
-
+    class Annotation(_ObjectAnnotation):
+        """
+        Represents an annotation for a specific frame of an ObjectInstance.
         Allows setting or getting data for the ObjectInstance on the given frame number.
+        This is deprecated, we will be using the ObjectAnnotation that this inherits from.
         """
 
         def __init__(self, object_instance: ObjectInstance, frame: int):
@@ -661,192 +781,57 @@ class ObjectInstance:
             self._frame = frame
 
         @property
+        def coordinates(self) -> Coordinates:
+            self._check_if_annotation_is_valid()
+            annotation_data = self._get_annotation_data()
+            if isinstance(annotation_data, _GeometricAnnotationData):
+                return annotation_data.coordinates
+            elif isinstance(annotation_data, _RangeObjectAnnotationData):
+                ranges = annotation_data.range_manager.get_ranges()
+                if self._object_instance._ontology_object.shape == Shape.TEXT:
+                    return TextCoordinates(range=ranges)
+                elif self._object_instance._ontology_object.shape == Shape.AUDIO:
+                    return AudioCoordinates(range=ranges)
+                else:
+                    raise LabelRowError("No coordinates for this annotation.")
+            else:
+                raise LabelRowError("Invalid annotation data found.")
+
+        @coordinates.setter
+        def coordinates(self, coordinates: Coordinates) -> None:
+            self._check_if_annotation_is_valid()
+            self._object_instance.set_for_frames(coordinates, self._frame, overwrite=True)
+
+        @property
+        def space(self) -> Space:
+            raise LabelRowError("This annotation does not exist on a space")
+
+        @property
         def frame(self) -> int:
             return self._frame
 
         @property
-        def coordinates(self) -> Coordinates:
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().coordinates
-
-        @coordinates.setter
-        def coordinates(self, coordinates: Coordinates) -> None:
-            self._check_if_frame_view_is_valid()
-            self._object_instance.set_for_frames(coordinates, self._frame, overwrite=True)
-
-        @property
-        def created_at(self) -> datetime:
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().object_frame_instance_info.created_at
-
-        @created_at.setter
-        def created_at(self, created_at: datetime) -> None:
-            self._check_if_frame_view_is_valid()
-            self._get_object_frame_instance_data().object_frame_instance_info.created_at = created_at
-
-        @property
-        def created_by(self) -> Optional[str]:
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().object_frame_instance_info.created_by
-
-        @created_by.setter
-        def created_by(self, created_by: Optional[str]) -> None:
-            """Set the created_by field with a user email or None if it should default to the current user of the SDK."""
-            self._check_if_frame_view_is_valid()
-            if created_by is not None:
-                check_email(created_by)
-            self._get_object_frame_instance_data().object_frame_instance_info.created_by = created_by
-
-        @property
-        def last_edited_at(self) -> datetime:
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().object_frame_instance_info.last_edited_at
-
-        @last_edited_at.setter
-        def last_edited_at(self, last_edited_at: datetime) -> None:
-            self._check_if_frame_view_is_valid()
-            self._get_object_frame_instance_data().object_frame_instance_info.last_edited_at = last_edited_at
-
-        @property
-        def last_edited_by(self) -> Optional[str]:
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().object_frame_instance_info.last_edited_by
-
-        @last_edited_by.setter
-        def last_edited_by(self, last_edited_by: Optional[str]) -> None:
-            """Set the last_edited_by field with a user email or None if it should default to the current user of the SDK."""
-            self._check_if_frame_view_is_valid()
-            if last_edited_by is not None:
-                check_email(last_edited_by)
-            self._get_object_frame_instance_data().object_frame_instance_info.last_edited_by = last_edited_by
-
-        @property
-        def confidence(self) -> float:
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().object_frame_instance_info.confidence
-
-        @confidence.setter
-        def confidence(self, confidence: float) -> None:
-            self._check_if_frame_view_is_valid()
-            self._get_object_frame_instance_data().object_frame_instance_info.confidence = confidence
-
-        @property
-        def manual_annotation(self) -> bool:
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().object_frame_instance_info.manual_annotation
-
-        @manual_annotation.setter
-        def manual_annotation(self, manual_annotation: bool) -> None:
-            self._check_if_frame_view_is_valid()
-            self._get_object_frame_instance_data().object_frame_instance_info.manual_annotation = manual_annotation
-
-        @property
         def reviews(self) -> Optional[List[Dict[str, Any]]]:
-            """Get the reviews for this object on this frame.
-
-            Returns:
-                Optional[List[Dict[str, Any]]]: A list of review dictionaries, if any.
-            """
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().object_frame_instance_info.reviews
+            self._check_if_annotation_is_valid()
+            return self._get_annotation_data().annotation_metadata.reviews
 
         @property
         def is_deleted(self) -> Optional[bool]:
-            """Check if the object instance is marked as deleted on this frame.
-
+            """This is merely here for backwards compatibility.
             Returns:
-                Optional[bool]: `True` if deleted, `False` otherwise, or `None` if not set.
+                Optional[List[Dict[str, Any]]]: A list of review dictionaries, if any.
             """
-            self._check_if_frame_view_is_valid()
-            return self._get_object_frame_instance_data().object_frame_instance_info.is_deleted
+            self._check_if_annotation_is_valid()
+            return self._get_annotation_data().annotation_metadata.is_deleted
 
-        def _get_object_frame_instance_data(self) -> ObjectInstance.FrameData:
+        def _get_annotation_data(self) -> _AnnotationData:
             return self._object_instance._frames_to_instance_data[self._frame]
 
-        def _check_if_frame_view_is_valid(self) -> None:
+        def _check_if_annotation_is_valid(self) -> None:
             if self._frame not in self._object_instance._frames_to_instance_data:
                 raise LabelRowError(
                     "Trying to use an ObjectInstance.Annotation for an ObjectInstance that is not on the frame"
                 )
-
-    @dataclass
-    class FrameInfo:
-        """Contains metadata information about a frame."""
-
-        created_at: datetime = field(default_factory=datetime.now)
-        created_by: Optional[str] = None
-        """None defaults to the user of the SDK once uploaded to the server."""
-        last_edited_at: datetime = field(default_factory=datetime.now)
-        last_edited_by: Optional[str] = None
-        """None defaults to the user of the SDK once uploaded to the server."""
-        confidence: float = DEFAULT_CONFIDENCE
-        manual_annotation: bool = DEFAULT_MANUAL_ANNOTATION
-        reviews: Optional[List[dict]] = None
-        is_deleted: Optional[bool] = None
-
-        @staticmethod
-        def from_dict(d: BaseFrameObject) -> ObjectInstance.FrameInfo:
-            """Create a FrameInfo instance from a dictionary.
-
-            Args:
-                d: A dictionary containing frame information.
-
-            Returns:
-                ObjectInstance.FrameInfo: An instance of FrameInfo.
-            """
-            if "lastEditedAt" in d and d["lastEditedAt"] is not None:
-                last_edited_at = parse_datetime(d["lastEditedAt"])
-            else:
-                last_edited_at = datetime.now()
-
-            return ObjectInstance.FrameInfo(
-                created_at=parse_datetime(d["createdAt"]),
-                created_by=d.get("createdBy"),
-                last_edited_at=last_edited_at,
-                last_edited_by=d.get("lastEditedBy"),
-                confidence=d["confidence"],
-                manual_annotation=d.get("manualAnnotation", True),
-                reviews=d.get("reviews"),
-                is_deleted=d.get("isDeleted"),
-            )
-
-        def update_from_optional_fields(
-            self,
-            created_at: Optional[datetime] = None,
-            created_by: Optional[str] = None,
-            last_edited_at: Optional[datetime] = None,
-            last_edited_by: Optional[str] = None,
-            confidence: Optional[float] = None,
-            manual_annotation: Optional[bool] = None,
-            reviews: Optional[List[Dict[str, Any]]] = None,
-            is_deleted: Optional[bool] = None,
-        ) -> None:
-            """Update the FrameInfo fields with the specified values.
-
-            Args:
-                created_at: Optional creation time.
-                created_by: Optional creator identifier.
-                last_edited_at: Optional last edited time.
-                last_edited_by: Optional last editor identifier.
-                confidence: Optional confidence value.
-                manual_annotation: Optional manual annotation flag.
-                reviews: Optional list of reviews.
-                is_deleted: Optional deleted flag.
-            """
-            self.created_at = created_at or self.created_at
-            if created_by is not None:
-                self.created_by = created_by
-            self.last_edited_at = last_edited_at or self.last_edited_at
-            if last_edited_by is not None:
-                self.last_edited_by = last_edited_by
-            if confidence is not None:
-                self.confidence = confidence
-            if manual_annotation is not None:
-                self.manual_annotation = manual_annotation
-            if reviews is not None:
-                self.reviews = reviews
-            if is_deleted is not None:
-                self.is_deleted = is_deleted
 
     @dataclass
     class FrameData:
@@ -854,11 +839,11 @@ class ObjectInstance:
 
         Attributes:
             coordinates (Coordinates): The coordinates associated with the frame.
-            object_frame_instance_info (ObjectInstance.FrameInfo): The frame's metadata information.
+            annotation_metadata (_AnnotationMetadata): The frame's metadata information.
         """
 
         coordinates: Coordinates
-        object_frame_instance_info: ObjectInstance.FrameInfo
+        annotation_metadata: _AnnotationMetadata
         # Probably the above can be flattened out into this class.
 
     def _set_answer_unsafe(
@@ -897,13 +882,14 @@ class ObjectInstance:
                 self._set_answer_unsafe(option, attribute, ranges, track_hash=track_hash)
         elif isinstance(attribute, ChecklistAttribute):
             checklist_answers = cast(List[AnswerDict], answers)
-
             options = []
             for answer in checklist_answers:
                 feature_hash = answer["featureHash"]
                 option = attribute.get_child_by_hash(feature_hash, type_=Option)
                 options.append(option)
+
             self._set_answer_unsafe(options, attribute, ranges, track_hash=track_hash)
+
         elif isinstance(attribute, NumericAttribute):
             value = cast(float, answer_dict["answers"])
 
@@ -971,7 +957,7 @@ def check_coordinate_type(coordinates: Coordinates, ontology_object: Object, par
     # Therefore, we need to further check the file type, to ensure that `HtmlCoordinates` are only used for
     # HTML files, and `TextCoordinates` are only used for plain text files.
     if isinstance(coordinates, TextCoordinates):
-        if parent is not None and parent == "text/html":
+        if parent is not None and parent.file_type == "text/html":
             raise LabelRowError(f"Expected coordinates of type {HtmlCoordinates}`, but got type `{type(coordinates)}`.")
     elif isinstance(coordinates, HtmlCoordinates):
         if parent is not None and parent.file_type != "text/html":

@@ -12,6 +12,7 @@ AUDIO_LABELS = {
     "dataset_title": "Audio Dataset",
     "data_title": "sample-audio.mp3",
     "data_type": "audio",
+    "spaces": {},
     "data_units": {
         "cd53f484-c9ab-4fd1-9c14-5b34d4e42ba2": {
             "data_hash": "cd53f484-c9ab-4fd1-9c14-5b34d4e42ba2",
@@ -32,6 +33,7 @@ AUDIO_LABELS = {
         "textClassificationHash": {
             "classificationHash": "textClassificationHash",
             "featureHash": "jPOcEsbw",
+            "spaces": {},
             "classifications": [
                 {
                     "name": "Text classification",
@@ -51,6 +53,7 @@ AUDIO_LABELS = {
         "radioClassificationHash": {
             "classificationHash": "radioClassificationHash",
             "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
+            "spaces": {},
             "classifications": [
                 {
                     "name": "Radio classification 1",
@@ -83,6 +86,7 @@ AUDIO_LABELS = {
         "checklistClassificationHash": {
             "classificationHash": "checklistClassificationHash",
             "featureHash": "3DuQbFxo",
+            "spaces": {},
             "classifications": [
                 {
                     "name": "Checklist classification",
