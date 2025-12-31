@@ -143,8 +143,7 @@ OntologyClasses = Union[Object, Classification]
 
 # Error message for uninitialised labelling
 LABELLING_NOT_INITIALISED_ERROR_MESSAGE = (
-    "For this operation you will need to initialise labelling first. Call the `.initialise_labels()` "
-    "to do so first."
+    "For this operation you will need to initialise labelling first. Call the `.initialise_labels()` to do so first."
 )
 
 # Type mapping for runtime validation in get_space

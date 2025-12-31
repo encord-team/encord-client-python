@@ -6,7 +6,7 @@ import pytest
 
 from encord.exceptions import LabelRowError
 from encord.objects import LabelRowV2, Object
-from encord.objects.attributes import Attribute, TextAttribute
+from encord.objects.attributes import TextAttribute
 from encord.objects.frames import Range
 from encord.objects.ontology_labels_impl import LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 from tests.objects.data.all_types_ontology_structure import all_types_structure
