@@ -26,23 +26,8 @@ EXPECTED_ERROR_MESSAGE = (
 def uninitialised_video_space(ontology):
     """Create a label row with uninitialised labelling and return a video space."""
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    # NOTE: We deliberately do NOT call label_row.from_labels_dict() here
-    # to keep labelling uninitialised
 
-    # Manually set up the space map as if from_labels_dict was partially called
-    # This simulates having a video space but without proper initialization
-    from encord.objects.spaces.video_space import VideoSpace
-
-    video_space = VideoSpace(
-        space_id="video-1-uuid",
-        label_row=label_row,
-        number_of_frames=100,
-        width=1920,
-        height=1080,
-    )
-    label_row._space_map["video-1-uuid"] = video_space
-
-    return video_space
+    return label_row._get_space(id="video-1-uuid", type_="video")
 
 
 def test_put_object_instance_requires_initialisation(uninitialised_video_space):
