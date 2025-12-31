@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from abc import abstractmethod
 from datetime import datetime
-from typing import TYPE_CHECKING, Dict, Literal, Optional, Union, cast
+from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union, cast
 
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import format_datetime_to_long_string, format_datetime_to_long_string_optional
@@ -23,7 +23,6 @@ from encord.objects.types import (
     FrameClassification,
     LabelBlob,
     ObjectAnswer,
-    ObjectAnswerForGeometric,
     ObjectAnswerForNonGeometric,
     SpaceRange,
 )
@@ -71,6 +70,27 @@ class RangeSpace(Space):
         end_of_range = sorted_ranges[-1].end
 
         return start_of_range, end_of_range
+
+    def get_object_instance_annotations(
+        self, filter_object_instances: Optional[list[str]] = None
+    ) -> List[_RangeObjectAnnotation]:
+        """Get all object instance annotations in the ranged space.
+
+        Args:
+            filter_object_instances: Optional list of object hashes to filter by.
+                If provided, only annotations for these objects will be returned.
+
+        Returns:
+            List[_RangeObjectAnnotation]: List of all object annotations across all frames,
+                sorted by frame number.
+        """
+        filter_set = set(filter_object_instances) if filter_object_instances is not None else None
+
+        return [
+            self._create_object_annotation(obj_hash)
+            for obj_hash in self._objects_map.keys()
+            if filter_set is None or obj_hash in filter_set
+        ]
 
     def put_object_instance(
         self,

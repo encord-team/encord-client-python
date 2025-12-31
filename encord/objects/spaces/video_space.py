@@ -43,7 +43,6 @@ from encord.objects.types import (
     LabelBlob,
     ObjectAnswer,
     ObjectAnswerForGeometric,
-    ObjectAnswerForNonGeometric,
 )
 
 logger = logging.getLogger(__name__)
@@ -706,10 +705,11 @@ class VideoSpace(Space):
                 sorted by frame number.
         """
         res: List[_GeometricFrameObjectAnnotation] = []
+        filter_set = set(filter_object_instances) if filter_object_instances is not None else None
 
         for frame, obj in dict(sorted(self._frames_to_object_hash_to_annotation_data.items())).items():
-            for obj_hash, annotation in obj.items():
-                if filter_object_instances is None or obj_hash in filter_object_instances:
+            for obj_hash in obj.keys():
+                if filter_set is None or obj_hash in filter_set:
                     res.append(self._get_object_annotation_on_frame(object_hash=obj_hash, frame=frame))
 
         return res

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 from encord.exceptions import LabelRowError
 from encord.objects.coordinates import HtmlCoordinates
+from encord.objects.html_node import HtmlRange, HtmlRanges
 from encord.objects.spaces.annotation.base_annotation import (
     _AnnotationData,
     _ClassificationAnnotation,
@@ -18,9 +19,9 @@ if TYPE_CHECKING:
 
 @dataclass
 class _HtmlAnnotationData(_AnnotationData):
-    """Annotation Data for HTML-based objects. Contains HtmlCoordinates."""
+    """Annotation Data for HTML-based objects. Contains HtmlRanges."""
 
-    coordinates: HtmlCoordinates
+    ranges: HtmlRanges
 
 
 class _HtmlObjectAnnotation(_ObjectAnnotation):
@@ -40,6 +41,19 @@ class _HtmlObjectAnnotation(_ObjectAnnotation):
         return self._space
 
     @property
+    def ranges(self) -> HtmlRanges:
+        self._check_if_annotation_is_valid()
+        return self._get_annotation_data().ranges
+
+    @ranges.setter
+    def ranges(self, ranges: Union[HtmlRange, HtmlRanges]) -> None:
+        self._check_if_annotation_is_valid()
+        if isinstance(ranges, HtmlRange):
+            ranges = [ranges]
+
+        self._space._object_hash_to_html_ranges[self._object_instance.object_hash] = ranges
+
+    @property
     def coordinates(self) -> HtmlCoordinates:
         """Get the HTML coordinates for this annotation.
 
@@ -47,7 +61,8 @@ class _HtmlObjectAnnotation(_ObjectAnnotation):
             HtmlCoordinates: The XPath-based coordinates for this annotation.
         """
         self._check_if_annotation_is_valid()
-        return self._space._object_hash_to_html_coordinates[self._object_instance.object_hash]
+        html_ranges = self._space._object_hash_to_html_ranges[self._object_instance.object_hash]
+        return HtmlCoordinates(range=html_ranges)
 
     @coordinates.setter
     def coordinates(self, coordinates: HtmlCoordinates) -> None:
@@ -57,16 +72,16 @@ class _HtmlObjectAnnotation(_ObjectAnnotation):
             coordinates: The new HtmlCoordinates to set.
         """
         self._check_if_annotation_is_valid()
-        self._space._object_hash_to_html_coordinates[self._object_instance.object_hash] = coordinates
+        self._space._object_hash_to_html_ranges[self._object_instance.object_hash] = coordinates.range
 
     def _get_annotation_data(self) -> _HtmlAnnotationData:
         return _HtmlAnnotationData(
             annotation_metadata=self._object_instance._instance_metadata,
-            coordinates=self._space._object_hash_to_html_coordinates[self._object_instance.object_hash],
+            ranges=self._space._object_hash_to_html_ranges[self._object_instance.object_hash],
         )
 
     def _check_if_annotation_is_valid(self) -> None:
-        if self._object_instance.object_hash not in self._space._object_hash_to_html_coordinates:
+        if self._object_instance.object_hash not in self._space._object_hash_to_html_ranges:
             raise LabelRowError(
                 "Trying to use an HtmlObjectAnnotation for an ObjectInstance that is not on this space."
             )
