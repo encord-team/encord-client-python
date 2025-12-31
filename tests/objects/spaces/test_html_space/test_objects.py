@@ -220,6 +220,7 @@ def test_get_object_annotations(ontology):
     assert first_annotation.frame == 0  # Frame here for backwards compatibility
     assert first_annotation.object_hash == object_instance_1.object_hash
     assert first_annotation.coordinates == HtmlCoordinates(range=[range_1])
+    assert first_annotation.ranges == [range_1]
     assert first_annotation.last_edited_by == name_1
     assert first_annotation.last_edited_at == date1
 
@@ -227,6 +228,7 @@ def test_get_object_annotations(ontology):
     assert second_annotation.frame == 0  # Frame here for backwards compatibility
     assert second_annotation.object_hash == object_instance_2.object_hash
     assert second_annotation.coordinates == HtmlCoordinates(range=[range_2])
+    assert second_annotation.ranges == [range_2]
     assert second_annotation.last_edited_by == name_2
     assert second_annotation.last_edited_at == date2
 
