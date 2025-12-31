@@ -244,6 +244,7 @@ class VideoSpace(Space):
         Raises:
             LabelRowError: If frames are invalid or if annotation already exists when on_overlap="error".
         """
+        self._label_row._check_labelling_is_initalised()
         self._method_not_supported_for_object_instance_with_frames(object_instance=object_instance)
         self._method_not_supported_for_object_instance_with_dynamic_attributes(object_instance=object_instance)
 
@@ -282,6 +283,7 @@ class VideoSpace(Space):
             List[int]: List of frame numbers where the object was actually removed.
                 Empty if the object didn't exist on any of the specified frames.
         """
+        self._label_row._check_labelling_is_initalised()
         self._method_not_supported_for_object_instance_with_frames(object_instance=object_instance)
 
         frame_list = frames_class_to_frames_list(frames)
@@ -436,6 +438,7 @@ class VideoSpace(Space):
             LabelRowError: If the attribute is not dynamic, not a valid child of the object,
                 or if the object doesn't exist on the space yet.
         """
+        self._label_row._check_labelling_is_initalised()
         if attribute is None:
             attribute = _infer_attribute_from_answer(object_instance._ontology_object.attributes, answer)
         if not object_instance._is_attribute_valid_child_of_object_instance(attribute):
@@ -486,6 +489,7 @@ class VideoSpace(Space):
         Raises:
             LabelRowError: If the attribute is not dynamic or if the object doesn't exist on the space.
         """
+        self._label_row._check_labelling_is_initalised()
         if not attribute.dynamic:
             raise LabelRowError("This method should not be called for non-dynamic attributes.")
 
@@ -520,6 +524,7 @@ class VideoSpace(Space):
         Raises:
             LabelRowError: If the attribute is not dynamic or if the object doesn't exist on the space.
         """
+        self._label_row._check_labelling_is_initalised()
         dynamic_answer_manager = self._object_hash_to_dynamic_answer_manager.get(object_instance.object_hash)
         if dynamic_answer_manager is None:
             raise LabelRowError("This object does not exist on this space.")
@@ -564,6 +569,7 @@ class VideoSpace(Space):
         Raises:
             LabelRowError: If frames are invalid or if classification already exists when on_overlap="error".
         """
+        self._label_row._check_labelling_is_initalised()
         self._method_not_supported_for_classification_instance_with_frames(
             classification_instance=classification_instance
         )
@@ -654,6 +660,7 @@ class VideoSpace(Space):
             List[int]: List of frame numbers where the classification was actually removed.
                 Empty if the classification didn't exist on any of the specified frames.
         """
+        self._label_row._check_labelling_is_initalised()
         self._method_not_supported_for_classification_instance_with_frames(
             classification_instance=classification_instance
         )
@@ -704,6 +711,7 @@ class VideoSpace(Space):
             List[_GeometricFrameObjectAnnotation]: List of all object annotations across all frames,
                 sorted by frame number.
         """
+        self._label_row._check_labelling_is_initalised()
         res: List[_GeometricFrameObjectAnnotation] = []
         filter_set = set(filter_object_instances) if filter_object_instances is not None else None
 
@@ -721,6 +729,7 @@ class VideoSpace(Space):
             Dict[int, List[_GeometricFrameObjectAnnotation]]: Dictionary mapping frame numbers to lists of
                 object annotations on that frame.
         """
+        self._label_row._check_labelling_is_initalised()
         ret: Dict[int, List[_GeometricFrameObjectAnnotation]] = {}
 
         for frame, object_to_annotation_data_map in sorted(self._frames_to_object_hash_to_annotation_data.items()):
@@ -744,6 +753,7 @@ class VideoSpace(Space):
             list[_FrameClassificationAnnotation]: List of all classification annotations across all frames,
                 sorted by frame number.
         """
+        self._label_row._check_labelling_is_initalised()
         res: list[_FrameClassificationAnnotation] = []
 
         for frame, classification in dict(
@@ -772,6 +782,7 @@ class VideoSpace(Space):
         Returns:
             Optional[ObjectInstance]: The removed object instance, or None if the object wasn't found.
         """
+        self._label_row._check_labelling_is_initalised()
         object_instance = self._objects_map.pop(object_hash, None)
 
         if object_instance is None:
@@ -806,6 +817,7 @@ class VideoSpace(Space):
         Returns:
             Optional[ClassificationInstance]: The removed classification instance, or None if the classification wasn't found.
         """
+        self._label_row._check_labelling_is_initalised()
         classification_instance = self._classifications_map.pop(classification_hash, None)
 
         if classification_instance is not None:

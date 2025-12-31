@@ -126,6 +126,7 @@ class RangeSpace(Space):
         Raises:
             LabelRowError: If ranges are invalid or if annotation already exists when on_overlap="error".
         """
+        self._label_row._check_labelling_is_initalised()
         self._method_not_supported_for_object_instance_with_frames(object_instance=object_instance)
         self._method_not_supported_for_object_instance_with_dynamic_attributes(object_instance=object_instance)
 
@@ -186,6 +187,7 @@ class RangeSpace(Space):
             Ranges: List of ranges where the object was actually removed.
                 Empty if the object didn't exist on any of the specified ranges.
         """
+        self._label_row._check_labelling_is_initalised()
         if object_instance.object_hash not in self._object_hash_to_range_manager:
             return []
 
@@ -233,6 +235,7 @@ class RangeSpace(Space):
         Raises:
             LabelRowError: If classification already exists when on_overlap="error".
         """
+        self._label_row._check_labelling_is_initalised()
         self._method_not_supported_for_classification_instance_with_frames(
             classification_instance=classification_instance
         )
@@ -305,6 +308,7 @@ class RangeSpace(Space):
         Returns:
             Optional[ObjectInstance]: The removed object instance, or None if the object wasn't found.
         """
+        self._label_row._check_labelling_is_initalised()
         object_instance = self._objects_map.pop(object_hash, None)
         # self._object_hash_to_annotation_data.pop(object_hash)
         self._object_hash_to_range_manager.pop(object_hash)
@@ -324,6 +328,7 @@ class RangeSpace(Space):
         Returns:
             Optional[ClassificationInstance]: The removed classification instance, or None if the classification wasn't found.
         """
+        self._label_row._check_labelling_is_initalised()
         classification_instance = self._classifications_map.pop(classification_hash, None)
 
         if classification_instance is not None:

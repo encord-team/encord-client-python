@@ -141,6 +141,11 @@ log = logging.getLogger(__name__)
 OntologyTypes = Union[Type[Object], Type[Classification]]
 OntologyClasses = Union[Object, Classification]
 
+# Error message for uninitialised labelling
+LABELLING_NOT_INITIALISED_ERROR_MESSAGE = (
+    "For this operation you will need to initialise labelling first. Call the `.initialise_labels()` to do so first."
+)
+
 # Type mapping for runtime validation in get_space
 _SPACE_TYPE_TO_CLASS = {
     "video": VideoSpace,
@@ -3102,10 +3107,7 @@ class LabelRowV2:
 
     def _check_labelling_is_initalised(self):
         if not self.is_labelling_initialised:
-            raise LabelRowError(
-                "For this operation you will need to initialise labelling first. Call the `.initialise_labels()` "
-                "to do so first."
-            )
+            raise LabelRowError(LABELLING_NOT_INITIALISED_ERROR_MESSAGE)
 
     def _method_not_supported_for_audio(self, range_only: bool = False):
         if self.data_type == DataType.AUDIO and not range_only:

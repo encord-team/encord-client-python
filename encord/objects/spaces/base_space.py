@@ -50,6 +50,7 @@ class Space(ABC):
         Returns:
             list[ObjectInstance]: List of all object instances present in the space.
         """
+        self._label_row._check_labelling_is_initalised()
         return list(self._objects_map.values())
 
     def get_classification_instances(self) -> list[ClassificationInstance]:
@@ -58,6 +59,7 @@ class Space(ABC):
         Returns:
             list[ClassificationInstance]: List of all classification instances present in the space.
         """
+        self._label_row._check_labelling_is_initalised()
         return list(self._classifications_map.values())
 
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
@@ -78,6 +80,7 @@ class Space(ABC):
         Returns:
             Sequence[_ObjectAnnotation]: Sequence of all object annotations in the space.
         """
+        self._label_row._check_labelling_is_initalised()
         res: list[_ObjectAnnotation] = []
         for obj_hash in self._objects_map:
             if filter_object_instances is None or obj_hash in filter_object_instances:
@@ -96,6 +99,7 @@ class Space(ABC):
         Returns:
             Sequence[_ClassificationAnnotation]: Sequence of all classification annotations in the space.
         """
+        self._label_row._check_labelling_is_initalised()
         res: list[_ClassificationAnnotation] = []
         for classification_hash in self._classifications_map:
             if filter_classification_instances is None or classification_hash in filter_classification_instances:
