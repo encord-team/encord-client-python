@@ -871,9 +871,16 @@ class LabelRowV2:
         if space is None:
             space_identifier_error_message = ""
             if id is not None:
-                space_identifier_error_message = f"Could not find space with given id '{id}'."
+                available_ids = list(self._space_map.keys())
+                space_identifier_error_message = (
+                    f"Could not find space with given id '{id}'. Available space ids: {available_ids}"
+                )
             elif layout_key is not None:
-                space_identifier_error_message = f"Could not find space with given layout key {layout_key}."
+                available_layout_keys = list(self._layout_key_to_space_id.keys())
+                space_identifier_error_message = (
+                    f"Could not find space with given layout key '{layout_key}'. "
+                    f"Available layout keys: {available_layout_keys}"
+                )
             raise LabelRowError(space_identifier_error_message)
 
         # Runtime type validation
