@@ -9,7 +9,7 @@ from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects import ClassificationInstance, Shape
 from encord.objects.coordinates import HtmlCoordinates
-from encord.objects.html_node import HtmlNode, HtmlRange
+from encord.objects.html_node import HtmlNode, HtmlRange, HtmlRanges
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.spaces.annotation.base_annotation import _AnnotationData, _AnnotationMetadata
 from encord.objects.spaces.annotation.html_annotation import (
@@ -50,7 +50,7 @@ class HTMLSpace(Space):
         self._objects_map: dict[str, ObjectInstance] = dict()
         self._classifications_map: dict[str, ClassificationInstance] = dict()
         self._classification_hash_to_annotation_data: dict[str, _AnnotationData] = dict()
-        self._object_hash_to_html_coordinates: dict[str, HtmlCoordinates] = dict()
+        self._object_hash_to_html_ranges: dict[str, HtmlRanges] = dict()
 
         # Since we can only have one classification of a particular class, this keeps track to make sure we don't add duplicates
         self._classification_ontologies: set[str] = set()
@@ -95,8 +95,6 @@ class HTMLSpace(Space):
         else:
             ranges_list = ranges
 
-        coordinates = HtmlCoordinates(range=ranges_list)
-
         already_exists = object_instance.object_hash in self._objects_map
 
         if already_exists and on_overlap == "error":
@@ -117,7 +115,7 @@ class HTMLSpace(Space):
             manual_annotation=manual_annotation,
         )
 
-        self._object_hash_to_html_coordinates[object_instance.object_hash] = coordinates
+        self._object_hash_to_html_ranges[object_instance.object_hash] = ranges_list
 
     def put_classification_instance(
         self,
@@ -209,6 +207,29 @@ class HTMLSpace(Space):
             space=self, classification_instance=self._classifications_map[classification_hash]
         )
 
+    def get_object_instance_annotations(
+        self, filter_object_instances: Optional[list[str]] = None
+    ) -> List[_HtmlObjectAnnotation]:
+        """Get all object instance annotations in the html space.
+
+        Args:
+            filter_object_instances: Optional list of object hashes to filter by.
+                If provided, only annotations for these objects will be returned.
+
+        Returns:
+            List[_HtmlObjectAnnotation]: List of all object annotations
+        """
+        res: List[_HtmlObjectAnnotation] = []
+
+        filter_set = set(filter_object_instances) if filter_object_instances is not None else None
+
+        for obj_hash in self._objects_map.keys():
+            # If no filter is provided or if the object_hash is in the filter set
+            if filter_set is None or obj_hash in filter_set:
+                res.append(self._create_object_annotation(obj_hash))
+
+        return res
+
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         """Remove an object instance from the HTML space.
 
@@ -219,7 +240,7 @@ class HTMLSpace(Space):
             Optional[ObjectInstance]: The removed object instance, or None if the object wasn't found.
         """
         object_instance = self._objects_map.pop(object_hash, None)
-        self._object_hash_to_html_coordinates.pop(object_hash, None)
+        self._object_hash_to_html_ranges.pop(object_hash, None)
         if object_instance is not None:
             object_instance._remove_from_space(self.space_id)
 
@@ -342,23 +363,23 @@ class HTMLSpace(Space):
 
         return html_ranges
 
-    def _html_coordinates_to_dict(self, coordinates: HtmlCoordinates) -> list:
+    def _html_ranges_to_dict(self, ranges: HtmlRanges) -> list:
         # Backend expects tuples: [[start_node, end_node], ...]
         return [
             [
                 {"xpath": html_range.start.xpath, "offset": html_range.start.offset},
                 {"xpath": html_range.end.xpath, "offset": html_range.end.offset},
             ]
-            for html_range in coordinates.range
+            for html_range in ranges
         ]
 
     def _to_object_answers(self, existing_object_answers: Dict[str, ObjectAnswer]) -> dict[str, ObjectAnswer]:
         ret: Dict[str, ObjectAnswerForNonGeometric] = {}
 
         for obj in self.get_object_instances():
-            coordinates = self._object_hash_to_html_coordinates[obj.object_hash]
+            coordinates = self._object_hash_to_html_ranges[obj.object_hash]
             annotation_metadata = obj._instance_metadata
-            ranges = self._html_coordinates_to_dict(coordinates)
+            ranges = self._html_ranges_to_dict(coordinates)
             does_obj_exist = obj.object_hash in existing_object_answers
 
             if does_obj_exist:

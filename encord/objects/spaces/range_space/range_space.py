@@ -23,7 +23,6 @@ from encord.objects.types import (
     FrameClassification,
     LabelBlob,
     ObjectAnswer,
-    ObjectAnswerForGeometric,
     ObjectAnswerForNonGeometric,
     SpaceRange,
 )
@@ -75,19 +74,18 @@ class RangeSpace(Space):
     def get_object_instance_annotations(
         self, filter_object_instances: Optional[list[str]] = None
     ) -> List[_RangeObjectAnnotation]:
-        """Get all object instance annotations in the video space.
+        """Get all object instance annotations in the ranged space.
 
         Args:
             filter_object_instances: Optional list of object hashes to filter by.
                 If provided, only annotations for these objects will be returned.
 
         Returns:
-            List[_GeometricFrameObjectAnnotation]: List of all object annotations across all frames,
+            List[_RangeObjectAnnotation]: List of all object annotations across all frames,
                 sorted by frame number.
         """
         res: List[_RangeObjectAnnotation] = []
 
-        # Convert to set for O(1) lookup performance
         filter_set = set(filter_object_instances) if filter_object_instances is not None else None
 
         for obj_hash in self._objects_map.keys():
