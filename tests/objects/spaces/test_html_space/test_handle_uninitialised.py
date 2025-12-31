@@ -8,15 +8,12 @@ from encord.exceptions import LabelRowError
 from encord.objects import LabelRowV2, Object
 from encord.objects.attributes import TextAttribute
 from encord.objects.html_node import HtmlNode, HtmlRange
+from encord.objects.ontology_labels_impl import LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.all_modalities import DATA_GROUP_METADATA
 
 # Use the existing text object for HTML space tests (HTML uses text shape)
 html_obj_ontology_item = all_types_structure.get_child_by_hash("textFeatureNodeHash", Object)
-
-EXPECTED_ERROR_MESSAGE = (
-    "For this operation you will need to initialise labelling first. Call the `.initialise_labels()` to do so first."
-)
 
 
 @pytest.fixture
@@ -41,7 +38,7 @@ def test_put_object_instance_requires_initialisation(uninitialised_html_space):
             ranges=html_range,
         )
 
-    assert exc_info.value.message == EXPECTED_ERROR_MESSAGE
+    assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 
 
 def test_put_classification_instance_requires_initialisation(uninitialised_html_space, ontology):
@@ -62,7 +59,7 @@ def test_put_classification_instance_requires_initialisation(uninitialised_html_
             classification_instance=classification_instance,
         )
 
-    assert exc_info.value.message == EXPECTED_ERROR_MESSAGE
+    assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 
 
 def test_remove_object_instance_requires_initialisation(uninitialised_html_space):
@@ -74,7 +71,7 @@ def test_remove_object_instance_requires_initialisation(uninitialised_html_space
             object_hash=new_object_instance.object_hash,
         )
 
-    assert exc_info.value.message == EXPECTED_ERROR_MESSAGE
+    assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 
 
 def test_remove_classification_instance_requires_initialisation(uninitialised_html_space, ontology):
@@ -89,4 +86,4 @@ def test_remove_classification_instance_requires_initialisation(uninitialised_ht
             classification_hash=classification_instance.classification_hash,
         )
 
-    assert exc_info.value.message == EXPECTED_ERROR_MESSAGE
+    assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE

@@ -8,14 +8,11 @@ from encord.exceptions import LabelRowError
 from encord.objects import LabelRowV2, Object
 from encord.objects.attributes import Attribute, TextAttribute
 from encord.objects.frames import Range
+from encord.objects.ontology_labels_impl import LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.two_audio import DATA_GROUP_METADATA
 
 audio_obj_ontology_item = all_types_structure.get_child_by_hash("KVfzNkFy", Object)
-
-EXPECTED_ERROR_MESSAGE = (
-    "For this operation you will need to initialise labelling first. Call the `.initialise_labels()` to do so first."
-)
 
 
 @pytest.fixture
@@ -36,7 +33,7 @@ def test_put_object_instance_requires_initialisation(uninitialised_audio_space):
             ranges=Range(start=0, end=100),
         )
 
-    assert exc_info.value.message == EXPECTED_ERROR_MESSAGE
+    assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 
 
 def test_remove_object_instance_from_range_requires_initialisation(uninitialised_audio_space):
@@ -49,7 +46,7 @@ def test_remove_object_instance_from_range_requires_initialisation(uninitialised
             ranges=Range(start=0, end=100),
         )
 
-    assert exc_info.value.message == EXPECTED_ERROR_MESSAGE
+    assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 
 
 def test_put_classification_instance_requires_initialisation(uninitialised_audio_space, ontology):
@@ -70,7 +67,7 @@ def test_put_classification_instance_requires_initialisation(uninitialised_audio
             classification_instance=classification_instance,
         )
 
-    assert exc_info.value.message == EXPECTED_ERROR_MESSAGE
+    assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 
 
 def test_remove_object_instance_requires_initialisation(uninitialised_audio_space):
@@ -82,7 +79,7 @@ def test_remove_object_instance_requires_initialisation(uninitialised_audio_spac
             object_hash=new_object_instance.object_hash,
         )
 
-    assert exc_info.value.message == EXPECTED_ERROR_MESSAGE
+    assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 
 
 def test_remove_classification_instance_requires_initialisation(uninitialised_audio_space, ontology):
@@ -97,4 +94,4 @@ def test_remove_classification_instance_requires_initialisation(uninitialised_au
             classification_hash=classification_instance.classification_hash,
         )
 
-    assert exc_info.value.message == EXPECTED_ERROR_MESSAGE
+    assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE

@@ -8,16 +8,13 @@ from encord.exceptions import LabelRowError
 from encord.objects import LabelRowV2, Object
 from encord.objects.attributes import Attribute, TextAttribute
 from encord.objects.coordinates import BoundingBoxCoordinates
+from encord.objects.ontology_labels_impl import LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.two_images import DATA_GROUP_METADATA
 
 box_ontology_item = all_types_structure.get_child_by_hash("MjI2NzEy", Object)
 box_with_attributes_ontology_item = all_types_structure.get_child_by_hash("MTA2MjAx", Object)
 box_text_attribute_ontology_item = box_with_attributes_ontology_item.get_child_by_hash("OTkxMjU1", type_=Attribute)
-
-EXPECTED_ERROR_MESSAGE = (
-    "For this operation you will need to initialise labelling first. Call the `.initialise_labels()` to do so first."
-)
 
 
 @pytest.fixture
@@ -38,7 +35,7 @@ def test_put_object_instance_requires_initialisation(uninitialised_image_space):
             coordinates=BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0),
         )
 
-    assert exc_info.value.message == EXPECTED_ERROR_MESSAGE
+    assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 
 
 def test_put_classification_instance_requires_initialisation(uninitialised_image_space, ontology):
@@ -59,7 +56,7 @@ def test_put_classification_instance_requires_initialisation(uninitialised_image
             classification_instance=classification_instance,
         )
 
-    assert exc_info.value.message == EXPECTED_ERROR_MESSAGE
+    assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 
 
 def test_remove_object_instance_requires_initialisation(uninitialised_image_space):
@@ -71,7 +68,7 @@ def test_remove_object_instance_requires_initialisation(uninitialised_image_spac
             object_hash=new_object_instance.object_hash,
         )
 
-    assert exc_info.value.message == EXPECTED_ERROR_MESSAGE
+    assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 
 
 def test_remove_classification_instance_requires_initialisation(uninitialised_image_space, ontology):
@@ -86,4 +83,4 @@ def test_remove_classification_instance_requires_initialisation(uninitialised_im
             classification_hash=classification_instance.classification_hash,
         )
 
-    assert exc_info.value.message == EXPECTED_ERROR_MESSAGE
+    assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
