@@ -84,16 +84,13 @@ class RangeSpace(Space):
             List[_RangeObjectAnnotation]: List of all object annotations across all frames,
                 sorted by frame number.
         """
-        res: List[_RangeObjectAnnotation] = []
-
         filter_set = set(filter_object_instances) if filter_object_instances is not None else None
 
-        for obj_hash in self._objects_map.keys():
-            # If no filter is provided or if the object_hash is in the filter set
-            if filter_set is None or obj_hash in filter_set:
-                res.append(self._create_object_annotation(obj_hash))
-
-        return res
+        return [
+            self._create_object_annotation(obj_hash)
+            for obj_hash in self._objects_map.keys()
+            if filter_set is None or obj_hash in filter_set
+        ]
 
     def put_object_instance(
         self,
