@@ -55,7 +55,7 @@ if TYPE_CHECKING:
 FrameOverlapStrategy = Union[Literal["error"], Literal["replace"]]
 
 
-class VideoSpace(Space):
+class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnnotation]):
     """Video space implementation for frame-based video annotations."""
 
     def __init__(
@@ -697,6 +697,29 @@ class VideoSpace(Space):
 
     def _get_object_annotation_on_frame(self, object_hash: str, frame: int = 0) -> _GeometricFrameObjectAnnotation:
         return _GeometricFrameObjectAnnotation(space=self, object_instance=self._objects_map[object_hash], frame=frame)
+
+    def _create_object_annotation(self, obj_hash: str) -> _GeometricFrameObjectAnnotation:
+        """Not supported for VideoSpace - use _get_object_annotation_on_frame() instead.
+
+        VideoSpace has frame-specific annotations, so it overrides get_object_instance_annotations()
+        with its own implementation that iterates through all frames.
+        """
+        raise NotImplementedError(
+            "VideoSpace does not support _create_object_annotation() without a frame. "
+            "Use _get_object_annotation_on_frame() instead or call get_object_instance_annotations() "
+            "to get all annotations across all frames."
+        )
+
+    def _create_classification_annotation(self, classification_hash: str) -> _FrameClassificationAnnotation:
+        """Not supported for VideoSpace - VideoSpace handles classifications per-frame.
+
+        VideoSpace has frame-specific annotations, so it overrides get_classification_instance_annotations()
+        with its own implementation that iterates through all frames.
+        """
+        raise NotImplementedError(
+            "VideoSpace does not support _create_classification_annotation() without a frame. "
+            "Use get_classification_instance_annotations() to get all annotations across all frames."
+        )
 
     def get_object_instance_annotations(
         self, filter_object_instances: Optional[list[str]] = None

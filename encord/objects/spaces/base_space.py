@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
     Dict,
+    Generic,
     Optional,
     Sequence,
     TypeVar,
@@ -26,8 +27,12 @@ if TYPE_CHECKING:
 
 SpaceT = TypeVar("SpaceT", bound="Space")
 
+# Type variables for generic annotation types
+ObjectAnnotationT = TypeVar("ObjectAnnotationT", bound="_ObjectAnnotation")
+ClassificationAnnotationT = TypeVar("ClassificationAnnotationT", bound="_ClassificationAnnotation")
 
-class Space(ABC):
+
+class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT]):
     """
     Manages the objects on a space within LabelRowV2.
     Users should not instantiate this class directly, but must obtain these instances via LabelRow.list_spaces().
@@ -70,7 +75,7 @@ class Space(ABC):
 
     def get_object_instance_annotations(
         self, filter_object_instances: Optional[list[str]] = None
-    ) -> Sequence[_ObjectAnnotation]:
+    ) -> Sequence[ObjectAnnotationT]:
         """Get all object instance annotations in the space.
 
         Args:
@@ -78,10 +83,11 @@ class Space(ABC):
                 If provided, only annotations for these objects will be returned.
 
         Returns:
-            Sequence[_ObjectAnnotation]: Sequence of all object annotations in the space.
+            Sequence[ObjectAnnotationT]: Sequence of all object annotations in the space.
+                The concrete type depends on the Space subclass.
         """
         self._label_row._check_labelling_is_initalised()
-        res: list[_ObjectAnnotation] = []
+        res: list[ObjectAnnotationT] = []
         for obj_hash in self._objects_map:
             if filter_object_instances is None or obj_hash in filter_object_instances:
                 res.append(self._create_object_annotation(obj_hash))
@@ -89,7 +95,7 @@ class Space(ABC):
 
     def get_classification_instance_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
-    ) -> Sequence[_ClassificationAnnotation]:
+    ) -> Sequence[ClassificationAnnotationT]:
         """Get all classification instance annotations in the space.
 
         Args:
@@ -97,20 +103,39 @@ class Space(ABC):
                 If provided, only annotations for these classifications will be returned.
 
         Returns:
-            Sequence[_ClassificationAnnotation]: Sequence of all classification annotations in the space.
+            Sequence[ClassificationAnnotationT]: Sequence of all classification annotations in the space.
+                The concrete type depends on the Space subclass.
         """
         self._label_row._check_labelling_is_initalised()
-        res: list[_ClassificationAnnotation] = []
+        res: list[ClassificationAnnotationT] = []
         for classification_hash in self._classifications_map:
             if filter_classification_instances is None or classification_hash in filter_classification_instances:
                 res.append(self._create_classification_annotation(classification_hash))
         return res
 
-    def _create_object_annotation(self, obj_hash: str) -> _ObjectAnnotation:
-        raise NotImplementedError("Subclass must implement _create_object_annotation")
+    @abstractmethod
+    def _create_object_annotation(self, obj_hash: str) -> ObjectAnnotationT:
+        """Factory method to create the appropriate object annotation type for this space.
 
-    def _create_classification_annotation(self, classification_hash: str) -> _ClassificationAnnotation:
-        raise NotImplementedError("Subclass must implement _create_classification_annotation")
+        Args:
+            obj_hash: The hash of the object instance.
+
+        Returns:
+            ObjectAnnotationT: The concrete annotation type for this space.
+        """
+        pass
+
+    @abstractmethod
+    def _create_classification_annotation(self, classification_hash: str) -> ClassificationAnnotationT:
+        """Factory method to create the appropriate classification annotation type for this space.
+
+        Args:
+            classification_hash: The hash of the classification instance.
+
+        Returns:
+            ClassificationAnnotationT: The concrete annotation type for this space.
+        """
+        pass
 
     @abstractmethod
     def _parse_space_dict(
