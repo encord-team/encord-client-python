@@ -169,6 +169,38 @@ DATA_GROUP_WITH_LABELS = {
                 },
             },
         },
+        "html-text-object": {
+            "objectHash": "html-text-object",
+            "classifications": [],
+            "range": [],
+            "createdBy": "user@example.com",
+            "createdAt": "Thu, 05 Dec 2024 15:24:19 UTC",
+            "lastEditedBy": "user@example.com",
+            "lastEditedAt": "Thu, 05 Dec 2024 15:24:44 UTC",
+            "manualAnnotation": True,
+            "featureHash": "textFeatureNodeHash",
+            "name": "text object",
+            "color": "#A4FF00",
+            "shape": "text",
+            "value": "text_object",
+            "spaces": {
+                "text-uuid": {
+                    "range": [
+                        {
+                            "start": {
+                                "xpath": "start_node",
+                                "offset": 5,
+                            },
+                            "end": {
+                                "xpath": "end_node",
+                                "offset": 10,
+                            },
+                        }
+                    ],
+                    "type": "html",
+                },
+            },
+        },
     },
     "classification_answers": {
         # Video classification (frame-based)

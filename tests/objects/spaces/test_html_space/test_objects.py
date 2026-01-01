@@ -8,10 +8,7 @@ from encord.objects import LabelRowV2, Object
 from encord.objects.coordinates import HtmlCoordinates
 from encord.objects.html_node import HtmlNode, HtmlRange
 from tests.objects.data.all_types_ontology_structure import all_types_structure
-from tests.objects.data.data_group.all_modalities import (
-    DATA_GROUP_METADATA,
-    DATA_GROUP_NO_LABELS,
-)
+from tests.objects.data.data_group.two_html import DATA_GROUP_METADATA, DATA_GROUP_TWO_HTML_NO_LABELS
 
 # Use the existing text object for HTML space tests (HTML uses text shape)
 html_obj_ontology_item = all_types_structure.get_child_by_hash("textFeatureNodeHash", Object)
@@ -20,8 +17,8 @@ html_obj_ontology_item = all_types_structure.get_child_by_hash("textFeatureNodeH
 def test_place_object_on_html_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(DATA_GROUP_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-uuid", type_="html")
+    label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
+    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
 
     # Act
     new_object_instance = html_obj_ontology_item.create_instance()
@@ -55,8 +52,8 @@ def test_place_object_on_html_space(ontology):
 def test_place_object_with_multiple_ranges(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(DATA_GROUP_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-uuid", type_="html")
+    label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
+    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
 
     # Act
     new_object_instance = html_obj_ontology_item.create_instance()
@@ -84,8 +81,8 @@ def test_place_object_with_multiple_ranges(ontology):
 def test_put_objects_with_error_overlapping_strategy(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(DATA_GROUP_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-uuid", type_="html")
+    label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
+    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
     new_object_instance = html_obj_ontology_item.create_instance()
     html_range = HtmlRange(
         start=HtmlNode(xpath="/html/body/p[1]", offset=0),
@@ -110,8 +107,8 @@ def test_put_objects_with_error_overlapping_strategy(ontology):
 def test_put_objects_with_replace_overlapping_strategy(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(DATA_GROUP_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-uuid", type_="html")
+    label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
+    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
     new_object_instance = html_obj_ontology_item.create_instance()
     original_range = HtmlRange(
         start=HtmlNode(xpath="/html/body/p[1]", offset=0),
@@ -142,8 +139,8 @@ def test_put_objects_with_replace_overlapping_strategy(ontology):
 def test_remove_object_from_html_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(DATA_GROUP_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-uuid", type_="html")
+    label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
+    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
     new_object_instance = html_obj_ontology_item.create_instance()
 
     html_range = HtmlRange(
@@ -174,8 +171,8 @@ def test_remove_object_from_html_space(ontology):
 def test_get_object_annotations(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(DATA_GROUP_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-uuid", type_="html")
+    label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
+    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
     object_instance_1 = html_obj_ontology_item.create_instance()
     object_instance_2 = html_obj_ontology_item.create_instance()
 
@@ -216,7 +213,7 @@ def test_get_object_annotations(ontology):
     # Assert
     assert len(object_annotations) == 2
 
-    assert first_annotation.space.space_id == "html-uuid"
+    assert first_annotation.space.space_id == "html-1-uuid"
     assert first_annotation.frame == 0  # Frame here for backwards compatibility
     assert first_annotation.object_hash == object_instance_1.object_hash
     assert first_annotation.coordinates == HtmlCoordinates(range=[range_1])
@@ -224,7 +221,7 @@ def test_get_object_annotations(ontology):
     assert first_annotation.last_edited_by == name_1
     assert first_annotation.last_edited_at == date1
 
-    assert second_annotation.space.space_id == "html-uuid"
+    assert second_annotation.space.space_id == "html-1-uuid"
     assert second_annotation.frame == 0  # Frame here for backwards compatibility
     assert second_annotation.object_hash == object_instance_2.object_hash
     assert second_annotation.coordinates == HtmlCoordinates(range=[range_2])
@@ -236,8 +233,8 @@ def test_get_object_annotations(ontology):
 def test_get_object_annotations_with_filter_objects(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(DATA_GROUP_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-uuid", type_="html")
+    label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
+    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
     object_instance_1 = html_obj_ontology_item.create_instance()
     object_instance_2 = html_obj_ontology_item.create_instance()
 
@@ -283,7 +280,7 @@ def test_get_object_annotations_with_filter_objects(ontology):
 
     # Assert
     assert len(object_annotations_for_object_1) == 1
-    assert first_annotation_for_object_1.space.space_id == "html-uuid"
+    assert first_annotation_for_object_1.space.space_id == "html-1-uuid"
     assert first_annotation_for_object_1.frame == 0  # Frame here for backwards compatibility
     assert first_annotation_for_object_1.object_hash == object_instance_1.object_hash
     assert first_annotation_for_object_1.coordinates == HtmlCoordinates(range=[range_1])
@@ -291,7 +288,7 @@ def test_get_object_annotations_with_filter_objects(ontology):
     assert first_annotation_for_object_1.last_edited_at == date1
 
     assert len(object_annotations_for_object_2) == 1
-    assert first_annotation_for_object_2.space.space_id == "html-uuid"
+    assert first_annotation_for_object_2.space.space_id == "html-1-uuid"
     assert first_annotation_for_object_2.frame == 0  # Frame here for backwards compatibility
     assert first_annotation_for_object_2.object_hash == object_instance_2.object_hash
     assert first_annotation_for_object_2.coordinates == HtmlCoordinates(range=[range_2])
@@ -302,8 +299,8 @@ def test_get_object_annotations_with_filter_objects(ontology):
 def test_get_object_annotations_from_object_instance(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(DATA_GROUP_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-uuid", type_="html")
+    label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
+    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
     object_instance_1 = html_obj_ontology_item.create_instance()
     object_instance_2 = html_obj_ontology_item.create_instance()
 
@@ -345,7 +342,7 @@ def test_get_object_annotations_from_object_instance(ontology):
 
     # Assert
     assert len(object_annotations_for_object_1) == 1
-    assert first_annotation_for_object_1.space.space_id == "html-uuid"
+    assert first_annotation_for_object_1.space.space_id == "html-1-uuid"
     assert first_annotation_for_object_1.frame == 0  # Frame here for backwards compatibility
     assert first_annotation_for_object_1.object_hash == object_instance_1.object_hash
     assert first_annotation_for_object_1.coordinates == HtmlCoordinates(range=[range_1])
@@ -353,7 +350,7 @@ def test_get_object_annotations_from_object_instance(ontology):
     assert first_annotation_for_object_1.last_edited_at == date1
 
     assert len(object_annotations_for_object_2) == 1
-    assert first_annotation_for_object_2.space.space_id == "html-uuid"
+    assert first_annotation_for_object_2.space.space_id == "html-1-uuid"
     assert first_annotation_for_object_2.frame == 0  # Frame here for backwards compatibility
     assert first_annotation_for_object_2.object_hash == object_instance_2.object_hash
     assert first_annotation_for_object_2.coordinates == HtmlCoordinates(range=[range_2])
@@ -364,8 +361,8 @@ def test_get_object_annotations_from_object_instance(ontology):
 def test_update_annotation_from_object_annotation_using_coordinates(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(DATA_GROUP_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-uuid", type_="html")
+    label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
+    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
     object_instance = html_obj_ontology_item.create_instance()
 
     current_range = HtmlRange(
