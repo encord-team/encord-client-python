@@ -5,6 +5,7 @@ from typing import (
     TYPE_CHECKING,
     Dict,
     Generic,
+    Iterator,
     Optional,
     Sequence,
     TypeVar,
@@ -75,7 +76,7 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT]):
 
     def get_object_instance_annotations(
         self, filter_object_instances: Optional[list[str]] = None
-    ) -> Sequence[ObjectAnnotationT]:
+    ) -> Iterator[ObjectAnnotationT]:
         """Get all object instance annotations in the space.
 
         Args:
@@ -83,19 +84,18 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT]):
                 If provided, only annotations for these objects will be returned.
 
         Returns:
-            Sequence[ObjectAnnotationT]: Sequence of all object annotations in the space.
+            Iterator[ObjectAnnotationT]: Iterator over all object annotations in the space.
                 The concrete type depends on the Space subclass.
+                Annotations are created lazily as the iterator is consumed.
         """
         self._label_row._check_labelling_is_initalised()
-        res: list[ObjectAnnotationT] = []
         for obj_hash in self._objects_map:
             if filter_object_instances is None or obj_hash in filter_object_instances:
-                res.append(self._create_object_annotation(obj_hash))
-        return res
+                yield self._create_object_annotation(obj_hash)
 
     def get_classification_instance_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
-    ) -> Sequence[ClassificationAnnotationT]:
+    ) -> Iterator[ClassificationAnnotationT]:
         """Get all classification instance annotations in the space.
 
         Args:
@@ -103,15 +103,14 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT]):
                 If provided, only annotations for these classifications will be returned.
 
         Returns:
-            Sequence[ClassificationAnnotationT]: Sequence of all classification annotations in the space.
+            Iterator[ClassificationAnnotationT]: Iterator over all classification annotations in the space.
                 The concrete type depends on the Space subclass.
+                Annotations are created lazily as the iterator is consumed.
         """
         self._label_row._check_labelling_is_initalised()
-        res: list[ClassificationAnnotationT] = []
         for classification_hash in self._classifications_map:
             if filter_classification_instances is None or classification_hash in filter_classification_instances:
-                res.append(self._create_classification_annotation(classification_hash))
-        return res
+                yield self._create_classification_annotation(classification_hash)
 
     @abstractmethod
     def _create_object_annotation(self, obj_hash: str) -> ObjectAnnotationT:

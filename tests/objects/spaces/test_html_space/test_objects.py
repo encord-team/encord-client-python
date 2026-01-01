@@ -43,7 +43,7 @@ def test_place_object_on_html_space(ontology):
     assert len(objects_on_space) == 1
     assert object_on_space._spaces == {html_space_1.space_id: html_space_1}
 
-    annotations = html_space_1.get_object_instance_annotations()
+    annotations = list(html_space_1.get_object_instance_annotations())
     assert len(annotations) == 1
 
     first_annotation = annotations[0]
@@ -76,7 +76,7 @@ def test_place_object_with_multiple_ranges(ontology):
     )
 
     # Assert
-    annotations = html_space_1.get_object_instance_annotations()
+    annotations = list(html_space_1.get_object_instance_annotations())
     assert len(annotations) == 1
     assert annotations[0].coordinates == HtmlCoordinates(range=html_ranges)
 
@@ -134,7 +134,7 @@ def test_put_objects_with_replace_overlapping_strategy(ontology):
     )
 
     # Assert
-    object_annotations = html_space_1.get_object_instance_annotations()
+    object_annotations = list(html_space_1.get_object_instance_annotations())
     assert len(object_annotations) == 1
     assert object_annotations[0].coordinates == HtmlCoordinates(range=[new_range])
 
@@ -164,10 +164,10 @@ def test_remove_object_from_html_space(ontology):
     objects_on_space = html_space_1.get_object_instances()
     assert len(objects_on_space) == 0
 
-    annotations_on_space = html_space_1.get_object_instance_annotations()
+    annotations_on_space = list(html_space_1.get_object_instance_annotations())
     assert len(annotations_on_space) == 0
 
-    annotations_on_object = new_object_instance.get_annotations()
+    annotations_on_object = list(new_object_instance.get_annotations())
     assert len(annotations_on_object) == 0
 
 
@@ -209,7 +209,7 @@ def test_get_object_annotations(ontology):
     )
 
     # Act
-    object_annotations = html_space_1.get_object_instance_annotations()
+    object_annotations = list(html_space_1.get_object_instance_annotations())
     first_annotation = object_annotations[0]
     second_annotation = object_annotations[1]
 
@@ -271,13 +271,13 @@ def test_get_object_annotations_with_filter_objects(ontology):
     )
 
     # Act
-    object_annotations_for_object_1 = html_space_1.get_object_instance_annotations(
-        filter_object_instances=[object_instance_1.object_hash]
+    object_annotations_for_object_1 = list(
+        html_space_1.get_object_instance_annotations(filter_object_instances=[object_instance_1.object_hash])
     )
     first_annotation_for_object_1 = object_annotations_for_object_1[0]
 
-    object_annotations_for_object_2 = html_space_1.get_object_instance_annotations(
-        filter_object_instances=[object_instance_2.object_hash]
+    object_annotations_for_object_2 = list(
+        html_space_1.get_object_instance_annotations(filter_object_instances=[object_instance_2.object_hash])
     )
     first_annotation_for_object_2 = object_annotations_for_object_2[0]
 
@@ -392,7 +392,7 @@ def test_update_annotation_from_object_annotation_using_coordinates(ontology):
     )
 
     # Act
-    object_annotations = html_space_1.get_object_instance_annotations()
+    object_annotations = list(html_space_1.get_object_instance_annotations())
     object_annotation = object_annotations[0]
 
     object_annotation.created_by = new_name
@@ -402,7 +402,7 @@ def test_update_annotation_from_object_annotation_using_coordinates(ontology):
     object_annotation.coordinates = HtmlCoordinates(range=[new_range])
 
     # Assert
-    updated_annotations = html_space_1.get_object_instance_annotations()
+    updated_annotations = list(html_space_1.get_object_instance_annotations())
     assert len(updated_annotations) == 1
     assert updated_annotations[0].coordinates == HtmlCoordinates(range=[new_range])
     assert updated_annotations[0].created_by == new_name

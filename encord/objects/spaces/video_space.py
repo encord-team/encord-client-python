@@ -3,7 +3,21 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Literal, Optional, Sequence, Set, Tuple, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+    cast,
+)
 
 from encord.common.range_manager import RangeManager
 from encord.constants.enums import SpaceType
@@ -723,7 +737,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
 
     def get_object_instance_annotations(
         self, filter_object_instances: Optional[list[str]] = None
-    ) -> List[_GeometricFrameObjectAnnotation]:
+    ) -> Iterator[_GeometricFrameObjectAnnotation]:
         """Get all object instance annotations in the video space.
 
         Args:
@@ -731,19 +745,16 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
                 If provided, only annotations for these objects will be returned.
 
         Returns:
-            List[_GeometricFrameObjectAnnotation]: List of all object annotations across all frames,
-                sorted by frame number.
+            Iterator[_GeometricFrameObjectAnnotation]: Iterator over all object annotations across all frames,
+                sorted by frame number. Annotations are created lazily as the iterator is consumed.
         """
         self._label_row._check_labelling_is_initalised()
-        res: List[_GeometricFrameObjectAnnotation] = []
         filter_set = set(filter_object_instances) if filter_object_instances is not None else None
 
         for frame, obj in dict(sorted(self._frames_to_object_hash_to_annotation_data.items())).items():
             for obj_hash in obj.keys():
                 if filter_set is None or obj_hash in filter_set:
-                    res.append(self._get_object_annotation_on_frame(object_hash=obj_hash, frame=frame))
-
-        return res
+                    yield self._get_object_annotation_on_frame(object_hash=obj_hash, frame=frame)
 
     def get_object_instance_annotations_by_frame(self) -> Dict[int, List[_GeometricFrameObjectAnnotation]]:
         """Get all object instance annotations organized by frame number.
@@ -765,7 +776,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
 
     def get_classification_instance_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
-    ) -> list[_FrameClassificationAnnotation]:
+    ) -> Iterator[_FrameClassificationAnnotation]:
         """Get all classification instance annotations in the video space.
 
         Args:
@@ -773,26 +784,21 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
                 If provided, only annotations for these classifications will be returned.
 
         Returns:
-            list[_FrameClassificationAnnotation]: List of all classification annotations across all frames,
-                sorted by frame number.
+            Iterator[_FrameClassificationAnnotation]: Iterator over all classification annotations across all frames,
+                sorted by frame number. Annotations are created lazily as the iterator is consumed.
         """
         self._label_row._check_labelling_is_initalised()
-        res: list[_FrameClassificationAnnotation] = []
 
         for frame, classification in dict(
             sorted(self._frames_to_classification_hash_to_annotation_data.items())
         ).items():
             for classification_hash, annotation in classification.items():
                 if filter_classification_instances is None or classification_hash in filter_classification_instances:
-                    res.append(
-                        _FrameClassificationAnnotation(
-                            space=self,
-                            classification_instance=self._classifications_map[classification_hash],
-                            frame=frame,
-                        )
+                    yield _FrameClassificationAnnotation(
+                        space=self,
+                        classification_instance=self._classifications_map[classification_hash],
+                        frame=frame,
                     )
-
-        return res
 
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         """Completely remove an object instance from all frames in the video space.
