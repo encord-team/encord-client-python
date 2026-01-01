@@ -1,9 +1,3 @@
-"""Tests for ensuring all public API methods check if labelling is initialised before proceeding.
-
-This module tests all space types (image, video, audio, text, html) to ensure proper error handling
-when operations are attempted on uninitialised label rows.
-"""
-
 from unittest.mock import Mock
 
 import pytest
@@ -18,10 +12,6 @@ from encord.objects.ontology_labels_impl import LABELLING_NOT_INITIALISED_ERROR_
 from encord.objects.spaces.video_space import VideoSpace
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.all_modalities import DATA_GROUP_METADATA as ALL_MODALITIES_DATA_GROUP
-from tests.objects.data.data_group.two_audio import DATA_GROUP_METADATA as AUDIO_DATA_GROUP
-from tests.objects.data.data_group.two_images import DATA_GROUP_METADATA as IMAGE_DATA_GROUP
-from tests.objects.data.data_group.two_text import DATA_GROUP_METADATA as TEXT_DATA_GROUP
-from tests.objects.data.data_group.two_videos import DATA_GROUP_METADATA as VIDEO_DATA_GROUP
 
 # Ontology items used across tests
 box_ontology_item = all_types_structure.get_child_by_hash("MjI2NzEy", Object)
@@ -35,26 +25,26 @@ html_obj_ontology_item = all_types_structure.get_child_by_hash("textFeatureNodeH
 # Space fixtures
 @pytest.fixture
 def uninitialised_image_space(ontology):
-    label_row = LabelRowV2(IMAGE_DATA_GROUP, Mock(), ontology)
-    return label_row._get_space(id="image-1-uuid", type_="image")
+    label_row = LabelRowV2(ALL_MODALITIES_DATA_GROUP, Mock(), ontology)
+    return label_row._get_space(id="image-uuid", type_="image")
 
 
 @pytest.fixture
 def uninitialised_video_space(ontology):
-    label_row = LabelRowV2(VIDEO_DATA_GROUP, Mock(), ontology)
-    return label_row._get_space(id="video-1-uuid", type_="video")
+    label_row = LabelRowV2(ALL_MODALITIES_DATA_GROUP, Mock(), ontology)
+    return label_row._get_space(id="video-uuid", type_="video")
 
 
 @pytest.fixture
 def uninitialised_audio_space(ontology):
-    label_row = LabelRowV2(AUDIO_DATA_GROUP, Mock(), ontology)
-    return label_row._get_space(id="audio-1-uuid", type_="audio")
+    label_row = LabelRowV2(ALL_MODALITIES_DATA_GROUP, Mock(), ontology)
+    return label_row._get_space(id="audio-uuid", type_="audio")
 
 
 @pytest.fixture
 def uninitialised_text_space(ontology):
-    label_row = LabelRowV2(TEXT_DATA_GROUP, Mock(), ontology)
-    return label_row._get_space(id="text-1-uuid", type_="text")
+    label_row = LabelRowV2(ALL_MODALITIES_DATA_GROUP, Mock(), ontology)
+    return label_row._get_space(id="text-uuid", type_="text")
 
 
 @pytest.fixture
