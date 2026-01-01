@@ -7,7 +7,6 @@ from typing import (
     Generic,
     Iterator,
     Optional,
-    Sequence,
     TypeVar,
     Union,
 )
@@ -89,8 +88,10 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT]):
                 Annotations are created lazily as the iterator is consumed.
         """
         self._label_row._check_labelling_is_initalised()
+
+        filter_set = set(filter_object_instances) if filter_object_instances is not None else None
         for obj_hash in self._objects_map:
-            if filter_object_instances is None or obj_hash in filter_object_instances:
+            if filter_set is None or obj_hash in filter_set:
                 yield self._create_object_annotation(obj_hash)
 
     def get_classification_instance_annotations(
@@ -108,8 +109,10 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT]):
                 Annotations are created lazily as the iterator is consumed.
         """
         self._label_row._check_labelling_is_initalised()
+        filter_set = set(filter_classification_instances) if filter_classification_instances is not None else None
+
         for classification_hash in self._classifications_map:
-            if filter_classification_instances is None or classification_hash in filter_classification_instances:
+            if filter_set is None or classification_hash in filter_set:
                 yield self._create_classification_annotation(classification_hash)
 
     @abstractmethod

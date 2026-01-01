@@ -789,11 +789,12 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
         """
         self._label_row._check_labelling_is_initalised()
 
+        filter_set = set(filter_classification_instances) if filter_classification_instances is not None else None
         for frame, classification in dict(
             sorted(self._frames_to_classification_hash_to_annotation_data.items())
         ).items():
             for classification_hash, annotation in classification.items():
-                if filter_classification_instances is None or classification_hash in filter_classification_instances:
+                if filter_set is None or classification_hash in filter_set:
                     yield _FrameClassificationAnnotation(
                         space=self,
                         classification_instance=self._classifications_map[classification_hash],
