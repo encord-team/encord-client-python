@@ -15,6 +15,7 @@ from encord.objects.coordinates import BoundingBoxCoordinates
 from encord.objects.frames import Range
 from encord.objects.html_node import HtmlNode, HtmlRange
 from encord.objects.ontology_labels_impl import LABELLING_NOT_INITIALISED_ERROR_MESSAGE
+from encord.objects.spaces.video_space import VideoSpace
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.all_modalities import DATA_GROUP_METADATA as ALL_MODALITIES_DATA_GROUP
 from tests.objects.data.data_group.two_audio import DATA_GROUP_METADATA as AUDIO_DATA_GROUP
@@ -211,19 +212,23 @@ class TestUninitialisedVideoSpace:
 
         assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 
-    def test_get_object_instance_annotations_requires_initialisation(self, uninitialised_video_space):
+    def test_get_object_instance_annotations_requires_initialisation(self, uninitialised_video_space: VideoSpace):
         with pytest.raises(LabelRowError) as exc_info:
             uninitialised_video_space.get_object_instance_annotations()
 
         assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 
-    def test_get_object_instance_annotations_by_frame_requires_initialisation(self, uninitialised_video_space):
+    def test_get_object_instance_annotations_by_frame_requires_initialisation(
+        self, uninitialised_video_space: VideoSpace
+    ):
         with pytest.raises(LabelRowError) as exc_info:
             uninitialised_video_space.get_object_instance_annotations_by_frame()
 
         assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 
-    def test_get_classification_instance_annotations_requires_initialisation(self, uninitialised_video_space):
+    def test_get_classification_instance_annotations_requires_initialisation(
+        self, uninitialised_video_space: VideoSpace
+    ):
         with pytest.raises(LabelRowError) as exc_info:
             uninitialised_video_space.get_classification_instance_annotations()
 
