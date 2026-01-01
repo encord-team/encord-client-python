@@ -271,6 +271,7 @@ class HTMLSpace(Space[_HtmlObjectAnnotation, _HtmlClassificationAnnotation]):
         classification_answers: dict[str, ClassificationAnswer],
     ) -> None:
         for object_answer in object_answers.values():
+            print(f"OBJECT ANSWER: {object_answer}")
             if "spaces" not in object_answer:
                 # skip this object_answer, it is not on a space
                 continue
@@ -358,6 +359,8 @@ class HTMLSpace(Space[_HtmlObjectAnnotation, _HtmlClassificationAnnotation]):
         ret: Dict[str, ObjectAnswerForNonGeometric] = {}
 
         for obj in self.get_object_instances():
+            print("OBJ!")
+            print(obj)
             coordinates = self._object_hash_to_html_ranges[obj.object_hash]
             annotation_metadata = obj._instance_metadata
             ranges = self._html_ranges_to_dict(coordinates)

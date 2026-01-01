@@ -184,18 +184,18 @@ DATA_GROUP_WITH_LABELS = {
             "shape": "text",
             "value": "text_object",
             "spaces": {
-                "text-uuid": {
+                "html-uuid": {
                     "range": [
-                        {
-                            "start": {
+                        [
+                            {
                                 "xpath": "start_node",
                                 "offset": 5,
                             },
-                            "end": {
+                            {
                                 "xpath": "end_node",
                                 "offset": 10,
                             },
-                        }
+                        ],
                     ],
                     "type": "html",
                 },
@@ -290,6 +290,31 @@ DATA_GROUP_WITH_LABELS = {
                 "text-uuid": {
                     "range": [],
                     "type": "frame",
+                },
+            },
+        },
+        "html-text-classification": {
+            "classificationHash": "html-text-classification",
+            "featureHash": "textClass2",
+            "classifications": [
+                {
+                    "name": "Text classification 2",
+                    "value": "text_classification_2",
+                    "answers": "Html space answer",
+                    "featureHash": "textAttr2",
+                    "manualAnnotation": True,
+                }
+            ],
+            "createdBy": "user@example.com",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "lastEditedBy": "user@example.com",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "manualAnnotation": True,
+            "range": [],
+            "spaces": {
+                "html-uuid": {
+                    "range": [],
+                    "type": "html",
                 },
             },
         },
