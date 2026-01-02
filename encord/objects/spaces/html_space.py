@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 HtmlOverlapStrategy = Union[Literal["error"], Literal["replace"]]
 
 
-class HTMLSpace(Space):
+class HTMLSpace(Space[_HtmlObjectAnnotation, _HtmlClassificationAnnotation]):
     """HTML space implementation for XPath-based annotations.
 
     This space handles annotations on HTML content where positions are
@@ -208,26 +208,6 @@ class HTMLSpace(Space):
         return _HtmlClassificationAnnotation(
             space=self, classification_instance=self._classifications_map[classification_hash]
         )
-
-    def get_object_instance_annotations(
-        self, filter_object_instances: Optional[list[str]] = None
-    ) -> List[_HtmlObjectAnnotation]:
-        """Get all object instance annotations in the html space.
-
-        Args:
-            filter_object_instances: Optional list of object hashes to filter by.
-                If provided, only annotations for these objects will be returned.
-
-        Returns:
-            List[_HtmlObjectAnnotation]: List of all object annotations
-        """
-
-        filter_set = set(filter_object_instances) if filter_object_instances is not None else None
-        return [
-            self._create_object_annotation(obj_hash)
-            for obj_hash in self._objects_map.keys()
-            if filter_set is None or obj_hash in filter_set
-        ]
 
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         """Remove an object instance from the HTML space.

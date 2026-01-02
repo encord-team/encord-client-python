@@ -44,7 +44,7 @@ if TYPE_CHECKING:
     from encord.objects.ontology_object import Object
 
 
-class ImageSpace(Space):
+class ImageSpace(Space[_GeometricObjectAnnotation, _SingleFrameClassificationAnnotation]):
     """Image space implementation for single-frame image annotations."""
 
     def __init__(self, space_id: str, label_row: LabelRowV2, width: int, height: int):

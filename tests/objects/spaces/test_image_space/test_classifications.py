@@ -48,7 +48,7 @@ def test_put_classification_on_image_space(ontology):
     assert len(classifications_on_space) == 1
     assert classification_on_space._spaces == {image_space_1.space_id: image_space_1}
 
-    annotations = image_space_1.get_classification_instance_annotations()
+    annotations = list(image_space_1.get_classification_instance_annotations())
     assert len(annotations) == 1
 
     first_annotation = annotations[0]
@@ -147,7 +147,7 @@ def test_put_classification_on_frames_with_overwrite_on_image_space(ontology):
     # Act
     image_space_1.put_classification_instance(classification_instance=classification_instance_2, on_overlap="replace")
 
-    annotations_on_classifications = image_space_1.get_classification_instance_annotations()
+    annotations_on_classifications = list(image_space_1.get_classification_instance_annotations())
 
     assert len(annotations_on_classifications) == 1
     annotation_on_frame_0 = annotations_on_classifications[0]
@@ -165,7 +165,7 @@ def test_remove_classification_from_image_space(ontology):
     image_space_1.put_classification_instance(classification_instance=new_classification_instance)
     classifications_on_space = image_space_1.get_classification_instances()
     assert len(classifications_on_space) == 1
-    annotations = image_space_1.get_classification_instance_annotations()
+    annotations = list(image_space_1.get_classification_instance_annotations())
     assert len(annotations) == 1
 
     # Act
@@ -178,7 +178,7 @@ def test_remove_classification_from_image_space(ontology):
     classifications_on_space = image_space_1.get_classification_instances()
     assert len(classifications_on_space) == 0
 
-    annotations = image_space_1.get_classification_instance_annotations()
+    annotations = list(image_space_1.get_classification_instance_annotations())
     assert len(annotations) == 0
 
 
@@ -209,7 +209,7 @@ def test_get_classification_annotations(ontology):
     )
 
     # Act
-    classification_annotations = image_space_1.get_classification_instance_annotations()
+    classification_annotations = list(image_space_1.get_classification_instance_annotations())
     first_annotation = classification_annotations[0]
     second_annotation = classification_annotations[1]
 
@@ -256,13 +256,17 @@ def test_get_classification_annotations_with_filter_classifications(ontology):
     )
 
     # Act
-    annotations_for_classification_1 = image_space_1.get_classification_instance_annotations(
-        filter_classification_instances=[text_classification_instance.classification_hash]
+    annotations_for_classification_1 = list(
+        image_space_1.get_classification_instance_annotations(
+            filter_classification_instances=[text_classification_instance.classification_hash]
+        )
     )
     first_annotation_for_text_classification = annotations_for_classification_1[0]
 
-    annotations_for_classification_2 = image_space_1.get_classification_instance_annotations(
-        filter_classification_instances=[checklist_classification_instance.classification_hash]
+    annotations_for_classification_2 = list(
+        image_space_1.get_classification_instance_annotations(
+            filter_classification_instances=[checklist_classification_instance.classification_hash]
+        )
     )
     first_annotation_for_checklist_classification = annotations_for_classification_2[0]
 
@@ -385,7 +389,7 @@ def test_update_annotation_from_object_annotation(ontology):
     assert not DeepDiff(current_frame_dict, EXPECTED_CURRENT_LABELS_DICT)
 
     # Act
-    classification_annotations = image_space_1.get_classification_instance_annotations()
+    classification_annotations = list(image_space_1.get_classification_instance_annotations())
     classification_annotation = classification_annotations[0]
 
     classification_annotation.created_by = new_name
