@@ -551,7 +551,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
     def put_classification_instance(
         self,
         classification_instance: ClassificationInstance,
-        frames: Frames,
+        frames: Optional[Frames],
         *,
         on_overlap: FrameOverlapStrategy = "error",
         created_at: Optional[datetime] = None,
