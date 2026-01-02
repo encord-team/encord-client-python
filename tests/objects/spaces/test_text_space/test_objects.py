@@ -22,7 +22,7 @@ text_obj_definition_attribute_ontology_item = text_obj_ontology_item.get_child_b
 )
 
 
-def test_place_object_on_space(ontology):
+def test_put_object_on_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_TEXT_NO_LABELS)
@@ -213,7 +213,7 @@ def test_remove_object_from_all_ranges_on_text_space(ontology):
     assert len(annotations_on_object) == 0
 
 
-def test_remove_object_from_audio_space(ontology):
+def test_remove_object_from_text_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_TEXT_NO_LABELS)
