@@ -22,7 +22,7 @@ audio_obj_transcription_attribute_ontology_item = audio_obj_ontology_item.get_ch
 )
 
 
-def test_place_object_on_audio_space(ontology):
+def test_put_object_on_audio_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
