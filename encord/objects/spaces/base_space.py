@@ -1,17 +1,20 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import (
     TYPE_CHECKING,
     Dict,
     Generic,
     Iterator,
+    Literal,
     Optional,
     TypeVar,
     Union,
 )
 
 from encord.exceptions import LabelRowError
+from encord.objects.frames import Range, Ranges
 from encord.objects.spaces.annotation.base_annotation import _ClassificationAnnotation, _ObjectAnnotation
 from encord.objects.spaces.types import SpaceInfo
 from encord.objects.types import (
@@ -30,9 +33,10 @@ SpaceT = TypeVar("SpaceT", bound="Space")
 # Type variables for generic annotation types
 ObjectAnnotationT = TypeVar("ObjectAnnotationT", bound="_ObjectAnnotation")
 ClassificationAnnotationT = TypeVar("ClassificationAnnotationT", bound="_ClassificationAnnotation")
+ClassificationOverlapStrategyT = TypeVar("ClassificationOverlapStrategyT", bound="str")
 
 
-class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT]):
+class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, ClassificationOverlapStrategyT]):
     """
     Manages the objects on a space within LabelRowV2.
     Users should not instantiate this class directly, but must obtain these instances via LabelRow.list_spaces().
@@ -118,6 +122,21 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT]):
             for classification_hash in self._classifications_map
             if filter_set is None or classification_hash in filter_set
         )
+
+    @abstractmethod
+    def put_classification_instance(
+        self,
+        classification_instance: ClassificationInstance,
+        *,
+        on_overlap: Optional[ClassificationOverlapStrategyT] = None,
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        confidence: Optional[float] = None,
+        manual_annotation: Optional[bool] = None,
+    ) -> None:
+        pass
 
     @abstractmethod
     def _create_object_annotation(self, obj_hash: str) -> ObjectAnnotationT:

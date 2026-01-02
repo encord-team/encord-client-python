@@ -1,8 +1,6 @@
-from unittest.mock import Mock, PropertyMock
+from unittest.mock import Mock
 
 from encord.objects import Classification, LabelRowV2
-from encord.objects.spaces.image_space import ImageSpace
-from encord.objects.spaces.video_space import VideoSpace
 from tests.objects.data.all_types_ontology_structure import GLOBAL_CLASSIFICATION, all_types_structure
 from tests.objects.data.data_group.all_modalities import (
     DATA_GROUP_METADATA,
@@ -26,10 +24,7 @@ def test_global_classifications_on_data_group(ontology):
     total_spaces = len(label_row._get_spaces())
     for space in label_row._space_map.values():
         global_classification_on_space = global_classification.create_instance()
-        if isinstance(space, VideoSpace):
-            space.put_classification_instance(classification_instance=global_classification_on_space)
-        else:
-            space.put_classification_instance(classification_instance=global_classification_on_space)
+        space.put_classification_instance(classification_instance=global_classification_on_space)
 
         classification_instances = space.get_classification_instances()
         assert len(classification_instances) == 1

@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from abc import abstractmethod
 from datetime import datetime
-from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union, cast
+from typing import TYPE_CHECKING, Dict, Literal, Optional, Union, cast
 
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import format_datetime_to_long_string, format_datetime_to_long_string_optional
@@ -32,13 +32,15 @@ logger = logging.getLogger(__name__)
 
 
 if TYPE_CHECKING:
-    from encord.objects import Object
     from encord.objects.ontology_labels_impl import LabelRowV2
 
 RangeOverlapStrategy = Union[Literal["error"], Literal["merge"], Literal["replace"]]
+RangeClassificationOverlapStrategy = Union[
+    Literal["error"], Literal["replace"]
+]  # For now, classifications for range spaces are always global
 
 
-class RangeSpace(Space[_RangeObjectAnnotation, _RangeClassificationAnnotation]):
+class RangeSpace(Space[_RangeObjectAnnotation, _RangeClassificationAnnotation, RangeClassificationOverlapStrategy]):
     """Abstract base class for spaces that manage one dimensional range-based annotations. (Audio, Text and HTML).
     This class extracts common logic for managing object and classification instances
     across ranges.
@@ -189,7 +191,7 @@ class RangeSpace(Space[_RangeObjectAnnotation, _RangeClassificationAnnotation]):
         self,
         classification_instance: ClassificationInstance,
         *,
-        on_overlap: Union[Literal["error"], Literal["replace"]] = "error",
+        on_overlap: Optional[RangeClassificationOverlapStrategy] = "error",
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,

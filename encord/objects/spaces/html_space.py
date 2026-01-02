@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 HtmlOverlapStrategy = Union[Literal["error"], Literal["replace"]]
 
 
-class HTMLSpace(Space[_HtmlObjectAnnotation, _HtmlClassificationAnnotation]):
+class HTMLSpace(Space[_HtmlObjectAnnotation, _HtmlClassificationAnnotation, HtmlOverlapStrategy]):
     """HTML space implementation for XPath-based annotations.
 
     This space handles annotations on HTML content where positions are
@@ -122,7 +122,7 @@ class HTMLSpace(Space[_HtmlObjectAnnotation, _HtmlClassificationAnnotation]):
         self,
         classification_instance: ClassificationInstance,
         *,
-        on_overlap: HtmlOverlapStrategy = "error",
+        on_overlap: Optional[HtmlOverlapStrategy] = "error",
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,

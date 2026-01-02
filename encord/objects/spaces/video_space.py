@@ -69,7 +69,7 @@ if TYPE_CHECKING:
 FrameOverlapStrategy = Union[Literal["error"], Literal["replace"]]
 
 
-class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnnotation]):
+class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnnotation, FrameOverlapStrategy]):
     """Video space implementation for frame-based video annotations."""
 
     def __init__(
@@ -551,9 +551,9 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
     def put_classification_instance(
         self,
         classification_instance: ClassificationInstance,
-        frames: Optional[Frames],
+        frames: Optional[Frames] = None,
         *,
-        on_overlap: FrameOverlapStrategy = "error",
+        on_overlap: Optional[FrameOverlapStrategy] = "error",
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,
@@ -588,70 +588,78 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
             classification_instance=classification_instance
         )
 
-        frame_list = frames_class_to_frames_list(frames)
-        self._are_frames_valid(frame_list)
+        if not classification_instance.is_global():
+            if frames is None:
+                raise LabelRowError("Please specify the frame on which the classification is to exist.")
 
-        self._classifications_map[classification_instance.classification_hash] = classification_instance
-        classification_instance._add_to_space(self)
+            frame_list = frames_class_to_frames_list(frames)
+            self._are_frames_valid(frame_list)
 
-        is_present, conflicting_ranges = self._is_classification_present_on_frames(
-            classification_instance._ontology_classification, frame_list
-        )
+            self._classifications_map[classification_instance.classification_hash] = classification_instance
+            classification_instance._add_to_space(self)
 
-        if is_present:
-            if on_overlap == "error":
-                location_msg = (
-                    "globally" if classification_instance.is_global() else f"on the ranges {conflicting_ranges}. "
-                )
-                raise LabelRowError(
-                    f"The classification '{classification_instance.classification_hash}' already exists "
-                    f"{location_msg}"
-                    f"Set 'on_overlap' parameter to 'replace' to overwrite."
-                )
-            elif on_overlap == "replace":
-                # If overwriting, remove conflicting classification entries from other classification instances
-                self._remove_conflicting_classifications_from_frames(
-                    classification=classification_instance,
-                    conflicting_ranges=conflicting_ranges,
-                )
-
-        for frame in frame_list:
-            existing_frame_classification_annotation_data = self._get_frame_classification_annotation_data(
-                classification_hash=classification_instance.classification_hash, frame=frame
+            is_present, conflicting_ranges = self._is_classification_present_on_frames(
+                classification_instance._ontology_classification, frame_list
             )
 
-            if existing_frame_classification_annotation_data is None:
-                existing_frame_classification_annotation_data = _AnnotationData(
-                    annotation_metadata=_AnnotationMetadata(),
+            if is_present:
+                if on_overlap == "error":
+                    location_msg = (
+                        "globally" if classification_instance.is_global() else f"on the ranges {conflicting_ranges}. "
+                    )
+                    raise LabelRowError(
+                        f"The classification '{classification_instance.classification_hash}' already exists "
+                        f"{location_msg}"
+                        f"Set 'on_overlap' parameter to 'replace' to overwrite."
+                    )
+                elif on_overlap == "replace":
+                    # If overwriting, remove conflicting classification entries from other classification instances
+                    self._remove_conflicting_classifications_from_frames(
+                        classification=classification_instance,
+                        conflicting_ranges=conflicting_ranges,
+                    )
+
+            for frame in frame_list:
+                existing_frame_classification_annotation_data = self._get_frame_classification_annotation_data(
+                    classification_hash=classification_instance.classification_hash, frame=frame
                 )
 
-                self._frames_to_classification_hash_to_annotation_data[frame][
-                    classification_instance.classification_hash
-                ] = existing_frame_classification_annotation_data
+                if existing_frame_classification_annotation_data is None:
+                    existing_frame_classification_annotation_data = _AnnotationData(
+                        annotation_metadata=_AnnotationMetadata(),
+                    )
 
-            existing_frame_classification_annotation_data.annotation_metadata.update_from_optional_fields(
-                created_at=created_at,
-                created_by=created_by,
-                last_edited_at=last_edited_at,
-                last_edited_by=last_edited_by,
-                confidence=confidence,
-                manual_annotation=manual_annotation,
+                    self._frames_to_classification_hash_to_annotation_data[frame][
+                        classification_instance.classification_hash
+                    ] = existing_frame_classification_annotation_data
+
+                existing_frame_classification_annotation_data.annotation_metadata.update_from_optional_fields(
+                    created_at=created_at,
+                    created_by=created_by,
+                    last_edited_at=last_edited_at,
+                    last_edited_by=last_edited_by,
+                    confidence=confidence,
+                    manual_annotation=manual_annotation,
+                )
+
+            range_manager = RangeManager(frame_class=frame_list)
+            ranges_to_add = range_manager.get_ranges()
+
+            existing_range_manager = self._classifications_ontology_to_ranges.get(
+                classification_instance._ontology_classification
             )
+            if existing_range_manager is None:
+                self._classifications_ontology_to_ranges[classification_instance._ontology_classification] = (
+                    range_manager
+                )
+            else:
+                existing_range_manager.add_ranges(ranges_to_add)
 
-        range_manager = RangeManager(frame_class=frame_list)
-        ranges_to_add = range_manager.get_ranges()
-
-        existing_range_manager = self._classifications_ontology_to_ranges.get(
-            classification_instance._ontology_classification
-        )
-        if existing_range_manager is None:
-            self._classifications_ontology_to_ranges[classification_instance._ontology_classification] = range_manager
+            self._classification_hash_to_range_manager[classification_instance._classification_hash].add_ranges(
+                ranges_to_add
+            )
         else:
-            existing_range_manager.add_ranges(ranges_to_add)
-
-        self._classification_hash_to_range_manager[classification_instance._classification_hash].add_ranges(
-            ranges_to_add
-        )
+            pass
 
     def remove_classification_instance_from_frames(
         self,

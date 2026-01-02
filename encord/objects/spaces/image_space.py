@@ -12,7 +12,6 @@ from encord.objects.coordinates import (
     add_coordinates_to_frame_object_dict,
     get_geometric_coordinates_from_frame_object_dict,
 )
-from encord.objects.frames import ranges_to_list
 from encord.objects.label_utils import create_frame_classification_dict, create_frame_object_dict
 from encord.objects.spaces.annotation.base_annotation import (
     _AnnotationData,
@@ -44,7 +43,7 @@ if TYPE_CHECKING:
     from encord.objects.ontology_object import Object
 
 
-class ImageSpace(Space[_GeometricObjectAnnotation, _SingleFrameClassificationAnnotation]):
+class ImageSpace(Space[_GeometricObjectAnnotation, _SingleFrameClassificationAnnotation, FrameOverlapStrategy]):
     """Image space implementation for single-frame image annotations."""
 
     def __init__(self, space_id: str, label_row: LabelRowV2, width: int, height: int):
@@ -123,7 +122,7 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _SingleFrameClassificationAnn
         self,
         classification_instance: ClassificationInstance,
         *,
-        on_overlap: FrameOverlapStrategy = "error",
+        on_overlap: Optional[FrameOverlapStrategy] = "error",
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,
