@@ -13,6 +13,9 @@ def test_read_and_export_all_space_labels(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_WITH_LABELS)
 
+    # Global Classification exists on LabelRowV2
+    assert len(label_row.get_classification_instances()) == 1
+
     # Video space: 1 object, 1 classification
     video_space = label_row._get_space(id="video-uuid", type_="video")
     assert len(video_space.get_object_instances()) == 1

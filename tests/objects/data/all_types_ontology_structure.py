@@ -57,12 +57,12 @@ RADIO_CLASSIFICATION = Classification(
 
 GLOBAL_CLASSIFICATION = Classification(
     uid=4,
-    feature_node_hash="3DuQbFx4",
+    feature_node_hash="globalClassificationTopLevelFeatureHash",
     _level=OntologyClassificationLevel.GLOBAL,
     attributes=[
         ChecklistAttribute(
             uid=[4, 1],
-            feature_node_hash="2mwWr3Of",
+            feature_node_hash="globalClassificationFeatureHash",
             name="Global classification",
             required=False,
             dynamic=False,
