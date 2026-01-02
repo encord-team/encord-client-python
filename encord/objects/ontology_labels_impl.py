@@ -1361,7 +1361,7 @@ class LabelRowV2:
         self._check_labelling_is_initalised()
 
         return self._get_classification_instances(
-            include_spaces=True,
+            include_spaces=False,
             filter_ontology_classification=filter_ontology_classification,
             filter_frames=filter_frames,
         )
