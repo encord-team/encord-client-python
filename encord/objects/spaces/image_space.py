@@ -161,11 +161,6 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
     def _create_object_annotation(self, obj_hash: str) -> _GeometricObjectAnnotation:
         return _GeometricObjectAnnotation(space=self, object_instance=self._objects_map[obj_hash])
 
-    def _create_classification_annotation(self, classification_hash: str) -> _GlobalClassificationAnnotation:
-        return _GlobalClassificationAnnotation(
-            space=self, classification_instance=self._classifications_map[classification_hash]
-        )
-
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         """Remove an object instance from the image space.
 

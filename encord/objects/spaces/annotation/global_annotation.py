@@ -11,7 +11,11 @@ if TYPE_CHECKING:
 
 
 class _GlobalClassificationAnnotation(_ClassificationAnnotation):
-    """Global classification annotation that preserves the specific space type."""
+    """
+    Annotation class that holds a global annotation. It exists over an entire Space.
+    For image, audio, text and html spaces, this is the only kind of classification annotation there is.
+    For video space, this can be contrasted with the FrameClassificationAnnotation, where the classification exists on certain frames.
+    """
 
     def __init__(self, space: Space, classification_instance: ClassificationInstance):
         super().__init__(space, classification_instance)

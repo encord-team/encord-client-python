@@ -159,11 +159,6 @@ class HTMLSpace(Space[_HtmlObjectAnnotation, _GlobalClassificationAnnotation, Ht
     def _create_object_annotation(self, obj_hash: str) -> _HtmlObjectAnnotation:
         return _HtmlObjectAnnotation(space=self, object_instance=self._objects_map[obj_hash])
 
-    def _create_classification_annotation(self, classification_hash: str) -> _GlobalClassificationAnnotation:
-        return _GlobalClassificationAnnotation(
-            space=self, classification_instance=self._classifications_map[classification_hash]
-        )
-
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         """Remove an object instance from the HTML space.
 
