@@ -1,5 +1,5 @@
 from itertools import groupby
-from typing import List, Sequence, Tuple
+from typing import List, Sequence, Set, Tuple
 
 
 def _string_to_rle(mask_string: str) -> List[int]:
@@ -100,3 +100,75 @@ def transpose_bytearray(byte_data: bytes, shape: Tuple[int, int]) -> bytes:
             transposed_byte_data[col * rows + row] = byte_data[row * cols + col]
 
     return transposed_byte_data
+
+
+def sparse_indices_to_rle_counts(indices: List[int]) -> List[int]:
+    """Convert a list of indices to RLE counts.
+
+    Args:
+        indices: List of indices representing "present" positions
+
+    Returns:
+        List of RLE counts alternating between empty and present runs
+    """
+    if len(indices) == 0:
+        return []
+
+    # For robustness, ensure the indices are sorted. The logic depends on this.
+    sorted_indices = sorted(indices)
+
+    run_lengths: List[int] = []
+
+    last_processed_index = -1  # Tracks the last index from the previous run.
+    i = 0  # The current position in the sorted_indices array.
+
+    while i < len(sorted_indices):
+        current_present_index = sorted_indices[i]
+
+        # 1. Calculate the length of the "empty" run.
+        # This is the gap between the last present pixel and the current one.
+        empty_run_length = current_present_index - last_processed_index - 1
+        run_lengths.append(empty_run_length)
+
+        # 2. Calculate the length of the "present" run.
+        present_run_start = i
+        # Iterate through the indices to find how many are consecutive.
+        while i < len(sorted_indices) - 1 and sorted_indices[i + 1] == sorted_indices[i] + 1:
+            i += 1
+        present_run_end = i
+        present_run_length = present_run_end - present_run_start + 1
+        run_lengths.append(present_run_length)
+
+        # Update the last processed index to the end of the current present run.
+        last_processed_index = sorted_indices[present_run_end]
+        i += 1
+
+    return run_lengths
+
+
+def points_to_rle_string(points: Set[int]) -> str:
+    points_list = list(points)
+    rle_counts = sparse_indices_to_rle_counts(points_list)
+    return _rle_to_string(rle_counts)
+
+
+def rle_string_to_points(rle_string: str) -> Set[int]:
+    if not rle_string:
+        return set()
+
+    rle_counts = _string_to_rle(rle_string)
+    points = set()
+    current_index = 0
+
+    # RLE counts alternate between empty and present runs
+    for i, count in enumerate(rle_counts):
+        if i % 2 == 0:
+            # Empty run - skip these indices
+            current_index += count
+        else:
+            # Present run - add these indices
+            for j in range(count):
+                points.add(current_index)
+                current_index += 1
+
+    return points

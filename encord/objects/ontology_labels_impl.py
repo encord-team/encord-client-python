@@ -112,6 +112,7 @@ from encord.objects.spaces.multiframe_space.medical_space import MedicalSpace
 from encord.objects.spaces.multiframe_space.pdf_space import PdfSpace
 from encord.objects.spaces.multiframe_space.video_space import VideoSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
+from encord.objects.spaces.range_space.point_cloud_space import PointCloudFileSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
 from encord.objects.spaces.types import ChildInfo, SpaceInfo
 from encord.objects.types import (
@@ -2554,7 +2555,7 @@ class LabelRowV2:
                 continue
 
             # Store layout_key -> space_id mapping if child_info is present
-            child_info = cast(Optional[ChildInfo], space_info.get("child_info", None))
+            child_info = cast(Optional[ChildInfo], space_info.get("child_info"))
             if child_info is not None:
                 self._layout_key_to_space_id[child_info["layout_key"]] = space_id
 
@@ -2630,9 +2631,17 @@ class LabelRowV2:
                     number_of_pages=space_info["number_of_pages"],
                 )
                 res[space_id] = pdf_space
-            elif space_info["space_type"] == SpaceType.SCENE_IMAGE or space_info["space_type"] == SpaceType.POINT_CLOUD:
+            elif space_info["space_type"] == SpaceType.SCENE_IMAGE
                 # TODO: Implement Scene Images
                 pass
+            elif space_info["space_type"] == SpaceType.POINT_CLOUD:
+                scene_info = space_info.get("scene_info", {"stream_id": "", "event_index": 0, "uri": space_id})
+                point_cloud_space = PointCloudFileSpace(
+                    space_id=space_id,
+                    label_row=self,
+                    scene_info=scene_info,
+                )
+                res[space_id] = point_cloud_space
             else:
                 exhaustive_guard(space_info["space_type"], message="Missing initialisation for space.")
 
@@ -2690,9 +2699,15 @@ class LabelRowV2:
                 pdf_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
-            elif space_info["space_type"] == SpaceType.SCENE_IMAGE or space_info["space_type"] == SpaceType.POINT_CLOUD:
+            elif space_info["space_type"] == SpaceType.SCENE_IMAGE:
                 # TODO: Enable this when we implement Scene images
                 pass
+            elif space_info["space_type"] == SpaceType.POINT_CLOUD:
+                point_cloud_space = self._space_map[space_id]
+                if isinstance(point_cloud_space, PointCloudFileSpace):
+                    point_cloud_space._parse_space_dict(
+                        space_info, object_answers=object_answers, classification_answers=classification_answers
+                    )
             else:
                 exhaustive_guard(
                     space_info["space_type"],

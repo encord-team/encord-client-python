@@ -418,6 +418,22 @@ all_types_structure = OntologyStructure(
         AUDIO_OBJECT_3,
         TEXT_OBJECT,
         CUBOID_2D_OBJECT,
+        Object(
+            uid=10,
+            name="segmentation object",
+            color="#4904a5",
+            shape=Shape.SEGMENTATION,
+            feature_node_hash="segmentationFeatureNodeHash",
+            attributes=[],
+        ),
+        Object(
+            uid=11,
+            name="Cuboid object",
+            color="#4904a5",
+            shape=Shape.CUBOID,
+            feature_node_hash="cuboidFeatureNodeHash",
+            attributes=[],
+        ),
     ],
     classifications=[
         RADIO_CLASSIFICATION,
