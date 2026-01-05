@@ -37,10 +37,6 @@ class _HtmlObjectAnnotation(_ObjectAnnotation):
         return 0
 
     @property
-    def space(self) -> HTMLSpace:
-        return self._space
-
-    @property
     def ranges(self) -> HtmlRanges:
         self._check_if_annotation_is_valid()
         return self._get_annotation_data().ranges
@@ -93,10 +89,6 @@ class _HtmlClassificationAnnotation(_ClassificationAnnotation):
     def __init__(self, space: HTMLSpace, classification_instance: ClassificationInstance):
         super().__init__(space, classification_instance)  # type: ignore[arg-type]
         self._space: HTMLSpace = space  # type: ignore[assignment]
-
-    @property
-    def space(self) -> HTMLSpace:
-        return self._space
 
     @property
     def frame(self) -> int:

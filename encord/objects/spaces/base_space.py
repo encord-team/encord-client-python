@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import datetime
+from itertools import chain
 from typing import (
     TYPE_CHECKING,
     Dict,
@@ -14,8 +15,12 @@ from typing import (
 )
 
 from encord.exceptions import LabelRowError
-from encord.objects.frames import Range, Ranges
-from encord.objects.spaces.annotation.base_annotation import _ClassificationAnnotation, _ObjectAnnotation
+from encord.objects.spaces.annotation.base_annotation import (
+    _AnnotationData,
+    _ClassificationAnnotation,
+    _ObjectAnnotation,
+)
+from encord.objects.spaces.annotation.global_annotation import GlobalClassificationAnnotation
 from encord.objects.spaces.types import SpaceInfo
 from encord.objects.types import (
     ClassificationAnswer,
@@ -46,12 +51,14 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
     _label_row: LabelRowV2
     _objects_map: dict[str, ObjectInstance]
     _classifications_map: dict[str, ClassificationInstance]
+    _global_classification_hash_to_instance_data: dict[str, _AnnotationData]
 
     def __init__(self, space_id: str, label_row: LabelRowV2):
         self.space_id = space_id
         self._label_row = label_row
         self._objects_map: dict[str, ObjectInstance] = dict()
         self._classifications_map: dict[str, ClassificationInstance] = dict()
+        self._global_classification_hash_to_instance_data = {}
 
     def get_object_instances(self) -> list[ObjectInstance]:
         """Get all object instances in the space.
@@ -102,7 +109,7 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
 
     def get_classification_instance_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
-    ) -> Iterator[ClassificationAnnotationT]:
+    ) -> Iterator[Union[ClassificationAnnotationT, GlobalClassificationAnnotation]]:
         """Get all classification instance annotations in the space.
 
         Args:
@@ -117,11 +124,22 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
         self._label_row._check_labelling_is_initalised()
         filter_set = set(filter_classification_instances) if filter_classification_instances is not None else None
 
-        return (
+        non_global_annotations = (
             self._create_classification_annotation(classification_hash)
             for classification_hash in self._classifications_map
             if filter_set is None or classification_hash in filter_set
         )
+
+        global_annotations = (
+            GlobalClassificationAnnotation(
+                space=self,
+                classification_instance=self._classifications_map[classification_hash],
+            )
+            for classification_hash in self._global_classification_hash_to_instance_data
+            if filter_set is None or classification_hash in filter_set
+        )
+
+        return chain(non_global_annotations, global_annotations)
 
     @abstractmethod
     def put_classification_instance(

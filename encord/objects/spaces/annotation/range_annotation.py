@@ -38,10 +38,6 @@ class _RangeObjectAnnotation(_ObjectAnnotation):
         return 0
 
     @property
-    def space(self) -> RangeSpace:
-        return self._space
-
-    @property
     def ranges(self) -> Ranges:
         self._check_if_annotation_is_valid()
         return self._get_annotation_data().range_manager.get_ranges()
@@ -93,10 +89,6 @@ class _RangeClassificationAnnotation(_ClassificationAnnotation):
     def __init__(self, space: RangeSpace, classification_instance: ClassificationInstance):
         super().__init__(space, classification_instance)
         self._space: RangeSpace = space
-
-    @property
-    def space(self) -> RangeSpace:
-        return self._space
 
     @property
     def frame(self) -> int:

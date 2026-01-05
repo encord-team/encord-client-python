@@ -68,10 +68,6 @@ class _GeometricFrameObjectAnnotation(_ObjectAnnotation):
         self._frame = frame
 
     @property
-    def space(self) -> VideoSpace:
-        return self._space
-
-    @property
     def frame(self) -> int:
         return self._frame
 
@@ -113,10 +109,6 @@ class _FrameClassificationAnnotation(_ClassificationAnnotation):
         self._frame = frame
 
     @property
-    def space(self) -> VideoSpace:
-        return self._space
-
-    @property
     def frame(self) -> int:
         return self._frame
 
@@ -147,10 +139,6 @@ class _SingleFrameClassificationAnnotation(_ClassificationAnnotation):
     @property
     def frame(self) -> int:
         return 0
-
-    @property
-    def space(self) -> ImageSpace:
-        return self._space
 
     def _get_annotation_data(self) -> _AnnotationData:
         return self._space._classification_hash_to_annotation_data[self._classification_instance.classification_hash]
