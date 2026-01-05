@@ -81,28 +81,3 @@ class _RangeObjectAnnotation(_ObjectAnnotation):
             raise LabelRowError(
                 "Trying to use a RangeObjectAnnotation for an ObjectInstance that is not on this space."
             )
-
-
-class _RangeClassificationAnnotation(_ClassificationAnnotation):
-    """Annotations for multi-frame classifications (e.g. Video)."""
-
-    def __init__(self, space: RangeSpace, classification_instance: ClassificationInstance):
-        super().__init__(space, classification_instance)
-        self._space: RangeSpace = space
-
-    @property
-    def frame(self) -> int:
-        """This field is deprecated. It is only here for backwards compatibility. It always returns 0."""
-        return 0
-
-    def _get_annotation_data(self) -> _AnnotationData:
-        return self._space._global_classification_hash_to_annotation_data[
-            self._classification_instance.classification_hash
-        ]
-
-    def _check_if_annotation_is_valid(self) -> None:
-        if (
-            self._classification_instance.classification_hash
-            not in self._space._global_classification_hash_to_annotation_data
-        ):
-            raise LabelRowError("This annotation is not available on this space.")

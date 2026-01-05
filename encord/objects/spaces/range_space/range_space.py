@@ -14,7 +14,6 @@ from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.spaces.annotation.base_annotation import _AnnotationData, _AnnotationMetadata
 from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
 from encord.objects.spaces.annotation.range_annotation import (
-    _RangeClassificationAnnotation,
     _RangeObjectAnnotation,
 )
 from encord.objects.spaces.base_space import Space
@@ -229,11 +228,6 @@ class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, 
 
     def _create_object_annotation(self, obj_hash: str) -> _RangeObjectAnnotation:
         return _RangeObjectAnnotation(space=self, object_instance=self._objects_map[obj_hash])
-
-    def _create_classification_annotation(self, classification_hash: str) -> _RangeClassificationAnnotation:
-        return _RangeClassificationAnnotation(
-            space=self, classification_instance=self._classifications_map[classification_hash]
-        )
 
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         """Remove an object instance from all ranges in the space.

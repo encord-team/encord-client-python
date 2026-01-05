@@ -8,12 +8,11 @@ from encord.common.time_parser import format_datetime_to_long_string, format_dat
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects import ClassificationInstance, Shape
-from encord.objects.coordinates import HtmlCoordinates
 from encord.objects.html_node import HtmlNode, HtmlRange, HtmlRanges
 from encord.objects.ontology_object_instance import ObjectInstance
-from encord.objects.spaces.annotation.base_annotation import _AnnotationData, _AnnotationMetadata
+from encord.objects.spaces.annotation.base_annotation import _AnnotationMetadata
+from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
 from encord.objects.spaces.annotation.html_annotation import (
-    _HtmlClassificationAnnotation,
     _HtmlObjectAnnotation,
 )
 from encord.objects.spaces.base_space import Space
@@ -38,7 +37,7 @@ if TYPE_CHECKING:
 HtmlOverlapStrategy = Union[Literal["error"], Literal["replace"]]
 
 
-class HTMLSpace(Space[_HtmlObjectAnnotation, _HtmlClassificationAnnotation, HtmlOverlapStrategy]):
+class HTMLSpace(Space[_HtmlObjectAnnotation, _GlobalClassificationAnnotation, HtmlOverlapStrategy]):
     """HTML space implementation for XPath-based annotations.
 
     This space handles annotations on HTML content where positions are
@@ -160,8 +159,8 @@ class HTMLSpace(Space[_HtmlObjectAnnotation, _HtmlClassificationAnnotation, Html
     def _create_object_annotation(self, obj_hash: str) -> _HtmlObjectAnnotation:
         return _HtmlObjectAnnotation(space=self, object_instance=self._objects_map[obj_hash])
 
-    def _create_classification_annotation(self, classification_hash: str) -> _HtmlClassificationAnnotation:
-        return _HtmlClassificationAnnotation(
+    def _create_classification_annotation(self, classification_hash: str) -> _GlobalClassificationAnnotation:
+        return _GlobalClassificationAnnotation(
             space=self, classification_instance=self._classifications_map[classification_hash]
         )
 

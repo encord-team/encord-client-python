@@ -599,7 +599,6 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
         self._classifications_map[classification_instance.classification_hash] = classification_instance
         classification_instance._add_to_space(self)
 
-        print(f"IS GLOBAL: {classification_instance.is_global()}")
         if classification_instance.is_global():
             if frames is not None:
                 raise LabelRowError("For global classifications, do not specify the frames when calling this method.")
@@ -656,7 +655,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
         if is_present:
             if on_overlap == "error":
                 raise LabelRowError(
-                    f"The classification '{classification_instance.classification_hash}' already exists on the ranges {conflicting_ranges}"
+                    f"The classification '{classification_instance.classification_hash}' already exists on the ranges {conflicting_ranges}. "
                     f"Set 'on_overlap' parameter to 'replace' to overwrite."
                 )
             elif on_overlap == "replace":

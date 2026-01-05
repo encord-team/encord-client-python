@@ -239,18 +239,6 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
         pass
 
     @abstractmethod
-    def _create_classification_annotation(self, classification_hash: str) -> ClassificationAnnotationT:
-        """Factory method to create the appropriate classification annotation type for this space.
-
-        Args:
-            classification_hash: The hash of the classification instance.
-
-        Returns:
-            ClassificationAnnotationT: The concrete annotation type for this space.
-        """
-        pass
-
-    @abstractmethod
     def _parse_space_dict(
         self,
         space_info: SpaceInfo,

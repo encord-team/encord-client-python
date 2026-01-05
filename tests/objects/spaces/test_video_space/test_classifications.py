@@ -33,7 +33,7 @@ def test_put_classification_on_video_space(ontology):
     new_classification_instance.set_answer(answer=text_answer)
 
     # Assert
-    classifications_on_label_row = label_row.get_classification_instances()
+    classifications_on_label_row = label_row._get_classification_instances(include_spaces=True)
     assert len(classifications_on_label_row) == 1
 
     classifications_on_space = video_space_1.get_classification_instances()
