@@ -258,12 +258,15 @@ class HTMLSpace(Space[_HtmlObjectAnnotation, _GlobalClassificationAnnotation, Ht
             classification_instance = self._label_row._create_new_classification_instance_from_answer(
                 classification_answer
             )
+
             if classification_instance is None:
                 continue
+
             annotation_metadata = _AnnotationMetadata.from_dict(classification_answer)  # type: ignore[arg-type]
 
-            self.put_classification_instance(
+            self._put_global_classification_instance(
                 classification_instance=classification_instance,
+                on_overlap="replace",
                 created_at=annotation_metadata.created_at,
                 created_by=annotation_metadata.created_by,
                 confidence=annotation_metadata.confidence,
@@ -362,19 +365,27 @@ class HTMLSpace(Space[_HtmlObjectAnnotation, _GlobalClassificationAnnotation, Ht
                     answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()
                 ]
                 classification_attributes_without_none = cast(list[AttributeDict], classification_attributes)
+                reversed_classification_attributes = list(reversed(classification_attributes_without_none))
 
-                classification_answer: ClassificationAnswer = {
-                    "classifications": list(reversed(classification_attributes_without_none)),
-                    "classificationHash": classification.classification_hash,
-                    "featureHash": classification.feature_hash,
-                    "range": [],
-                    "createdBy": annotation_metadata.created_by,
-                    "createdAt": format_datetime_to_long_string_optional(annotation_metadata.created_at),
-                    "lastEditedBy": annotation_metadata.last_edited_by,
-                    "lastEditedAt": format_datetime_to_long_string_optional(annotation_metadata.last_edited_at),
-                    "manualAnnotation": annotation_metadata.manual_annotation,
-                    "spaces": {self.space_id: {"range": [], "type": "html"}},
-                }
+                classification_answer: ClassificationAnswer
+                if classification.is_global():
+                    classification_answer = self._to_global_classification_answer(
+                        classification_instance=classification, classifications=reversed_classification_attributes
+                    )
+                else:
+                    classification_answer = {
+                        "classifications": reversed_classification_attributes,
+                        "classificationHash": classification.classification_hash,
+                        "featureHash": classification.feature_hash,
+                        "range": [],
+                        "createdBy": annotation_metadata.created_by,
+                        "createdAt": format_datetime_to_long_string_optional(annotation_metadata.created_at),
+                        "lastEditedBy": annotation_metadata.last_edited_by,
+                        "lastEditedAt": format_datetime_to_long_string_optional(annotation_metadata.last_edited_at),
+                        "manualAnnotation": annotation_metadata.manual_annotation,
+                        "confidence": annotation_metadata.confidence,
+                        "spaces": {self.space_id: {"range": [], "type": "html"}},
+                    }
 
                 ret[classification.classification_hash] = classification_answer
 

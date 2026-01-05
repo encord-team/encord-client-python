@@ -362,19 +362,27 @@ class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, 
                     answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()
                 ]
                 classification_attributes_without_none = cast(list[AttributeDict], classification_attributes)
+                reversed_classification_attributes = list(reversed(classification_attributes_without_none))
 
-                classification_answer: ClassificationAnswer = {
-                    "classifications": list(reversed(classification_attributes_without_none)),
-                    "classificationHash": classification.classification_hash,
-                    "featureHash": classification.feature_hash,
-                    "range": [],
-                    "createdBy": annotation_metadata.created_by,
-                    "createdAt": format_datetime_to_long_string_optional(annotation_metadata.created_at),
-                    "lastEditedBy": annotation_metadata.last_edited_by,
-                    "lastEditedAt": format_datetime_to_long_string_optional(annotation_metadata.last_edited_at),
-                    "manualAnnotation": annotation_metadata.manual_annotation,
-                    "spaces": {self.space_id: {"range": [], "type": "frame"}},
-                }
+                classification_answer: ClassificationAnswer
+                if classification.is_global():
+                    classification_answer = self._to_global_classification_answer(
+                        classification_instance=classification, classifications=reversed_classification_attributes
+                    )
+                else:
+                    classification_answer = {
+                        "classifications": reversed_classification_attributes,
+                        "classificationHash": classification.classification_hash,
+                        "featureHash": classification.feature_hash,
+                        "range": [],
+                        "createdBy": annotation_metadata.created_by,
+                        "createdAt": format_datetime_to_long_string_optional(annotation_metadata.created_at),
+                        "lastEditedBy": annotation_metadata.last_edited_by,
+                        "lastEditedAt": format_datetime_to_long_string_optional(annotation_metadata.last_edited_at),
+                        "manualAnnotation": annotation_metadata.manual_annotation,
+                        "confidence": annotation_metadata.confidence,
+                        "spaces": {self.space_id: {"range": [], "type": "frame"}},
+                    }
 
                 ret[classification.classification_hash] = classification_answer
 

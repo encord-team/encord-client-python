@@ -67,6 +67,7 @@ def test_place_classification_on_html_space(ontology):
             "createdBy": None,
             "lastEditedBy": None,
             "manualAnnotation": True,
+            "confidence": 1.0,
         }
     }
 
@@ -370,6 +371,7 @@ def test_update_annotation_from_classification_annotation(ontology):
             "lastEditedBy": name,
             "lastEditedAt": format_datetime_to_long_string(date),
             "manualAnnotation": True,
+            "confidence": 1.0,
             "classifications": [
                 {
                     "name": "Text classification",
@@ -407,6 +409,7 @@ def test_update_annotation_from_classification_annotation(ontology):
             "lastEditedBy": new_name,
             "lastEditedAt": format_datetime_to_long_string(new_date),
             "manualAnnotation": True,
+            "confidence": 1.0,
             "classifications": [
                 {
                     "name": "Text classification",
