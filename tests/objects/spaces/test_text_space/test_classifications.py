@@ -92,7 +92,7 @@ def test_place_classification_where_classification_already_exists(ontology):
     # Assert
     assert (
         e.value.message
-        == f"The classification with feature hash '{classification_instance_1.feature_hash}' already exists globally.Set 'on_overlap' parameter to 'replace' to overwrite."
+        == f"The classification with feature hash '{classification_instance_1.feature_hash}' already exists globally. Set 'on_overlap' parameter to 'replace' to overwrite."
     )
 
 
@@ -119,7 +119,7 @@ def test_place_classification_on_where_classification_of_same_class_already_exis
     # Assert
     assert (
         e.value.message
-        == f"The classification with feature hash '{classification_instance_1.feature_hash}' already exists globally.Set 'on_overlap' parameter to 'replace' to overwrite."
+        == f"The classification with feature hash '{classification_instance_1.feature_hash}' already exists globally. Set 'on_overlap' parameter to 'replace' to overwrite."
     )
 
 

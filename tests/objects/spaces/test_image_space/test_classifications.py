@@ -97,7 +97,7 @@ def test_put_classification_on_frame_where_classification_instance_exists_on_ima
     # Assert
     assert (
         e.value.message
-        == f"The classification with feature hash '{classification_instance_1.feature_hash}' already exists globally.Set 'on_overlap' parameter to 'replace' to overwrite."
+        == f"The classification with feature hash '{classification_instance_1.feature_hash}' already exists globally. Set 'on_overlap' parameter to 'replace' to overwrite."
     )
 
 
@@ -124,7 +124,7 @@ def test_put_classification_on_frame_where_classification_of_same_ontology_item_
     # Assert
     assert (
         e.value.message
-        == f"The classification with feature hash '{classification_instance_1.feature_hash}' already exists globally.Set 'on_overlap' parameter to 'replace' to overwrite."
+        == f"The classification with feature hash '{classification_instance_1.feature_hash}' already exists globally. Set 'on_overlap' parameter to 'replace' to overwrite."
     )
 
 

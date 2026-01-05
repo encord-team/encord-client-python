@@ -162,7 +162,7 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
         if is_present:
             if on_overlap == "error":
                 raise LabelRowError(
-                    f"The classification with feature hash '{classification_instance.feature_hash}' already exists globally."
+                    f"The classification with feature hash '{classification_instance.feature_hash}' already exists globally. "
                     f"Set 'on_overlap' parameter to 'replace' to overwrite."
                 )
             elif on_overlap == "replace":
