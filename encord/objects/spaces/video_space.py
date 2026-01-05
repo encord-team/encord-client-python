@@ -596,9 +596,6 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
             classification_instance=classification_instance
         )
 
-        self._classifications_map[classification_instance.classification_hash] = classification_instance
-        classification_instance._add_to_space(self)
-
         if classification_instance.is_global():
             if frames is not None:
                 raise LabelRowError("For global classifications, do not specify the frames when calling this method.")

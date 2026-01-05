@@ -253,7 +253,6 @@ class _ObjectAnnotation(_Annotation):
 
     def __init__(self, space: Space, object_instance: ObjectInstance):
         super().__init__(space)
-        self._space = space
         self._object_instance = object_instance
 
     @property
@@ -280,7 +279,6 @@ class _ClassificationAnnotation(_Annotation):
 
     def __init__(self, space: Space, classification_instance: ClassificationInstance):
         super().__init__(space)
-        self._space = space
         self._classification_instance = classification_instance
 
     @property
