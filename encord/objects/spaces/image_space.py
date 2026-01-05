@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import time
 from datetime import datetime
 from typing import TYPE_CHECKING, Dict, Optional, Sequence, cast
 
@@ -48,9 +47,7 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _SingleFrameClassificationAnn
 
     def __init__(self, space_id: str, label_row: LabelRowV2, width: int, height: int):
         super().__init__(space_id, label_row)
-        self._objects_map: dict[str, ObjectInstance] = dict()
         self._classification_ontologies: set[str] = set()
-        self._classifications_map: dict[str, ClassificationInstance] = dict()
         self._object_hash_to_annotation_data: dict[str, _GeometricAnnotationData] = dict()
         self._classification_hash_to_annotation_data: dict[str, _AnnotationData] = dict()
 
@@ -152,6 +149,43 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _SingleFrameClassificationAnn
             classification_instance=classification_instance
         )
 
+        # This is a bit stupid because a classification on an image behaves almost exactly like a global classification
+        # But splitting them up for now because one is handled at the base_space, the other in the image_space
+        if classification_instance.is_global():
+            self._put_global_classification_instance(
+                classification_instance=classification_instance,
+                on_overlap=on_overlap,
+                created_at=created_at,
+                created_by=created_by,
+                last_edited_at=last_edited_at,
+                last_edited_by=last_edited_by,
+                confidence=confidence,
+                manual_annotation=manual_annotation,
+            )
+        else:
+            self._put_classification_instance_on_frame(
+                classification_instance=classification_instance,
+                on_overlap=on_overlap,
+                created_at=created_at,
+                created_by=created_by,
+                last_edited_at=last_edited_at,
+                last_edited_by=last_edited_by,
+                confidence=confidence,
+                manual_annotation=manual_annotation,
+            )
+
+    def _put_classification_instance_on_frame(
+        self,
+        classification_instance: ClassificationInstance,
+        *,
+        on_overlap: Optional[FrameOverlapStrategy] = "error",
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        confidence: Optional[float] = None,
+        manual_annotation: Optional[bool] = None,
+    ) -> None:
         is_classification_of_same_ontology_present = (
             classification_instance._ontology_classification.feature_node_hash in self._classification_ontologies
         )

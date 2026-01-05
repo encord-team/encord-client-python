@@ -96,8 +96,13 @@ class _RangeClassificationAnnotation(_ClassificationAnnotation):
         return 0
 
     def _get_annotation_data(self) -> _AnnotationData:
-        return self._space._classification_hash_to_annotation_data[self._classification_instance.classification_hash]
+        return self._space._global_classification_hash_to_annotation_data[
+            self._classification_instance.classification_hash
+        ]
 
     def _check_if_annotation_is_valid(self) -> None:
-        if self._classification_instance.classification_hash not in self._space._classification_hash_to_annotation_data:
+        if (
+            self._classification_instance.classification_hash
+            not in self._space._global_classification_hash_to_annotation_data
+        ):
             raise LabelRowError("This annotation is not available on this space.")

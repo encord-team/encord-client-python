@@ -26,6 +26,7 @@ def test_global_classifications_on_data_group(ontology):
     # Add global classification to each space
     total_spaces = len(label_row._get_spaces())
     for space in label_row._space_map.values():
+        print(f"SPACE ID: {space.space_id}")
         global_classification_on_space = global_classification.create_instance()
         space.put_classification_instance(classification_instance=global_classification_on_space)
         assert list(space._global_classification_hash_to_annotation_data.keys()) == [

@@ -14,6 +14,8 @@ from typing import (
     Union,
 )
 
+from pytest import Class
+
 from encord.exceptions import LabelRowError
 from encord.objects.spaces.annotation.base_annotation import (
     _AnnotationData,
@@ -170,8 +172,9 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
                 )
             elif on_overlap == "replace":
                 # If overwriting, remove conflicting classification entries from other classification instances
-                self._remove_conflicting_global_classifications(classification=classification_instance)
+                self._remove_global_classification_instance(classification=classification_instance)
 
+        self._classifications_map[classification_instance.classification_hash] = classification_instance
         new_classification_annotation_data = _AnnotationData(
             annotation_metadata=_AnnotationMetadata(),
         )
@@ -188,12 +191,16 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
             new_classification_annotation_data
         )
 
-    def _remove_conflicting_global_classifications(
+    def _remove_global_classification_instance(
         self,
         classification: ClassificationInstance,
-    ) -> None:
+    ) -> ClassificationInstance:
+        classification._remove_from_space(self.space_id)
         self._global_classification_ontology_feature_hashes.remove(classification.feature_hash)
         self._global_classification_hash_to_annotation_data.pop(classification.classification_hash)
+        self._classifications_map.pop(classification.classification_hash)
+
+        return classification
 
     @abstractmethod
     def put_classification_instance(
