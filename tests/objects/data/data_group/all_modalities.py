@@ -304,6 +304,37 @@ DATA_GROUP_WITH_LABELS = {
                 },
             },
         },
+        "global-classification-on-image": {
+            "classificationHash": "global-classification-on-image",
+            "featureHash": "globalClassificationTopLevelFeatureHash",
+            "classifications": [
+                {
+                    "name": "Global classification",
+                    "value": "global_classification",
+                    "answers": [
+                        {
+                            "name": "Global Answer 1",
+                            "value": "global_answer_1",
+                            "featureHash": "3vLjF0q1",
+                        }
+                    ],
+                    "featureHash": "globalClassificationFeatureHash",
+                    "manualAnnotation": True,
+                }
+            ],
+            "range": [],
+            "spaces": {
+                "image-uuid": {
+                    "type": "global",
+                }
+            },
+            "createdBy": "user1Hash@encord.com",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "lastEditedBy": "user1Hash@encord.com",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "manualAnnotation": True,
+            "confidence": 5.0,
+        },
         # Audio classification (range-based)
         "audio-classification": {
             "classificationHash": "audio-classification",

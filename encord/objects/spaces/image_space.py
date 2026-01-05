@@ -296,6 +296,9 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
             frame_classification_annotation_data,
         ) in self._global_classification_hash_to_annotation_data.items():
             space_classification = self._classifications_map[classification_hash]
+            if space_classification.is_global():
+                continue
+
             classification_list.append(
                 self._to_encord_classification(
                     classification_instance=space_classification,
@@ -337,6 +340,29 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
             if object_instance := self._objects_map.get(object_hash):
                 answer_list = answer["classifications"]
                 object_instance.set_answer_from_list(answer_list)
+
+        for classification_answer in classification_answers.values():
+            spaces = classification_answer.get("spaces", {})
+            classification_on_this_space = spaces.get(self.space_id, None)
+            if classification_on_this_space is not None and classification_on_this_space["type"] == "global":
+                classification_instance = self._label_row._create_new_classification_instance_from_answer(
+                    classification_answer
+                )
+
+                if classification_instance is None:
+                    continue
+
+                annotation_metadata = _AnnotationMetadata.from_dict(classification_answer)
+                self._put_global_classification_instance(
+                    classification_instance=classification_instance,
+                    on_overlap="replace",
+                    created_at=annotation_metadata.created_at,
+                    created_by=annotation_metadata.created_by,
+                    last_edited_at=annotation_metadata.last_edited_at,
+                    last_edited_by=annotation_metadata.last_edited_by,
+                    confidence=annotation_metadata.confidence,
+                    manual_annotation=annotation_metadata.manual_annotation,
+                )
 
     def _parse_frame_label_dict(self, frame_label: LabelBlob, classification_answers: dict[str, ClassificationAnswer]):
         for frame_object_label in frame_label["objects"]:
@@ -411,18 +437,24 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
             classifications: list[AttributeDict] = [
                 cast(AttributeDict, answer.to_encord_dict()) for answer in all_static_answers if answer.is_answered()
             ]
-            classification_index_element: ClassificationAnswer = {
-                "classifications": classifications,
-                "classificationHash": classification.classification_hash,
-                "featureHash": classification.feature_hash,
-                "spaces": {
-                    self.space_id: {
-                        "range": [[0, 0]],  # For images, there is only one frame
-                        "type": "frame",
-                    }
-                },
-            }
 
-            ret[classification.classification_hash] = classification_index_element
+            if classification.is_global():
+                ret[classification.classification_hash] = self._to_global_classification_answer(
+                    classification_instance=classification, classifications=classifications
+                )
+            else:
+                classification_index_element: ClassificationAnswer = {
+                    "classifications": classifications,
+                    "classificationHash": classification.classification_hash,
+                    "featureHash": classification.feature_hash,
+                    "spaces": {
+                        self.space_id: {
+                            "range": [[0, 0]],  # For images, there is only one frame
+                            "type": "frame",
+                        }
+                    },
+                }
+
+                ret[classification.classification_hash] = classification_index_element
 
         return ret

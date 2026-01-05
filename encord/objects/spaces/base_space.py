@@ -8,6 +8,7 @@ from typing import (
     Dict,
     Generic,
     Iterator,
+    List,
     Literal,
     Optional,
     TypeVar,
@@ -16,6 +17,7 @@ from typing import (
 
 from pytest import Class
 
+from encord.common.time_parser import format_datetime_to_long_string
 from encord.exceptions import LabelRowError
 from encord.objects.spaces.annotation.base_annotation import (
     _AnnotationData,
@@ -26,10 +28,12 @@ from encord.objects.spaces.annotation.base_annotation import (
 from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
 from encord.objects.spaces.types import SpaceInfo
 from encord.objects.types import (
+    AttributeDict,
     ClassificationAnswer,
     ObjectAnswer,
     ObjectAnswerForGeometric,
     ObjectAnswerForNonGeometric,
+    SpaceGlobalData,
 )
 
 if TYPE_CHECKING:
@@ -260,6 +264,31 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
         self, existing_classification_answers: Dict[str, ClassificationAnswer]
     ) -> Dict[str, ClassificationAnswer]:
         pass
+
+    def _to_global_classification_answer(
+        self, classification_instance: ClassificationInstance, classifications: List[AttributeDict]
+    ) -> ClassificationAnswer:
+        space_range: SpaceGlobalData = {"type": "global"}
+        annotation_data = self._global_classification_hash_to_annotation_data[
+            classification_instance.classification_hash
+        ]
+        annotation_metadata = annotation_data.annotation_metadata
+
+        classification_index_element: ClassificationAnswer = {
+            "classifications": classifications,
+            "classificationHash": classification_instance.classification_hash,
+            "featureHash": classification_instance.feature_hash,
+            "spaces": {self.space_id: space_range},
+            "createdBy": annotation_metadata.created_by,
+            "createdAt": format_datetime_to_long_string(annotation_metadata.created_at),
+            "lastEditedBy": annotation_metadata.last_edited_by,
+            "lastEditedAt": format_datetime_to_long_string(annotation_metadata.last_edited_at),
+            "confidence": annotation_metadata.confidence,
+            "manualAnnotation": annotation_metadata.manual_annotation,
+            "range": [],
+        }
+
+        return classification_index_element
 
     @staticmethod
     def _method_not_supported_for_object_instance_with_frames(object_instance: ObjectInstance):

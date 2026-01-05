@@ -1121,31 +1121,6 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
 
         return ret
 
-    def _to_global_classification_answer(
-        self, classification_instance: ClassificationInstance, classifications: List[AttributeDict]
-    ) -> ClassificationAnswer:
-        space_range: SpaceGlobalData = {"type": "global"}
-        annotation_data = self._global_classification_hash_to_annotation_data[
-            classification_instance.classification_hash
-        ]
-        annotation_metadata = annotation_data.annotation_metadata
-
-        classification_index_element: ClassificationAnswer = {
-            "classifications": classifications,
-            "classificationHash": classification_instance.classification_hash,
-            "featureHash": classification_instance.feature_hash,
-            "spaces": {self.space_id: space_range},
-            "createdBy": annotation_metadata.created_by,
-            "createdAt": format_datetime_to_long_string(annotation_metadata.created_at),
-            "lastEditedBy": annotation_metadata.last_edited_by,
-            "lastEditedAt": format_datetime_to_long_string(annotation_metadata.last_edited_at),
-            "confidence": annotation_metadata.confidence,
-            "manualAnnotation": annotation_metadata.manual_annotation,
-            "range": [],
-        }
-
-        return classification_index_element
-
     def _parse_space_dict(
         self,
         space_info: SpaceInfo,
