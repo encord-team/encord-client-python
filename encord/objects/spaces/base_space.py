@@ -17,6 +17,7 @@ from typing import (
 from encord.exceptions import LabelRowError
 from encord.objects.spaces.annotation.base_annotation import (
     _AnnotationData,
+    _AnnotationMetadata,
     _ClassificationAnnotation,
     _ObjectAnnotation,
 )
@@ -40,6 +41,8 @@ ObjectAnnotationT = TypeVar("ObjectAnnotationT", bound="_ObjectAnnotation")
 ClassificationAnnotationT = TypeVar("ClassificationAnnotationT", bound="_ClassificationAnnotation")
 ClassificationOverlapStrategyT = TypeVar("ClassificationOverlapStrategyT", bound="str")
 
+GlobalClassificationOverlapStrategy = Union[Literal["error"], Literal["replace"]]
+
 
 class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, ClassificationOverlapStrategyT]):
     """
@@ -51,14 +54,18 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
     _label_row: LabelRowV2
     _objects_map: dict[str, ObjectInstance]
     _classifications_map: dict[str, ClassificationInstance]
-    _global_classification_hash_to_instance_data: dict[str, _AnnotationData]
+    _global_classification_hash_to_annotation_data: dict[str, _AnnotationData]
+
+    # Used to keep track of global classifications that already exist.
+    _global_classification_ontology_feature_hashes: set[str]
 
     def __init__(self, space_id: str, label_row: LabelRowV2):
         self.space_id = space_id
         self._label_row = label_row
         self._objects_map: dict[str, ObjectInstance] = dict()
         self._classifications_map: dict[str, ClassificationInstance] = dict()
-        self._global_classification_hash_to_instance_data = {}
+        self._global_classification_hash_to_annotation_data = {}
+        self._global_classification_ontology_feature_hashes = set()
 
     def get_object_instances(self) -> list[ObjectInstance]:
         """Get all object instances in the space.
@@ -135,11 +142,58 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
                 space=self,
                 classification_instance=self._classifications_map[classification_hash],
             )
-            for classification_hash in self._global_classification_hash_to_instance_data
+            for classification_hash in self._global_classification_hash_to_annotation_data
             if filter_set is None or classification_hash in filter_set
         )
 
         return chain(non_global_annotations, global_annotations)
+
+    def _put_global_classification_instance(
+        self,
+        classification_instance: ClassificationInstance,
+        *,
+        on_overlap: Optional[GlobalClassificationOverlapStrategy],
+        created_at: Optional[datetime],
+        created_by: Optional[str],
+        last_edited_at: Optional[datetime],
+        last_edited_by: Optional[str],
+        confidence: Optional[float],
+        manual_annotation: Optional[bool],
+    ) -> None:
+        is_present = classification_instance.feature_hash in self._global_classification_ontology_feature_hashes
+
+        if is_present:
+            if on_overlap == "error":
+                raise LabelRowError(
+                    f"The classification '{classification_instance.classification_hash}' already exists globally."
+                    f"Set 'on_overlap' parameter to 'replace' to overwrite."
+                )
+            elif on_overlap == "replace":
+                # If overwriting, remove conflicting classification entries from other classification instances
+                self._remove_conflicting_global_classifications(classification=classification_instance)
+
+        new_classification_annotation_data = _AnnotationData(
+            annotation_metadata=_AnnotationMetadata(),
+        )
+        new_classification_annotation_data.annotation_metadata.update_from_optional_fields(
+            created_at=created_at,
+            created_by=created_by,
+            last_edited_at=last_edited_at,
+            last_edited_by=last_edited_by,
+            confidence=confidence,
+            manual_annotation=manual_annotation,
+        )
+
+        self._global_classification_hash_to_annotation_data[classification_instance.classification_hash] = (
+            new_classification_annotation_data
+        )
+
+    def _remove_conflicting_global_classifications(
+        self,
+        classification: ClassificationInstance,
+    ) -> None:
+        self._global_classification_ontology_feature_hashes.remove(classification.feature_hash)
+        self._global_classification_hash_to_annotation_data.pop(classification.classification_hash)
 
     @abstractmethod
     def put_classification_instance(

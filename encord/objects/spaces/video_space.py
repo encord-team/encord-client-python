@@ -104,7 +104,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
         self._classification_hash_to_range_manager: defaultdict[str, RangeManager] = defaultdict(RangeManager)
 
         # Used to track whether an instance of a classification_ontology exists on frames
-        # Global classifications are also here, but with empty range_manager
+        # Global classifications are NOT tracked here
         self._classifications_ontology_to_ranges: defaultdict[Classification, RangeManager] = defaultdict(RangeManager)
 
         self._object_hash_to_dynamic_answer_manager: dict[str, DynamicAnswerManager] = dict()
@@ -599,9 +599,21 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
         self._classifications_map[classification_instance.classification_hash] = classification_instance
         classification_instance._add_to_space(self)
 
+        print(f"IS GLOBAL: {classification_instance.is_global()}")
         if classification_instance.is_global():
             if frames is not None:
                 raise LabelRowError("For global classifications, do not specify the frames when calling this method.")
+
+            self._put_global_classification_instance(
+                classification_instance=classification_instance,
+                on_overlap=on_overlap,
+                created_at=created_at,
+                created_by=created_by,
+                last_edited_at=last_edited_at,
+                last_edited_by=last_edited_by,
+                confidence=confidence,
+                manual_annotation=manual_annotation,
+            )
             pass
         else:
             if frames is None:
@@ -618,6 +630,9 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
                 confidence=confidence,
                 manual_annotation=manual_annotation,
             )
+
+        self._classifications_map[classification_instance.classification_hash] = classification_instance
+        classification_instance._add_to_space(self)
 
     def _put_classification_instance_on_frames(
         self,
@@ -640,12 +655,8 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
 
         if is_present:
             if on_overlap == "error":
-                location_msg = (
-                    "globally" if classification_instance.is_global() else f"on the ranges {conflicting_ranges}. "
-                )
                 raise LabelRowError(
-                    f"The classification '{classification_instance.classification_hash}' already exists "
-                    f"{location_msg}"
+                    f"The classification '{classification_instance.classification_hash}' already exists on the ranges {conflicting_ranges}"
                     f"Set 'on_overlap' parameter to 'replace' to overwrite."
                 )
             elif on_overlap == "replace":
@@ -654,45 +665,43 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
                     classification=classification_instance,
                     conflicting_ranges=conflicting_ranges,
                 )
-            for frame in frame_list:
-                existing_frame_classification_annotation_data = self._get_frame_classification_annotation_data(
-                    classification_hash=classification_instance.classification_hash, frame=frame
-                )
-
-                if existing_frame_classification_annotation_data is None:
-                    existing_frame_classification_annotation_data = _AnnotationData(
-                        annotation_metadata=_AnnotationMetadata(),
-                    )
-
-                    self._frames_to_classification_hash_to_annotation_data[frame][
-                        classification_instance.classification_hash
-                    ] = existing_frame_classification_annotation_data
-
-                existing_frame_classification_annotation_data.annotation_metadata.update_from_optional_fields(
-                    created_at=created_at,
-                    created_by=created_by,
-                    last_edited_at=last_edited_at,
-                    last_edited_by=last_edited_by,
-                    confidence=confidence,
-                    manual_annotation=manual_annotation,
-                )
-
-            range_manager = RangeManager(frame_class=frame_list)
-            ranges_to_add = range_manager.get_ranges()
-
-            existing_range_manager = self._classifications_ontology_to_ranges.get(
-                classification_instance._ontology_classification
+        for frame in frame_list:
+            existing_frame_classification_annotation_data = self._get_frame_classification_annotation_data(
+                classification_hash=classification_instance.classification_hash, frame=frame
             )
-            if existing_range_manager is None:
-                self._classifications_ontology_to_ranges[classification_instance._ontology_classification] = (
-                    range_manager
-                )
-            else:
-                existing_range_manager.add_ranges(ranges_to_add)
 
-            self._classification_hash_to_range_manager[classification_instance._classification_hash].add_ranges(
-                ranges_to_add
+            if existing_frame_classification_annotation_data is None:
+                existing_frame_classification_annotation_data = _AnnotationData(
+                    annotation_metadata=_AnnotationMetadata(),
+                )
+
+                self._frames_to_classification_hash_to_annotation_data[frame][
+                    classification_instance.classification_hash
+                ] = existing_frame_classification_annotation_data
+
+            existing_frame_classification_annotation_data.annotation_metadata.update_from_optional_fields(
+                created_at=created_at,
+                created_by=created_by,
+                last_edited_at=last_edited_at,
+                last_edited_by=last_edited_by,
+                confidence=confidence,
+                manual_annotation=manual_annotation,
             )
+
+        range_manager = RangeManager(frame_class=frame_list)
+        ranges_to_add = range_manager.get_ranges()
+
+        existing_range_manager = self._classifications_ontology_to_ranges.get(
+            classification_instance._ontology_classification
+        )
+        if existing_range_manager is None:
+            self._classifications_ontology_to_ranges[classification_instance._ontology_classification] = range_manager
+        else:
+            existing_range_manager.add_ranges(ranges_to_add)
+
+        self._classification_hash_to_range_manager[classification_instance._classification_hash].add_ranges(
+            ranges_to_add
+        )
 
     def remove_classification_instance_from_frames(
         self,
