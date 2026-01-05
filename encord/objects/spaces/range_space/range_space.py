@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from abc import abstractmethod
 from datetime import datetime
-from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union, cast
+from typing import TYPE_CHECKING, Dict, Literal, Optional, Union, cast
 
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import format_datetime_to_long_string, format_datetime_to_long_string_optional
@@ -32,7 +32,6 @@ logger = logging.getLogger(__name__)
 
 
 if TYPE_CHECKING:
-    from encord.objects import Object
     from encord.objects.ontology_labels_impl import LabelRowV2
 
 RangeOverlapStrategy = Union[Literal["error"], Literal["merge"], Literal["replace"]]
