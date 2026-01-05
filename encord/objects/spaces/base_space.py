@@ -216,7 +216,7 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
         self,
         classification_instance: ClassificationInstance,
         *,
-        on_overlap: Optional[ClassificationOverlapStrategyT] = "error",
+        on_overlap: Optional[ClassificationOverlapStrategyT] = None,
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,
