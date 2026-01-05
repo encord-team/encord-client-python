@@ -169,6 +169,38 @@ DATA_GROUP_WITH_LABELS = {
                 },
             },
         },
+        "html-text-object": {
+            "objectHash": "html-text-object",
+            "classifications": [],
+            "range": [],
+            "createdBy": "user@example.com",
+            "createdAt": "Thu, 05 Dec 2024 15:24:19 UTC",
+            "lastEditedBy": "user@example.com",
+            "lastEditedAt": "Thu, 05 Dec 2024 15:24:44 UTC",
+            "manualAnnotation": True,
+            "featureHash": "textFeatureNodeHash",
+            "name": "text object",
+            "color": "#A4FF00",
+            "shape": "text",
+            "value": "text_object",
+            "spaces": {
+                "html-uuid": {
+                    "range": [
+                        [
+                            {
+                                "xpath": "start_node",
+                                "offset": 5,
+                            },
+                            {
+                                "xpath": "end_node",
+                                "offset": 10,
+                            },
+                        ],
+                    ],
+                    "type": "html",
+                },
+            },
+        },
     },
     "classification_answers": {
         # Video classification (frame-based)
@@ -258,6 +290,31 @@ DATA_GROUP_WITH_LABELS = {
                 "text-uuid": {
                     "range": [],
                     "type": "frame",
+                },
+            },
+        },
+        "html-text-classification": {
+            "classificationHash": "html-text-classification",
+            "featureHash": "textClass2",
+            "classifications": [
+                {
+                    "name": "Text classification 2",
+                    "value": "text_classification_2",
+                    "answers": "Html space answer",
+                    "featureHash": "textAttr2",
+                    "manualAnnotation": True,
+                }
+            ],
+            "createdBy": "user@example.com",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "lastEditedBy": "user@example.com",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "manualAnnotation": True,
+            "range": [],
+            "spaces": {
+                "html-uuid": {
+                    "range": [],
+                    "type": "html",
                 },
             },
         },
