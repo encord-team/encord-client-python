@@ -49,7 +49,7 @@ from encord.objects.spaces.annotation.geometric_annotation import (
     _GeometricAnnotationData,
     _GeometricFrameObjectAnnotation,
 )
-from encord.objects.spaces.annotation.global_annotation import GlobalClassificationAnnotation
+from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
 from encord.objects.spaces.base_space import Space
 from encord.objects.spaces.types import SpaceInfo, VideoSpaceInfo
 from encord.objects.types import (
@@ -828,7 +828,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
 
     def get_classification_instance_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
-    ) -> Iterator[Union[_FrameClassificationAnnotation, GlobalClassificationAnnotation]]:
+    ) -> Iterator[Union[_FrameClassificationAnnotation, _GlobalClassificationAnnotation]]:
         """Get all classification instance annotations in the video space.
 
         Args:
@@ -857,7 +857,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
         )
 
         global_annotations = (
-            GlobalClassificationAnnotation(
+            _GlobalClassificationAnnotation(
                 space=self,
                 classification_instance=self._classifications_map[classification_hash],
             )

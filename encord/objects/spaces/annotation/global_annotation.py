@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from encord.objects.spaces.base_space import Space
 
 
-class GlobalClassificationAnnotation(_ClassificationAnnotation):
+class _GlobalClassificationAnnotation(_ClassificationAnnotation):
     """Global classification annotation that preserves the specific space type."""
 
     def __init__(self, space: Space, classification_instance: ClassificationInstance):
