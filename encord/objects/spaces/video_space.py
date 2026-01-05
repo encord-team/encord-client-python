@@ -23,6 +23,7 @@ from typing import (
 from pydantic import parse_obj_as
 
 from encord.common.range_manager import RangeManager
+from encord.common.time_parser import format_datetime_to_long_string
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects.answers import NumericAnswerValue
@@ -61,6 +62,9 @@ from encord.objects.types import (
     LabelBlob,
     ObjectAnswer,
     ObjectAnswerForGeometric,
+    SpaceFrameData,
+    SpaceGlobalData,
+    SpaceRange,
 )
 
 logger = logging.getLogger(__name__)
@@ -1083,30 +1087,64 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
             classification_range_manager = self._classification_hash_to_range_manager.get(
                 classification_instance.classification_hash, None
             )
-            if classification_range_manager is None:
-                continue
 
             all_static_answers = classification_instance.get_all_static_answers()
             classifications = [
                 cast(AttributeDict, answer.to_encord_dict()) for answer in all_static_answers if answer.is_answered()
             ]
-            classification_index_element: ClassificationAnswer = {
-                "classifications": classifications,
-                "classificationHash": classification_instance.classification_hash,
-                "featureHash": classification_instance.feature_hash,
-                "spaces": {
-                    self.space_id: {
-                        "range": ranges_to_list(
-                            classification_range_manager.get_ranges(),
-                        ),
-                        "type": "frame",
-                    }
-                },
-            }
 
-            ret[classification_instance.classification_hash] = classification_index_element
+            if classification_instance.is_global():
+                classification_answer = self._to_global_classification_answer(
+                    classification_instance=classification_instance,
+                    classifications=classifications,
+                )
+                ret[classification_instance.classification_hash] = classification_answer
+            else:
+                if classification_range_manager is None:
+                    continue
+
+                space_range: SpaceFrameData = {
+                    "range": ranges_to_list(
+                        classification_range_manager.get_ranges(),
+                    ),
+                    "type": "frame",
+                }
+
+                classification_index_element: ClassificationAnswer = {
+                    "classifications": classifications,
+                    "classificationHash": classification_instance.classification_hash,
+                    "featureHash": classification_instance.feature_hash,
+                    "spaces": {self.space_id: space_range},
+                }
+
+                ret[classification_instance.classification_hash] = classification_index_element
 
         return ret
+
+    def _to_global_classification_answer(
+        self, classification_instance: ClassificationInstance, classifications: List[AttributeDict]
+    ) -> ClassificationAnswer:
+        space_range: SpaceGlobalData = {"type": "global"}
+        annotation_data = self._global_classification_hash_to_annotation_data[
+            classification_instance.classification_hash
+        ]
+        annotation_metadata = annotation_data.annotation_metadata
+
+        classification_index_element: ClassificationAnswer = {
+            "classifications": classifications,
+            "classificationHash": classification_instance.classification_hash,
+            "featureHash": classification_instance.feature_hash,
+            "spaces": {self.space_id: space_range},
+            "createdBy": annotation_metadata.created_by,
+            "createdAt": format_datetime_to_long_string(annotation_metadata.created_at),
+            "lastEditedBy": annotation_metadata.last_edited_by,
+            "lastEditedAt": format_datetime_to_long_string(annotation_metadata.last_edited_at),
+            "confidence": annotation_metadata.confidence,
+            "manualAnnotation": annotation_metadata.manual_annotation,
+            "range": [],
+        }
+
+        return classification_index_element
 
     def _parse_space_dict(
         self,
@@ -1124,6 +1162,29 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
             if object_instance := self._objects_map.get(object_hash):
                 answer_list = answer["classifications"]
                 object_instance.set_answer_from_list(answer_list)
+
+        for classification_answer in classification_answers.values():
+            spaces = classification_answer.get("spaces", {})
+            classification_on_this_space = spaces.get(self.space_id, None)
+            if classification_on_this_space is not None and classification_on_this_space["type"] == "global":
+                classification_instance = self._label_row._create_new_classification_instance_from_answer(
+                    classification_answer
+                )
+
+                if classification_instance is None:
+                    continue
+
+                annotation_metadata = _AnnotationMetadata.from_dict(classification_answer)
+                self._put_global_classification_instance(
+                    classification_instance=classification_instance,
+                    on_overlap="replace",
+                    created_at=annotation_metadata.created_at,
+                    created_by=annotation_metadata.created_by,
+                    last_edited_at=annotation_metadata.last_edited_at,
+                    last_edited_by=annotation_metadata.last_edited_by,
+                    confidence=annotation_metadata.confidence,
+                    manual_annotation=annotation_metadata.manual_annotation,
+                )
 
     def _parse_frame_label_dict(self, frame: int, frame_label: LabelBlob, classification_answers: dict):
         for obj in frame_label["objects"]:

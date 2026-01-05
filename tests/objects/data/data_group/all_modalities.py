@@ -203,7 +203,6 @@ DATA_GROUP_WITH_LABELS = {
         },
     },
     "classification_answers": {
-        # Video classification (frame-based)
         "global-classification": {
             "classificationHash": "global-classification",
             "featureHash": "globalClassificationTopLevelFeatureHash",
@@ -249,7 +248,37 @@ DATA_GROUP_WITH_LABELS = {
                 },
             },
         },
-        # Image classification (frame-based, uses checklist)
+        "global-classification-on-video": {
+            "classificationHash": "global-classification-on-video",
+            "featureHash": "globalClassificationTopLevelFeatureHash",
+            "classifications": [
+                {
+                    "name": "Global classification",
+                    "value": "global_classification",
+                    "answers": [
+                        {
+                            "name": "Global Answer 1",
+                            "value": "global_answer_1",
+                            "featureHash": "3vLjF0q1",
+                        }
+                    ],
+                    "featureHash": "globalClassificationFeatureHash",
+                    "manualAnnotation": True,
+                }
+            ],
+            "range": [],
+            "spaces": {
+                "video-uuid": {
+                    "type": "global",
+                }
+            },
+            "createdBy": "user1Hash@encord.com",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "lastEditedBy": "user1Hash@encord.com",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "manualAnnotation": True,
+            "confidence": 5.0,
+        },
         "image-classification": {
             "classificationHash": "image-classification",
             "featureHash": "3DuQbFxo",

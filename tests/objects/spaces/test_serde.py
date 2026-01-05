@@ -21,9 +21,9 @@ def test_read_and_export_all_space_labels(ontology):
     assert len(video_space.get_object_instances()) == 1
     assert video_space.get_object_instances()[0].object_hash == "video-box-object"
     assert len(list(video_space.get_object_instance_annotations())) == 1
-    assert len(video_space.get_classification_instances()) == 1
+    assert len(video_space.get_classification_instances()) == 2
     assert video_space.get_classification_instances()[0].classification_hash == "video-classification"
-    assert len(list(video_space.get_classification_instance_annotations())) == 1
+    assert len(list(video_space.get_classification_instance_annotations())) == 2
 
     # Image space: 1 object, 1 classification
     image_space = label_row._get_space(id="image-uuid", type_="image")

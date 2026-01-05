@@ -224,7 +224,11 @@ class SpaceFrameData(TypedDict):
     range: List[List[int]]
 
 
-SpaceRange = Union[SpaceHtmlData, SpaceFrameData]
+class SpaceGlobalData(TypedDict):
+    type: Literal["global"]
+
+
+SpaceRange = Union[SpaceHtmlData, SpaceFrameData, SpaceGlobalData]
 
 
 class ObjectAnswerForNonGeometric(BaseFrameObject):
