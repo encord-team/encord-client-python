@@ -107,13 +107,16 @@ class FileInSceneInfo(TypedDict):
     uri: str
 
 
+class PointCloudFileSpaceInfo(TypedDict):
+    space_type: Literal[SpaceType.POINT_CLOUD]
+    scene_info: FileInSceneInfo
+    labels: LabelBlob
+
+
 class SceneImageSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.SCENE_IMAGE]
     scene_info: FileInSceneInfo
-
-
-class PointCloudSpaceInfo(BaseSpaceInfo):
-    space_type: Literal[SpaceType.POINT_CLOUD]
+    labels: LabelBlob
 
 
 class PdfSpaceInfo(BaseSpaceInfo):
@@ -132,12 +135,12 @@ SpaceInfo = Union[
     MedicalFileSpaceInfo,
     MedicalStackSpaceInfo,
     SceneImageSpaceInfo,
-    PointCloudSpaceInfo,
+    PointCloudFileSpaceInfo,
     PdfSpaceInfo,
 ]
 
 
-# Mainly here to ensure we create a SpaceInfo for every SpaceType enum
+# type checking only; ensure we create a SpaceInfo for every SpaceType enum
 def _get_space_info_from_space_enum(space_enum: SpaceType) -> Type[SpaceInfo]:
     if space_enum == SpaceType.VIDEO:
         return VideoSpaceInfo
@@ -157,7 +160,9 @@ def _get_space_info_from_space_enum(space_enum: SpaceType) -> Type[SpaceInfo]:
         return MedicalStackSpaceInfo
     elif space_enum == SpaceType.PDF:
         return PdfSpaceInfo
-    elif space_enum == SpaceType.POINT_CLOUD or space_enum == SpaceType.SCENE_IMAGE:
+    elif space_enum == SpaceType.POINT_CLOUD:
+        return PointCloudFileSpaceInfo
+    elif space_enum == SpaceType.SCENE_IMAGE:
         raise LabelRowError(f"Space for {space_enum} not yet implemented.")
     else:
         exhaustive_guard(space_enum)
