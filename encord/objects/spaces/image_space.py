@@ -32,6 +32,7 @@ from encord.objects.types import (
     LabelBlob,
     ObjectAnswer,
     ObjectAnswerForGeometric,
+    _is_global_classification_on_space,
 )
 
 logger = logging.getLogger(__name__)
@@ -343,8 +344,8 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
 
         for classification_answer in classification_answers.values():
             spaces = classification_answer.get("spaces", {})
-            classification_on_this_space = spaces.get(self.space_id, None)
-            if classification_on_this_space is not None and classification_on_this_space["type"] == "global":
+            space_range = spaces.get(self.space_id, None)
+            if space_range is not None and _is_global_classification_on_space(space_range=space_range):
                 classification_instance = self._label_row._create_new_classification_instance_from_answer(
                     classification_answer
                 )
@@ -440,7 +441,9 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
 
             if classification.is_global():
                 ret[classification.classification_hash] = self._to_global_classification_answer(
-                    classification_instance=classification, classifications=classifications
+                    classification_instance=classification,
+                    classifications=classifications,
+                    space_range={"range": [], "type": "frame"},
                 )
             else:
                 classification_index_element: ClassificationAnswer = {

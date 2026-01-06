@@ -15,8 +15,6 @@ from typing import (
     Union,
 )
 
-from pytest import Class
-
 from encord.common.time_parser import format_datetime_to_long_string
 from encord.exceptions import LabelRowError
 from encord.objects.spaces.annotation.base_annotation import (
@@ -33,7 +31,7 @@ from encord.objects.types import (
     ObjectAnswer,
     ObjectAnswerForGeometric,
     ObjectAnswerForNonGeometric,
-    SpaceGlobalData,
+    SpaceRange,
 )
 
 if TYPE_CHECKING:
@@ -266,9 +264,11 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
         pass
 
     def _to_global_classification_answer(
-        self, classification_instance: ClassificationInstance, classifications: List[AttributeDict]
+        self,
+        classification_instance: ClassificationInstance,
+        classifications: List[AttributeDict],
+        space_range: SpaceRange,
     ) -> ClassificationAnswer:
-        space_range: SpaceGlobalData = {"type": "global"}
         annotation_data = self._global_classification_hash_to_annotation_data[
             classification_instance.classification_hash
         ]

@@ -267,11 +267,7 @@ DATA_GROUP_WITH_LABELS = {
                 }
             ],
             "range": [],
-            "spaces": {
-                "video-uuid": {
-                    "type": "global",
-                }
-            },
+            "spaces": {"video-uuid": {"range": [], "type": "frame"}},
             "createdBy": "user1Hash@encord.com",
             "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
             "lastEditedBy": "user1Hash@encord.com",
@@ -325,7 +321,8 @@ DATA_GROUP_WITH_LABELS = {
             "range": [],
             "spaces": {
                 "image-uuid": {
-                    "type": "global",
+                    "range": [],
+                    "type": "frame",
                 }
             },
             "createdBy": "user1Hash@encord.com",
@@ -375,7 +372,8 @@ DATA_GROUP_WITH_LABELS = {
             "range": [],
             "spaces": {
                 "audio-uuid": {
-                    "type": "global",
+                    "range": [],
+                    "type": "frame",
                 }
             },
             "createdBy": "user1Hash@encord.com",
@@ -433,7 +431,8 @@ DATA_GROUP_WITH_LABELS = {
             "range": [],
             "spaces": {
                 "text-uuid": {
-                    "type": "global",
+                    "range": [],
+                    "type": "frame",
                 }
             },
             "createdBy": "user1Hash@encord.com",
@@ -490,7 +489,8 @@ DATA_GROUP_WITH_LABELS = {
             "range": [],
             "spaces": {
                 "html-uuid": {
-                    "type": "global",
+                    "range": [],
+                    "type": "html",
                 }
             },
             "createdBy": "user1Hash@encord.com",

@@ -63,8 +63,7 @@ from encord.objects.types import (
     ObjectAnswer,
     ObjectAnswerForGeometric,
     SpaceFrameData,
-    SpaceGlobalData,
-    SpaceRange,
+    _is_global_classification_on_space,
 )
 
 logger = logging.getLogger(__name__)
@@ -1097,6 +1096,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
                 classification_answer = self._to_global_classification_answer(
                     classification_instance=classification_instance,
                     classifications=classifications,
+                    space_range={"range": [], "type": "frame"},
                 )
                 ret[classification_instance.classification_hash] = classification_answer
             else:
@@ -1140,8 +1140,8 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
 
         for classification_answer in classification_answers.values():
             spaces = classification_answer.get("spaces", {})
-            classification_on_this_space = spaces.get(self.space_id, None)
-            if classification_on_this_space is not None and classification_on_this_space["type"] == "global":
+            space_range = spaces.get(self.space_id, None)
+            if space_range is not None and _is_global_classification_on_space(space_range=space_range):
                 classification_instance = self._label_row._create_new_classification_instance_from_answer(
                     classification_answer
                 )

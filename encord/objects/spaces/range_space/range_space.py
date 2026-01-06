@@ -11,7 +11,6 @@ from encord.exceptions import LabelRowError
 from encord.objects import ClassificationInstance, Shape
 from encord.objects.frames import Range, Ranges
 from encord.objects.ontology_object_instance import ObjectInstance
-from encord.objects.spaces.annotation.base_annotation import _AnnotationData, _AnnotationMetadata
 from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
 from encord.objects.spaces.annotation.range_annotation import (
     _RangeObjectAnnotation,
@@ -367,7 +366,9 @@ class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, 
                 classification_answer: ClassificationAnswer
                 if classification.is_global():
                     classification_answer = self._to_global_classification_answer(
-                        classification_instance=classification, classifications=reversed_classification_attributes
+                        classification_instance=classification,
+                        classifications=reversed_classification_attributes,
+                        space_range={"range": [], "type": "frame"},
                     )
                 else:
                     classification_answer = {

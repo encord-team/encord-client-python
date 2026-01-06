@@ -370,7 +370,9 @@ class HTMLSpace(Space[_HtmlObjectAnnotation, _GlobalClassificationAnnotation, Ht
                 classification_answer: ClassificationAnswer
                 if classification.is_global():
                     classification_answer = self._to_global_classification_answer(
-                        classification_instance=classification, classifications=reversed_classification_attributes
+                        classification_instance=classification,
+                        classifications=reversed_classification_attributes,
+                        space_range={"range": [], "type": "html"},
                     )
                 else:
                     classification_answer = {
