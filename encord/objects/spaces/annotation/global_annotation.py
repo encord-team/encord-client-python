@@ -21,6 +21,10 @@ class _GlobalClassificationAnnotation(_ClassificationAnnotation):
         super().__init__(space, classification_instance)
 
     @property
+    def space(self) -> Space:
+        return self._space
+
+    @property
     def frame(self) -> int:
         return 0
 

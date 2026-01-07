@@ -155,9 +155,10 @@ class _Annotation(ABC):
         pass
 
     @property
+    @abstractmethod
     def space(self) -> Space:
         """Get the space that this annotation is on."""
-        return self._space
+        pass
 
     @property
     def created_at(self) -> datetime:

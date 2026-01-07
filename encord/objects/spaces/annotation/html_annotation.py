@@ -32,6 +32,10 @@ class _HtmlObjectAnnotation(_ObjectAnnotation):
         self._space: HTMLSpace = space
 
     @property
+    def space(self) -> HTMLSpace:
+        return self._space
+
+    @property
     def frame(self) -> int:
         """This field is deprecated. It is only here for backwards compatibility. It always returns 0."""
         return 0

@@ -33,6 +33,10 @@ class _RangeObjectAnnotation(_ObjectAnnotation):
         self._space: RangeSpace = space
 
     @property
+    def space(self) -> RangeSpace:
+        return self._space
+
+    @property
     def frame(self) -> int:
         """This field is deprecated. It is only here for backwards compatibility. It always returns 0."""
         return 0
