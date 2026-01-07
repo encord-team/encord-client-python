@@ -9,7 +9,7 @@ from encord.objects.coordinates import BoundingBoxCoordinates
 from encord.objects.frames import Range
 from encord.objects.html_node import HtmlNode, HtmlRange
 from encord.objects.ontology_labels_impl import LABELLING_NOT_INITIALISED_ERROR_MESSAGE
-from encord.objects.spaces.video_space import VideoSpace
+from encord.objects.spaces.multiframe_space.video_space import VideoSpace
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.all_modalities import DATA_GROUP_METADATA as ALL_MODALITIES_DATA_GROUP
 
