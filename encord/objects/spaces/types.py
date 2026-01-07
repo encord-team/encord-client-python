@@ -15,6 +15,14 @@ class ChildInfo(TypedDict):
     file_name: str
 
 
+class MedicalFileSpaceInfo(BaseSpaceInfo):
+    space_type: Literal[SpaceType.MEDICAL_FILE]
+    child_info: NotRequired[ChildInfo]
+    number_of_frames: int
+    width: int
+    height: int
+
+
 class VideoSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.VIDEO]
     child_info: NotRequired[ChildInfo]

@@ -134,7 +134,7 @@ def test_put_object_on_invalid_frames(ontology):
 
     # Assert
     assert negative_frame_error.value.message == "Frame -1 is invalid. Negative frames are not supported."
-    assert exceed_frame_error.value.message == "Frame 50000 is invalid. The max frame on this video is 9."
+    assert exceed_frame_error.value.message == "Frame 50000 is invalid. The max frame on this file is 9."
 
 
 def test_remove_object_from_frames_on_video_space(ontology):

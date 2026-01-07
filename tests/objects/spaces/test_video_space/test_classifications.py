@@ -146,7 +146,7 @@ def test_put_classification_on_invalid_frames(ontology):
 
     # Assert
     assert negative_frame_error.value.message == "Frame -1 is invalid. Negative frames are not supported."
-    assert exceed_frame_error.value.message == "Frame 100 is invalid. The max frame on this video is 9."
+    assert exceed_frame_error.value.message == "Frame 100 is invalid. The max frame on this file is 9."
 
 
 def test_remove_classification_from_frames_on_video_space(ontology):
