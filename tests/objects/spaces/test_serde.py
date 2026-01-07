@@ -72,7 +72,7 @@ def test_read_and_export_all_space_labels(ontology):
     assert len(list(html_space.get_classification_instance_annotations())) == 2
 
     # medical space: 1 object, 1 normal classification, 1 global classification
-    dicom_space = label_row._get_space(id="dicom-uuid", type_="medical_file")
+    dicom_space = label_row._get_space(id="dicom-uuid", type_="medical-file")
     assert len(dicom_space.get_object_instances()) == 1
     assert dicom_space.get_object_instances()[0].object_hash == "dicom-box-object"
     assert len(list(dicom_space.get_object_instance_annotations())) == 1
