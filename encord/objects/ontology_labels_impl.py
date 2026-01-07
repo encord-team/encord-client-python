@@ -107,10 +107,10 @@ from encord.objects.spaces.base_space import Space, SpaceT
 from encord.objects.spaces.html_space import HTMLSpace
 from encord.objects.spaces.image_space import ImageSpace
 from encord.objects.spaces.multiframe_space.medical_file_space import MedicalFileSpace
+from encord.objects.spaces.multiframe_space.video_space import VideoSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
 from encord.objects.spaces.types import SpaceInfo
-from encord.objects.spaces.video_space import VideoSpace
 from encord.objects.types import (
     AttributeDict,
     BaseFrameObject,
