@@ -1,7 +1,14 @@
 import datetime
 
 from encord.constants.enums import DataType, SpaceType
-from encord.objects.spaces.types import AudioSpaceInfo, HtmlSpaceInfo, ImageSpaceInfo, TextSpaceInfo, VideoSpaceInfo
+from encord.objects.spaces.types import (
+    AudioSpaceInfo,
+    HtmlSpaceInfo,
+    ImageSpaceInfo,
+    MedicalFileSpaceInfo,
+    TextSpaceInfo,
+    VideoSpaceInfo,
+)
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
 
 DATA_GROUP_DATA_HASH = "all-modalities-data-hash"
@@ -42,6 +49,15 @@ HTML_SPACE_INFO: HtmlSpaceInfo = {
     "labels": {},
 }
 
+MEDICAL_SPACE_INFO: MedicalFileSpaceInfo = {
+    "space_type": SpaceType.MEDICAL_FILE,
+    "child_info": {"layout_key": "left-shoulder", "file_name": "left-shoulder.dcm"},
+    "number_of_frames": 100,
+    "width": 100,
+    "height": 200,
+    "labels": {},
+}
+
 DATA_GROUP_NO_LABELS = {
     "label_hash": "28f0e9d2-51e0-459d-8ffa-2e214da653a9",
     "branch_name": "main",
@@ -59,37 +75,12 @@ DATA_GROUP_NO_LABELS = {
     "object_actions": {},
     "label_status": "LABEL_IN_PROGRESS",
     "spaces": {
-        "video-uuid": {
-            "space_type": SpaceType.VIDEO,
-            "title": "Video",
-            "width": 100,
-            "height": 100,
-            "number_of_frames": 10,
-            "labels": {},
-        },
-        "image-uuid": {
-            "space_type": SpaceType.IMAGE,
-            "title": "Image",
-            "width": 100,
-            "height": 100,
-            "labels": {},
-        },
-        "text-uuid": {
-            "space_type": SpaceType.TEXT,
-            "title": "Text",
-            "labels": {},
-        },
-        "audio-uuid": {
-            "space_type": SpaceType.AUDIO,
-            "title": "Audio",
-            "duration_ms": 10000,
-            "labels": {},
-        },
-        "html-uuid": {
-            "space_type": SpaceType.HTML,
-            "title": "HTML",
-            "labels": {},
-        },
+        "video-uuid": VIDEO_SPACE_INFO,
+        "image-uuid": IMAGE_SPACE_INFO,
+        "text-uuid": TEXT_SPACE_INFO,
+        "audio-uuid": AUDIO_SPACE_INFO,
+        "html-uuid": HTML_SPACE_INFO,
+        "dicom-uuid": MEDICAL_SPACE_INFO,
     },
     "data_units": {
         DATA_GROUP_DATA_HASH: {
@@ -200,6 +191,10 @@ DATA_GROUP_WITH_LABELS = {
                     "type": "html",
                 },
             },
+        },
+        "dicom-box-object": {
+            "objectHash": "dicom-box-object",
+            "classifications": [],
         },
     },
     "classification_answers": {
@@ -500,6 +495,52 @@ DATA_GROUP_WITH_LABELS = {
             "manualAnnotation": True,
             "confidence": 5.0,
         },
+        "dicom-classification": {
+            "classificationHash": "dicom-classification",
+            "featureHash": "jPOcEsbw",
+            "classifications": [
+                {
+                    "name": "Text classification",
+                    "value": "text_classification",
+                    "answers": "Dicom answer",
+                    "featureHash": "OxrtEM+v",
+                    "manualAnnotation": True,
+                }
+            ],
+            "spaces": {
+                "dicom-uuid": {
+                    "range": [[0, 0]],
+                    "type": "frame",
+                },
+            },
+        },
+        "global-classification-on-dicom": {
+            "classificationHash": "global-classification-on-dicom",
+            "featureHash": "globalClassificationTopLevelFeatureHash",
+            "classifications": [
+                {
+                    "name": "Global classification",
+                    "value": "global_classification",
+                    "answers": [
+                        {
+                            "name": "Global Answer 1",
+                            "value": "global_answer_1",
+                            "featureHash": "3vLjF0q1",
+                        }
+                    ],
+                    "featureHash": "globalClassificationFeatureHash",
+                    "manualAnnotation": True,
+                }
+            ],
+            "range": [],
+            "spaces": {"dicom-uuid": {"range": [], "type": "frame"}},
+            "createdBy": "user1Hash@encord.com",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "lastEditedBy": "user1Hash@encord.com",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "manualAnnotation": True,
+            "confidence": 5.0,
+        },
     },
     "object_actions": {},
     "label_status": "LABEL_IN_PROGRESS",
@@ -601,6 +642,47 @@ DATA_GROUP_WITH_LABELS = {
             "child_info": {"layout_key": "main-html", "file_name": "document.html"},
             "labels": {},
         },
+        "dicom-uuid": {
+            "space_type": SpaceType.MEDICAL_FILE,
+            "child_info": {"layout_key": "left-shoulder", "file_name": "left-shoulder.dcm"},
+            "number_of_frames": 100,
+            "width": 100,
+            "height": 200,
+            "labels": {
+                "0": {
+                    "objects": [
+                        {
+                            "name": "Box",
+                            "color": "#D33115",
+                            "shape": "bounding_box",
+                            "value": "box",
+                            "createdAt": "Tue, 17 Jan 2023 17:23:10 UTC",
+                            "createdBy": "user@example.com",
+                            "confidence": 1,
+                            "objectHash": "dicom-box-object",
+                            "lastEditedAt": "Wed, 18 Jan 2023 17:23:24 UTC",
+                            "featureHash": "MjI2NzEy",
+                            "manualAnnotation": True,
+                            "boundingBox": {"h": 0.1, "w": 0.1, "x": 0.1, "y": 0.1},
+                        },
+                    ],
+                    "classifications": [
+                        {
+                            "name": "Text classification",
+                            "value": "text_classification",
+                            "createdAt": "Tue, 17 Jan 2023 11:45:01 UTC",
+                            "createdBy": "user@example.com",
+                            "confidence": 1,
+                            "featureHash": "jPOcEsbw",
+                            "lastEditedAt": "Tue, 17 Jan 2023 11:45:01 UTC",
+                            "lastEditedBy": "user@example.com",
+                            "classificationHash": "dicom-classification",
+                            "manualAnnotation": True,
+                        },
+                    ],
+                },
+            },
+        },
     },
     "data_units": {
         DATA_GROUP_DATA_HASH: {
@@ -647,5 +729,6 @@ DATA_GROUP_METADATA = LabelRowMetadata(
         "text-uuid": TEXT_SPACE_INFO,
         "audio-uuid": AUDIO_SPACE_INFO,
         "html-uuid": HTML_SPACE_INFO,
+        "dicom-uuid": MEDICAL_SPACE_INFO,
     },
 )

@@ -20,10 +20,7 @@ from typing import (
     cast,
 )
 
-from pydantic import parse_obj_as
-
 from encord.common.range_manager import RangeManager
-from encord.common.time_parser import format_datetime_to_long_string
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects.answers import NumericAnswerValue
@@ -71,7 +68,7 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from encord.objects import Classification, ClassificationInstance, Option
     from encord.objects.ontology_labels_impl import LabelRowV2
-    from encord.objects.ontology_object import Object, ObjectInstance
+    from encord.objects.ontology_object import ObjectInstance
 
 FrameOverlapStrategy = Union[Literal["error"], Literal["replace"]]
 
@@ -1216,22 +1213,3 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
                 manual_annotation=classification_frame_instance_info.manual_annotation,
                 confidence=classification_frame_instance_info.confidence,
             )
-
-    def _to_space_dict(self) -> VideoSpaceInfo:
-        """Export space to dictionary format."""
-        labels: dict[str, LabelBlob] = {}
-        frames_with_objects = list(self._frames_to_object_hash_to_annotation_data.keys())
-        frames_with_classifications = list(self._frames_to_classification_hash_to_annotation_data.keys())
-        frames_with_both_objects_and_classifications = sorted(set(frames_with_objects + frames_with_classifications))
-
-        for frame in frames_with_both_objects_and_classifications:
-            frame_label = self._build_frame_label_dict(frame=frame)
-            labels[str(frame)] = frame_label
-
-        return VideoSpaceInfo(
-            space_type=SpaceType.VIDEO,
-            labels=labels,
-            number_of_frames=self._number_of_frames,
-            width=self._width,
-            height=self._height,
-        )

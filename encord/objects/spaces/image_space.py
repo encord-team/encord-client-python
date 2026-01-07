@@ -22,8 +22,8 @@ from encord.objects.spaces.annotation.geometric_annotation import (
 )
 from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
 from encord.objects.spaces.base_space import Space
+from encord.objects.spaces.multiframe_space.multiframe_space import FrameOverlapStrategy
 from encord.objects.spaces.types import ImageSpaceInfo, SpaceInfo
-from encord.objects.spaces.video_space import FrameOverlapStrategy
 from encord.objects.types import (
     AttributeDict,
     ClassificationAnswer,
@@ -40,7 +40,6 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from encord.objects import ClassificationInstance, ObjectInstance
     from encord.objects.ontology_labels_impl import LabelRowV2
-    from encord.objects.ontology_object import Object
 
 
 class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotation, FrameOverlapStrategy]):

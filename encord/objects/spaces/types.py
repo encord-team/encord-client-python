@@ -54,4 +54,4 @@ class HtmlSpaceInfo(BaseSpaceInfo):
     child_info: NotRequired[ChildInfo]
 
 
-SpaceInfo = Union[VideoSpaceInfo, ImageSpaceInfo, AudioSpaceInfo, TextSpaceInfo, HtmlSpaceInfo]
+SpaceInfo = Union[VideoSpaceInfo, ImageSpaceInfo, AudioSpaceInfo, TextSpaceInfo, HtmlSpaceInfo, MedicalFileSpaceInfo]
