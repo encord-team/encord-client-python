@@ -1,4 +1,4 @@
-from typing import Literal, TypedDict, Union
+from typing import List, Literal, TypedDict, Union
 
 from typing_extensions import NotRequired
 
@@ -13,14 +13,6 @@ class BaseSpaceInfo(TypedDict):
 class ChildInfo(TypedDict):
     layout_key: str
     file_name: str
-
-
-class MedicalFileSpaceInfo(BaseSpaceInfo):
-    space_type: Literal[SpaceType.MEDICAL_FILE]
-    child_info: NotRequired[ChildInfo]
-    number_of_frames: int
-    width: int
-    height: int
 
 
 class VideoSpaceInfo(BaseSpaceInfo):
@@ -54,4 +46,33 @@ class HtmlSpaceInfo(BaseSpaceInfo):
     child_info: NotRequired[ChildInfo]
 
 
-SpaceInfo = Union[VideoSpaceInfo, ImageSpaceInfo, AudioSpaceInfo, TextSpaceInfo, HtmlSpaceInfo, MedicalFileSpaceInfo]
+class MedicalFileSpaceInfo(BaseSpaceInfo):
+    space_type: Literal[SpaceType.MEDICAL_FILE]
+    child_info: NotRequired[ChildInfo]
+    number_of_frames: int
+    width: int
+    height: int
+
+
+class DicomFrameInfo(TypedDict):
+    width: int
+    height: int
+    instance_uid: str
+    file_name: str
+
+
+class MedicalStackSpaceInfo(BaseSpaceInfo):
+    space_type: Literal[SpaceType.MEDICAL_STACK]
+    child_info: NotRequired[ChildInfo]
+    frames: List[DicomFrameInfo]
+
+
+SpaceInfo = Union[
+    VideoSpaceInfo,
+    ImageSpaceInfo,
+    AudioSpaceInfo,
+    TextSpaceInfo,
+    HtmlSpaceInfo,
+    MedicalFileSpaceInfo,
+    MedicalStackSpaceInfo,
+]

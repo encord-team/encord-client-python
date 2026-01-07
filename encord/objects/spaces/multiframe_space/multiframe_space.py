@@ -49,7 +49,7 @@ from encord.objects.spaces.annotation.geometric_annotation import (
 )
 from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
 from encord.objects.spaces.base_space import Space
-from encord.objects.spaces.types import SpaceInfo, VideoSpaceInfo
+from encord.objects.spaces.types import SpaceInfo
 from encord.objects.types import (
     AttributeDict,
     ClassificationAnswer,

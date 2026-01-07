@@ -72,3 +72,4 @@ class SpaceType(StringEnum):
     TEXT = "text"
     HTML = "html"
     MEDICAL_FILE = "medical-file"
+    MEDICAL_STACK = "medical-stack"
