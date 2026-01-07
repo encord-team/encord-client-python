@@ -46,7 +46,7 @@ GLOBAL_CLASSIFICATION_LABELS = {
                             "featureHash": "3vLjF0q1",
                         }
                     ],
-                    "featureHash": "2mwWr3Of",
+                    "featureHash": global_classification_dict["attributes"][0]["featureNodeHash"],
                     "manualAnnotation": True,
                 },
             ],

@@ -32,7 +32,7 @@ def test_place_classification_on_html_space(ontology):
     new_classification_instance.set_answer(answer=text_answer)
 
     # Assert
-    classifications_on_label_row = label_row.get_classification_instances()
+    classifications_on_label_row = label_row._get_classification_instances(include_spaces=True)
     assert len(classifications_on_label_row) == 1
 
     classifications_on_space = html_space_1.get_classification_instances()
@@ -67,6 +67,7 @@ def test_place_classification_on_html_space(ontology):
             "createdBy": None,
             "lastEditedBy": None,
             "manualAnnotation": True,
+            "confidence": 1.0,
         }
     }
 
@@ -92,7 +93,7 @@ def test_place_classification_where_classification_already_exists(ontology):
     # Assert
     assert (
         e.value.message
-        == "Annotation for the classification 'Text classification' already exists. Set the 'on_overlap' parameter to 'replace' to overwrite this annotation."
+        == f"The classification with feature hash '{classification_instance_1.feature_hash}' already exists globally. Set 'on_overlap' parameter to 'replace' to overwrite."
     )
 
 
@@ -119,7 +120,7 @@ def test_place_classification_on_where_classification_of_same_class_already_exis
     # Assert
     assert (
         e.value.message
-        == "Annotation for the classification 'Text classification' already exists. Set the 'on_overlap' parameter to 'replace' to overwrite this annotation."
+        == f"The classification with feature hash '{classification_instance_1.feature_hash}' already exists globally. Set 'on_overlap' parameter to 'replace' to overwrite."
     )
 
 
@@ -370,6 +371,7 @@ def test_update_annotation_from_classification_annotation(ontology):
             "lastEditedBy": name,
             "lastEditedAt": format_datetime_to_long_string(date),
             "manualAnnotation": True,
+            "confidence": 1.0,
             "classifications": [
                 {
                     "name": "Text classification",
@@ -407,6 +409,7 @@ def test_update_annotation_from_classification_annotation(ontology):
             "lastEditedBy": new_name,
             "lastEditedAt": format_datetime_to_long_string(new_date),
             "manualAnnotation": True,
+            "confidence": 1.0,
             "classifications": [
                 {
                     "name": "Text classification",

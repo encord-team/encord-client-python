@@ -124,6 +124,9 @@ class _Annotation(ABC):
     Class providing common annotation properties.
     """
 
+    def __init__(self, space: Space):
+        self._space = space
+
     @abstractmethod
     def _get_annotation_data(self) -> _AnnotationData:
         """Get the underlying annotation data.
@@ -250,7 +253,7 @@ class _ObjectAnnotation(_Annotation):
     """
 
     def __init__(self, space: Space, object_instance: ObjectInstance):
-        self._space = space
+        super().__init__(space)
         self._object_instance = object_instance
 
     @property
@@ -275,10 +278,8 @@ class _ClassificationAnnotation(_Annotation):
     Allows setting or getting annotation data for the Classification.
     """
 
-    def __init__(
-        self, space: Union[VideoSpace, ImageSpace, RangeSpace], classification_instance: ClassificationInstance
-    ):
-        self._space = space
+    def __init__(self, space: Space, classification_instance: ClassificationInstance):
+        super().__init__(space)
         self._classification_instance = classification_instance
 
     @property

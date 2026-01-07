@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from abc import abstractmethod
 from datetime import datetime
-from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union, cast
+from typing import TYPE_CHECKING, Dict, Literal, Optional, Union, cast
 
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import format_datetime_to_long_string, format_datetime_to_long_string_optional
@@ -11,9 +11,8 @@ from encord.exceptions import LabelRowError
 from encord.objects import ClassificationInstance, Shape
 from encord.objects.frames import Range, Ranges
 from encord.objects.ontology_object_instance import ObjectInstance
-from encord.objects.spaces.annotation.base_annotation import _AnnotationData, _AnnotationMetadata
+from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
 from encord.objects.spaces.annotation.range_annotation import (
-    _RangeClassificationAnnotation,
     _RangeObjectAnnotation,
 )
 from encord.objects.spaces.base_space import Space
@@ -32,13 +31,15 @@ logger = logging.getLogger(__name__)
 
 
 if TYPE_CHECKING:
-    from encord.objects import Object
     from encord.objects.ontology_labels_impl import LabelRowV2
 
 RangeOverlapStrategy = Union[Literal["error"], Literal["merge"], Literal["replace"]]
+RangeClassificationOverlapStrategy = Union[
+    Literal["error"], Literal["replace"]
+]  # For now, classifications for range spaces are always global
 
 
-class RangeSpace(Space[_RangeObjectAnnotation, _RangeClassificationAnnotation]):
+class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, RangeClassificationOverlapStrategy]):
     """Abstract base class for spaces that manage one dimensional range-based annotations. (Audio, Text and HTML).
     This class extracts common logic for managing object and classification instances
     across ranges.
@@ -46,13 +47,7 @@ class RangeSpace(Space[_RangeObjectAnnotation, _RangeClassificationAnnotation]):
 
     def __init__(self, space_id: str, label_row: LabelRowV2):
         super().__init__(space_id, label_row)
-        self._objects_map: dict[str, ObjectInstance] = dict()
-        self._classifications_map: dict[str, ClassificationInstance] = dict()
-        self._classification_hash_to_annotation_data: dict[str, _AnnotationData] = dict()
         self._object_hash_to_range_manager: dict[str, RangeManager] = dict()
-
-        # Since we can only have one classification of a particular class, this keeps track to make sure we don't add duplicates
-        self._classification_ontologies: set[str] = set()
 
     @abstractmethod
     def _are_ranges_valid(self, ranges: Ranges) -> None:
@@ -189,7 +184,7 @@ class RangeSpace(Space[_RangeObjectAnnotation, _RangeClassificationAnnotation]):
         self,
         classification_instance: ClassificationInstance,
         *,
-        on_overlap: Union[Literal["error"], Literal["replace"]] = "error",
+        on_overlap: Optional[RangeClassificationOverlapStrategy] = "error",
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,
@@ -198,6 +193,7 @@ class RangeSpace(Space[_RangeObjectAnnotation, _RangeClassificationAnnotation]):
         manual_annotation: Optional[bool] = None,
     ) -> None:
         """Add a classification instance to the space (audio, text, or HTML).
+            Currently classification instances exist on the entire space.
 
         Args:
             classification_instance: The classification instance to add to the space.
@@ -218,46 +214,9 @@ class RangeSpace(Space[_RangeObjectAnnotation, _RangeClassificationAnnotation]):
         self._method_not_supported_for_classification_instance_with_frames(
             classification_instance=classification_instance
         )
-        is_classification_of_same_ontology_present = (
-            classification_instance._ontology_classification.feature_node_hash in self._classification_ontologies
-        )
-
-        if is_classification_of_same_ontology_present and on_overlap == "error":
-            ontology_classification = classification_instance._ontology_classification
-            raise LabelRowError(
-                f"Annotation for the classification '{ontology_classification.title}' already exists. "
-                "Set the 'on_overlap' parameter to 'replace' to overwrite this annotation."
-            )
-        elif is_classification_of_same_ontology_present and on_overlap == "replace":
-            classification_to_remove = None
-            for existing_classification_instance in self._classifications_map.values():
-                if (
-                    existing_classification_instance._ontology_classification.feature_node_hash
-                    == classification_instance._ontology_classification.feature_node_hash
-                ):
-                    classification_to_remove = existing_classification_instance
-
-            if classification_to_remove is not None:
-                self._classifications_map.pop(classification_to_remove.classification_hash)
-                self._classification_hash_to_annotation_data.pop(classification_to_remove.classification_hash)
-
-        self._classifications_map[classification_instance.classification_hash] = classification_instance
-        classification_instance._add_to_space(self)
-
-        existing_annotation_data = self._classification_hash_to_annotation_data.get(
-            classification_instance.classification_hash
-        )
-
-        if existing_annotation_data is None:
-            existing_annotation_data = _AnnotationData(
-                annotation_metadata=_AnnotationMetadata(),
-            )
-
-            self._classification_hash_to_annotation_data[classification_instance.classification_hash] = (
-                existing_annotation_data
-            )
-
-        existing_annotation_data.annotation_metadata.update_from_optional_fields(
+        self._put_global_classification_instance(
+            classification_instance=classification_instance,
+            on_overlap=on_overlap,
             created_at=created_at,
             created_by=created_by,
             last_edited_at=last_edited_at,
@@ -266,15 +225,8 @@ class RangeSpace(Space[_RangeObjectAnnotation, _RangeClassificationAnnotation]):
             manual_annotation=manual_annotation,
         )
 
-        self._classification_ontologies.add(classification_instance._ontology_classification.feature_node_hash)
-
     def _create_object_annotation(self, obj_hash: str) -> _RangeObjectAnnotation:
         return _RangeObjectAnnotation(space=self, object_instance=self._objects_map[obj_hash])
-
-    def _create_classification_annotation(self, classification_hash: str) -> _RangeClassificationAnnotation:
-        return _RangeClassificationAnnotation(
-            space=self, classification_instance=self._classifications_map[classification_hash]
-        )
 
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         """Remove an object instance from all ranges in the space.
@@ -308,14 +260,9 @@ class RangeSpace(Space[_RangeObjectAnnotation, _RangeClassificationAnnotation]):
             Optional[ClassificationInstance]: The removed classification instance, or None if the classification wasn't found.
         """
         self._label_row._check_labelling_is_initalised()
-        classification_instance = self._classifications_map.pop(classification_hash, None)
 
-        if classification_instance is not None:
-            classification_instance._remove_from_space(self.space_id)
-            self._classification_hash_to_annotation_data.pop(classification_hash)
-            self._classification_ontologies.remove(classification_instance._ontology_classification.feature_node_hash)
-
-        return classification_instance
+        classification_instance = self._classifications_map[classification_hash]
+        return self._remove_global_classification_instance(classification=classification_instance)
 
     def _create_new_classification_from_classification_answer(
         self, frame_classification_label: FrameClassification, classification_answers: dict
@@ -408,25 +355,35 @@ class RangeSpace(Space[_RangeObjectAnnotation, _RangeClassificationAnnotation]):
                 ret[classification.classification_hash] = existing_classification_answer
             else:
                 all_static_answers = classification.get_all_static_answers()
-                annotation = self._classification_hash_to_annotation_data[classification.classification_hash]
+                annotation = self._global_classification_hash_to_annotation_data[classification.classification_hash]
                 annotation_metadata = annotation.annotation_metadata
                 classification_attributes = [
                     answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()
                 ]
                 classification_attributes_without_none = cast(list[AttributeDict], classification_attributes)
+                reversed_classification_attributes = list(reversed(classification_attributes_without_none))
 
-                classification_answer: ClassificationAnswer = {
-                    "classifications": list(reversed(classification_attributes_without_none)),
-                    "classificationHash": classification.classification_hash,
-                    "featureHash": classification.feature_hash,
-                    "range": [],
-                    "createdBy": annotation_metadata.created_by,
-                    "createdAt": format_datetime_to_long_string_optional(annotation_metadata.created_at),
-                    "lastEditedBy": annotation_metadata.last_edited_by,
-                    "lastEditedAt": format_datetime_to_long_string_optional(annotation_metadata.last_edited_at),
-                    "manualAnnotation": annotation_metadata.manual_annotation,
-                    "spaces": {self.space_id: {"range": [], "type": "frame"}},
-                }
+                classification_answer: ClassificationAnswer
+                if classification.is_global():
+                    classification_answer = self._to_global_classification_answer(
+                        classification_instance=classification,
+                        classifications=reversed_classification_attributes,
+                        space_range={"range": [], "type": "frame"},
+                    )
+                else:
+                    classification_answer = {
+                        "classifications": reversed_classification_attributes,
+                        "classificationHash": classification.classification_hash,
+                        "featureHash": classification.feature_hash,
+                        "range": [],
+                        "createdBy": annotation_metadata.created_by,
+                        "createdAt": format_datetime_to_long_string_optional(annotation_metadata.created_at),
+                        "lastEditedBy": annotation_metadata.last_edited_by,
+                        "lastEditedAt": format_datetime_to_long_string_optional(annotation_metadata.last_edited_at),
+                        "manualAnnotation": annotation_metadata.manual_annotation,
+                        "confidence": annotation_metadata.confidence,
+                        "spaces": {self.space_id: {"range": [], "type": "frame"}},
+                    }
 
                 ret[classification.classification_hash] = classification_answer
 

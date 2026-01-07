@@ -91,13 +91,15 @@ class AudioSpace(RangeSpace):
             classification_instance = self._label_row._create_new_classification_instance_from_answer(
                 classification_answer
             )
+
             if classification_instance is None:
                 continue
 
             annotation_metadata = _AnnotationMetadata.from_dict(classification_answer)
 
-            self.put_classification_instance(
+            self._put_global_classification_instance(
                 classification_instance=classification_instance,
+                on_overlap="replace",
                 created_at=annotation_metadata.created_at,
                 created_by=annotation_metadata.created_by,
                 confidence=annotation_metadata.confidence,

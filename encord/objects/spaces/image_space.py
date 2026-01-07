@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import time
 from datetime import datetime
 from typing import TYPE_CHECKING, Dict, Optional, Sequence, cast
 
@@ -12,7 +11,6 @@ from encord.objects.coordinates import (
     add_coordinates_to_frame_object_dict,
     get_geometric_coordinates_from_frame_object_dict,
 )
-from encord.objects.frames import ranges_to_list
 from encord.objects.label_utils import create_frame_classification_dict, create_frame_object_dict
 from encord.objects.spaces.annotation.base_annotation import (
     _AnnotationData,
@@ -21,8 +19,8 @@ from encord.objects.spaces.annotation.base_annotation import (
 from encord.objects.spaces.annotation.geometric_annotation import (
     _GeometricAnnotationData,
     _GeometricObjectAnnotation,
-    _SingleFrameClassificationAnnotation,
 )
+from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
 from encord.objects.spaces.base_space import Space
 from encord.objects.spaces.types import ImageSpaceInfo, SpaceInfo
 from encord.objects.spaces.video_space import FrameOverlapStrategy
@@ -34,26 +32,23 @@ from encord.objects.types import (
     LabelBlob,
     ObjectAnswer,
     ObjectAnswerForGeometric,
+    _is_global_classification_on_space,
 )
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from encord.objects import Classification, ClassificationInstance, ObjectInstance
+    from encord.objects import ClassificationInstance, ObjectInstance
     from encord.objects.ontology_labels_impl import LabelRowV2
     from encord.objects.ontology_object import Object
 
 
-class ImageSpace(Space[_GeometricObjectAnnotation, _SingleFrameClassificationAnnotation]):
+class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotation, FrameOverlapStrategy]):
     """Image space implementation for single-frame image annotations."""
 
     def __init__(self, space_id: str, label_row: LabelRowV2, width: int, height: int):
         super().__init__(space_id, label_row)
-        self._objects_map: dict[str, ObjectInstance] = dict()
-        self._classification_ontologies: set[str] = set()
-        self._classifications_map: dict[str, ClassificationInstance] = dict()
         self._object_hash_to_annotation_data: dict[str, _GeometricAnnotationData] = dict()
-        self._classification_hash_to_annotation_data: dict[str, _AnnotationData] = dict()
 
         self._width = width
         self._height = height
@@ -123,7 +118,7 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _SingleFrameClassificationAnn
         self,
         classification_instance: ClassificationInstance,
         *,
-        on_overlap: FrameOverlapStrategy = "error",
+        on_overlap: Optional[FrameOverlapStrategy] = "error",
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,
@@ -153,47 +148,9 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _SingleFrameClassificationAnn
             classification_instance=classification_instance
         )
 
-        is_classification_of_same_ontology_present = (
-            classification_instance._ontology_classification.feature_node_hash in self._classification_ontologies
-        )
-
-        if is_classification_of_same_ontology_present:
-            if on_overlap == "error":
-                raise LabelRowError(
-                    f"A classification instance for the classification with feature hash '{classification_instance._ontology_classification.feature_node_hash}' already exists. Set 'on_overlap' parameter to 'replace' to overwrite."
-                )
-            elif on_overlap == "replace":
-                # Remove classification instances of that ontology item
-                classification_hash_to_remove = None
-                for existing_classification_instance in self._classifications_map.values():
-                    if (
-                        existing_classification_instance._ontology_classification.feature_node_hash
-                        == classification_instance._ontology_classification.feature_node_hash
-                    ):
-                        classification_hash_to_remove = existing_classification_instance.classification_hash
-
-                if classification_hash_to_remove is not None:
-                    self._classifications_map.pop(classification_hash_to_remove)
-                    self._classification_hash_to_annotation_data.pop(classification_hash_to_remove)
-
-        self._classifications_map[classification_instance.classification_hash] = classification_instance
-        self._classification_ontologies.add(classification_instance._ontology_classification.feature_node_hash)
-        classification_instance._add_to_space(self)
-
-        existing_frame_classification_annotation_data = self._classification_hash_to_annotation_data.get(
-            classification_instance.classification_hash
-        )
-
-        if existing_frame_classification_annotation_data is None:
-            existing_frame_classification_annotation_data = _AnnotationData(
-                annotation_metadata=_AnnotationMetadata(),
-            )
-
-            self._classification_hash_to_annotation_data[classification_instance.classification_hash] = (
-                existing_frame_classification_annotation_data
-            )
-
-        existing_frame_classification_annotation_data.annotation_metadata.update_from_optional_fields(
+        self._put_global_classification_instance(
+            classification_instance=classification_instance,
+            on_overlap=on_overlap,
             created_at=created_at,
             created_by=created_by,
             last_edited_at=last_edited_at,
@@ -204,11 +161,6 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _SingleFrameClassificationAnn
 
     def _create_object_annotation(self, obj_hash: str) -> _GeometricObjectAnnotation:
         return _GeometricObjectAnnotation(space=self, object_instance=self._objects_map[obj_hash])
-
-    def _create_classification_annotation(self, classification_hash: str) -> _SingleFrameClassificationAnnotation:
-        return _SingleFrameClassificationAnnotation(
-            space=self, classification_instance=self._classifications_map[classification_hash]
-        )
 
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         """Remove an object instance from the image space.
@@ -242,14 +194,8 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _SingleFrameClassificationAnn
             Optional[ClassificationInstance]: The removed classification instance, or None if the classification wasn't found.
         """
         self._label_row._check_labelling_is_initalised()
-        classification_instance = self._classifications_map.pop(classification_hash, None)
-
-        if classification_instance is not None:
-            classification_instance._remove_from_space(self.space_id)
-            self._classification_hash_to_annotation_data.pop(classification_hash)
-            self._classification_ontologies.remove(classification_instance._ontology_classification.feature_node_hash)
-
-        return classification_instance
+        classification_instance = self._classifications_map[classification_hash]
+        return self._remove_global_classification_instance(classification=classification_instance)
 
     """INTERNAL METHODS FOR DESERDE"""
 
@@ -349,8 +295,11 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _SingleFrameClassificationAnn
         for (
             classification_hash,
             frame_classification_annotation_data,
-        ) in self._classification_hash_to_annotation_data.items():
+        ) in self._global_classification_hash_to_annotation_data.items():
             space_classification = self._classifications_map[classification_hash]
+            if space_classification.is_global():
+                continue
+
             classification_list.append(
                 self._to_encord_classification(
                     classification_instance=space_classification,
@@ -392,6 +341,29 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _SingleFrameClassificationAnn
             if object_instance := self._objects_map.get(object_hash):
                 answer_list = answer["classifications"]
                 object_instance.set_answer_from_list(answer_list)
+
+        for classification_answer in classification_answers.values():
+            spaces = classification_answer.get("spaces", {})
+            space_range = spaces.get(self.space_id, None)
+            if space_range is not None and _is_global_classification_on_space(space_range=space_range):
+                classification_instance = self._label_row._create_new_classification_instance_from_answer(
+                    classification_answer
+                )
+
+                if classification_instance is None:
+                    continue
+
+                annotation_metadata = _AnnotationMetadata.from_dict(classification_answer)
+                self._put_global_classification_instance(
+                    classification_instance=classification_instance,
+                    on_overlap="replace",
+                    created_at=annotation_metadata.created_at,
+                    created_by=annotation_metadata.created_by,
+                    last_edited_at=annotation_metadata.last_edited_at,
+                    last_edited_by=annotation_metadata.last_edited_by,
+                    confidence=annotation_metadata.confidence,
+                    manual_annotation=annotation_metadata.manual_annotation,
+                )
 
     def _parse_frame_label_dict(self, frame_label: LabelBlob, classification_answers: dict[str, ClassificationAnswer]):
         for frame_object_label in frame_label["objects"]:
@@ -466,18 +438,26 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _SingleFrameClassificationAnn
             classifications: list[AttributeDict] = [
                 cast(AttributeDict, answer.to_encord_dict()) for answer in all_static_answers if answer.is_answered()
             ]
-            classification_index_element: ClassificationAnswer = {
-                "classifications": classifications,
-                "classificationHash": classification.classification_hash,
-                "featureHash": classification.feature_hash,
-                "spaces": {
-                    self.space_id: {
-                        "range": [[0, 0]],  # For images, there is only one frame
-                        "type": "frame",
-                    }
-                },
-            }
 
-            ret[classification.classification_hash] = classification_index_element
+            if classification.is_global():
+                ret[classification.classification_hash] = self._to_global_classification_answer(
+                    classification_instance=classification,
+                    classifications=classifications,
+                    space_range={"range": [], "type": "frame"},
+                )
+            else:
+                classification_index_element: ClassificationAnswer = {
+                    "classifications": classifications,
+                    "classificationHash": classification.classification_hash,
+                    "featureHash": classification.feature_hash,
+                    "spaces": {
+                        self.space_id: {
+                            "range": [[0, 0]],  # For images, there is only one frame
+                            "type": "frame",
+                        }
+                    },
+                }
+
+                ret[classification.classification_hash] = classification_index_element
 
         return ret

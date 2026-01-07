@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from datetime import datetime
+from itertools import chain
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -19,7 +20,10 @@ from typing import (
     cast,
 )
 
+from pydantic import parse_obj_as
+
 from encord.common.range_manager import RangeManager
+from encord.common.time_parser import format_datetime_to_long_string
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects.answers import NumericAnswerValue
@@ -46,6 +50,7 @@ from encord.objects.spaces.annotation.geometric_annotation import (
     _GeometricAnnotationData,
     _GeometricFrameObjectAnnotation,
 )
+from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
 from encord.objects.spaces.base_space import Space
 from encord.objects.spaces.types import SpaceInfo, VideoSpaceInfo
 from encord.objects.types import (
@@ -57,6 +62,8 @@ from encord.objects.types import (
     LabelBlob,
     ObjectAnswer,
     ObjectAnswerForGeometric,
+    SpaceFrameData,
+    _is_global_classification_on_space,
 )
 
 logger = logging.getLogger(__name__)
@@ -69,7 +76,7 @@ if TYPE_CHECKING:
 FrameOverlapStrategy = Union[Literal["error"], Literal["replace"]]
 
 
-class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnnotation]):
+class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnnotation, FrameOverlapStrategy]):
     """Video space implementation for frame-based video annotations."""
 
     def __init__(
@@ -90,6 +97,9 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
             defaultdict(dict)
         )
 
+        # Keeps track of global classification annotation data across whole space
+        self._global_classification_hash_to_annotation_data: dict[str, _AnnotationData] = {}
+
         # Keeps track of which frames each object/classification still exists on.
         # Used primarily to completely remove object if someone has removed it from all frames via `remove_object_instance_from_frames` or
         # `remove_classification_instance_from_frames`.
@@ -97,6 +107,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
         self._classification_hash_to_range_manager: defaultdict[str, RangeManager] = defaultdict(RangeManager)
 
         # Used to track whether an instance of a classification_ontology exists on frames
+        # Global classifications are NOT tracked here
         self._classifications_ontology_to_ranges: defaultdict[Classification, RangeManager] = defaultdict(RangeManager)
 
         self._object_hash_to_dynamic_answer_manager: dict[str, DynamicAnswerManager] = dict()
@@ -551,9 +562,9 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
     def put_classification_instance(
         self,
         classification_instance: ClassificationInstance,
-        frames: Frames,
+        frames: Optional[Frames] = None,
         *,
-        on_overlap: FrameOverlapStrategy = "error",
+        on_overlap: Optional[FrameOverlapStrategy] = "error",
         created_at: Optional[datetime] = None,
         created_by: Optional[str] = None,
         last_edited_at: Optional[datetime] = None,
@@ -588,24 +599,63 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
             classification_instance=classification_instance
         )
 
-        frame_list = frames_class_to_frames_list(frames)
-        self._are_frames_valid(frame_list)
+        if classification_instance.is_global():
+            if frames is not None:
+                raise LabelRowError("For global classifications, do not specify the frames when calling this method.")
+
+            self._put_global_classification_instance(
+                classification_instance=classification_instance,
+                on_overlap=on_overlap,
+                created_at=created_at,
+                created_by=created_by,
+                last_edited_at=last_edited_at,
+                last_edited_by=last_edited_by,
+                confidence=confidence,
+                manual_annotation=manual_annotation,
+            )
+            pass
+        else:
+            if frames is None:
+                raise LabelRowError("Please specify the frame on which the classification is to exist.")
+
+            self._put_classification_instance_on_frames(
+                classification_instance=classification_instance,
+                frames=frames,
+                on_overlap=on_overlap,
+                created_at=created_at,
+                created_by=created_by,
+                last_edited_at=last_edited_at,
+                last_edited_by=last_edited_by,
+                confidence=confidence,
+                manual_annotation=manual_annotation,
+            )
 
         self._classifications_map[classification_instance.classification_hash] = classification_instance
         classification_instance._add_to_space(self)
 
+    def _put_classification_instance_on_frames(
+        self,
+        classification_instance: ClassificationInstance,
+        frames: Frames,
+        *,
+        on_overlap: Optional[FrameOverlapStrategy],
+        created_at: Optional[datetime],
+        created_by: Optional[str],
+        last_edited_at: Optional[datetime],
+        last_edited_by: Optional[str],
+        confidence: Optional[float],
+        manual_annotation: Optional[bool],
+    ) -> None:
+        frame_list = frames_class_to_frames_list(frames)
+        self._are_frames_valid(frame_list)
         is_present, conflicting_ranges = self._is_classification_present_on_frames(
             classification_instance._ontology_classification, frame_list
         )
 
         if is_present:
             if on_overlap == "error":
-                location_msg = (
-                    "globally" if classification_instance.is_global() else f"on the ranges {conflicting_ranges}. "
-                )
                 raise LabelRowError(
-                    f"The classification '{classification_instance.classification_hash}' already exists "
-                    f"{location_msg}"
+                    f"The classification '{classification_instance.classification_hash}' already exists on the ranges {conflicting_ranges}. "
                     f"Set 'on_overlap' parameter to 'replace' to overwrite."
                 )
             elif on_overlap == "replace":
@@ -614,7 +664,6 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
                     classification=classification_instance,
                     conflicting_ranges=conflicting_ranges,
                 )
-
         for frame in frame_list:
             existing_frame_classification_annotation_data = self._get_frame_classification_annotation_data(
                 classification_hash=classification_instance.classification_hash, frame=frame
@@ -778,7 +827,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
 
     def get_classification_instance_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
-    ) -> Iterator[_FrameClassificationAnnotation]:
+    ) -> Iterator[Union[_FrameClassificationAnnotation, _GlobalClassificationAnnotation]]:
         """Get all classification instance annotations in the video space.
 
         Args:
@@ -786,13 +835,14 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
                 If provided, only annotations for these classifications will be returned.
 
         Returns:
-            Iterator[_FrameClassificationAnnotation]: Iterator over all classification annotations across all frames,
-                sorted by frame number. Annotations are created lazily as the iterator is consumed.
+            Iterator[Union[_FrameClassificationAnnotation, GlobalClassificationAnnotation]]:
+                Iterator over all classification annotations (both frame-based and global),
+                sorted by frame number for frame-based annotations. Annotations are created lazily as the iterator is consumed.
         """
         self._label_row._check_labelling_is_initalised()
         filter_set = set(filter_classification_instances) if filter_classification_instances is not None else None
 
-        return (
+        frame_annotations = (
             _FrameClassificationAnnotation(
                 space=self,
                 classification_instance=self._classifications_map[classification_hash],
@@ -804,6 +854,17 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
             for classification_hash, annotation in classification.items()
             if filter_set is None or classification_hash in filter_set
         )
+
+        global_annotations = (
+            _GlobalClassificationAnnotation(
+                space=self,
+                classification_instance=self._classifications_map[classification_hash],
+            )
+            for classification_hash in self._global_classification_hash_to_annotation_data
+            if filter_set is None or classification_hash in filter_set
+        )
+
+        return chain(frame_annotations, global_annotations)
 
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
         """Completely remove an object instance from all frames in the video space.
@@ -1025,28 +1086,38 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
             classification_range_manager = self._classification_hash_to_range_manager.get(
                 classification_instance.classification_hash, None
             )
-            if classification_range_manager is None:
-                continue
 
             all_static_answers = classification_instance.get_all_static_answers()
             classifications = [
                 cast(AttributeDict, answer.to_encord_dict()) for answer in all_static_answers if answer.is_answered()
             ]
-            classification_index_element: ClassificationAnswer = {
-                "classifications": classifications,
-                "classificationHash": classification_instance.classification_hash,
-                "featureHash": classification_instance.feature_hash,
-                "spaces": {
-                    self.space_id: {
-                        "range": ranges_to_list(
-                            classification_range_manager.get_ranges(),
-                        ),
-                        "type": "frame",
-                    }
-                },
-            }
 
-            ret[classification_instance.classification_hash] = classification_index_element
+            if classification_instance.is_global():
+                classification_answer = self._to_global_classification_answer(
+                    classification_instance=classification_instance,
+                    classifications=classifications,
+                    space_range={"range": [], "type": "frame"},
+                )
+                ret[classification_instance.classification_hash] = classification_answer
+            else:
+                if classification_range_manager is None:
+                    continue
+
+                space_range: SpaceFrameData = {
+                    "range": ranges_to_list(
+                        classification_range_manager.get_ranges(),
+                    ),
+                    "type": "frame",
+                }
+
+                classification_index_element: ClassificationAnswer = {
+                    "classifications": classifications,
+                    "classificationHash": classification_instance.classification_hash,
+                    "featureHash": classification_instance.feature_hash,
+                    "spaces": {self.space_id: space_range},
+                }
+
+                ret[classification_instance.classification_hash] = classification_index_element
 
         return ret
 
@@ -1066,6 +1137,29 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
             if object_instance := self._objects_map.get(object_hash):
                 answer_list = answer["classifications"]
                 object_instance.set_answer_from_list(answer_list)
+
+        for classification_answer in classification_answers.values():
+            spaces = classification_answer.get("spaces", {})
+            space_range = spaces.get(self.space_id, None)
+            if space_range is not None and _is_global_classification_on_space(space_range=space_range):
+                classification_instance = self._label_row._create_new_classification_instance_from_answer(
+                    classification_answer
+                )
+
+                if classification_instance is None:
+                    continue
+
+                annotation_metadata = _AnnotationMetadata.from_dict(classification_answer)
+                self._put_global_classification_instance(
+                    classification_instance=classification_instance,
+                    on_overlap="replace",
+                    created_at=annotation_metadata.created_at,
+                    created_by=annotation_metadata.created_by,
+                    last_edited_at=annotation_metadata.last_edited_at,
+                    last_edited_by=annotation_metadata.last_edited_by,
+                    confidence=annotation_metadata.confidence,
+                    manual_annotation=annotation_metadata.manual_annotation,
+                )
 
     def _parse_frame_label_dict(self, frame: int, frame_label: LabelBlob, classification_answers: dict):
         for obj in frame_label["objects"]:

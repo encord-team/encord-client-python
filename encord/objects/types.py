@@ -276,3 +276,7 @@ class LabelRowDict(TypedDict, total=False):
 def _is_containing_metadata(answer: ClassificationAnswer) -> bool:
     """Check if the classification answer contains necessary metadata fields."""
     return "createdBy" in answer
+
+
+def _is_global_classification_on_space(space_range: SpaceRange) -> bool:
+    return len(space_range["range"]) == 0

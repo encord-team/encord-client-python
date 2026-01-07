@@ -203,7 +203,32 @@ DATA_GROUP_WITH_LABELS = {
         },
     },
     "classification_answers": {
-        # Video classification (frame-based)
+        "global-classification": {
+            "classificationHash": "global-classification",
+            "featureHash": "globalClassificationTopLevelFeatureHash",
+            "classifications": [
+                {
+                    "name": "Global classification",
+                    "value": "global_classification",
+                    "answers": [
+                        {
+                            "name": "Global Answer 1",
+                            "value": "global_answer_1",
+                            "featureHash": "3vLjF0q1",
+                        }
+                    ],
+                    "featureHash": "globalClassificationFeatureHash",
+                    "manualAnnotation": True,
+                }
+            ],
+            "range": [],
+            "spaces": {},
+            "createdBy": "user1Hash@encord.com",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "lastEditedBy": "user1Hash@encord.com",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "manualAnnotation": True,
+        },
         "video-classification": {
             "classificationHash": "video-classification",
             "featureHash": "jPOcEsbw",
@@ -223,7 +248,33 @@ DATA_GROUP_WITH_LABELS = {
                 },
             },
         },
-        # Image classification (frame-based, uses checklist)
+        "global-classification-on-video": {
+            "classificationHash": "global-classification-on-video",
+            "featureHash": "globalClassificationTopLevelFeatureHash",
+            "classifications": [
+                {
+                    "name": "Global classification",
+                    "value": "global_classification",
+                    "answers": [
+                        {
+                            "name": "Global Answer 1",
+                            "value": "global_answer_1",
+                            "featureHash": "3vLjF0q1",
+                        }
+                    ],
+                    "featureHash": "globalClassificationFeatureHash",
+                    "manualAnnotation": True,
+                }
+            ],
+            "range": [],
+            "spaces": {"video-uuid": {"range": [], "type": "frame"}},
+            "createdBy": "user1Hash@encord.com",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "lastEditedBy": "user1Hash@encord.com",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "manualAnnotation": True,
+            "confidence": 5.0,
+        },
         "image-classification": {
             "classificationHash": "image-classification",
             "featureHash": "3DuQbFxo",
@@ -249,6 +300,38 @@ DATA_GROUP_WITH_LABELS = {
                 },
             },
         },
+        "global-classification-on-image": {
+            "classificationHash": "global-classification-on-image",
+            "featureHash": "globalClassificationTopLevelFeatureHash",
+            "classifications": [
+                {
+                    "name": "Global classification",
+                    "value": "global_classification",
+                    "answers": [
+                        {
+                            "name": "Global Answer 1",
+                            "value": "global_answer_1",
+                            "featureHash": "3vLjF0q1",
+                        }
+                    ],
+                    "featureHash": "globalClassificationFeatureHash",
+                    "manualAnnotation": True,
+                }
+            ],
+            "range": [],
+            "spaces": {
+                "image-uuid": {
+                    "range": [],
+                    "type": "frame",
+                }
+            },
+            "createdBy": "user1Hash@encord.com",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "lastEditedBy": "user1Hash@encord.com",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "manualAnnotation": True,
+            "confidence": 5.0,
+        },
         # Audio classification (range-based)
         "audio-classification": {
             "classificationHash": "audio-classification",
@@ -259,6 +342,7 @@ DATA_GROUP_WITH_LABELS = {
             "lastEditedBy": "user@example.com",
             "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
             "manualAnnotation": True,
+            "confidence": 3.0,
             "range": [],
             "spaces": {
                 "audio-uuid": {
@@ -266,6 +350,38 @@ DATA_GROUP_WITH_LABELS = {
                     "type": "frame",
                 },
             },
+        },
+        "global-classification-on-audio": {
+            "classificationHash": "global-classification-on-audio",
+            "featureHash": "globalClassificationTopLevelFeatureHash",
+            "classifications": [
+                {
+                    "name": "Global classification",
+                    "value": "global_classification",
+                    "answers": [
+                        {
+                            "name": "Global Answer 1",
+                            "value": "global_answer_1",
+                            "featureHash": "3vLjF0q1",
+                        }
+                    ],
+                    "featureHash": "globalClassificationFeatureHash",
+                    "manualAnnotation": True,
+                }
+            ],
+            "range": [],
+            "spaces": {
+                "audio-uuid": {
+                    "range": [],
+                    "type": "frame",
+                }
+            },
+            "createdBy": "user1Hash@encord.com",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "lastEditedBy": "user1Hash@encord.com",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "manualAnnotation": True,
+            "confidence": 5.0,
         },
         # Text classification (range-based)
         "text-classification": {
@@ -285,6 +401,7 @@ DATA_GROUP_WITH_LABELS = {
             "lastEditedBy": "user@example.com",
             "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
             "manualAnnotation": True,
+            "confidence": 4.0,
             "range": [],
             "spaces": {
                 "text-uuid": {
@@ -292,6 +409,38 @@ DATA_GROUP_WITH_LABELS = {
                     "type": "frame",
                 },
             },
+        },
+        "global-classification-on-text": {
+            "classificationHash": "global-classification-on-text",
+            "featureHash": "globalClassificationTopLevelFeatureHash",
+            "classifications": [
+                {
+                    "name": "Global classification",
+                    "value": "global_classification",
+                    "answers": [
+                        {
+                            "name": "Global Answer 1",
+                            "value": "global_answer_1",
+                            "featureHash": "3vLjF0q1",
+                        }
+                    ],
+                    "featureHash": "globalClassificationFeatureHash",
+                    "manualAnnotation": True,
+                }
+            ],
+            "range": [],
+            "spaces": {
+                "text-uuid": {
+                    "range": [],
+                    "type": "frame",
+                }
+            },
+            "createdBy": "user1Hash@encord.com",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "lastEditedBy": "user1Hash@encord.com",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "manualAnnotation": True,
+            "confidence": 5.0,
         },
         "html-text-classification": {
             "classificationHash": "html-text-classification",
@@ -310,6 +459,7 @@ DATA_GROUP_WITH_LABELS = {
             "lastEditedBy": "user@example.com",
             "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
             "manualAnnotation": True,
+            "confidence": 7.0,
             "range": [],
             "spaces": {
                 "html-uuid": {
@@ -317,6 +467,38 @@ DATA_GROUP_WITH_LABELS = {
                     "type": "html",
                 },
             },
+        },
+        "global-classification-on-html": {
+            "classificationHash": "global-classification-on-html",
+            "featureHash": "globalClassificationTopLevelFeatureHash",
+            "classifications": [
+                {
+                    "name": "Global classification",
+                    "value": "global_classification",
+                    "answers": [
+                        {
+                            "name": "Global Answer 1",
+                            "value": "global_answer_1",
+                            "featureHash": "3vLjF0q1",
+                        }
+                    ],
+                    "featureHash": "globalClassificationFeatureHash",
+                    "manualAnnotation": True,
+                }
+            ],
+            "range": [],
+            "spaces": {
+                "html-uuid": {
+                    "range": [],
+                    "type": "html",
+                }
+            },
+            "createdBy": "user1Hash@encord.com",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "lastEditedBy": "user1Hash@encord.com",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "manualAnnotation": True,
+            "confidence": 5.0,
         },
     },
     "object_actions": {},

@@ -134,27 +134,3 @@ class _FrameClassificationAnnotation(_ClassificationAnnotation):
             raise LabelRowError(
                 "Trying to use an ObjectInstance.FrameAnnotation for a VideoObjectInstance that is not on the frame"
             )
-
-
-class _SingleFrameClassificationAnnotation(_ClassificationAnnotation):
-    """Annotations for single-frame classifications (e.g. Image)."""
-
-    def __init__(self, space: ImageSpace, classification_instance: ClassificationInstance):
-        super().__init__(space, classification_instance)
-        self._space: ImageSpace = space
-        self._classification_instance = classification_instance
-
-    @property
-    def frame(self) -> int:
-        return 0
-
-    @property
-    def space(self) -> ImageSpace:
-        return self._space
-
-    def _get_annotation_data(self) -> _AnnotationData:
-        return self._space._classification_hash_to_annotation_data[self._classification_instance.classification_hash]
-
-    def _check_if_annotation_is_valid(self) -> None:
-        if not self._classification_instance.classification_hash in self._space._classification_hash_to_annotation_data:
-            raise LabelRowError("Annotation is invalid")

@@ -2,14 +2,14 @@ from tests.objects.data.all_types_ontology_structure import RADIO_CLASSIFICATION
 
 global_classification_dict = {  # should match GLOBAL_CLASSIFICATION.to_dict()
     "id": "4",
-    "featureNodeHash": "3DuQbFx4",
+    "featureNodeHash": "globalClassificationTopLevelFeatureHash",
     "level": "global",
     "attributes": [
         {
             "id": "4.1",
             "name": "Global classification",
             "type": "checklist",
-            "featureNodeHash": "2mwWr3Of",
+            "featureNodeHash": "globalClassificationFeatureHash",
             "required": False,
             "dynamic": False,
             "archived": False,

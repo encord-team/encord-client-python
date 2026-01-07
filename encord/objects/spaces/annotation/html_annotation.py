@@ -32,13 +32,13 @@ class _HtmlObjectAnnotation(_ObjectAnnotation):
         self._space: HTMLSpace = space
 
     @property
+    def space(self) -> HTMLSpace:
+        return self._space
+
+    @property
     def frame(self) -> int:
         """This field is deprecated. It is only here for backwards compatibility. It always returns 0."""
         return 0
-
-    @property
-    def space(self) -> HTMLSpace:
-        return self._space
 
     @property
     def ranges(self) -> HtmlRanges:
@@ -95,17 +95,18 @@ class _HtmlClassificationAnnotation(_ClassificationAnnotation):
         self._space: HTMLSpace = space  # type: ignore[assignment]
 
     @property
-    def space(self) -> HTMLSpace:
-        return self._space
-
-    @property
     def frame(self) -> int:
         """This field is deprecated. It is only here for backwards compatibility. It always returns 0."""
         return 0
 
     def _get_annotation_data(self) -> _AnnotationData:
-        return self._space._classification_hash_to_annotation_data[self._classification_instance.classification_hash]
+        return self._space._global_classification_hash_to_annotation_data[
+            self._classification_instance.classification_hash
+        ]
 
     def _check_if_annotation_is_valid(self) -> None:
-        if self._classification_instance.classification_hash not in self._space._classification_hash_to_annotation_data:
+        if (
+            self._classification_instance.classification_hash
+            not in self._space._global_classification_hash_to_annotation_data
+        ):
             raise LabelRowError("This annotation is not available on this space.")
