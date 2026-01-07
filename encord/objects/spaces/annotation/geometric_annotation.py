@@ -114,7 +114,7 @@ class _FrameClassificationAnnotation(_ClassificationAnnotation):
 
     @property
     def space(self) -> VideoSpace:
-        return self.space
+        return self._space
 
     @property
     def frame(self) -> int:
