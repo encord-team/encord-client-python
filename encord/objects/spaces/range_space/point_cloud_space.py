@@ -23,9 +23,9 @@ if TYPE_CHECKING:
 
 
 class PointCloudFileSpace(RangeSpace):
-    def __init__(self, space_id: str, label_row: LabelRowV2, scene_info: FileInSceneInfo):
-        super().__init__(space_id, label_row)
-        self._scene_info = scene_info
+    def __init__(self, space_id: str, label_row: LabelRowV2, space_info: PointCloudFileSpaceInfo):
+        super().__init__(space_id, label_row, space_info)
+        self._scene_info = space_info["scene_info"]
 
     def _are_ranges_valid(self, ranges: Ranges) -> None:
         pass
@@ -199,6 +199,7 @@ class PointCloudFileSpace(RangeSpace):
                 existing_object_answer = cast(ObjectAnswerForNonGeometric, existing_object_answers[obj.object_hash])
                 space_data: SpaceSegmentationData = {"range": [], "type": "frame", "segmentation": segmentation}
                 existing_object_answer["spaces"][self.space_id] = space_data
+                ret[obj.object_hash] = existing_object_answer
             else:
                 shape = cast(Literal[Shape.SEGMENTATION], obj.ontology_item.shape.value)
                 all_static_answers = self._label_row._get_all_static_answers(obj)

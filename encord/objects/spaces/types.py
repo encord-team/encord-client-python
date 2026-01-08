@@ -118,10 +118,6 @@ class SceneImageSpaceInfo(BaseSpaceInfo):
     scene_info: FileInSceneInfo
 
 
-class PointCloudSpaceInfo(BaseSpaceInfo):
-    space_type: Literal[SpaceType.POINT_CLOUD]
-
-
 class PdfSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.PDF]
     child_info: NotRequired[ChildInfo]
@@ -138,7 +134,7 @@ SpaceInfo = Union[
     MedicalFileSpaceInfo,
     MedicalStackSpaceInfo,
     SceneImageSpaceInfo,
-    PointCloudSpaceInfo,
+    PointCloudFileSpaceInfo,
     PdfSpaceInfo,
 ]
 
@@ -164,7 +160,7 @@ def _get_space_info_from_space_enum(space_enum: SpaceType) -> Type[SpaceInfo]:
     elif space_enum == SpaceType.PDF:
         return PdfSpaceInfo
     elif space_enum == SpaceType.POINT_CLOUD:
-        return PointCloudSpaceInfo
+        return PointCloudFileSpaceInfo
     elif space_enum == SpaceType.SCENE_IMAGE:
         raise LabelRowError(f"Space for {space_enum} not yet implemented.")
     else:

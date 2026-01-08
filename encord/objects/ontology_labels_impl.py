@@ -2631,15 +2631,17 @@ class LabelRowV2:
                     number_of_pages=space_info["number_of_pages"],
                 )
                 res[space_id] = pdf_space
-            elif space_info["space_type"] == SpaceType.SCENE_IMAGE
+            elif space_info["space_type"] == SpaceType.SCENE_IMAGE:
                 # TODO: Implement Scene Images
                 pass
             elif space_info["space_type"] == SpaceType.POINT_CLOUD:
-                scene_info = space_info.get("scene_info", {"stream_id": "", "event_index": 0, "uri": space_id})
+                # Ensure scene_info exists in space_info for PointCloudFileSpaceInfo
+                if "scene_info" not in space_info:
+                    space_info["scene_info"] = {"stream_id": "", "event_index": 0, "uri": space_id}  # type: ignore[typeddict-item]
                 point_cloud_space = PointCloudFileSpace(
                     space_id=space_id,
                     label_row=self,
-                    scene_info=scene_info,
+                    space_info=space_info,  # type: ignore[arg-type]
                 )
                 res[space_id] = point_cloud_space
             else:
