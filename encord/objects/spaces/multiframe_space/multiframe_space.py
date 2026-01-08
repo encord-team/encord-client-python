@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from abc import abstractmethod
 from collections import defaultdict
 from datetime import datetime
 from itertools import chain
@@ -81,8 +82,6 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         space_id: str,
         label_row: LabelRowV2,
         number_of_frames: int,
-        width: int,
-        height: int,
     ):
         super().__init__(space_id, label_row)
 
@@ -111,8 +110,10 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
 
         # Need to check if this is 1-indexed
         self._number_of_frames: int = number_of_frames
-        self._width = width
-        self._height = height
+
+    @abstractmethod
+    def _get_frame_dimensions(self, frame: int) -> tuple[int, int]:
+        pass
 
     def _is_classification_present_on_frames(
         self, classification: Classification, frames: Frames
@@ -988,6 +989,7 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         self,
         object_instance: ObjectInstance,
         frame_object_annotation_data: _GeometricAnnotationData,
+        frame_number: int,
     ) -> FrameObject:
         from encord.objects.ontology_object import Object
 
@@ -1000,11 +1002,13 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             object_instance_annotation=frame_object_annotation_data.annotation_metadata,
         )
 
+        width, height = self._get_frame_dimensions(frame_number)
+
         frame_object = add_coordinates_to_frame_object_dict(
             coordinates=frame_object_annotation_data.coordinates,
             base_frame_object=base_frame_object,
-            width=self._width,
-            height=self._height,
+            width=width,
+            height=height,
         )
 
         return frame_object
@@ -1045,7 +1049,9 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             space_object = self._objects_map[object_hash]
             object_list.append(
                 self._to_encord_object(
-                    object_instance=space_object, frame_object_annotation_data=frame_object_annotation_data
+                    object_instance=space_object,
+                    frame_object_annotation_data=frame_object_annotation_data,
+                    frame_number=frame,
                 )
             )
 

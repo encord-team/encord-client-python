@@ -1,17 +1,37 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from encord.constants.enums import SpaceType
 from encord.objects.spaces.multiframe_space.multiframe_space import MultiFrameSpace
 from encord.objects.spaces.types import MedicalFileSpaceInfo
 from encord.objects.types import LabelBlob
 
+if TYPE_CHECKING:
+    from encord.objects.ontology_labels_impl import LabelRowV2
+
 logger = logging.getLogger(__name__)
 
 
 class MedicalFileSpace(MultiFrameSpace):
     """Space for medical files (e.g. DICOM, NIfTI)."""
+
+    def __init__(
+        self,
+        space_id: str,
+        label_row: LabelRowV2,
+        number_of_frames: int,
+        width: int,
+        height: int,
+    ):
+        super().__init__(space_id, label_row, number_of_frames=number_of_frames)
+        self._number_of_frames = number_of_frames
+        self._width = width
+        self._height = height
+
+    def _get_frame_dimensions(self, frame: int) -> tuple[int, int]:
+        return self._width, self._height
 
     def _to_space_dict(self) -> MedicalFileSpaceInfo:
         """Export space to dictionary format."""

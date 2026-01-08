@@ -82,6 +82,16 @@ def test_read_and_export_all_space_labels(ontology):
     assert classification_instances[1].classification_hash == "global-classification-on-dicom"
     assert len(list(dicom_space.get_classification_instance_annotations())) == 2
 
+    # medical stack space: 1 object, 1 normal classification, 1 global classification
+    dicom_stack_space = label_row._get_space(id="dicom-stack-uuid", type_="medical-stack")
+    assert len(dicom_space.get_object_instances()) == 1
+    assert dicom_stack_space.get_object_instances()[0].object_hash == "dicom-stack-box-object"
+    assert len(list(dicom_stack_space.get_object_instance_annotations())) == 1
+    classification_instances = dicom_stack_space.get_classification_instances()
+    assert len(classification_instances) == 2
+    assert classification_instances[0].classification_hash == "dicom-stack-classification"
+    assert classification_instances[1].classification_hash == "global-classification-on-dicom-stack"
+    assert len(list(dicom_stack_space.get_classification_instance_annotations())) == 2
     # Verify round-trip serialization
     output_dict = label_row.to_encord_dict()
     assert not DeepDiff(

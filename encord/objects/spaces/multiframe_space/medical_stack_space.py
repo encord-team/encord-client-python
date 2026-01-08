@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from encord.constants.enums import SpaceType
+from encord.exceptions import LabelRowError
 from encord.objects.spaces.multiframe_space.multiframe_space import MultiFrameSpace
 from encord.objects.spaces.types import DicomFrameInfo, MedicalStackSpaceInfo
 from encord.objects.types import LabelBlob
@@ -18,8 +19,17 @@ class MedicalStackSpace(MultiFrameSpace):
     """Space for medical files (e.g. DICOM, NIfTI)."""
 
     def __init__(self, space_id: str, label_row: LabelRowV2, frames: List[DicomFrameInfo]):
-        super().__init__(space_id, label_row, number_of_frames=len(frames), height=0, width=0)
+        super().__init__(space_id, label_row, number_of_frames=len(frames))
         self._frames = frames
+
+    def _get_frame_dimensions(self, frame_number: int) -> tuple[int, int]:
+        if frame_number >= self._number_of_frames:
+            raise LabelRowError(
+                f"Invalid frame number '{frame_number}'. This file only has {self._number_of_frames} frames."
+            )
+
+        frame = self._frames[frame_number]
+        return frame["width"], frame["height"]
 
     def _to_space_dict(self) -> MedicalStackSpaceInfo:
         """Export space to dictionary format."""

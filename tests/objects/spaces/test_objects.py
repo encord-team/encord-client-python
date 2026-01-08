@@ -39,6 +39,9 @@ def test_bitmask_dimension_validation():
     image_space.put_object_instance(object_instance=image_instance, coordinates=correct_bitmask)
     assert len(image_space.get_object_instances()) == 1
 
+    dicom_stack_instance = bitmask_object.create_instance()
+    dicom_stack_space.put_object_instance(object_instance=dicom_stack_instance, coordinates=correct_bitmask, frames=[0])
+    assert len(dicom_stack_space.get_object_instances()) == 1
     label_row.to_encord_dict()  # Serialization should succeed
 
     # Incorrect dimensions (50x50) should raise ValueError on serialization
@@ -59,6 +62,16 @@ def test_bitmask_dimension_validation():
     incorrect_image_instance = bitmask_object.create_instance()
     image_space.put_object_instance(object_instance=incorrect_image_instance, coordinates=incorrect_bitmask)
     assert len(image_space.get_object_instances()) == 2
+
+    with pytest.raises(ValueError, match="Bitmask dimensions don't match the media dimensions"):
+        label_row.to_encord_dict()
+
+    # Test incorrect dimensions on medical stack space
+    incorrect_dicom_stack_instance = bitmask_object.create_instance()
+    dicom_stack_space.put_object_instance(
+        object_instance=incorrect_dicom_stack_instance, coordinates=incorrect_bitmask, frames=[0]
+    )
+    assert len(dicom_stack_space.get_object_instances()) == 2
 
     with pytest.raises(ValueError, match="Bitmask dimensions don't match the media dimensions"):
         label_row.to_encord_dict()

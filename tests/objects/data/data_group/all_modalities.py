@@ -67,7 +67,7 @@ MEDICAL_STACK_SPACE_INFO: MedicalStackSpaceInfo = {
             "file_name": "frame-1.dcm",
             "height": 100,
             "width": 100,
-            "instance_uid": "2",
+            "instance_uid": "1",
         },
         {
             "file_name": "frame-2.dcm",
@@ -763,7 +763,7 @@ DATA_GROUP_WITH_LABELS = {
                     "file_name": "frame-1.dcm",
                     "height": 100,
                     "width": 100,
-                    "instance_uid": "2",
+                    "instance_uid": "1",
                 },
                 {
                     "file_name": "frame-2.dcm",
