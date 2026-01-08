@@ -156,8 +156,8 @@ _SPACE_TYPE_TO_CLASS = {
     "audio": AudioSpace,
     "text": TextSpace,
     "html": HTMLSpace,
-    "medical-file": MedicalFileSpace,
-    "medical-stack": MedicalStackSpace,
+    "medical_file": MedicalFileSpace,
+    "medical_stack": MedicalStackSpace,
 }
 
 
@@ -821,11 +821,11 @@ class LabelRowV2:
         pass
 
     @overload
-    def _get_space(self, *, id: str, type_: Literal["medical-file"]) -> MedicalFileSpace:
+    def _get_space(self, *, id: str, type_: Literal["medical_file"]) -> MedicalFileSpace:
         pass
 
     @overload
-    def _get_space(self, *, id: str, type_: Literal["medical-stack"]) -> MedicalStackSpace:
+    def _get_space(self, *, id: str, type_: Literal["medical_stack"]) -> MedicalStackSpace:
         pass
 
     @overload
@@ -849,11 +849,11 @@ class LabelRowV2:
         pass
 
     @overload
-    def _get_space(self, *, layout_key: str, type_: Literal["medical-file"]) -> MedicalFileSpace:
+    def _get_space(self, *, layout_key: str, type_: Literal["medical_file"]) -> MedicalFileSpace:
         pass
 
     @overload
-    def _get_space(self, *, layout_key: str, type_: Literal["medical-stack"]) -> MedicalStackSpace:
+    def _get_space(self, *, layout_key: str, type_: Literal["medical_stack"]) -> MedicalStackSpace:
         pass
 
     def _get_space(
@@ -861,7 +861,7 @@ class LabelRowV2:
         *,
         id: Optional[str] = None,
         layout_key: Optional[str] = None,
-        type_: Literal["video", "image", "audio", "text", "html", "medical-file", "medical-stack"],
+        type_: Literal["video", "image", "audio", "text", "html", "medical_file", "medical_stack"],
     ) -> Space:
         """Retrieves a single space which matches the specified id and type.
 
@@ -2584,12 +2584,12 @@ class LabelRowV2:
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.MEDICAL_FILE:
-                medical_file_space = self._get_space(id=space_id, type_="medical-file")
+                medical_file_space = self._get_space(id=space_id, type_="medical_file")
                 medical_file_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.MEDICAL_STACK:
-                medical_stack_space = self._get_space(id=space_id, type_="medical-stack")
+                medical_stack_space = self._get_space(id=space_id, type_="medical_stack")
                 medical_stack_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
