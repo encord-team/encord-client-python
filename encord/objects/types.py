@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Literal, Optional, TypedDict, Union
+from typing import Any, Dict, List, Literal, Optional, TypedDict, TypeGuard, Union
 
 from encord.objects.common import Shape
 from encord.objects.html_node import HtmlNode
@@ -80,6 +80,16 @@ class Cuboid2DIsometricDict(TypedDict):
 
 Cuboid2DDict = Union[Cuboid2DPerspectiveDict, Cuboid2DIsometricDict]
 """Union type for 2D cuboid dict - either perspective or isometric projection."""
+
+
+def is_perspective(cuboid: Cuboid2DDict) -> TypeGuard[Cuboid2DPerspectiveDict]:
+    # We check for a key unique to the perspective dictionary
+    return "vanishingPoint" in cuboid
+
+
+def is_offset(cuboid: Cuboid2DDict) -> TypeGuard[Cuboid2DIsometricDict]:
+    # We check for a key unique to the isometric dictionary
+    return "offset" in cuboid
 
 
 class Cuboid2DFrameCoordinatesDict(TypedDict):

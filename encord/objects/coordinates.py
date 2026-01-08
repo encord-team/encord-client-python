@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Type, Union, cast
+from typing import Any, Dict, List, Optional, Type, TypeGuard, Union, cast
 
 from encord.exceptions import LabelRowError
 from encord.objects.bitmask import BitmaskCoordinates
@@ -25,7 +25,10 @@ from encord.objects.types import (
     BaseFrameObject,
     BoundingBoxDict,
     BoundingBoxFrameCoordinatesDict,
+    Cuboid2DDict,
     Cuboid2DFrameCoordinatesDict,
+    Cuboid2DIsometricDict,
+    Cuboid2DPerspectiveDict,
     FrameObject,
     Point3DFrameCoordinatesDict,
     PointDict,
@@ -35,6 +38,8 @@ from encord.objects.types import (
     PolylineFrameCoordinatesDict,
     RotatableBoundingBoxDict,
     RotatableBoundingBoxFrameCoordinatesDict,
+    is_offset,
+    is_perspective,
 )
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
@@ -267,7 +272,8 @@ def cuboid_2d_coordinates_from_dict(d: Cuboid2DFrameCoordinatesDict) -> Cuboid2D
     front_flat = cuboid_2d_dict["front"]
     front = [PointCoordinate(x=front_flat[i], y=front_flat[i + 1]) for i in range(0, len(front_flat), 2)]
 
-    if vp := cuboid_2d_dict.get("vanishingPoint"):
+    if is_perspective(cuboid_2d_dict):
+        vp = cuboid_2d_dict["vanishingPoint"]
         vanishing_point = PointCoordinate(x=vp["x"], y=vp["y"])
         scale_ratio = cuboid_2d_dict.get("scaleRatio")
         if scale_ratio is None:
@@ -275,9 +281,10 @@ def cuboid_2d_coordinates_from_dict(d: Cuboid2DFrameCoordinatesDict) -> Cuboid2D
         return Cuboid2DPerspectiveCoordinates(
             front=front,
             vanishing_point=vanishing_point,
-            scale_ratio=scale_ratio,
+            scale_ratio=cast(float, scale_ratio),
         )
-    elif off := cuboid_2d_dict.get("offset"):
+    elif is_offset(cuboid_2d_dict):
+        off = cuboid_2d_dict["offset"]
         offset = PointCoordinate(x=off["x"], y=off["y"])
         return Cuboid2DIsometricCoordinates(
             front=front,
