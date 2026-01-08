@@ -11,7 +11,7 @@ from encord.objects.types import LabelBlob
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from tests.objects.spaces.test_serde import LabelRowV2
+    from encord.objects.ontology_labels_impl import LabelRowV2
 
 
 class MedicalStackSpace(MultiFrameSpace):

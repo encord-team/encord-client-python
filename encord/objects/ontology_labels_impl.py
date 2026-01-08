@@ -2543,7 +2543,7 @@ class LabelRowV2:
             elif space_info["space_type"] == SpaceType.MEDICAL_STACK:
                 medical_stack_space = MedicalStackSpace(space_id=space_id, label_row=self, frames=space_info["frames"])
                 res[space_id] = medical_stack_space
-            elif space_info["space_type"] == SpaceType.SCENE_IMAGE:
+            elif space_info["space_type"] == SpaceType.SCENE_IMAGE or space_info["space_type"] == SpaceType.POINT_CLOUD:
                 # TODO: Implement Scene Images
                 pass
             else:
@@ -2593,7 +2593,7 @@ class LabelRowV2:
                 medical_stack_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
-            elif space_info["space_type"] == SpaceType.SCENE_IMAGE:
+            elif space_info["space_type"] == SpaceType.SCENE_IMAGE or space_info["space_type"] == SpaceType.POINT_CLOUD:
                 # TODO: Enable this when we implement Scene images
                 pass
             else:

@@ -74,3 +74,4 @@ class SpaceType(StringEnum):
     MEDICAL_FILE = "medical-file"
     MEDICAL_STACK = "medical-stack"
     SCENE_IMAGE = "scene-image"
+    POINT_CLOUD = "point-cloud"

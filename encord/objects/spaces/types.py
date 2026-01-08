@@ -78,6 +78,10 @@ class SceneImageSpaceInfo(BaseSpaceInfo):
     scene_info: FileInSceneInfo
 
 
+class PointCloudSpaceInfo(BaseSpaceInfo):
+    space_type: Literal[SpaceType.POINT_CLOUD]
+
+
 SpaceInfo = Union[
     VideoSpaceInfo,
     ImageSpaceInfo,
@@ -87,4 +91,5 @@ SpaceInfo = Union[
     MedicalFileSpaceInfo,
     MedicalStackSpaceInfo,
     SceneImageSpaceInfo,
+    PointCloudSpaceInfo,
 ]
