@@ -1038,6 +1038,19 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
 
         return frame_object_dict
 
+    def _build_frame_labels_dict(self) -> dict[str, LabelBlob]:
+        """Export space to dictionary format."""
+        labels: dict[str, LabelBlob] = {}
+        frames_with_objects = list(self._frames_to_object_hash_to_annotation_data.keys())
+        frames_with_classifications = list(self._frames_to_classification_hash_to_annotation_data.keys())
+        frames_with_both_objects_and_classifications = sorted(set(frames_with_objects + frames_with_classifications))
+
+        for frame in frames_with_both_objects_and_classifications:
+            frame_label = self._build_frame_label_dict(frame=frame)
+            labels[str(frame)] = frame_label
+
+        return labels
+
     def _build_frame_label_dict(self, frame: int) -> LabelBlob:
         object_list: List[FrameObject] = []
         classification_list: List[FrameClassification] = []
