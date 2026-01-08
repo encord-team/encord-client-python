@@ -7,6 +7,7 @@ from encord.exceptions import LabelRowError
 from encord.objects import Shape
 from encord.objects.coordinates import (
     ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
+    Cuboid2DCoordinates,
     PointCoordinate,
     PointCoordinate3D,
     PolygonCoordinates,
@@ -96,3 +97,183 @@ def test_polyline_coordinates():
     # point with missing coordinate
     with pytest.raises(LabelRowError):
         PolylineCoordinates.from_dict({"polyline": [{"x": 0}, {"x": 1, "y": 1}]})
+
+
+def test_cuboid_2d_coordinates_perspective():
+    """Test Cuboid2DCoordinates with perspective projection (vanishing point + scale ratio)."""
+    front = [
+        PointCoordinate(x=0, y=0),
+        PointCoordinate(x=100, y=0),
+        PointCoordinate(x=100, y=100),
+        PointCoordinate(x=0, y=100),
+    ]
+    vanishing_point = PointCoordinate(x=400, y=300)
+    scale_ratio = 0.75
+
+    cuboid = Cuboid2DCoordinates(
+        front=front,
+        vanishing_point=vanishing_point,
+        scale_ratio=scale_ratio,
+    )
+
+    assert cuboid.front == front
+    assert cuboid.vanishing_point == vanishing_point
+    assert cuboid.scale_ratio == scale_ratio
+    assert cuboid.offset is None
+
+
+def test_cuboid_2d_coordinates_parallel():
+    """Test Cuboid2DCoordinates with parallel projection (offset)."""
+    front = [
+        PointCoordinate(x=0, y=0),
+        PointCoordinate(x=100, y=0),
+        PointCoordinate(x=100, y=100),
+        PointCoordinate(x=0, y=100),
+    ]
+    offset = PointCoordinate(x=50, y=-50)
+
+    cuboid = Cuboid2DCoordinates(front=front, offset=offset)
+
+    assert cuboid.front == front
+    assert cuboid.offset == offset
+    assert cuboid.vanishing_point is None
+    assert cuboid.scale_ratio is None
+
+
+def test_cuboid_2d_coordinates_validation():
+    """Test that Cuboid2DCoordinates validation raises errors for invalid configurations."""
+    front = [PointCoordinate(x=0, y=0), PointCoordinate(x=100, y=100)]
+
+    # Neither perspective nor parallel
+    with pytest.raises(LabelRowError):
+        Cuboid2DCoordinates(front=front)
+
+    # Both perspective and parallel
+    with pytest.raises(LabelRowError):
+        Cuboid2DCoordinates(
+            front=front,
+            vanishing_point=PointCoordinate(x=400, y=300),
+            scale_ratio=0.75,
+            offset=PointCoordinate(x=50, y=-50),
+        )
+
+    # Perspective with only vanishing_point (missing scale_ratio)
+    with pytest.raises(LabelRowError):
+        Cuboid2DCoordinates(front=front, vanishing_point=PointCoordinate(x=400, y=300))
+
+    # Perspective with only scale_ratio (missing vanishing_point)
+    with pytest.raises(LabelRowError):
+        Cuboid2DCoordinates(front=front, scale_ratio=0.75)
+
+
+def test_cuboid_2d_coordinates_from_dict_perspective():
+    """Test Cuboid2DCoordinates.from_dict with perspective projection."""
+    data = {
+        "cuboid_2d": {
+            "front": [0, 0, 100, 0, 100, 100, 0, 100],
+            "vanishingPoint": {"x": 400, "y": 300},
+            "scaleRatio": 0.75,
+        }
+    }
+
+    cuboid = Cuboid2DCoordinates.from_dict(data)
+
+    assert len(cuboid.front) == 4
+    assert cuboid.front[0] == PointCoordinate(x=0, y=0)
+    assert cuboid.front[1] == PointCoordinate(x=100, y=0)
+    assert cuboid.front[2] == PointCoordinate(x=100, y=100)
+    assert cuboid.front[3] == PointCoordinate(x=0, y=100)
+    assert cuboid.vanishing_point == PointCoordinate(x=400, y=300)
+    assert cuboid.scale_ratio == 0.75
+    assert cuboid.offset is None
+
+
+def test_cuboid_2d_coordinates_from_dict_parallel():
+    """Test Cuboid2DCoordinates.from_dict with parallel projection."""
+    data = {
+        "cuboid_2d": {
+            "front": [0, 0, 100, 0, 100, 100, 0, 100],
+            "offset": {"x": 50, "y": -50},
+        }
+    }
+
+    cuboid = Cuboid2DCoordinates.from_dict(data)
+
+    assert len(cuboid.front) == 4
+    assert cuboid.offset == PointCoordinate(x=50, y=-50)
+    assert cuboid.vanishing_point is None
+    assert cuboid.scale_ratio is None
+
+
+def test_cuboid_2d_coordinates_to_dict_perspective():
+    """Test Cuboid2DCoordinates.to_dict with perspective projection."""
+    front = [
+        PointCoordinate(x=0, y=0),
+        PointCoordinate(x=100, y=0),
+        PointCoordinate(x=100, y=100),
+        PointCoordinate(x=0, y=100),
+    ]
+
+    cuboid = Cuboid2DCoordinates(
+        front=front,
+        vanishing_point=PointCoordinate(x=400, y=300),
+        scale_ratio=0.75,
+    )
+
+    result = cuboid.to_dict()
+
+    assert result["front"] == [0, 0, 100, 0, 100, 100, 0, 100]
+    assert result["vanishingPoint"] == {"x": 400, "y": 300}
+    assert result["scaleRatio"] == 0.75
+    assert "offset" not in result
+
+
+def test_cuboid_2d_coordinates_to_dict_parallel():
+    """Test Cuboid2DCoordinates.to_dict with parallel projection."""
+    front = [
+        PointCoordinate(x=0, y=0),
+        PointCoordinate(x=100, y=0),
+        PointCoordinate(x=100, y=100),
+        PointCoordinate(x=0, y=100),
+    ]
+
+    cuboid = Cuboid2DCoordinates(front=front, offset=PointCoordinate(x=50, y=-50))
+
+    result = cuboid.to_dict()
+
+    assert result["front"] == [0, 0, 100, 0, 100, 100, 0, 100]
+    assert result["offset"] == {"x": 50, "y": -50}
+    assert "vanishingPoint" not in result
+    assert "scaleRatio" not in result
+
+
+def test_cuboid_2d_coordinates_roundtrip():
+    """Test that to_dict and from_dict are inverse operations."""
+    # Perspective projection
+    original_perspective = Cuboid2DCoordinates(
+        front=[
+            PointCoordinate(x=10.5, y=20.5),
+            PointCoordinate(x=110.5, y=20.5),
+            PointCoordinate(x=110.5, y=120.5),
+            PointCoordinate(x=10.5, y=120.5),
+        ],
+        vanishing_point=PointCoordinate(x=500.0, y=400.0),
+        scale_ratio=0.6,
+    )
+    dict_perspective = original_perspective.to_dict()
+    reconstructed_perspective = Cuboid2DCoordinates.from_dict({"cuboid_2d": dict_perspective})
+    assert reconstructed_perspective == original_perspective
+
+    # Parallel projection
+    original_parallel = Cuboid2DCoordinates(
+        front=[
+            PointCoordinate(x=0, y=0),
+            PointCoordinate(x=50, y=0),
+            PointCoordinate(x=50, y=50),
+            PointCoordinate(x=0, y=50),
+        ],
+        offset=PointCoordinate(x=25, y=-25),
+    )
+    dict_parallel = original_parallel.to_dict()
+    reconstructed_parallel = Cuboid2DCoordinates.from_dict({"cuboid_2d": dict_parallel})
+    assert reconstructed_parallel == original_parallel

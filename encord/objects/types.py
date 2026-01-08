@@ -63,6 +63,26 @@ class PolygonFrameCoordinatesDict(PolygonFrameCoordinatesDictRequired, total=Fal
     polygons: Optional[PolygonDict]  # This was introduced to support complex polygons.
 
 
+class Cuboid2DDictRequired(TypedDict):
+    """Required fields for Cuboid2D coordinates."""
+
+    front: List[float]  # Flat array of coordinates [x1, y1, x2, y2, ...]
+
+
+class Cuboid2DDict(Cuboid2DDictRequired, total=False):
+    """Cuboid2D coordinates with optional perspective or parallel projection fields."""
+
+    # Perspective projection fields
+    vanishingPoint: Optional[PointDict]
+    scaleRatio: Optional[float]
+    # Parallel projection field
+    offset: Optional[PointDict]
+
+
+class Cuboid2DFrameCoordinatesDict(TypedDict):
+    cuboid_2d: Cuboid2DDict
+
+
 class AnswerDict(TypedDict):
     """
     Answer for attributes/classifications.
@@ -127,9 +147,19 @@ class PointFrameObject3D(BaseFrameObject, Point3DFrameCoordinatesDict):
 
 PointFrameObject = Union[PointFrameObject2D, PointFrameObject3D]
 
+
+class Cuboid2DFrameObject(BaseFrameObject, Cuboid2DFrameCoordinatesDict):
+    shape: Literal[Shape.CUBOID_2D]
+
+
 """ Frame object in the label blob. Contains shape data, and is differentiated by the 'shape' field. """
 FrameObject = Union[
-    BoundingBoxFrameObject, RotatableBoundingBoxFrameObject, PolygonFrameObject, PointFrameObject, PolylineFrameObject
+    BoundingBoxFrameObject,
+    RotatableBoundingBoxFrameObject,
+    PolygonFrameObject,
+    PointFrameObject,
+    PolylineFrameObject,
+    Cuboid2DFrameObject,
 ]
 
 
