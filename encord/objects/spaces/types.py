@@ -1,4 +1,4 @@
-from typing import List, Literal, TypedDict, Union
+from typing import Dict, List, Literal, TypedDict, Union
 
 from typing_extensions import NotRequired
 
@@ -7,7 +7,7 @@ from encord.objects.types import LabelBlob
 
 
 class BaseSpaceInfo(TypedDict):
-    labels: dict[str, LabelBlob]
+    labels: Dict[str, LabelBlob]
 
 
 class ChildInfo(TypedDict):
@@ -67,6 +67,17 @@ class MedicalStackSpaceInfo(BaseSpaceInfo):
     frames: List[DicomFrameInfo]
 
 
+class FileInSceneInfo(TypedDict):
+    stream_id: str
+    event_index: int
+    uri: str
+
+
+class SceneImageSpaceInfo(BaseSpaceInfo):
+    space_type: Literal[SpaceType.SCENE_IMAGE]
+    scene_info: FileInSceneInfo
+
+
 SpaceInfo = Union[
     VideoSpaceInfo,
     ImageSpaceInfo,
@@ -75,4 +86,5 @@ SpaceInfo = Union[
     HtmlSpaceInfo,
     MedicalFileSpaceInfo,
     MedicalStackSpaceInfo,
+    SceneImageSpaceInfo,
 ]

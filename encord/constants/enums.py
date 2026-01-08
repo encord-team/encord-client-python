@@ -73,3 +73,4 @@ class SpaceType(StringEnum):
     HTML = "html"
     MEDICAL_FILE = "medical-file"
     MEDICAL_STACK = "medical-stack"
+    SCENE_IMAGE = "scene-image"
