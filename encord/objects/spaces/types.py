@@ -15,6 +15,12 @@ class ChildInfo(TypedDict):
     file_name: str
 
 
+class FileInSceneInfo(TypedDict):
+    stream_id: str
+    event_index: int
+    uri: str
+
+
 class VideoSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.VIDEO]
     child_info: NotRequired[ChildInfo]
@@ -46,4 +52,12 @@ class HtmlSpaceInfo(BaseSpaceInfo):
     child_info: NotRequired[ChildInfo]
 
 
-SpaceInfo = Union[VideoSpaceInfo, ImageSpaceInfo, AudioSpaceInfo, TextSpaceInfo, HtmlSpaceInfo]
+class PointCloudFileSpaceInfo(TypedDict):
+    """Point cloud space with a single label (not frame-keyed)."""
+
+    space_type: Literal[SpaceType.POINT_CLOUD]
+    scene_info: FileInSceneInfo
+    labels: LabelBlob
+
+
+SpaceInfo = Union[VideoSpaceInfo, ImageSpaceInfo, AudioSpaceInfo, TextSpaceInfo, HtmlSpaceInfo, PointCloudFileSpaceInfo]

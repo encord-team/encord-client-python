@@ -107,8 +107,9 @@ from encord.objects.spaces.base_space import Space, SpaceT
 from encord.objects.spaces.html_space import HTMLSpace
 from encord.objects.spaces.image_space import ImageSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
+from encord.objects.spaces.range_space.point_cloud_space import PointCloudFileSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
-from encord.objects.spaces.types import SpaceInfo
+from encord.objects.spaces.types import ChildInfo, SpaceInfo
 from encord.objects.spaces.video_space import VideoSpace
 from encord.objects.types import (
     AttributeDict,
@@ -2470,7 +2471,7 @@ class LabelRowV2:
                 continue
 
             # Store layout_key -> space_id mapping if child_info is present
-            child_info = space_info.get("child_info")
+            child_info = cast(Optional[ChildInfo], space_info.get("child_info"))
             if child_info is not None:
                 self._layout_key_to_space_id[child_info["layout_key"]] = space_id
 
@@ -2510,6 +2511,14 @@ class LabelRowV2:
                     label_row=self,
                 )
                 res[space_id] = html_space
+            elif space_info["space_type"] == SpaceType.POINT_CLOUD:
+                scene_info = space_info.get("scene_info", {"stream_id": "", "event_index": 0, "uri": space_id})
+                point_cloud_space = PointCloudFileSpace(
+                    space_id=space_id,
+                    label_row=self,
+                    scene_info=scene_info,
+                )
+                res[space_id] = point_cloud_space
 
         return res
 
@@ -2545,6 +2554,12 @@ class LabelRowV2:
                 html_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
+            elif space_info["space_type"] == SpaceType.POINT_CLOUD:
+                point_cloud_space = self._space_map[space_id]
+                if isinstance(point_cloud_space, PointCloudFileSpace):
+                    point_cloud_space._parse_space_dict(
+                        space_info, object_answers=object_answers, classification_answers=classification_answers
+                    )
 
     def _parse_label_row_metadata(self, label_row_metadata: LabelRowMetadata) -> LabelRowV2.LabelRowReadOnlyData:
         data_type = DataType.from_upper_case_string(label_row_metadata.data_type)
