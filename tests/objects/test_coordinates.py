@@ -7,11 +7,13 @@ from encord.exceptions import LabelRowError
 from encord.objects import Shape
 from encord.objects.coordinates import (
     ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
-    Cuboid2DCoordinates,
+    Cuboid2DIsometricCoordinates,
+    Cuboid2DPerspectiveCoordinates,
     PointCoordinate,
     PointCoordinate3D,
     PolygonCoordinates,
     PolylineCoordinates,
+    cuboid_2d_coordinates_from_dict,
 )
 
 
@@ -100,7 +102,7 @@ def test_polyline_coordinates():
 
 
 def test_cuboid_2d_coordinates_perspective():
-    """Test Cuboid2DCoordinates with perspective projection (vanishing point + scale ratio)."""
+    """Test Cuboid2DPerspectiveCoordinates with perspective projection (vanishing point + scale ratio)."""
     front = [
         PointCoordinate(x=0, y=0),
         PointCoordinate(x=100, y=0),
@@ -110,7 +112,7 @@ def test_cuboid_2d_coordinates_perspective():
     vanishing_point = PointCoordinate(x=400, y=300)
     scale_ratio = 0.75
 
-    cuboid = Cuboid2DCoordinates(
+    cuboid = Cuboid2DPerspectiveCoordinates(
         front=front,
         vanishing_point=vanishing_point,
         scale_ratio=scale_ratio,
@@ -119,11 +121,10 @@ def test_cuboid_2d_coordinates_perspective():
     assert cuboid.front == front
     assert cuboid.vanishing_point == vanishing_point
     assert cuboid.scale_ratio == scale_ratio
-    assert cuboid.offset is None
 
 
-def test_cuboid_2d_coordinates_parallel():
-    """Test Cuboid2DCoordinates with parallel projection (offset)."""
+def test_cuboid_2d_coordinates_isometric():
+    """Test Cuboid2DIsometricCoordinates with isometric projection (offset)."""
     front = [
         PointCoordinate(x=0, y=0),
         PointCoordinate(x=100, y=0),
@@ -132,42 +133,27 @@ def test_cuboid_2d_coordinates_parallel():
     ]
     offset = PointCoordinate(x=50, y=-50)
 
-    cuboid = Cuboid2DCoordinates(front=front, offset=offset)
+    cuboid = Cuboid2DIsometricCoordinates(front=front, offset=offset)
 
     assert cuboid.front == front
     assert cuboid.offset == offset
-    assert cuboid.vanishing_point is None
-    assert cuboid.scale_ratio is None
 
 
-def test_cuboid_2d_coordinates_validation():
-    """Test that Cuboid2DCoordinates validation raises errors for invalid configurations."""
-    front = [PointCoordinate(x=0, y=0), PointCoordinate(x=100, y=100)]
+def test_cuboid_2d_coordinates_from_dict_validation():
+    """Test that cuboid_2d_coordinates_from_dict raises errors for invalid configurations."""
+    front = [0, 0, 100, 100]
 
     # Neither perspective nor parallel
     with pytest.raises(LabelRowError):
-        Cuboid2DCoordinates(front=front)
-
-    # Both perspective and parallel
-    with pytest.raises(LabelRowError):
-        Cuboid2DCoordinates(
-            front=front,
-            vanishing_point=PointCoordinate(x=400, y=300),
-            scale_ratio=0.75,
-            offset=PointCoordinate(x=50, y=-50),
-        )
+        cuboid_2d_coordinates_from_dict({"cuboid_2d": {"front": front}})
 
     # Perspective with only vanishing_point (missing scale_ratio)
     with pytest.raises(LabelRowError):
-        Cuboid2DCoordinates(front=front, vanishing_point=PointCoordinate(x=400, y=300))
-
-    # Perspective with only scale_ratio (missing vanishing_point)
-    with pytest.raises(LabelRowError):
-        Cuboid2DCoordinates(front=front, scale_ratio=0.75)
+        cuboid_2d_coordinates_from_dict({"cuboid_2d": {"front": front, "vanishingPoint": {"x": 400, "y": 300}}})
 
 
 def test_cuboid_2d_coordinates_from_dict_perspective():
-    """Test Cuboid2DCoordinates.from_dict with perspective projection."""
+    """Test cuboid_2d_coordinates_from_dict with perspective projection."""
     data = {
         "cuboid_2d": {
             "front": [0, 0, 100, 0, 100, 100, 0, 100],
@@ -176,8 +162,9 @@ def test_cuboid_2d_coordinates_from_dict_perspective():
         }
     }
 
-    cuboid = Cuboid2DCoordinates.from_dict(data)
+    cuboid = cuboid_2d_coordinates_from_dict(data)
 
+    assert isinstance(cuboid, Cuboid2DPerspectiveCoordinates)
     assert len(cuboid.front) == 4
     assert cuboid.front[0] == PointCoordinate(x=0, y=0)
     assert cuboid.front[1] == PointCoordinate(x=100, y=0)
@@ -185,11 +172,10 @@ def test_cuboid_2d_coordinates_from_dict_perspective():
     assert cuboid.front[3] == PointCoordinate(x=0, y=100)
     assert cuboid.vanishing_point == PointCoordinate(x=400, y=300)
     assert cuboid.scale_ratio == 0.75
-    assert cuboid.offset is None
 
 
-def test_cuboid_2d_coordinates_from_dict_parallel():
-    """Test Cuboid2DCoordinates.from_dict with parallel projection."""
+def test_cuboid_2d_coordinates_from_dict_isometric():
+    """Test cuboid_2d_coordinates_from_dict with isometric projection."""
     data = {
         "cuboid_2d": {
             "front": [0, 0, 100, 0, 100, 100, 0, 100],
@@ -197,16 +183,15 @@ def test_cuboid_2d_coordinates_from_dict_parallel():
         }
     }
 
-    cuboid = Cuboid2DCoordinates.from_dict(data)
+    cuboid = cuboid_2d_coordinates_from_dict(data)
 
+    assert isinstance(cuboid, Cuboid2DIsometricCoordinates)
     assert len(cuboid.front) == 4
     assert cuboid.offset == PointCoordinate(x=50, y=-50)
-    assert cuboid.vanishing_point is None
-    assert cuboid.scale_ratio is None
 
 
 def test_cuboid_2d_coordinates_to_dict_perspective():
-    """Test Cuboid2DCoordinates.to_dict with perspective projection."""
+    """Test Cuboid2DPerspectiveCoordinates.to_dict with perspective projection."""
     front = [
         PointCoordinate(x=0, y=0),
         PointCoordinate(x=100, y=0),
@@ -214,7 +199,7 @@ def test_cuboid_2d_coordinates_to_dict_perspective():
         PointCoordinate(x=0, y=100),
     ]
 
-    cuboid = Cuboid2DCoordinates(
+    cuboid = Cuboid2DPerspectiveCoordinates(
         front=front,
         vanishing_point=PointCoordinate(x=400, y=300),
         scale_ratio=0.75,
@@ -228,8 +213,8 @@ def test_cuboid_2d_coordinates_to_dict_perspective():
     assert "offset" not in result
 
 
-def test_cuboid_2d_coordinates_to_dict_parallel():
-    """Test Cuboid2DCoordinates.to_dict with parallel projection."""
+def test_cuboid_2d_coordinates_to_dict_isometric():
+    """Test Cuboid2DIsometricCoordinates.to_dict with isometric projection."""
     front = [
         PointCoordinate(x=0, y=0),
         PointCoordinate(x=100, y=0),
@@ -237,7 +222,7 @@ def test_cuboid_2d_coordinates_to_dict_parallel():
         PointCoordinate(x=0, y=100),
     ]
 
-    cuboid = Cuboid2DCoordinates(front=front, offset=PointCoordinate(x=50, y=-50))
+    cuboid = Cuboid2DIsometricCoordinates(front=front, offset=PointCoordinate(x=50, y=-50))
 
     result = cuboid.to_dict()
 
@@ -248,9 +233,9 @@ def test_cuboid_2d_coordinates_to_dict_parallel():
 
 
 def test_cuboid_2d_coordinates_roundtrip():
-    """Test that to_dict and from_dict are inverse operations."""
+    """Test that to_dict and cuboid_2d_coordinates_from_dict are inverse operations."""
     # Perspective projection
-    original_perspective = Cuboid2DCoordinates(
+    original_perspective = Cuboid2DPerspectiveCoordinates(
         front=[
             PointCoordinate(x=10.5, y=20.5),
             PointCoordinate(x=110.5, y=20.5),
@@ -261,11 +246,11 @@ def test_cuboid_2d_coordinates_roundtrip():
         scale_ratio=0.6,
     )
     dict_perspective = original_perspective.to_dict()
-    reconstructed_perspective = Cuboid2DCoordinates.from_dict({"cuboid_2d": dict_perspective})
+    reconstructed_perspective = cuboid_2d_coordinates_from_dict({"cuboid_2d": dict_perspective})
     assert reconstructed_perspective == original_perspective
 
-    # Parallel projection
-    original_parallel = Cuboid2DCoordinates(
+    # Isometric projection
+    original_isometric = Cuboid2DIsometricCoordinates(
         front=[
             PointCoordinate(x=0, y=0),
             PointCoordinate(x=50, y=0),
@@ -274,6 +259,6 @@ def test_cuboid_2d_coordinates_roundtrip():
         ],
         offset=PointCoordinate(x=25, y=-25),
     )
-    dict_parallel = original_parallel.to_dict()
-    reconstructed_parallel = Cuboid2DCoordinates.from_dict({"cuboid_2d": dict_parallel})
-    assert reconstructed_parallel == original_parallel
+    dict_isometric = original_isometric.to_dict()
+    reconstructed_isometric = cuboid_2d_coordinates_from_dict({"cuboid_2d": dict_isometric})
+    assert reconstructed_isometric == original_isometric

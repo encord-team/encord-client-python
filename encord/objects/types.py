@@ -63,20 +63,23 @@ class PolygonFrameCoordinatesDict(PolygonFrameCoordinatesDictRequired, total=Fal
     polygons: Optional[PolygonDict]  # This was introduced to support complex polygons.
 
 
-class Cuboid2DDictRequired(TypedDict):
-    """Required fields for Cuboid2D coordinates."""
+class Cuboid2DPerspectiveDict(TypedDict):
+    """Perspective projection cuboid dict with vanishing point and scale ratio."""
 
     front: List[float]  # Flat array of coordinates [x1, y1, x2, y2, ...]
+    vanishingPoint: PointDict
+    scaleRatio: float
 
 
-class Cuboid2DDict(Cuboid2DDictRequired, total=False):
-    """Cuboid2D coordinates with optional perspective or parallel projection fields."""
+class Cuboid2DIsometricDict(TypedDict):
+    """Isometric projection cuboid dict with offset."""
 
-    # Perspective projection fields
-    vanishingPoint: Optional[PointDict]
-    scaleRatio: Optional[float]
-    # Parallel projection field
-    offset: Optional[PointDict]
+    front: List[float]  # Flat array of coordinates [x1, y1, x2, y2, ...]
+    offset: PointDict
+
+
+Cuboid2DDict = Union[Cuboid2DPerspectiveDict, Cuboid2DIsometricDict]
+"""Union type for 2D cuboid dict - either perspective or isometric projection."""
 
 
 class Cuboid2DFrameCoordinatesDict(TypedDict):
