@@ -245,12 +245,10 @@ class Cuboid2DCoordinates:
         scale_ratio = None
         offset = None
 
-        if "vanishingPoint" in cuboid_2d_dict and cuboid_2d_dict["vanishingPoint"] is not None:
-            vp = cuboid_2d_dict["vanishingPoint"]
+        if vp := cuboid_2d_dict.get("vanishingPoint"):
             vanishing_point = PointCoordinate(x=vp["x"], y=vp["y"])
             scale_ratio = cuboid_2d_dict.get("scaleRatio")
-        elif "offset" in cuboid_2d_dict and cuboid_2d_dict["offset"] is not None:
-            off = cuboid_2d_dict["offset"]
+        elif off := cuboid_2d_dict.get("offset"):
             offset = PointCoordinate(x=off["x"], y=off["y"])
 
         return Cuboid2DCoordinates(
@@ -266,9 +264,7 @@ class Cuboid2DCoordinates:
         Returns:
             dict: A dictionary representation of the cuboid 2D coordinates.
         """
-        front_flat: List[float] = []
-        for point in self.front:
-            front_flat.extend([point.x, point.y])
+        front_flat = [c for point in self.front for c in (point.x, point.y)]
 
         result: Dict[str, Any] = {"front": front_flat}
 
