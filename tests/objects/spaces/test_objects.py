@@ -26,7 +26,7 @@ def test_bitmask_dimension_validation():
 
     video_space = label_row._get_space(id="video-uuid", type_="video")
     image_space = label_row._get_space(id="image-uuid", type_="image")
-    dicom_stack_space = label_row._get_space(id="dicom-stack-uuid", type_="medical-stack")
+    dicom_stack_space = label_row._get_space(id="dicom-stack-uuid", type_="medical_stack")
 
     # Correct dimensions (100x100) should succeed on both spaces
     correct_bitmask = BitmaskCoordinates(np.zeros((100, 100), dtype=bool))

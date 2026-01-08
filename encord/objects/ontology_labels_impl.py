@@ -2491,7 +2491,7 @@ class LabelRowV2:
                 continue
 
             # Store layout_key -> space_id mapping if child_info is present
-            child_info = cast(ChildInfo | None, space_info.get("child_info", None))
+            child_info = cast(Optional[ChildInfo], space_info.get("child_info", None))
             if child_info is not None:
                 self._layout_key_to_space_id[child_info["layout_key"]] = space_id
 
