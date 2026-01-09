@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Literal, Optional, TypedDict, TypeGuard, Union
+from typing import Any, Dict, List, Literal, Optional, TypedDict, Union
+
+from typing_extensions import TypeGuard
 
 from encord.objects.common import Shape
 from encord.objects.html_node import HtmlNode

@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Type, TypeGuard, Union, cast
+from typing import Any, Dict, List, Optional, Type, Union, cast
 
 from encord.exceptions import LabelRowError
 from encord.objects.bitmask import BitmaskCoordinates
@@ -25,10 +25,7 @@ from encord.objects.types import (
     BaseFrameObject,
     BoundingBoxDict,
     BoundingBoxFrameCoordinatesDict,
-    Cuboid2DDict,
     Cuboid2DFrameCoordinatesDict,
-    Cuboid2DIsometricDict,
-    Cuboid2DPerspectiveDict,
     FrameObject,
     Point3DFrameCoordinatesDict,
     PointDict,
