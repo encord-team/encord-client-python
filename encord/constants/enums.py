@@ -71,3 +71,7 @@ class SpaceType(StringEnum):
     AUDIO = "audio"
     TEXT = "text"
     HTML = "html"
+    MEDICAL_FILE = "medical_file"
+    MEDICAL_STACK = "medical_stack"
+    SCENE_IMAGE = "scene_image"
+    POINT_CLOUD = "point_cloud"

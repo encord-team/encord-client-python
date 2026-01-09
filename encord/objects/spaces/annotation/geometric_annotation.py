@@ -14,7 +14,7 @@ from encord.objects.spaces.annotation.base_annotation import (
 if TYPE_CHECKING:
     from encord.objects import ClassificationInstance, ObjectInstance
     from encord.objects.spaces.image_space import ImageSpace
-    from encord.objects.spaces.video_space import VideoSpace
+    from encord.objects.spaces.multiframe_space.multiframe_space import MultiFrameSpace
 
 
 @dataclass
@@ -62,13 +62,13 @@ class _GeometricObjectAnnotation(_ObjectAnnotation):
 class _GeometricFrameObjectAnnotation(_ObjectAnnotation):
     """Annotations for multi-frame geometric object labels (e.g. Video)."""
 
-    def __init__(self, space: VideoSpace, object_instance: ObjectInstance, frame: int):
+    def __init__(self, space: MultiFrameSpace, object_instance: ObjectInstance, frame: int):
         super().__init__(space, object_instance)
-        self._space: VideoSpace = space
+        self._space: MultiFrameSpace = space
         self._frame = frame
 
     @property
-    def space(self) -> VideoSpace:
+    def space(self) -> MultiFrameSpace:
         return self._space
 
     @property
@@ -107,13 +107,13 @@ class _GeometricFrameObjectAnnotation(_ObjectAnnotation):
 class _FrameClassificationAnnotation(_ClassificationAnnotation):
     """Annotations for multi-frame classifications (e.g. Video)."""
 
-    def __init__(self, space: VideoSpace, classification_instance: ClassificationInstance, frame: int):
+    def __init__(self, space: MultiFrameSpace, classification_instance: ClassificationInstance, frame: int):
         super().__init__(space, classification_instance)
-        self._space: VideoSpace = space
+        self._space: MultiFrameSpace = space
         self._frame = frame
 
     @property
-    def space(self) -> VideoSpace:
+    def space(self) -> MultiFrameSpace:
         return self._space
 
     @property

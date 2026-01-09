@@ -106,10 +106,12 @@ from encord.objects.spaces.annotation.base_annotation import (
 from encord.objects.spaces.base_space import Space, SpaceT
 from encord.objects.spaces.html_space import HTMLSpace
 from encord.objects.spaces.image_space import ImageSpace
+from encord.objects.spaces.multiframe_space.medical_file_space import MedicalFileSpace
+from encord.objects.spaces.multiframe_space.medical_stack_space import MedicalStackSpace
+from encord.objects.spaces.multiframe_space.video_space import VideoSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
-from encord.objects.spaces.types import SpaceInfo
-from encord.objects.spaces.video_space import VideoSpace
+from encord.objects.spaces.types import ChildInfo, MedicalStackSpaceInfo, SpaceInfo
 from encord.objects.types import (
     AttributeDict,
     BaseFrameObject,
@@ -146,6 +148,7 @@ LABELLING_NOT_INITIALISED_ERROR_MESSAGE = (
     "For this operation you will need to initialise labelling first. Call the `.initialise_labels()` to do so first."
 )
 
+
 # Type mapping for runtime validation in get_space
 _SPACE_TYPE_TO_CLASS = {
     "video": VideoSpace,
@@ -153,6 +156,8 @@ _SPACE_TYPE_TO_CLASS = {
     "audio": AudioSpace,
     "text": TextSpace,
     "html": HTMLSpace,
+    "medical_file": MedicalFileSpace,
+    "medical_stack": MedicalStackSpace,
 }
 
 
@@ -812,6 +817,18 @@ class LabelRowV2:
         pass
 
     @overload
+    def _get_space(self, *, id: str, type_: Literal["html"]) -> HTMLSpace:
+        pass
+
+    @overload
+    def _get_space(self, *, id: str, type_: Literal["medical_file"]) -> MedicalFileSpace:
+        pass
+
+    @overload
+    def _get_space(self, *, id: str, type_: Literal["medical_stack"]) -> MedicalStackSpace:
+        pass
+
+    @overload
     def _get_space(self, *, layout_key: str, type_: Literal["video"]) -> VideoSpace:
         pass
 
@@ -828,11 +845,15 @@ class LabelRowV2:
         pass
 
     @overload
-    def _get_space(self, *, id: str, type_: Literal["html"]) -> HTMLSpace:
+    def _get_space(self, *, layout_key: str, type_: Literal["html"]) -> HTMLSpace:
         pass
 
     @overload
-    def _get_space(self, *, layout_key: str, type_: Literal["html"]) -> HTMLSpace:
+    def _get_space(self, *, layout_key: str, type_: Literal["medical_file"]) -> MedicalFileSpace:
+        pass
+
+    @overload
+    def _get_space(self, *, layout_key: str, type_: Literal["medical_stack"]) -> MedicalStackSpace:
         pass
 
     def _get_space(
@@ -840,7 +861,7 @@ class LabelRowV2:
         *,
         id: Optional[str] = None,
         layout_key: Optional[str] = None,
-        type_: Literal["video", "image", "audio", "text", "html"],
+        type_: Literal["video", "image", "audio", "text", "html", "medical_file", "medical_stack"],
     ) -> Space:
         """Retrieves a single space which matches the specified id and type.
 
@@ -2470,7 +2491,7 @@ class LabelRowV2:
                 continue
 
             # Store layout_key -> space_id mapping if child_info is present
-            child_info = space_info.get("child_info")
+            child_info = cast(Optional[ChildInfo], space_info.get("child_info", None))
             if child_info is not None:
                 self._layout_key_to_space_id[child_info["layout_key"]] = space_id
 
@@ -2510,6 +2531,23 @@ class LabelRowV2:
                     label_row=self,
                 )
                 res[space_id] = html_space
+            elif space_info["space_type"] == SpaceType.MEDICAL_FILE:
+                medical_file_space = MedicalFileSpace(
+                    space_id=space_id,
+                    label_row=self,
+                    number_of_frames=space_info["number_of_frames"],
+                    width=space_info["width"],
+                    height=space_info["height"],
+                )
+                res[space_id] = medical_file_space
+            elif space_info["space_type"] == SpaceType.MEDICAL_STACK:
+                medical_stack_space = MedicalStackSpace(space_id=space_id, label_row=self, frames=space_info["frames"])
+                res[space_id] = medical_stack_space
+            elif space_info["space_type"] == SpaceType.SCENE_IMAGE or space_info["space_type"] == SpaceType.POINT_CLOUD:
+                # TODO: Implement Scene Images
+                pass
+            else:
+                exhaustive_guard(space_info["space_type"], message="Missing initialisation for space.")
 
         return res
 
@@ -2545,6 +2583,21 @@ class LabelRowV2:
                 html_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
+            elif space_info["space_type"] == SpaceType.MEDICAL_FILE:
+                medical_file_space = self._get_space(id=space_id, type_="medical_file")
+                medical_file_space._parse_space_dict(
+                    space_info, object_answers=object_answers, classification_answers=classification_answers
+                )
+            elif space_info["space_type"] == SpaceType.MEDICAL_STACK:
+                medical_stack_space = self._get_space(id=space_id, type_="medical_stack")
+                medical_stack_space._parse_space_dict(
+                    space_info, object_answers=object_answers, classification_answers=classification_answers
+                )
+            elif space_info["space_type"] == SpaceType.SCENE_IMAGE or space_info["space_type"] == SpaceType.POINT_CLOUD:
+                # TODO: Enable this when we implement Scene images
+                pass
+            else:
+                exhaustive_guard(space_info["space_type"], message="Missing implementation for parsing space labels.")
 
     def _parse_label_row_metadata(self, label_row_metadata: LabelRowMetadata) -> LabelRowV2.LabelRowReadOnlyData:
         data_type = DataType.from_upper_case_string(label_row_metadata.data_type)

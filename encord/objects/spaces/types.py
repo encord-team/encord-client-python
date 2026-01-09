@@ -1,4 +1,4 @@
-from typing import Literal, TypedDict, Union
+from typing import Dict, List, Literal, TypedDict, Union
 
 from typing_extensions import NotRequired
 
@@ -7,7 +7,7 @@ from encord.objects.types import LabelBlob
 
 
 class BaseSpaceInfo(TypedDict):
-    labels: dict[str, LabelBlob]
+    labels: Dict[str, LabelBlob]
 
 
 class ChildInfo(TypedDict):
@@ -46,4 +46,50 @@ class HtmlSpaceInfo(BaseSpaceInfo):
     child_info: NotRequired[ChildInfo]
 
 
-SpaceInfo = Union[VideoSpaceInfo, ImageSpaceInfo, AudioSpaceInfo, TextSpaceInfo, HtmlSpaceInfo]
+class MedicalFileSpaceInfo(BaseSpaceInfo):
+    space_type: Literal[SpaceType.MEDICAL_FILE]
+    child_info: NotRequired[ChildInfo]
+    number_of_frames: int
+    width: int
+    height: int
+
+
+class DicomFrameInfo(TypedDict):
+    width: int
+    height: int
+    instance_uid: str
+    file_name: str
+
+
+class MedicalStackSpaceInfo(BaseSpaceInfo):
+    space_type: Literal[SpaceType.MEDICAL_STACK]
+    child_info: NotRequired[ChildInfo]
+    frames: List[DicomFrameInfo]
+
+
+class FileInSceneInfo(TypedDict):
+    stream_id: str
+    event_index: int
+    uri: str
+
+
+class SceneImageSpaceInfo(BaseSpaceInfo):
+    space_type: Literal[SpaceType.SCENE_IMAGE]
+    scene_info: FileInSceneInfo
+
+
+class PointCloudSpaceInfo(BaseSpaceInfo):
+    space_type: Literal[SpaceType.POINT_CLOUD]
+
+
+SpaceInfo = Union[
+    VideoSpaceInfo,
+    ImageSpaceInfo,
+    AudioSpaceInfo,
+    TextSpaceInfo,
+    HtmlSpaceInfo,
+    MedicalFileSpaceInfo,
+    MedicalStackSpaceInfo,
+    SceneImageSpaceInfo,
+    PointCloudSpaceInfo,
+]

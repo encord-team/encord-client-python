@@ -46,14 +46,14 @@ def test_get_space_that_do_not_exist(ontology):
         label_row._get_space(id="non-existent-video", type_="video")
     assert (
         no_such_space_error.value.message
-        == "Could not find space with given id 'non-existent-video'. Available space ids: ['video-uuid', 'image-uuid', 'text-uuid', 'audio-uuid', 'html-uuid']"
+        == "Could not find space with given id 'non-existent-video'. Available space ids: ['video-uuid', 'image-uuid', 'text-uuid', 'audio-uuid', 'html-uuid', 'dicom-uuid', 'dicom-stack-uuid']"
     )
 
     with pytest.raises(LabelRowError) as no_such_layout_key_error:
         label_row._get_space(layout_key="non-existent-layout", type_="video")
     assert (
         no_such_layout_key_error.value.message
-        == "Could not find space with given layout key 'non-existent-layout'. Available layout keys: ['main-video', 'main-image', 'main-text', 'main-audio', 'main-html']"
+        == "Could not find space with given layout key 'non-existent-layout'. Available layout keys: ['main-video', 'main-image', 'main-text', 'main-audio', 'main-html', 'left-shoulder', 'xray-stack']"
     )
 
     with pytest.raises(LabelRowError) as incorrect_type_error:

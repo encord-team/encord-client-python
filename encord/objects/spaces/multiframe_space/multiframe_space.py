@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from abc import abstractmethod
 from collections import defaultdict
 from datetime import datetime
 from itertools import chain
@@ -20,10 +21,7 @@ from typing import (
     cast,
 )
 
-from pydantic import parse_obj_as
-
 from encord.common.range_manager import RangeManager
-from encord.common.time_parser import format_datetime_to_long_string
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects.answers import NumericAnswerValue
@@ -52,7 +50,7 @@ from encord.objects.spaces.annotation.geometric_annotation import (
 )
 from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
 from encord.objects.spaces.base_space import Space
-from encord.objects.spaces.types import SpaceInfo, VideoSpaceInfo
+from encord.objects.spaces.types import SpaceInfo
 from encord.objects.types import (
     AttributeDict,
     ClassificationAnswer,
@@ -71,21 +69,19 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from encord.objects import Classification, ClassificationInstance, Option
     from encord.objects.ontology_labels_impl import LabelRowV2
-    from encord.objects.ontology_object import Object, ObjectInstance
+    from encord.objects.ontology_object import ObjectInstance
 
 FrameOverlapStrategy = Union[Literal["error"], Literal["replace"]]
 
 
-class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnnotation, FrameOverlapStrategy]):
-    """Video space implementation for frame-based video annotations."""
+class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnnotation, FrameOverlapStrategy]):
+    """Space which handles annotation on multiple frames. E.g. video, dicom, nifti"""
 
     def __init__(
         self,
         space_id: str,
         label_row: LabelRowV2,
         number_of_frames: int,
-        width: int,
-        height: int,
     ):
         super().__init__(space_id, label_row)
 
@@ -114,8 +110,10 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
 
         # Need to check if this is 1-indexed
         self._number_of_frames: int = number_of_frames
-        self._width = width
-        self._height = height
+
+    @abstractmethod
+    def _get_frame_dimensions(self, frame: int) -> tuple[int, int]:
+        pass
 
     def _is_classification_present_on_frames(
         self, classification: Classification, frames: Frames
@@ -163,7 +161,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
             raise LabelRowError(f"Frame {min_frame} is invalid. Negative frames are not supported.")
         if max_frame > max_allowed_frame_index:
             raise LabelRowError(
-                f"Frame {max_frame} is invalid. The max frame on this video is {max_allowed_frame_index}."
+                f"Frame {max_frame} is invalid. The max frame on this file is {max_allowed_frame_index}."
             )
 
     def _put_object_instance(
@@ -246,10 +244,10 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
     ) -> None:
-        """Add an object instance to specific frames in the video space.
+        """Add an object instance to specific frames in the space.
 
         Args:
-            object_instance: The object instance to add to the video space.
+            object_instance: The object instance to add to the space.
             frames: Frame numbers or ranges where the object should appear. Can be:
                 - A single frame number (int)
                 - A list of frame numbers (List[int])
@@ -291,7 +289,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
         object_instance: ObjectInstance,
         frames: Frames,
     ) -> List[int]:
-        """Remove an object instance from specific frames in the video space.
+        """Remove an object instance from specific frames in the space.
 
         If the object is removed from all frames, it will be completely removed from the space.
         All dynamic answers associated with the object on these frames will also be removed.
@@ -575,7 +573,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
         """Add a classification instance to specific frames in the video space.
 
         Args:
-            classification_instance: The classification instance to add to the video space.
+            classification_instance: The classification instance to add to the space.
             frames: Frame numbers or ranges where the classification should appear. Can be:
                 - A single frame number (int)
                 - A list of frame numbers (List[int])
@@ -707,7 +705,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
         classification_instance: ClassificationInstance,
         frames: Frames,
     ) -> List[int]:
-        """Remove a classification instance from specific frames in the video space.
+        """Remove a classification instance from specific frames in the space.
 
         If the classification is removed from all frames, it will be completely removed from the space.
 
@@ -762,19 +760,19 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
         return _GeometricFrameObjectAnnotation(space=self, object_instance=self._objects_map[object_hash], frame=frame)
 
     def _create_object_annotation(self, obj_hash: str) -> _GeometricFrameObjectAnnotation:
-        """Not supported for VideoSpace - use _get_object_annotation_on_frame() instead.
+        """Not supported multiframe spaces - use _get_object_annotation_on_frame() instead.
 
-        VideoSpace has frame-specific annotations, so it overrides get_object_instance_annotations()
+        MultiFrame spaces has frame-specific annotations, so it overrides get_object_instance_annotations()
         with its own implementation that iterates through all frames.
         """
         raise NotImplementedError(
-            "VideoSpace does not support _create_object_annotation() without a frame. "
+            "This space does not support _create_object_annotation() without a frame. "
             "Use _get_object_annotation_on_frame() instead or call get_object_instance_annotations() "
             "to get all annotations across all frames."
         )
 
     def _create_classification_annotation(self, classification_hash: str) -> _FrameClassificationAnnotation:
-        """Not supported for VideoSpace - VideoSpace handles classifications per-frame.
+        """Not supported for MutliFrameSpace - MultiFrameSpace handles classifications per-frame.
 
         VideoSpace has frame-specific annotations, so it overrides get_classification_instance_annotations()
         with its own implementation that iterates through all frames.
@@ -828,7 +826,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
     def get_classification_instance_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
     ) -> Iterator[Union[_FrameClassificationAnnotation, _GlobalClassificationAnnotation]]:
-        """Get all classification instance annotations in the video space.
+        """Get all classification instance annotations in the space.
 
         Args:
             filter_classification_instances: Optional list of classification hashes to filter by.
@@ -867,7 +865,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
         return chain(frame_annotations, global_annotations)
 
     def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
-        """Completely remove an object instance from all frames in the video space.
+        """Completely remove an object instance from all frames in the space.
 
         This removes the object from all frames it appears on and cleans up all associated data.
 
@@ -902,7 +900,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
         return object_instance
 
     def remove_classification_instance(self, classification_hash: str) -> Optional[ClassificationInstance]:
-        """Completely remove a classification instance from all frames in the video space.
+        """Completely remove a classification instance from all frames in the space.
 
         This removes the classification from all frames it appears on and cleans up all associated data.
 
@@ -991,6 +989,7 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
         self,
         object_instance: ObjectInstance,
         frame_object_annotation_data: _GeometricAnnotationData,
+        frame_number: int,
     ) -> FrameObject:
         from encord.objects.ontology_object import Object
 
@@ -1003,11 +1002,13 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
             object_instance_annotation=frame_object_annotation_data.annotation_metadata,
         )
 
+        width, height = self._get_frame_dimensions(frame_number)
+
         frame_object = add_coordinates_to_frame_object_dict(
             coordinates=frame_object_annotation_data.coordinates,
             base_frame_object=base_frame_object,
-            width=self._width,
-            height=self._height,
+            width=width,
+            height=height,
         )
 
         return frame_object
@@ -1037,6 +1038,19 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
 
         return frame_object_dict
 
+    def _build_frame_labels_dict(self) -> dict[str, LabelBlob]:
+        """Export space to dictionary format."""
+        labels: dict[str, LabelBlob] = {}
+        frames_with_objects = list(self._frames_to_object_hash_to_annotation_data.keys())
+        frames_with_classifications = list(self._frames_to_classification_hash_to_annotation_data.keys())
+        frames_with_both_objects_and_classifications = sorted(set(frames_with_objects + frames_with_classifications))
+
+        for frame in frames_with_both_objects_and_classifications:
+            frame_label = self._build_frame_label_dict(frame=frame)
+            labels[str(frame)] = frame_label
+
+        return labels
+
     def _build_frame_label_dict(self, frame: int) -> LabelBlob:
         object_list: List[FrameObject] = []
         classification_list: List[FrameClassification] = []
@@ -1048,7 +1062,9 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
             space_object = self._objects_map[object_hash]
             object_list.append(
                 self._to_encord_object(
-                    object_instance=space_object, frame_object_annotation_data=frame_object_annotation_data
+                    object_instance=space_object,
+                    frame_object_annotation_data=frame_object_annotation_data,
+                    frame_number=frame,
                 )
             )
 
@@ -1216,22 +1232,3 @@ class VideoSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificationAnno
                 manual_annotation=classification_frame_instance_info.manual_annotation,
                 confidence=classification_frame_instance_info.confidence,
             )
-
-    def _to_space_dict(self) -> VideoSpaceInfo:
-        """Export video space to dictionary format."""
-        labels: dict[str, LabelBlob] = {}
-        frames_with_objects = list(self._frames_to_object_hash_to_annotation_data.keys())
-        frames_with_classifications = list(self._frames_to_classification_hash_to_annotation_data.keys())
-        frames_with_both_objects_and_classifications = sorted(set(frames_with_objects + frames_with_classifications))
-
-        for frame in frames_with_both_objects_and_classifications:
-            frame_label = self._build_frame_label_dict(frame=frame)
-            labels[str(frame)] = frame_label
-
-        return VideoSpaceInfo(
-            space_type=SpaceType.VIDEO,
-            labels=labels,
-            number_of_frames=self._number_of_frames,
-            width=self._width,
-            height=self._height,
-        )
