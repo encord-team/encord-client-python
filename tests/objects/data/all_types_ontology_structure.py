@@ -141,6 +141,16 @@ TEXT_OBJECT = Object(
         ),
     ],
 )
+CUBOID_2D_OBJECT = Object(
+    uid=12,
+    name="Cuboid 2D",
+    color="#FF00FF",
+    shape=Shape.CUBOID_2D,
+    feature_node_hash="cuboid2dFeatureHash",
+    archived=False,
+    attributes=[],
+)
+
 all_types_structure = OntologyStructure(
     objects=[
         Object(
@@ -407,6 +417,7 @@ all_types_structure = OntologyStructure(
         AUDIO_OBJECT_2,
         AUDIO_OBJECT_3,
         TEXT_OBJECT,
+        CUBOID_2D_OBJECT,
     ],
     classifications=[
         RADIO_CLASSIFICATION,
