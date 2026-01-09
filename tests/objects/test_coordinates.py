@@ -104,12 +104,12 @@ def test_polyline_coordinates():
 def test_cuboid_2d_coordinates_perspective():
     """Test Cuboid2DPerspectiveCoordinates with perspective projection (vanishing point + scale ratio)."""
     front = [
-        PointCoordinate(x=0, y=0),
-        PointCoordinate(x=100, y=0),
-        PointCoordinate(x=100, y=100),
-        PointCoordinate(x=0, y=100),
+        PointCoordinate(x=0.0, y=0.0),
+        PointCoordinate(x=0.1, y=0.0),
+        PointCoordinate(x=0.1, y=0.1),
+        PointCoordinate(x=0.0, y=0.1),
     ]
-    vanishing_point = PointCoordinate(x=400, y=300)
+    vanishing_point = PointCoordinate(x=0.4, y=0.3)
     scale_ratio = 0.75
 
     cuboid = Cuboid2DPerspectiveCoordinates(
@@ -126,12 +126,12 @@ def test_cuboid_2d_coordinates_perspective():
 def test_cuboid_2d_coordinates_isometric():
     """Test Cuboid2DIsometricCoordinates with isometric projection (offset)."""
     front = [
-        PointCoordinate(x=0, y=0),
-        PointCoordinate(x=100, y=0),
-        PointCoordinate(x=100, y=100),
-        PointCoordinate(x=0, y=100),
+        PointCoordinate(x=0.0, y=0.0),
+        PointCoordinate(x=0.1, y=0.0),
+        PointCoordinate(x=0.1, y=0.1),
+        PointCoordinate(x=0.0, y=0.1),
     ]
-    offset = PointCoordinate(x=50, y=-50)
+    offset = PointCoordinate(x=0.05, y=-0.05)
 
     cuboid = Cuboid2DIsometricCoordinates(front=front, offset=offset)
 
@@ -141,7 +141,7 @@ def test_cuboid_2d_coordinates_isometric():
 
 def test_cuboid_2d_coordinates_from_dict_validation():
     """Test that cuboid_2d_coordinates_from_dict raises errors for invalid configurations."""
-    front = [0, 0, 100, 100]
+    front = [0.0, 0.0, 0.1, 0.1]
 
     # Neither perspective nor parallel
     with pytest.raises(LabelRowError):
@@ -149,15 +149,15 @@ def test_cuboid_2d_coordinates_from_dict_validation():
 
     # Perspective with only vanishing_point (missing scale_ratio)
     with pytest.raises(LabelRowError):
-        cuboid_2d_coordinates_from_dict({"cuboid_2d": {"front": front, "vanishingPoint": {"x": 400, "y": 300}}})
+        cuboid_2d_coordinates_from_dict({"cuboid_2d": {"front": front, "vanishingPoint": {"x": 0.4, "y": 0.3}}})
 
 
 def test_cuboid_2d_coordinates_from_dict_perspective():
     """Test cuboid_2d_coordinates_from_dict with perspective projection."""
     data = {
         "cuboid_2d": {
-            "front": [0, 0, 100, 0, 100, 100, 0, 100],
-            "vanishingPoint": {"x": 400, "y": 300},
+            "front": [0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.1],
+            "vanishingPoint": {"x": 0.4, "y": 0.3},
             "scaleRatio": 0.75,
         }
     }
@@ -166,11 +166,11 @@ def test_cuboid_2d_coordinates_from_dict_perspective():
 
     assert isinstance(cuboid, Cuboid2DPerspectiveCoordinates)
     assert len(cuboid.front) == 4
-    assert cuboid.front[0] == PointCoordinate(x=0, y=0)
-    assert cuboid.front[1] == PointCoordinate(x=100, y=0)
-    assert cuboid.front[2] == PointCoordinate(x=100, y=100)
-    assert cuboid.front[3] == PointCoordinate(x=0, y=100)
-    assert cuboid.vanishing_point == PointCoordinate(x=400, y=300)
+    assert cuboid.front[0] == PointCoordinate(x=0.0, y=0.0)
+    assert cuboid.front[1] == PointCoordinate(x=0.1, y=0.0)
+    assert cuboid.front[2] == PointCoordinate(x=0.1, y=0.1)
+    assert cuboid.front[3] == PointCoordinate(x=0.0, y=0.1)
+    assert cuboid.vanishing_point == PointCoordinate(x=0.4, y=0.3)
     assert cuboid.scale_ratio == 0.75
 
 
@@ -178,8 +178,8 @@ def test_cuboid_2d_coordinates_from_dict_isometric():
     """Test cuboid_2d_coordinates_from_dict with isometric projection."""
     data = {
         "cuboid_2d": {
-            "front": [0, 0, 100, 0, 100, 100, 0, 100],
-            "offset": {"x": 50, "y": -50},
+            "front": [0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.1],
+            "offset": {"x": 0.05, "y": -0.05},
         }
     }
 
@@ -187,28 +187,28 @@ def test_cuboid_2d_coordinates_from_dict_isometric():
 
     assert isinstance(cuboid, Cuboid2DIsometricCoordinates)
     assert len(cuboid.front) == 4
-    assert cuboid.offset == PointCoordinate(x=50, y=-50)
+    assert cuboid.offset == PointCoordinate(x=0.05, y=-0.05)
 
 
 def test_cuboid_2d_coordinates_to_dict_perspective():
     """Test Cuboid2DPerspectiveCoordinates.to_dict with perspective projection."""
     front = [
-        PointCoordinate(x=0, y=0),
-        PointCoordinate(x=100, y=0),
-        PointCoordinate(x=100, y=100),
-        PointCoordinate(x=0, y=100),
+        PointCoordinate(x=0.0, y=0.0),
+        PointCoordinate(x=0.1, y=0.0),
+        PointCoordinate(x=0.1, y=0.1),
+        PointCoordinate(x=0.0, y=0.1),
     ]
 
     cuboid = Cuboid2DPerspectiveCoordinates(
         front=front,
-        vanishing_point=PointCoordinate(x=400, y=300),
+        vanishing_point=PointCoordinate(x=0.4, y=0.3),
         scale_ratio=0.75,
     )
 
     result = cuboid.to_dict()
 
-    assert result["front"] == [0, 0, 100, 0, 100, 100, 0, 100]
-    assert result["vanishingPoint"] == {"x": 400, "y": 300}
+    assert result["front"] == [0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.1]
+    assert result["vanishingPoint"] == {"x": 0.4, "y": 0.3}
     assert result["scaleRatio"] == 0.75
     assert "offset" not in result
 
@@ -216,18 +216,18 @@ def test_cuboid_2d_coordinates_to_dict_perspective():
 def test_cuboid_2d_coordinates_to_dict_isometric():
     """Test Cuboid2DIsometricCoordinates.to_dict with isometric projection."""
     front = [
-        PointCoordinate(x=0, y=0),
-        PointCoordinate(x=100, y=0),
-        PointCoordinate(x=100, y=100),
-        PointCoordinate(x=0, y=100),
+        PointCoordinate(x=0.0, y=0.0),
+        PointCoordinate(x=0.1, y=0.0),
+        PointCoordinate(x=0.1, y=0.1),
+        PointCoordinate(x=0.0, y=0.1),
     ]
 
-    cuboid = Cuboid2DIsometricCoordinates(front=front, offset=PointCoordinate(x=50, y=-50))
+    cuboid = Cuboid2DIsometricCoordinates(front=front, offset=PointCoordinate(x=0.05, y=-0.05))
 
     result = cuboid.to_dict()
 
-    assert result["front"] == [0, 0, 100, 0, 100, 100, 0, 100]
-    assert result["offset"] == {"x": 50, "y": -50}
+    assert result["front"] == [0.0, 0.0, 0.1, 0.0, 0.1, 0.1, 0.0, 0.1]
+    assert result["offset"] == {"x": 0.05, "y": -0.05}
     assert "vanishingPoint" not in result
     assert "scaleRatio" not in result
 
@@ -237,12 +237,12 @@ def test_cuboid_2d_coordinates_roundtrip():
     # Perspective projection
     original_perspective = Cuboid2DPerspectiveCoordinates(
         front=[
-            PointCoordinate(x=10.5, y=20.5),
-            PointCoordinate(x=110.5, y=20.5),
-            PointCoordinate(x=110.5, y=120.5),
-            PointCoordinate(x=10.5, y=120.5),
+            PointCoordinate(x=0.105, y=0.205),
+            PointCoordinate(x=0.205, y=0.205),
+            PointCoordinate(x=0.205, y=0.305),
+            PointCoordinate(x=0.105, y=0.305),
         ],
-        vanishing_point=PointCoordinate(x=500.0, y=400.0),
+        vanishing_point=PointCoordinate(x=0.5, y=0.4),
         scale_ratio=0.6,
     )
     dict_perspective = original_perspective.to_dict()
@@ -252,12 +252,12 @@ def test_cuboid_2d_coordinates_roundtrip():
     # Isometric projection
     original_isometric = Cuboid2DIsometricCoordinates(
         front=[
-            PointCoordinate(x=0, y=0),
-            PointCoordinate(x=50, y=0),
-            PointCoordinate(x=50, y=50),
-            PointCoordinate(x=0, y=50),
+            PointCoordinate(x=0.0, y=0.0),
+            PointCoordinate(x=0.05, y=0.0),
+            PointCoordinate(x=0.05, y=0.05),
+            PointCoordinate(x=0.0, y=0.05),
         ],
-        offset=PointCoordinate(x=25, y=-25),
+        offset=PointCoordinate(x=0.025, y=-0.025),
     )
     dict_isometric = original_isometric.to_dict()
     reconstructed_isometric = cuboid_2d_coordinates_from_dict({"cuboid_2d": dict_isometric})
