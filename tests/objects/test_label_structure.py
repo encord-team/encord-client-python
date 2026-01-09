@@ -22,6 +22,8 @@ from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATI
 from encord.objects.coordinates import (
     AudioCoordinates,
     BoundingBoxCoordinates,
+    Cuboid2DIsometricCoordinates,
+    Cuboid2DPerspectiveCoordinates,
     HtmlCoordinates,
     PointCoordinate,
     PolygonCoordinates,
@@ -32,7 +34,7 @@ from encord.objects.html_node import HtmlNode, HtmlRange
 from encord.objects.options import Option
 from encord.orm.label_row import LabelRowMetadata, LabelStatus
 from tests.objects.common import BASE_LABEL_ROW_METADATA
-from tests.objects.data.all_types_ontology_structure import RADIO_CLASSIFICATION, all_types_structure
+from tests.objects.data.all_types_ontology_structure import CUBOID_2D_OBJECT, RADIO_CLASSIFICATION, all_types_structure
 from tests.objects.data.audio_labels import EMPTY_AUDIO_LABELS
 from tests.objects.data.empty_image_group import empty_image_group_labels
 from tests.objects.objects_test_utils import validate_label_row_serialisation
@@ -1512,3 +1514,56 @@ def test_plain_text_object_cannot_be_added_to_html_label_row(
         "Unable to assign object instance without a html range to a html file. "
         f"Please ensure the object instance exists on frame=0, and has coordinates of type {HtmlCoordinates}."
     )
+
+
+def test_cuboid_2d_shape(empty_video_label_row: LabelRowV2):
+    cuboid2d_ontology_item = CUBOID_2D_OBJECT
+
+    # Test with perspective coordinates on frame 0
+    perspective_coords = Cuboid2DPerspectiveCoordinates(
+        front=[
+            PointCoordinate(x=0.1, y=0.1),
+            PointCoordinate(x=0.3, y=0.1),
+            PointCoordinate(x=0.3, y=0.3),
+            PointCoordinate(x=0.1, y=0.3),
+        ],
+        vanishing_point=PointCoordinate(x=0.5, y=0.2),
+        scale_ratio=0.75,
+    )
+
+    cuboid_instance = ObjectInstance(cuboid2d_ontology_item)
+    cuboid_instance.set_for_frames(coordinates=perspective_coords, frames=0)
+
+    # Test with isometric coordinates on frame 1
+    isometric_coords = Cuboid2DIsometricCoordinates(
+        front=[
+            PointCoordinate(x=0.4, y=0.4),
+            PointCoordinate(x=0.6, y=0.4),
+            PointCoordinate(x=0.6, y=0.6),
+            PointCoordinate(x=0.4, y=0.6),
+        ],
+        offset=PointCoordinate(x=0.05, y=-0.05),
+    )
+    cuboid_instance.set_for_frames(coordinates=isometric_coords, frames=1)
+
+    empty_video_label_row.add_object_instance(cuboid_instance)
+
+    # Verify the instance was added
+    object_instances = empty_video_label_row.get_object_instances()
+    assert len(object_instances) == 1
+    assert object_instances[0].object_hash == cuboid_instance.object_hash
+
+    # Verify annotations on both frames
+    annotations = cuboid_instance.get_annotations()
+    assert len(annotations) == 2
+
+    annotation_0 = cuboid_instance.get_annotation(0)
+    assert isinstance(annotation_0.coordinates, Cuboid2DPerspectiveCoordinates)
+    assert annotation_0.coordinates.scale_ratio == 0.75
+
+    annotation_1 = cuboid_instance.get_annotation(1)
+    assert isinstance(annotation_1.coordinates, Cuboid2DIsometricCoordinates)
+    assert annotation_1.coordinates.offset == PointCoordinate(x=0.05, y=-0.05)
+
+    # Validate serialisation/parsing roundtrip
+    validate_label_row_serialisation(empty_video_label_row)
