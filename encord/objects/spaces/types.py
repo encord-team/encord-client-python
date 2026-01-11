@@ -6,7 +6,6 @@ from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects.types import LabelBlob
 from encord.utilities.type_utilities import exhaustive_guard
-from tests.objects.data.data_group.all_modalities import HTML_SPACE_INFO
 
 
 class BaseSpaceInfo(TypedDict):
