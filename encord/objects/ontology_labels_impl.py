@@ -106,12 +106,14 @@ from encord.objects.spaces.annotation.base_annotation import (
 from encord.objects.spaces.base_space import Space, SpaceT
 from encord.objects.spaces.html_space import HTMLSpace
 from encord.objects.spaces.image_space import ImageSpace
+from encord.objects.spaces.multiframe_space import image_sequence_space
+from encord.objects.spaces.multiframe_space.image_sequence_space import ImageSequenceSpace
 from encord.objects.spaces.multiframe_space.medical_file_space import MedicalFileSpace
 from encord.objects.spaces.multiframe_space.medical_stack_space import MedicalStackSpace
 from encord.objects.spaces.multiframe_space.video_space import VideoSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
-from encord.objects.spaces.types import ChildInfo, MedicalStackSpaceInfo, SpaceInfo
+from encord.objects.spaces.types import ChildInfo, ImageSequenceSpaceInfo, MedicalStackSpaceInfo, SpaceInfo
 from encord.objects.types import (
     AttributeDict,
     BaseFrameObject,
@@ -159,8 +161,10 @@ _SPACE_TYPE_TO_CLASS = {
     "medical_file": MedicalFileSpace,
     "medical_stack": MedicalStackSpace,
 }
-SpaceLiteral = Literal["video", "image", "audio", "text", "html", "medical_file", "medical_stack"]
-SpaceClass = Union[VideoSpace, ImageSpace, AudioSpace, TextSpace, HTMLSpace, MedicalFileSpace, MedicalStackSpace]
+SpaceLiteral = Literal["video", "image", "image_sequence", "audio", "text", "html", "medical_file", "medical_stack"]
+SpaceClass = Union[
+    VideoSpace, ImageSpace, ImageSequenceSpace, AudioSpace, TextSpace, HTMLSpace, MedicalFileSpace, MedicalStackSpace
+]
 
 
 # Mainly here to allow type checking to ensure SpaceLiteral and SpaceEnum are in sync
@@ -169,6 +173,8 @@ def _get_space_literal_from_space_enum(space_enum: SpaceType) -> SpaceLiteral:
         return "video"
     elif space_enum == SpaceType.IMAGE:
         return "image"
+    elif space_enum == SpaceType.IMAGE_SEQUENCE:
+        return "image_sequence"
     elif space_enum == SpaceType.AUDIO:
         return "audio"
     elif space_enum == SpaceType.TEXT:
@@ -190,6 +196,8 @@ def _get_space_class_from_space_literal(space_literal: SpaceLiteral) -> Type[Spa
         return VideoSpace
     elif space_literal == "image":
         return ImageSpace
+    elif space_literal == "image_sequence":
+        return ImageSequenceSpace
     elif space_literal == "audio":
         return AudioSpace
     elif space_literal == "text":
@@ -852,6 +860,10 @@ class LabelRowV2:
         pass
 
     @overload
+    def _get_space(self, *, id: str, type_: Literal["image_sequence"]) -> ImageSequenceSpace:
+        pass
+
+    @overload
     def _get_space(self, *, id: str, type_: Literal["audio"]) -> AudioSpace:
         pass
 
@@ -877,6 +889,10 @@ class LabelRowV2:
 
     @overload
     def _get_space(self, *, layout_key: str, type_: Literal["image"]) -> ImageSpace:
+        pass
+
+    @overload
+    def _get_space(self, *, layout_key: str, type_: Literal["image_sequence"]) -> ImageSequenceSpace:
         pass
 
     @overload
@@ -2249,7 +2265,7 @@ class LabelRowV2:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
 
         else:
-            exhaustive_guard(data_type)
+            exhaustive_guard(data_type, message=f"Missing implementation for data type {data_type}")
 
         ret["data_hash"] = frame_level_data.image_hash
         ret["data_title"] = frame_level_data.image_title
@@ -2294,7 +2310,7 @@ class LabelRowV2:
         elif self.data_type == DataType.MISSING_DATA_TYPE:
             raise LabelRowError("Label row is missing data type.")
         else:
-            exhaustive_guard(self.data_type)
+            exhaustive_guard(self.data_type, message=f"Missing implementation for data type {data_type}")
 
         ret["labels"] = self._to_encord_labels(frame_level_data)
 
@@ -2345,7 +2361,7 @@ class LabelRowV2:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
 
         else:
-            exhaustive_guard(data_type)
+            exhaustive_guard(data_type, message=f"Missing implementation for data type {data_type}")
 
         return ret
 
@@ -2555,6 +2571,15 @@ class LabelRowV2:
                     height=space_info["height"],
                 )
                 res[space_id] = image_space
+            elif space_info["space_type"] == SpaceType.IMAGE_SEQUENCE:
+                image_sequence_space = ImageSequenceSpace(
+                    space_id=space_id,
+                    label_row=self,
+                    number_of_frames=space_info["number_of_frames"],
+                    width=space_info["width"],
+                    height=space_info["height"],
+                )
+                res[space_id] = image_sequence_space
             elif space_info["space_type"] == SpaceType.AUDIO:
                 audio_space = AudioSpace(
                     space_id=space_id,
@@ -2590,7 +2615,6 @@ class LabelRowV2:
                 # TODO: Implement Scene Images
                 pass
             else:
-                print(space_info["space_type"])
                 exhaustive_guard(space_info["space_type"], message="Missing initialisation for space.")
 
         return res
@@ -2610,6 +2634,11 @@ class LabelRowV2:
             elif space_info["space_type"] == SpaceType.IMAGE:
                 image_space = self._get_space(id=space_id, type_="image")
                 image_space._parse_space_dict(
+                    space_info, object_answers=object_answers, classification_answers=classification_answers
+                )
+            elif space_info["space_type"] == SpaceType.IMAGE_SEQUENCE:
+                image_sequence_space = self._get_space(id=space_id, type_="image_sequence")
+                image_sequence_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.AUDIO:
