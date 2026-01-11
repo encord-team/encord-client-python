@@ -8,6 +8,7 @@ from encord.objects.spaces.types import (
     ImageSpaceInfo,
     MedicalFileSpaceInfo,
     MedicalStackSpaceInfo,
+    PdfSpaceInfo,
     TextSpaceInfo,
     VideoSpaceInfo,
 )
@@ -91,6 +92,14 @@ MEDICAL_STACK_SPACE_INFO: MedicalStackSpaceInfo = {
 }
 
 
+PDF_SPACE_INFO: PdfSpaceInfo = {
+    "space_type": SpaceType.PDF,
+    "child_info": {"layout_key": "main-pdf", "file_name": "document.pdf"},
+    "number_of_pages": 100,
+    "labels": {},
+}
+
+
 DATA_GROUP_NO_LABELS = {
     "label_hash": "28f0e9d2-51e0-459d-8ffa-2e214da653a9",
     "branch_name": "main",
@@ -116,6 +125,7 @@ DATA_GROUP_NO_LABELS = {
         "dicom-uuid": MEDICAL_SPACE_INFO,
         "dicom-stack-uuid": MEDICAL_STACK_SPACE_INFO,
         "image-sequence-uuid": IMAGE_SEQUENCE_SPACE_INFO,
+        "pdf-uuid": PDF_SPACE_INFO,
     },
     "data_units": {
         DATA_GROUP_DATA_HASH: {
@@ -237,6 +247,10 @@ DATA_GROUP_WITH_LABELS = {
         },
         "dicom-stack-box-object": {
             "objectHash": "dicom-stack-box-object",
+            "classifications": [],
+        },
+        "pdf-box-object": {
+            "objectHash": "pdf-box-object",
             "classifications": [],
         },
     },
@@ -676,6 +690,52 @@ DATA_GROUP_WITH_LABELS = {
             "manualAnnotation": True,
             "confidence": 5.0,
         },
+        "pdf-classification": {
+            "classificationHash": "pdf-classification",
+            "featureHash": "jPOcEsbw",
+            "classifications": [
+                {
+                    "name": "Text classification",
+                    "value": "text_classification",
+                    "answers": "Pdf answer",
+                    "featureHash": "OxrtEM+v",
+                    "manualAnnotation": True,
+                }
+            ],
+            "spaces": {
+                "pdf-uuid": {
+                    "range": [[0, 0]],
+                    "type": "frame",
+                },
+            },
+        },
+        "global-classification-on-pdf": {
+            "classificationHash": "global-classification-on-pdf",
+            "featureHash": "globalClassificationTopLevelFeatureHash",
+            "classifications": [
+                {
+                    "name": "Global classification",
+                    "value": "global_classification",
+                    "answers": [
+                        {
+                            "name": "Global Answer 1",
+                            "value": "global_answer_1",
+                            "featureHash": "3vLjF0q1",
+                        }
+                    ],
+                    "featureHash": "globalClassificationFeatureHash",
+                    "manualAnnotation": True,
+                }
+            ],
+            "range": [],
+            "spaces": {"pdf-uuid": {"range": [], "type": "frame"}},
+            "createdBy": "user1Hash@encord.com",
+            "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "lastEditedBy": "user1Hash@encord.com",
+            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "manualAnnotation": True,
+            "confidence": 5.0,
+        },
     },
     "object_actions": {},
     "label_status": "LABEL_IN_PROGRESS",
@@ -911,6 +971,45 @@ DATA_GROUP_WITH_LABELS = {
                 },
             },
         },
+        "pdf-uuid": {
+            "space_type": SpaceType.PDF,
+            "child_info": {"layout_key": "main-pdf", "file_name": "document.pdf"},
+            "number_of_pages": 100,
+            "labels": {
+                "0": {
+                    "objects": [
+                        {
+                            "name": "Box",
+                            "color": "#D33115",
+                            "shape": "bounding_box",
+                            "value": "box",
+                            "createdAt": "Tue, 17 Jan 2023 17:23:10 UTC",
+                            "createdBy": "user@example.com",
+                            "confidence": 1,
+                            "objectHash": "pdf-box-object",
+                            "lastEditedAt": "Wed, 18 Jan 2023 17:23:24 UTC",
+                            "featureHash": "MjI2NzEy",
+                            "manualAnnotation": True,
+                            "boundingBox": {"h": 0.1, "w": 0.1, "x": 0.1, "y": 0.1},
+                        },
+                    ],
+                    "classifications": [
+                        {
+                            "name": "Text classification",
+                            "value": "text_classification",
+                            "createdAt": "Tue, 17 Jan 2023 11:45:01 UTC",
+                            "createdBy": "user@example.com",
+                            "confidence": 1,
+                            "featureHash": "jPOcEsbw",
+                            "lastEditedAt": "Tue, 17 Jan 2023 11:45:01 UTC",
+                            "lastEditedBy": "user@example.com",
+                            "classificationHash": "pdf-classification",
+                            "manualAnnotation": True,
+                        },
+                    ],
+                },
+            },
+        },
     },
     "data_units": {
         DATA_GROUP_DATA_HASH: {
@@ -960,5 +1059,6 @@ DATA_GROUP_METADATA = LabelRowMetadata(
         "dicom-uuid": MEDICAL_SPACE_INFO,
         "dicom-stack-uuid": MEDICAL_STACK_SPACE_INFO,
         "image-sequence-uuid": IMAGE_SEQUENCE_SPACE_INFO,
+        "pdf-uuid": PDF_SPACE_INFO,
     },
 )

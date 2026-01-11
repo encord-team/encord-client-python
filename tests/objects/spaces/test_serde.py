@@ -92,6 +92,29 @@ def test_read_and_export_all_space_labels(ontology):
     assert classification_instances[0].classification_hash == "dicom-stack-classification"
     assert classification_instances[1].classification_hash == "global-classification-on-dicom-stack"
     assert len(list(dicom_stack_space.get_classification_instance_annotations())) == 2
+
+    # image sequence stack space: 1 object, 1 normal classification, 1 global classification
+    image_sequence_space = label_row._get_space(id="image-sequence-uuid", type_="image_sequence")
+    assert len(dicom_space.get_object_instances()) == 1
+    assert image_sequence_space.get_object_instances()[0].object_hash == "image-sequence-box-object"
+    assert len(list(image_sequence_space.get_object_instance_annotations())) == 1
+    classification_instances = image_sequence_space.get_classification_instances()
+    assert len(classification_instances) == 2
+    assert classification_instances[0].classification_hash == "image-sequence-classification"
+    assert classification_instances[1].classification_hash == "global-classification-on-image-sequence"
+    assert len(list(image_sequence_space.get_classification_instance_annotations())) == 2
+
+    # pdf space: 1 object, 1 normal classification, 1 global classification
+    pdf_space = label_row._get_space(id="pdf-uuid", type_="pdf")
+    assert len(dicom_space.get_object_instances()) == 1
+    assert pdf_space.get_object_instances()[0].object_hash == "pdf-box-object"
+    assert len(list(pdf_space.get_object_instance_annotations())) == 1
+    classification_instances = pdf_space.get_classification_instances()
+    assert len(classification_instances) == 2
+    assert classification_instances[0].classification_hash == "pdf-classification"
+    assert classification_instances[1].classification_hash == "global-classification-on-pdf"
+    assert len(list(pdf_space.get_classification_instance_annotations())) == 2
+
     # Verify round-trip serialization
     output_dict = label_row.to_encord_dict()
     assert not DeepDiff(

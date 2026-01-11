@@ -110,6 +110,7 @@ from encord.objects.spaces.multiframe_space import image_sequence_space
 from encord.objects.spaces.multiframe_space.image_sequence_space import ImageSequenceSpace
 from encord.objects.spaces.multiframe_space.medical_file_space import MedicalFileSpace
 from encord.objects.spaces.multiframe_space.medical_stack_space import MedicalStackSpace
+from encord.objects.spaces.multiframe_space.pdf_space import PdfSpace
 from encord.objects.spaces.multiframe_space.video_space import VideoSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
@@ -152,18 +153,19 @@ LABELLING_NOT_INITIALISED_ERROR_MESSAGE = (
 
 
 # Type mapping for runtime validation in get_space
-_SPACE_TYPE_TO_CLASS = {
-    "video": VideoSpace,
-    "image": ImageSpace,
-    "audio": AudioSpace,
-    "text": TextSpace,
-    "html": HTMLSpace,
-    "medical_file": MedicalFileSpace,
-    "medical_stack": MedicalStackSpace,
-}
-SpaceLiteral = Literal["video", "image", "image_sequence", "audio", "text", "html", "medical_file", "medical_stack"]
+SpaceLiteral = Literal[
+    "video", "image", "image_sequence", "audio", "text", "html", "medical_file", "medical_stack", "pdf"
+]
 SpaceClass = Union[
-    VideoSpace, ImageSpace, ImageSequenceSpace, AudioSpace, TextSpace, HTMLSpace, MedicalFileSpace, MedicalStackSpace
+    VideoSpace,
+    ImageSpace,
+    ImageSequenceSpace,
+    AudioSpace,
+    TextSpace,
+    HTMLSpace,
+    MedicalFileSpace,
+    MedicalStackSpace,
+    PdfSpace,
 ]
 
 
@@ -185,6 +187,8 @@ def _get_space_literal_from_space_enum(space_enum: SpaceType) -> SpaceLiteral:
         return "medical_file"
     elif space_enum == SpaceType.MEDICAL_STACK:
         return "medical_stack"
+    elif space_enum == SpaceType.PDF:
+        return "pdf"
     elif space_enum == SpaceType.POINT_CLOUD or space_enum == SpaceType.SCENE_IMAGE:
         raise LabelRowError(f"Space {space_enum} not yet implemented.")
     else:
@@ -208,6 +212,8 @@ def _get_space_class_from_space_literal(space_literal: SpaceLiteral) -> Type[Spa
         return MedicalFileSpace
     elif space_literal == "medical_stack":
         return MedicalStackSpace
+    elif space_literal == "pdf":
+        return PdfSpace
     else:
         exhaustive_guard(space_literal, message=f"Missing space class for space type {space_literal}")
 
@@ -884,6 +890,10 @@ class LabelRowV2:
         pass
 
     @overload
+    def _get_space(self, *, id: str, type_: Literal["pdf"]) -> PdfSpace:
+        pass
+
+    @overload
     def _get_space(self, *, layout_key: str, type_: Literal["video"]) -> VideoSpace:
         pass
 
@@ -913,6 +923,10 @@ class LabelRowV2:
 
     @overload
     def _get_space(self, *, layout_key: str, type_: Literal["medical_stack"]) -> MedicalStackSpace:
+        pass
+
+    @overload
+    def _get_space(self, *, layout_key: str, type_: Literal["pdf"]) -> PdfSpace:
         pass
 
     def _get_space(
@@ -2611,6 +2625,9 @@ class LabelRowV2:
             elif space_info["space_type"] == SpaceType.MEDICAL_STACK:
                 medical_stack_space = MedicalStackSpace(space_id=space_id, label_row=self, frames=space_info["frames"])
                 res[space_id] = medical_stack_space
+            elif space_info["space_type"] == SpaceType.PDF:
+                pdf_space = PdfSpace(space_id=space_id, label_row=self, number_of_pages=space_info["number_of_pages"])
+                res[space_id] = pdf_space
             elif space_info["space_type"] == SpaceType.SCENE_IMAGE or space_info["space_type"] == SpaceType.POINT_CLOUD:
                 # TODO: Implement Scene Images
                 pass
@@ -2664,6 +2681,11 @@ class LabelRowV2:
             elif space_info["space_type"] == SpaceType.MEDICAL_STACK:
                 medical_stack_space = self._get_space(id=space_id, type_="medical_stack")
                 medical_stack_space._parse_space_dict(
+                    space_info, object_answers=object_answers, classification_answers=classification_answers
+                )
+            elif space_info["space_type"] == SpaceType.PDF:
+                pdf_space = self._get_space(id=space_id, type_="pdf")
+                pdf_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.SCENE_IMAGE or space_info["space_type"] == SpaceType.POINT_CLOUD:

@@ -27,6 +27,8 @@ def _get_space_id_from_space_literal(space_literal: SpaceLiteral) -> str:
         return "dicom-uuid"
     elif space_literal == "medical_stack":
         return "dicom-stack-uuid"
+    elif space_literal == "pdf":
+        return "pdf-uuid"
     else:
         exhaustive_guard(space_literal, message=f"Missing implementation for space {space_literal}")
 
@@ -48,6 +50,8 @@ def _get_space_layout_key_from_space_literal(space_literal: SpaceLiteral) -> str
         return "left-shoulder"
     elif space_literal == "medical_stack":
         return "xray-stack"
+    elif space_literal == "pdf":
+        return "main-pdf"
     else:
         exhaustive_guard(space_literal, message=f"Missing implementation for space {space_literal}")
 
