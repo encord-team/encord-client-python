@@ -65,9 +65,11 @@ def is_geometric(data_type: DataType) -> bool:
     return data_type in GEOMETRIC_TYPES
 
 
+# When adding a new space, it is recommended to use mypy immediately after to check for places to update.
 class SpaceType(StringEnum):
     VIDEO = "video"
     IMAGE = "image"
+    IMAGE_SEQUENCE = "image_sequence"
     AUDIO = "audio"
     TEXT = "text"
     HTML = "html"
@@ -75,3 +77,4 @@ class SpaceType(StringEnum):
     MEDICAL_STACK = "medical_stack"
     SCENE_IMAGE = "scene_image"
     POINT_CLOUD = "point_cloud"
+    PDF = "pdf"

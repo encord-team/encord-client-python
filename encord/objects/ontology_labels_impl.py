@@ -108,10 +108,11 @@ from encord.objects.spaces.html_space import HTMLSpace
 from encord.objects.spaces.image_space import ImageSpace
 from encord.objects.spaces.multiframe_space.medical_file_space import MedicalFileSpace
 from encord.objects.spaces.multiframe_space.medical_stack_space import MedicalStackSpace
+from encord.objects.spaces.multiframe_space.pdf_space import PdfSpace
 from encord.objects.spaces.multiframe_space.video_space import VideoSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
-from encord.objects.spaces.types import ChildInfo, MedicalStackSpaceInfo, SpaceInfo
+from encord.objects.spaces.types import ChildInfo, SpaceInfo
 from encord.objects.types import (
     AttributeDict,
     BaseFrameObject,
@@ -150,15 +151,68 @@ LABELLING_NOT_INITIALISED_ERROR_MESSAGE = (
 
 
 # Type mapping for runtime validation in get_space
-_SPACE_TYPE_TO_CLASS = {
-    "video": VideoSpace,
-    "image": ImageSpace,
-    "audio": AudioSpace,
-    "text": TextSpace,
-    "html": HTMLSpace,
-    "medical_file": MedicalFileSpace,
-    "medical_stack": MedicalStackSpace,
-}
+SpaceLiteral = Literal[
+    "video", "image", "image_sequence", "audio", "text", "html", "medical_file", "medical_stack", "pdf"
+]
+SpaceClass = Union[
+    VideoSpace,
+    ImageSpace,
+    AudioSpace,
+    TextSpace,
+    HTMLSpace,
+    MedicalFileSpace,
+    MedicalStackSpace,
+    PdfSpace,
+]
+
+
+# Mainly here to allow type checking to ensure SpaceLiteral and SpaceEnum are in sync
+def _get_space_literal_from_space_enum(space_enum: SpaceType) -> SpaceLiteral:
+    if space_enum == SpaceType.VIDEO:
+        return "video"
+    elif space_enum == SpaceType.IMAGE:
+        return "image"
+    elif space_enum == SpaceType.IMAGE_SEQUENCE:
+        return "image_sequence"
+    elif space_enum == SpaceType.AUDIO:
+        return "audio"
+    elif space_enum == SpaceType.TEXT:
+        return "text"
+    elif space_enum == SpaceType.HTML:
+        return "html"
+    elif space_enum == SpaceType.MEDICAL_FILE:
+        return "medical_file"
+    elif space_enum == SpaceType.MEDICAL_STACK:
+        return "medical_stack"
+    elif space_enum == SpaceType.PDF:
+        return "pdf"
+    elif space_enum == SpaceType.POINT_CLOUD or space_enum == SpaceType.SCENE_IMAGE:
+        raise LabelRowError(f"Space {space_enum} not yet implemented.")
+    else:
+        exhaustive_guard(space_enum, message=f"Missing space literal for space enum {space_enum}")
+
+
+def _get_space_class_from_space_literal(space_literal: SpaceLiteral) -> Type[SpaceClass]:
+    if space_literal == "video":
+        return VideoSpace
+    elif space_literal == "image":
+        return ImageSpace
+    elif space_literal == "image_sequence":
+        return VideoSpace
+    elif space_literal == "audio":
+        return AudioSpace
+    elif space_literal == "text":
+        return TextSpace
+    elif space_literal == "html":
+        return HTMLSpace
+    elif space_literal == "medical_file":
+        return MedicalFileSpace
+    elif space_literal == "medical_stack":
+        return MedicalStackSpace
+    elif space_literal == "pdf":
+        return PdfSpace
+    else:
+        exhaustive_guard(space_literal, message=f"Missing space class for space type {space_literal}")
 
 
 class LabelRowV2:
@@ -809,6 +863,10 @@ class LabelRowV2:
         pass
 
     @overload
+    def _get_space(self, *, id: str, type_: Literal["image_sequence"]) -> VideoSpace:
+        pass
+
+    @overload
     def _get_space(self, *, id: str, type_: Literal["audio"]) -> AudioSpace:
         pass
 
@@ -829,11 +887,19 @@ class LabelRowV2:
         pass
 
     @overload
+    def _get_space(self, *, id: str, type_: Literal["pdf"]) -> PdfSpace:
+        pass
+
+    @overload
     def _get_space(self, *, layout_key: str, type_: Literal["video"]) -> VideoSpace:
         pass
 
     @overload
     def _get_space(self, *, layout_key: str, type_: Literal["image"]) -> ImageSpace:
+        pass
+
+    @overload
+    def _get_space(self, *, layout_key: str, type_: Literal["image_sequence"]) -> VideoSpace:
         pass
 
     @overload
@@ -856,12 +922,16 @@ class LabelRowV2:
     def _get_space(self, *, layout_key: str, type_: Literal["medical_stack"]) -> MedicalStackSpace:
         pass
 
+    @overload
+    def _get_space(self, *, layout_key: str, type_: Literal["pdf"]) -> PdfSpace:
+        pass
+
     def _get_space(
         self,
         *,
         id: Optional[str] = None,
         layout_key: Optional[str] = None,
-        type_: Literal["video", "image", "audio", "text", "html", "medical_file", "medical_stack"],
+        type_: SpaceLiteral,
     ) -> Space:
         """Retrieves a single space which matches the specified id and type.
 
@@ -910,7 +980,7 @@ class LabelRowV2:
             raise LabelRowError(space_identifier_error_message)
 
         # Runtime type validation
-        expected_class = _SPACE_TYPE_TO_CLASS[type_]
+        expected_class = _get_space_class_from_space_literal(type_)
         if not isinstance(space, expected_class):
             space_identifier = id if id is not None else layout_key
             raise LabelRowError(
@@ -2206,7 +2276,7 @@ class LabelRowV2:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
 
         else:
-            exhaustive_guard(data_type)
+            exhaustive_guard(data_type, message=f"Missing implementation for data type {data_type}")
 
         ret["data_hash"] = frame_level_data.image_hash
         ret["data_title"] = frame_level_data.image_title
@@ -2251,7 +2321,7 @@ class LabelRowV2:
         elif self.data_type == DataType.MISSING_DATA_TYPE:
             raise LabelRowError("Label row is missing data type.")
         else:
-            exhaustive_guard(self.data_type)
+            exhaustive_guard(self.data_type, message=f"Missing implementation for data type {data_type}")
 
         ret["labels"] = self._to_encord_labels(frame_level_data)
 
@@ -2302,7 +2372,7 @@ class LabelRowV2:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
 
         else:
-            exhaustive_guard(data_type)
+            exhaustive_guard(data_type, message=f"Missing implementation for data type {data_type}")
 
         return ret
 
@@ -2502,6 +2572,7 @@ class LabelRowV2:
                     number_of_frames=space_info["number_of_frames"],
                     width=space_info["width"],
                     height=space_info["height"],
+                    is_image_sequence=False,
                 )
                 res[space_id] = video_space
             elif space_info["space_type"] == SpaceType.IMAGE:
@@ -2512,6 +2583,18 @@ class LabelRowV2:
                     height=space_info["height"],
                 )
                 res[space_id] = image_space
+            elif space_info["space_type"] == SpaceType.IMAGE_SEQUENCE:
+                # Image sequence is exactly the same as a video, so we reuse the same class
+
+                image_sequence_space = VideoSpace(
+                    space_id=space_id,
+                    label_row=self,
+                    number_of_frames=space_info["number_of_frames"],
+                    width=space_info["width"],
+                    height=space_info["height"],
+                    is_image_sequence=True,
+                )
+                res[space_id] = image_sequence_space
             elif space_info["space_type"] == SpaceType.AUDIO:
                 audio_space = AudioSpace(
                     space_id=space_id,
@@ -2543,6 +2626,9 @@ class LabelRowV2:
             elif space_info["space_type"] == SpaceType.MEDICAL_STACK:
                 medical_stack_space = MedicalStackSpace(space_id=space_id, label_row=self, frames=space_info["frames"])
                 res[space_id] = medical_stack_space
+            elif space_info["space_type"] == SpaceType.PDF:
+                pdf_space = PdfSpace(space_id=space_id, label_row=self, number_of_pages=space_info["number_of_pages"])
+                res[space_id] = pdf_space
             elif space_info["space_type"] == SpaceType.SCENE_IMAGE or space_info["space_type"] == SpaceType.POINT_CLOUD:
                 # TODO: Implement Scene Images
                 pass
@@ -2566,6 +2652,11 @@ class LabelRowV2:
             elif space_info["space_type"] == SpaceType.IMAGE:
                 image_space = self._get_space(id=space_id, type_="image")
                 image_space._parse_space_dict(
+                    space_info, object_answers=object_answers, classification_answers=classification_answers
+                )
+            elif space_info["space_type"] == SpaceType.IMAGE_SEQUENCE:
+                image_sequence_space = self._get_space(id=space_id, type_="image_sequence")
+                image_sequence_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.AUDIO:
@@ -2593,11 +2684,19 @@ class LabelRowV2:
                 medical_stack_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
+            elif space_info["space_type"] == SpaceType.PDF:
+                pdf_space = self._get_space(id=space_id, type_="pdf")
+                pdf_space._parse_space_dict(
+                    space_info, object_answers=object_answers, classification_answers=classification_answers
+                )
             elif space_info["space_type"] == SpaceType.SCENE_IMAGE or space_info["space_type"] == SpaceType.POINT_CLOUD:
                 # TODO: Enable this when we implement Scene images
                 pass
             else:
-                exhaustive_guard(space_info["space_type"], message="Missing implementation for parsing space labels.")
+                exhaustive_guard(
+                    space_info["space_type"],
+                    message=f"Missing implementation for parsing space labels for space type: {space_info['space_type']}",
+                )
 
     def _parse_label_row_metadata(self, label_row_metadata: LabelRowMetadata) -> LabelRowV2.LabelRowReadOnlyData:
         data_type = DataType.from_upper_case_string(label_row_metadata.data_type)
@@ -2714,7 +2813,7 @@ class LabelRowV2:
             raise NotImplementedError(f"The data type {data_type} is not implemented yet.")
 
         else:
-            exhaustive_guard(data_type)
+            exhaustive_guard(data_type, message=f"Data type {data_type} not handled.")
 
         return LabelRowV2.LabelRowReadOnlyData(
             label_hash=label_row_dict["label_hash"],
@@ -2818,7 +2917,7 @@ class LabelRowV2:
                 is_html = data_unit["data_type"] == "text/html"
                 self._add_objects_instances_from_objects_without_frames(object_answers, html=is_html)
             else:
-                exhaustive_guard(data_type)
+                exhaustive_guard(data_type, message=f"Missing implementation for datat type: {data_type}")
 
             self._add_data_unit_metadata(data_type, data_unit.get("metadata"))
 
