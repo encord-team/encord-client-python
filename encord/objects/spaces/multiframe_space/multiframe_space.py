@@ -826,17 +826,6 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
     def _get_classification_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
     ) -> Iterator[Union[_FrameClassificationAnnotation, _GlobalClassificationAnnotation]]:
-        """Get all classification instance annotations in the space.
-
-        Args:
-            filter_classification_instances: Optional list of classification hashes to filter by.
-                If provided, only annotations for these classifications will be returned.
-
-        Returns:
-            Iterator[Union[_FrameClassificationAnnotation, GlobalClassificationAnnotation]]:
-                Iterator over all classification annotations (both frame-based and global),
-                sorted by frame number for frame-based annotations. Annotations are created lazily as the iterator is consumed.
-        """
         self._label_row._check_labelling_is_initalised()
         filter_set = set(filter_classification_instances) if filter_classification_instances is not None else None
 
