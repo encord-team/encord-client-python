@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class PdfSpace(MultiFrameSpace):
-    """Video space implementation for frame-based video annotations."""
+    """PDF space implementation for page-based annotations."""
 
     def __init__(
         self,
@@ -23,6 +23,8 @@ class PdfSpace(MultiFrameSpace):
         self._number_of_pages = number_of_pages
 
     def _get_frame_dimensions(self, frame: int) -> tuple[int, int]:
+        # TODO: Currently we don't support adding bitmasks to PDF, we currently can't verify whether its a valid bitmasks
+        # as we don't know the real width/height of the PDF
         return 0, 0
 
     def _to_space_dict(self) -> PdfSpaceInfo:

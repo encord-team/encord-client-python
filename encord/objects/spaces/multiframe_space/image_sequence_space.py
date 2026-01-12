@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class ImageSequenceSpace(MultiFrameSpace):
-    """Image sequence space implementation for frame-based video annotations."""
+    """Image sequence space implementation for frame-based annotations."""
 
     def __init__(
         self,
