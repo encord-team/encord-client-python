@@ -44,8 +44,8 @@ class HTMLSpace(Space[_HtmlObjectAnnotation, _GlobalClassificationAnnotation, Ht
     specified using XPath expressions with character offsets.
     """
 
-    def __init__(self, space_id: str, label_row: LabelRowV2):
-        super().__init__(space_id, label_row)
+    def __init__(self, space_id: str, label_row: LabelRowV2, space_info: SpaceInfo):
+        super().__init__(space_id, label_row, space_info)
         self._object_hash_to_html_ranges: dict[str, HtmlRanges] = dict()
 
     def put_object_instance(

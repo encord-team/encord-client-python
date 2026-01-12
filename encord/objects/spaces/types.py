@@ -1,4 +1,5 @@
-from typing import Dict, List, Literal, Type, TypedDict, Union
+from dataclasses import dataclass
+from typing import Dict, List, Literal, Optional, Type, TypedDict, Union
 
 from typing_extensions import NotRequired
 
@@ -6,6 +7,26 @@ from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects.types import LabelBlob
 from encord.utilities.type_utilities import exhaustive_guard
+
+
+@dataclass(frozen=True)
+class SpaceMetadata:
+    layout_key: Optional[str]
+    file_name: str
+
+
+@dataclass(frozen=True)
+class DataGroupMetadata(SpaceMetadata):
+    """Metadata for spaces originating from a data group."""
+
+
+@dataclass(frozen=True)
+class SceneMetadata(SpaceMetadata):
+    """Metadata for spaces originating from a scene."""
+
+    stream_id: str
+    event_index: int
+    uri: str
 
 
 class BaseSpaceInfo(TypedDict):

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, List, Optional
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects.spaces.multiframe_space.multiframe_space import MultiFrameSpace
-from encord.objects.spaces.types import DicomFrameInfo, MedicalStackSpaceInfo
+from encord.objects.spaces.types import DicomFrameInfo, MedicalStackSpaceInfo, SpaceInfo
 from encord.objects.types import LabelBlob
 
 logger = logging.getLogger(__name__)
@@ -18,8 +18,8 @@ if TYPE_CHECKING:
 class MedicalStackSpace(MultiFrameSpace):
     """Space for medical files (e.g. DICOM, NIfTI)."""
 
-    def __init__(self, space_id: str, label_row: LabelRowV2, frames: List[DicomFrameInfo]):
-        super().__init__(space_id, label_row, number_of_frames=len(frames))
+    def __init__(self, space_id: str, label_row: LabelRowV2, space_info: SpaceInfo, frames: List[DicomFrameInfo]):
+        super().__init__(space_id, label_row, space_info, number_of_frames=len(frames))
         self._frames = frames
 
     def _get_frame_dimensions(self, frame_number: int) -> tuple[int, int]:

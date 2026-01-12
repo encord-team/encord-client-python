@@ -17,8 +17,8 @@ if TYPE_CHECKING:
 class AudioSpace(RangeSpace):
     """Audio space implementation for range-based annotations."""
 
-    def __init__(self, space_id: str, label_row: LabelRowV2, duration_ms: int):
-        super().__init__(space_id, label_row)
+    def __init__(self, space_id: str, label_row: LabelRowV2, space_info: SpaceInfo, duration_ms: int):
+        super().__init__(space_id, label_row, space_info)
         self._duration_ms = duration_ms
 
     def _are_ranges_valid(self, ranges: Ranges) -> None:
