@@ -25,7 +25,14 @@ from encord.objects.spaces.annotation.base_annotation import (
     _ObjectAnnotation,
 )
 from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
-from encord.objects.spaces.types import SpaceInfo
+from encord.objects.spaces.types import (
+    ChildInfo,
+    DataGroupMetadata,
+    FileInSceneInfo,
+    SceneMetadata,
+    SpaceInfo,
+    SpaceMetadata,
+)
 from encord.objects.types import (
     AttributeDict,
     ClassificationAnswer,
@@ -57,6 +64,7 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
     """
 
     space_id: str
+    metadata: SpaceMetadata
     _label_row: LabelRowV2
     _objects_map: dict[str, ObjectInstance]
     _classifications_map: dict[str, ClassificationInstance]
@@ -65,8 +73,9 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
     # Used to keep track of global classifications that already exist.
     _global_classification_feature_hash_to_classification_hash: dict[str, str]
 
-    def __init__(self, space_id: str, label_row: LabelRowV2):
+    def __init__(self, space_id: str, label_row: LabelRowV2, space_info: SpaceInfo):
         self.space_id = space_id
+        self.metadata = self._extract_metadata_from_space_info(space_info)
         self._label_row = label_row
         self._objects_map: dict[str, ObjectInstance] = dict()
         self._classifications_map: dict[str, ClassificationInstance] = dict()
@@ -345,3 +354,25 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
                 "Classification instance contains frames data. "
                 "Ensure ClassificationInstance.set_for_frames was not used before calling this method. "
             )
+
+    @staticmethod
+    def _extract_metadata_from_space_info(space_info: SpaceInfo) -> SpaceMetadata:
+        child_info: Optional[ChildInfo] = space_info.get("child_info")  # type: ignore[assignment]
+        if child_info is not None:
+            return DataGroupMetadata(
+                layout_key=child_info["layout_key"],
+                file_name=child_info["file_name"],
+            )
+
+        scene_info: Optional[FileInSceneInfo] = space_info.get("scene_info")  # type: ignore[assignment]
+        if scene_info is not None:
+            file_name = scene_info["uri"].split("/")[-1]
+            return SceneMetadata(
+                stream_id=scene_info["stream_id"],
+                event_index=scene_info["event_index"],
+                uri=scene_info["uri"],
+                layout_key=None,
+                file_name=file_name,
+            )
+
+        raise LabelRowError("SpaceInfo must contain either 'child_info' or 'scene_info' to extract metadata.")

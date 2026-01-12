@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from encord.constants.enums import SpaceType
 from encord.objects.spaces.multiframe_space.multiframe_space import MultiFrameSpace
-from encord.objects.spaces.types import MedicalFileSpaceInfo
+from encord.objects.spaces.types import MedicalFileSpaceInfo, SpaceInfo
 from encord.objects.types import LabelBlob
 
 if TYPE_CHECKING:
@@ -21,11 +21,12 @@ class MedicalFileSpace(MultiFrameSpace):
         self,
         space_id: str,
         label_row: LabelRowV2,
+        space_info: SpaceInfo,
         number_of_frames: int,
         width: int,
         height: int,
     ):
-        super().__init__(space_id, label_row, number_of_frames=number_of_frames)
+        super().__init__(space_id, label_row, space_info, number_of_frames=number_of_frames)
         self._number_of_frames = number_of_frames
         self._width = width
         self._height = height

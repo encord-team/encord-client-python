@@ -17,8 +17,8 @@ if TYPE_CHECKING:
 class TextSpace(RangeSpace):
     """Text space implementation for range-based annotations."""
 
-    def __init__(self, space_id: str, label_row: LabelRowV2):
-        super().__init__(space_id, label_row)
+    def __init__(self, space_id: str, label_row: LabelRowV2, space_info: SpaceInfo):
+        super().__init__(space_id, label_row, space_info)
 
     def _are_ranges_valid(self, ranges: Ranges) -> None:
         start_of_range, _end_of_range = self._get_start_and_end_of_ranges(ranges)

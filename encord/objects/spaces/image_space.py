@@ -45,8 +45,8 @@ if TYPE_CHECKING:
 class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotation, FrameOverlapStrategy]):
     """Image space implementation for single-frame image annotations."""
 
-    def __init__(self, space_id: str, label_row: LabelRowV2, width: int, height: int):
-        super().__init__(space_id, label_row)
+    def __init__(self, space_id: str, label_row: LabelRowV2, space_info: SpaceInfo, width: int, height: int):
+        super().__init__(space_id, label_row, space_info)
         self._object_hash_to_annotation_data: dict[str, _GeometricAnnotationData] = dict()
 
         self._width = width

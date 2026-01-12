@@ -16,6 +16,7 @@ from encord.objects.spaces.annotation.range_annotation import (
     _RangeObjectAnnotation,
 )
 from encord.objects.spaces.base_space import Space
+from encord.objects.spaces.types import SpaceInfo
 from encord.objects.types import (
     AttributeDict,
     ClassificationAnswer,
@@ -45,8 +46,8 @@ class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, 
     across ranges.
     """
 
-    def __init__(self, space_id: str, label_row: LabelRowV2):
-        super().__init__(space_id, label_row)
+    def __init__(self, space_id: str, label_row: LabelRowV2, space_info: SpaceInfo):
+        super().__init__(space_id, label_row, space_info)
         self._object_hash_to_range_manager: dict[str, RangeManager] = dict()
 
     @abstractmethod

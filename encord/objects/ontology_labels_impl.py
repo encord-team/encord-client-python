@@ -2569,6 +2569,7 @@ class LabelRowV2:
                 video_space = VideoSpace(
                     space_id=space_id,
                     label_row=self,
+                    space_info=space_info,
                     number_of_frames=space_info["number_of_frames"],
                     width=space_info["width"],
                     height=space_info["height"],
@@ -2579,16 +2580,17 @@ class LabelRowV2:
                 image_space = ImageSpace(
                     space_id=space_id,
                     label_row=self,
+                    space_info=space_info,
                     width=space_info["width"],
                     height=space_info["height"],
                 )
                 res[space_id] = image_space
             elif space_info["space_type"] == SpaceType.IMAGE_SEQUENCE:
                 # Image sequence is exactly the same as a video, so we reuse the same class
-
                 image_sequence_space = VideoSpace(
                     space_id=space_id,
                     label_row=self,
+                    space_info=space_info,
                     number_of_frames=space_info["number_of_frames"],
                     width=space_info["width"],
                     height=space_info["height"],
@@ -2599,6 +2601,7 @@ class LabelRowV2:
                 audio_space = AudioSpace(
                     space_id=space_id,
                     label_row=self,
+                    space_info=space_info,
                     duration_ms=space_info["duration_ms"],
                 )
                 res[space_id] = audio_space
@@ -2606,28 +2609,38 @@ class LabelRowV2:
                 text_space = TextSpace(
                     space_id=space_id,
                     label_row=self,
+                    space_info=space_info,
                 )
                 res[space_id] = text_space
             elif space_info["space_type"] == SpaceType.HTML:
                 html_space = HTMLSpace(
                     space_id=space_id,
                     label_row=self,
+                    space_info=space_info,
                 )
                 res[space_id] = html_space
             elif space_info["space_type"] == SpaceType.MEDICAL_FILE:
                 medical_file_space = MedicalFileSpace(
                     space_id=space_id,
                     label_row=self,
+                    space_info=space_info,
                     number_of_frames=space_info["number_of_frames"],
                     width=space_info["width"],
                     height=space_info["height"],
                 )
                 res[space_id] = medical_file_space
             elif space_info["space_type"] == SpaceType.MEDICAL_STACK:
-                medical_stack_space = MedicalStackSpace(space_id=space_id, label_row=self, frames=space_info["frames"])
+                medical_stack_space = MedicalStackSpace(
+                    space_id=space_id, label_row=self, space_info=space_info, frames=space_info["frames"]
+                )
                 res[space_id] = medical_stack_space
             elif space_info["space_type"] == SpaceType.PDF:
-                pdf_space = PdfSpace(space_id=space_id, label_row=self, number_of_pages=space_info["number_of_pages"])
+                pdf_space = PdfSpace(
+                    space_id=space_id,
+                    label_row=self,
+                    space_info=space_info,
+                    number_of_pages=space_info["number_of_pages"],
+                )
                 res[space_id] = pdf_space
             elif space_info["space_type"] == SpaceType.SCENE_IMAGE or space_info["space_type"] == SpaceType.POINT_CLOUD:
                 # TODO: Implement Scene Images

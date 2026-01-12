@@ -83,9 +83,10 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         self,
         space_id: str,
         label_row: LabelRowV2,
+        space_info: SpaceInfo,
         number_of_frames: int,
     ):
-        super().__init__(space_id, label_row)
+        super().__init__(space_id, label_row, space_info)
 
         # Keeps track of object/classification annotation data on each frame
         self._frames_to_object_hash_to_annotation_data: defaultdict[int, dict[str, _GeometricAnnotationData]] = (

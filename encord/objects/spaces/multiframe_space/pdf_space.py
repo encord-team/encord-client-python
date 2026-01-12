@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from encord.constants.enums import SpaceType
 from encord.objects.spaces.multiframe_space.multiframe_space import MultiFrameSpace
-from encord.objects.spaces.types import PdfSpaceInfo
+from encord.objects.spaces.types import PdfSpaceInfo, SpaceInfo
 
 if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
@@ -17,9 +17,10 @@ class PdfSpace(MultiFrameSpace):
         self,
         space_id: str,
         label_row: LabelRowV2,
+        space_info: SpaceInfo,
         number_of_pages: int,
     ):
-        super().__init__(space_id, label_row, number_of_frames=number_of_pages)
+        super().__init__(space_id, label_row, space_info, number_of_frames=number_of_pages)
         self._number_of_pages = number_of_pages
 
     def _get_frame_dimensions(self, frame: int) -> tuple[int, int]:
