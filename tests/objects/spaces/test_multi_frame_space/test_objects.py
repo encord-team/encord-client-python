@@ -438,7 +438,7 @@ def test_get_object_annotations_by_frame(ontology):
     )
 
     # Act
-    object_annotations_by_frame = video_space_1.get_object_instance_annotations_by_frame()
+    object_annotations_by_frame = video_space_1.get_annotations_by_frame(type_="object")
 
     # Assert
     assert list(object_annotations_by_frame.keys()) == [0, 1, 2, 3]

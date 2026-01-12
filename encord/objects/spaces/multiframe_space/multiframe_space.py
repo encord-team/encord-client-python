@@ -19,6 +19,7 @@ from typing import (
     Tuple,
     Union,
     cast,
+    overload,
 )
 
 from encord.common.range_manager import RangeManager
@@ -63,6 +64,7 @@ from encord.objects.types import (
     SpaceFrameData,
     _is_global_classification_on_space,
 )
+from encord.utilities.type_utilities import exhaustive_guard
 
 logger = logging.getLogger(__name__)
 
@@ -759,6 +761,13 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
     def _get_object_annotation_on_frame(self, object_hash: str, frame: int = 0) -> _GeometricFrameObjectAnnotation:
         return _GeometricFrameObjectAnnotation(space=self, object_instance=self._objects_map[object_hash], frame=frame)
 
+    def _get_classification_annotation_on_frame(
+        self, classification_hash: str, frame: int = 0
+    ) -> _FrameClassificationAnnotation:
+        return _FrameClassificationAnnotation(
+            space=self, classification_instance=self._classifications_map[classification_hash], frame=frame
+        )
+
     def _create_object_annotation(self, obj_hash: str) -> _GeometricFrameObjectAnnotation:
         """Not supported multiframe spaces - use _get_object_annotation_on_frame() instead.
 
@@ -805,7 +814,24 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             if filter_set is None or obj_hash in filter_set
         )
 
-    def get_object_instance_annotations_by_frame(self) -> Dict[int, List[_GeometricFrameObjectAnnotation]]:
+    @overload
+    def get_annotations_by_frame(
+        self,
+        type_: Literal["object"],
+    ) -> Dict[int, List[_GeometricFrameObjectAnnotation]]:
+        pass
+
+    @overload
+    def get_annotations_by_frame(
+        self,
+        type_: Literal["classification"],
+    ) -> Dict[int, List[_FrameClassificationAnnotation]]:
+        pass
+
+    def get_annotations_by_frame(
+        self,
+        type_: Literal["object", "classification"],
+    ) -> Union[Dict[int, List[_GeometricFrameObjectAnnotation]], Dict[int, List[_FrameClassificationAnnotation]]]:
         """Get all object instance annotations organized by frame number.
 
         Returns:
@@ -813,12 +839,39 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
                 object annotations on that frame.
         """
         self._label_row._check_labelling_is_initalised()
+        if type_ == "object":
+            return self._get_object_annotations_by_frame()
+        elif type_ == "classification":
+            return self._get_classification_instance_annotations_by_frame()
+        else:
+            exhaustive_guard(type_, message=f"Unrecognized type {type_}")
+
+    def _get_object_annotations_by_frame(
+        self,
+    ) -> Dict[int, List[_GeometricFrameObjectAnnotation]]:
+        self._label_row._check_labelling_is_initalised()
         ret: Dict[int, List[_GeometricFrameObjectAnnotation]] = {}
 
         for frame, object_to_annotation_data_map in sorted(self._frames_to_object_hash_to_annotation_data.items()):
             ret[frame] = [
                 self._get_object_annotation_on_frame(frame=frame, object_hash=object_hash)
                 for object_hash in object_to_annotation_data_map.keys()
+            ]
+
+        return ret
+
+    def _get_classification_instance_annotations_by_frame(
+        self,
+    ) -> Dict[int, List[_FrameClassificationAnnotation]]:
+        self._label_row._check_labelling_is_initalised()
+        ret: Dict[int, List[_FrameClassificationAnnotation]] = {}
+
+        for frame, classification_to_annotation_data_map in sorted(
+            self._frames_to_classification_hash_to_annotation_data.items()
+        ):
+            ret[frame] = [
+                self._get_classification_annotation_on_frame(frame=frame, classification_hash=classification_hash)
+                for classification_hash in classification_to_annotation_data_map.keys()
             ]
 
         return ret
