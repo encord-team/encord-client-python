@@ -13,6 +13,7 @@ from typing import (
     Optional,
     TypeVar,
     Union,
+    overload,
 )
 
 from encord.common.time_parser import format_datetime_to_long_string
@@ -33,6 +34,7 @@ from encord.objects.types import (
     ObjectAnswerForNonGeometric,
     SpaceRange,
 )
+from encord.utilities.type_utilities import exhaustive_guard
 
 if TYPE_CHECKING:
     from encord.objects import ClassificationInstance, ObjectInstance
@@ -95,7 +97,36 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
     def remove_classification_instance(self, classification_hash: str) -> Optional[ClassificationInstance]:
         pass
 
-    def get_object_instance_annotations(
+    @overload
+    def get_annotations(
+        self,
+        type_: Literal["object"],
+        filter_instance_hashes: Optional[list[str]] = None,
+    ) -> Iterator[ObjectAnnotationT]:
+        pass
+
+    @overload
+    def get_annotations(
+        self,
+        type_: Literal["classification"],
+        filter_instance_hashes: Optional[list[str]] = None,
+    ) -> Iterator[Union[ClassificationAnnotationT, _GlobalClassificationAnnotation]]:
+        pass
+
+    def get_annotations(
+        self,
+        type_: Literal["object", "classification"],
+        filter_instance_hashes: Optional[list[str]] = None,
+    ) -> Iterator[Union[ObjectAnnotationT, ClassificationAnnotationT, _GlobalClassificationAnnotation]]:
+        self._label_row._check_labelling_is_initalised()
+        if type_ == "object":
+            return self._get_object_annotations(filter_object_instances=filter_instance_hashes)
+        elif type_ == "classification":
+            return self._get_classification_annotations(filter_classification_instances=filter_instance_hashes)
+        else:
+            exhaustive_guard(type_, message=f"Invalid type_: {type_}")
+
+    def _get_object_annotations(
         self, filter_object_instances: Optional[list[str]] = None
     ) -> Iterator[ObjectAnnotationT]:
         """Get all object instance annotations in the space.
@@ -118,7 +149,7 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
             if filter_set is None or obj_hash in filter_set
         )
 
-    def get_classification_instance_annotations(
+    def _get_classification_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
     ) -> Iterator[Union[ClassificationAnnotationT, _GlobalClassificationAnnotation]]:
         """Get all classification instance annotations in the space.

@@ -381,9 +381,7 @@ class ClassificationInstance:
             res: List[_ClassificationAnnotation] = []
             for space in self._spaces.values():
                 res.extend(
-                    space.get_classification_instance_annotations(
-                        filter_classification_instances=[self.classification_hash]
-                    )
+                    space._get_classification_annotations(filter_classification_instances=[self.classification_hash])
                 )
             return res
         else:

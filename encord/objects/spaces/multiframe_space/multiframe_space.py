@@ -782,7 +782,7 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             "Use get_classification_instance_annotations() to get all annotations across all frames."
         )
 
-    def get_object_instance_annotations(
+    def _get_object_annotations(
         self, filter_object_instances: Optional[list[str]] = None
     ) -> Iterator[_GeometricFrameObjectAnnotation]:
         """Get all object instance annotations in the video space.
@@ -823,7 +823,7 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
 
         return ret
 
-    def get_classification_instance_annotations(
+    def _get_classification_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
     ) -> Iterator[Union[_FrameClassificationAnnotation, _GlobalClassificationAnnotation]]:
         """Get all classification instance annotations in the space.

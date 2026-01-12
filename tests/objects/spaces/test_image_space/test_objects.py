@@ -50,7 +50,7 @@ def test_put_classification_on_image_space(ontology):
     assert len(objects_on_space) == 2
     assert object_on_space._spaces == {image_space_1.space_id: image_space_1}
 
-    annotations = list(image_space_1.get_object_instance_annotations())
+    annotations = list(image_space_1.get_annotations(type_="object"))
     assert len(annotations) == 2
 
     first_annotation = annotations[0]
@@ -111,7 +111,7 @@ def test_put_classification_on_frames_with_overwrite_on_image_space(ontology):
     )
 
     # Assert
-    object_annotations = list(image_space_1.get_object_instance_annotations())
+    object_annotations = list(image_space_1.get_annotations(type_="object"))
     annotation_on_frame_1 = object_annotations[0]
     assert annotation_on_frame_1.frame == 0
     assert annotation_on_frame_1.coordinates == coordinates_2
@@ -141,7 +141,7 @@ def test_remove_object_from_image_space(ontology):
     objects_on_space = image_space_1.get_object_instances()
     assert len(objects_on_space) == 0
 
-    annotations_on_space = list(image_space_1.get_object_instance_annotations())
+    annotations_on_space = list(image_space_1.get_annotations(type_="object"))
     assert len(annotations_on_space) == 0
 
     annotations_on_object = new_object_instance.get_annotations()
@@ -173,12 +173,12 @@ def test_add_object_to_two_spaces(ontology):
     entities = image_space_1.get_object_instances()
     assert len(entities) == 1
 
-    annotations_on_image_space_1 = list(image_space_1.get_object_instance_annotations())
+    annotations_on_image_space_1 = list(image_space_1.get_annotations(type_="object"))
     first_annotation_on_image_space_1 = annotations_on_image_space_1[0]
     assert len(annotations_on_image_space_1) == 1
     assert first_annotation_on_image_space_1.coordinates == box_coordinates_1
 
-    annotations_on_image_space_2 = list(image_space_2.get_object_instance_annotations())
+    annotations_on_image_space_2 = list(image_space_2.get_annotations(type_="object"))
     first_annotation_on_image_space_2 = annotations_on_image_space_2[0]
     assert len(annotations_on_image_space_2) == 1
     assert first_annotation_on_image_space_2.coordinates == box_coordinates_2
@@ -272,7 +272,7 @@ def test_get_object_annotations(ontology):
     )
 
     # Act
-    object_annotations = list(image_space_1.get_object_instance_annotations())
+    object_annotations = list(image_space_1.get_annotations(type_="object"))
     first_annotation = object_annotations[0]
     second_annotation = object_annotations[1]
 
@@ -327,12 +327,12 @@ def test_get_object_annotations_with_filter_objects(ontology):
 
     # Act
     object_annotations_for_object_1 = list(
-        image_space_1.get_object_instance_annotations(filter_object_instances=[object_instance_1.object_hash])
+        image_space_1.get_annotations(type_="object", filter_instance_hashes=[object_instance_1.object_hash])
     )
     first_annotation_for_object_1 = object_annotations_for_object_1[0]
 
     object_annotations_for_object_2 = list(
-        image_space_1.get_object_instance_annotations(filter_object_instances=[object_instance_2.object_hash])
+        image_space_1.get_annotations(type_="object", filter_instance_hashes=[object_instance_2.object_hash])
     )
     first_annotation_for_object_2 = object_annotations_for_object_2[0]
 
@@ -461,7 +461,7 @@ def test_update_annotation_from_object_annotation(ontology):
     assert not DeepDiff(current_frame_dict, EXPECTED_CURRENT_LABELS_DICT)
 
     # Act
-    object_annotations = list(image_space_1.get_object_instance_annotations())
+    object_annotations = list(image_space_1.get_annotations(type_="object"))
     object_annotation = object_annotations[0]
 
     object_annotation.created_by = new_name

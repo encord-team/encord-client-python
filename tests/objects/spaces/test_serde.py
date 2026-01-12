@@ -20,100 +20,100 @@ def test_read_and_export_all_space_labels(ontology):
     video_space = label_row._get_space(id="video-uuid", type_="video")
     assert len(video_space.get_object_instances()) == 1
     assert video_space.get_object_instances()[0].object_hash == "video-box-object"
-    assert len(list(video_space.get_object_instance_annotations())) == 1
+    assert len(list(video_space.get_annotations(type_="object"))) == 1
     classification_instances = video_space.get_classification_instances()
     assert len(classification_instances) == 2
     assert classification_instances[0].classification_hash == "video-classification"
     assert classification_instances[1].classification_hash == "global-classification-on-video"
-    assert len(list(video_space.get_classification_instance_annotations())) == 2
+    assert len(list(video_space.get_annotations(type_="classification"))) == 2
 
     # Image space: 1 object, 1 normal classification, 1 global classification
     image_space = label_row._get_space(id="image-uuid", type_="image")
     assert len(image_space.get_object_instances()) == 1
     assert image_space.get_object_instances()[0].object_hash == "image-box-object"
-    assert len(list(image_space.get_object_instance_annotations())) == 1
+    assert len(list(image_space.get_annotations(type_="object"))) == 1
     classification_instances = image_space.get_classification_instances()
     assert len(classification_instances) == 2
     assert classification_instances[0].classification_hash == "image-classification"
     assert classification_instances[1].classification_hash == "global-classification-on-image"
-    assert len(list(image_space.get_classification_instance_annotations())) == 2
+    assert len(list(image_space.get_annotations(type_="classification"))) == 2
 
     # Audio space: 1 object, 1 normal classification, 1 global classification
     audio_space = label_row._get_space(id="audio-uuid", type_="audio")
     assert len(audio_space.get_object_instances()) == 1
     assert audio_space.get_object_instances()[0].object_hash == "audio-object"
-    assert len(list(audio_space.get_object_instance_annotations())) == 1
+    assert len(list(audio_space.get_annotations(type_="object"))) == 1
     classification_instances = audio_space.get_classification_instances()
     assert len(classification_instances) == 2
     assert classification_instances[0].classification_hash == "audio-classification"
     assert classification_instances[1].classification_hash == "global-classification-on-audio"
-    assert len(list(audio_space.get_classification_instance_annotations())) == 2
+    assert len(list(audio_space.get_annotations(type_="classification"))) == 2
 
     # Text space: 1 object, 1 normal classification, 1 global classification
     text_space = label_row._get_space(id="text-uuid", type_="text")
     assert len(text_space.get_object_instances()) == 1
     assert text_space.get_object_instances()[0].object_hash == "text-object"
-    assert len(list(text_space.get_object_instance_annotations())) == 1
+    assert len(list(text_space.get_annotations(type_="object"))) == 1
     classification_instances = text_space.get_classification_instances()
     assert len(classification_instances) == 2
     assert classification_instances[0].classification_hash == "text-classification"
     assert classification_instances[1].classification_hash == "global-classification-on-text"
-    assert len(list(text_space.get_classification_instance_annotations())) == 2
+    assert len(list(text_space.get_annotations(type_="classification"))) == 2
 
     # html space: 1 object, 1 normal classification, 1 global classification
     html_space = label_row._get_space(id="html-uuid", type_="html")
     assert len(html_space.get_object_instances()) == 1
     assert html_space.get_object_instances()[0].object_hash == "html-text-object"
-    assert len(list(html_space.get_object_instance_annotations())) == 1
+    assert len(list(html_space.get_annotations(type_="object"))) == 1
     classification_instances = html_space.get_classification_instances()
     assert len(classification_instances) == 2
     assert classification_instances[0].classification_hash == "html-text-classification"
     assert classification_instances[1].classification_hash == "global-classification-on-html"
-    assert len(list(html_space.get_classification_instance_annotations())) == 2
+    assert len(list(html_space.get_annotations(type_="classification"))) == 2
 
     # medical space: 1 object, 1 normal classification, 1 global classification
     dicom_space = label_row._get_space(id="dicom-uuid", type_="medical_file")
     assert len(dicom_space.get_object_instances()) == 1
     assert dicom_space.get_object_instances()[0].object_hash == "dicom-box-object"
-    assert len(list(dicom_space.get_object_instance_annotations())) == 1
+    assert len(list(dicom_space.get_annotations(type_="object"))) == 1
     classification_instances = dicom_space.get_classification_instances()
     assert len(classification_instances) == 2
     assert classification_instances[0].classification_hash == "dicom-classification"
     assert classification_instances[1].classification_hash == "global-classification-on-dicom"
-    assert len(list(dicom_space.get_classification_instance_annotations())) == 2
+    assert len(list(dicom_space.get_annotations(type_="classification"))) == 2
 
     # medical stack space: 1 object, 1 normal classification, 1 global classification
     dicom_stack_space = label_row._get_space(id="dicom-stack-uuid", type_="medical_stack")
     assert len(dicom_space.get_object_instances()) == 1
     assert dicom_stack_space.get_object_instances()[0].object_hash == "dicom-stack-box-object"
-    assert len(list(dicom_stack_space.get_object_instance_annotations())) == 1
+    assert len(list(dicom_stack_space.get_annotations(type_="object"))) == 1
     classification_instances = dicom_stack_space.get_classification_instances()
     assert len(classification_instances) == 2
     assert classification_instances[0].classification_hash == "dicom-stack-classification"
     assert classification_instances[1].classification_hash == "global-classification-on-dicom-stack"
-    assert len(list(dicom_stack_space.get_classification_instance_annotations())) == 2
+    assert len(list(dicom_stack_space.get_annotations(type_="classification"))) == 2
 
     # image sequence stack space: 1 object, 1 normal classification, 1 global classification
     image_sequence_space = label_row._get_space(id="image-sequence-uuid", type_="image_sequence")
     assert len(image_sequence_space.get_object_instances()) == 1
     assert image_sequence_space.get_object_instances()[0].object_hash == "image-sequence-box-object"
-    assert len(list(image_sequence_space.get_object_instance_annotations())) == 1
+    assert len(list(image_sequence_space.get_annotations(type_="object"))) == 1
     classification_instances = image_sequence_space.get_classification_instances()
     assert len(classification_instances) == 2
     assert classification_instances[0].classification_hash == "image-sequence-classification"
     assert classification_instances[1].classification_hash == "global-classification-on-image-sequence"
-    assert len(list(image_sequence_space.get_classification_instance_annotations())) == 2
+    assert len(list(image_sequence_space.get_annotations(type_="classification"))) == 2
 
     # pdf space: 1 object, 1 normal classification, 1 global classification
     pdf_space = label_row._get_space(id="pdf-uuid", type_="pdf")
     assert len(pdf_space.get_object_instances()) == 1
     assert pdf_space.get_object_instances()[0].object_hash == "pdf-box-object"
-    assert len(list(pdf_space.get_object_instance_annotations())) == 1
+    assert len(list(pdf_space.get_annotations(type_="object"))) == 1
     classification_instances = pdf_space.get_classification_instances()
     assert len(classification_instances) == 2
     assert classification_instances[0].classification_hash == "pdf-classification"
     assert classification_instances[1].classification_hash == "global-classification-on-pdf"
-    assert len(list(pdf_space.get_classification_instance_annotations())) == 2
+    assert len(list(pdf_space.get_annotations(type_="classification"))) == 2
 
     # Verify round-trip serialization
     output_dict = label_row.to_encord_dict()
