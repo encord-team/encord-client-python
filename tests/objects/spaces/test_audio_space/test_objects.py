@@ -450,12 +450,12 @@ def test_get_object_annotations_with_filter_objects(ontology):
 
     # Act
     object_annotations_for_object_1 = list(
-        audio_space_1.get_annotations(type_="object", filter_instances=[object_instance_1.object_hash])
+        audio_space_1.get_annotations(type_="object", filter_instance_hashes=[object_instance_1.object_hash])
     )
     first_annotation_for_object_1 = object_annotations_for_object_1[0]
 
     object_annotations_for_object_2 = list(
-        audio_space_1.get_annotations(type_="object", filter_instances=[object_instance_2.object_hash])
+        audio_space_1.get_annotations(type_="object", filter_instance_hashes=[object_instance_2.object_hash])
     )
     first_annotation_for_object_2 = object_annotations_for_object_2[0]
 
