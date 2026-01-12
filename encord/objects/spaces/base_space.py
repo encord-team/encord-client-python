@@ -27,6 +27,7 @@ from encord.objects.spaces.annotation.base_annotation import (
 from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
 from encord.objects.spaces.types import (
     ChildInfo,
+    DataGroupMetadata,
     FileInSceneInfo,
     SceneMetadata,
     SpaceInfo,
@@ -358,7 +359,7 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
     def _extract_metadata_from_space_info(space_info: SpaceInfo) -> SpaceMetadata:
         child_info: Optional[ChildInfo] = space_info.get("child_info")  # type: ignore[assignment]
         if child_info is not None:
-            return SpaceMetadata(
+            return DataGroupMetadata(
                 layout_key=child_info["layout_key"],
                 file_name=child_info["file_name"],
             )

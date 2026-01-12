@@ -58,7 +58,6 @@ def _get_space_layout_key_from_space_literal(space_literal: SpaceLiteral) -> str
 
 
 def _get_expected_metadata_for_space_literal(space_literal: SpaceLiteral) -> DataGroupMetadata:
-    """Get the expected parent info for a given space literal."""
     if space_literal == "video":
         return DataGroupMetadata(layout_key="main-video", file_name="video.mp4")
     elif space_literal == "image":
@@ -84,34 +83,19 @@ def _get_expected_metadata_for_space_literal(space_literal: SpaceLiteral) -> Dat
 def test_space_metadata_is_populated_for_data_group(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
 
+    spaces = label_row._get_spaces()
+    assert len(spaces) == 9  # 9 modalities in the test data
+
     for space_literal in get_args(SpaceLiteral):
         space_id = _get_space_id_from_space_literal(space_literal)
         space = label_row._get_space(id=space_id, type_=space_literal)
 
         expected_metadata = _get_expected_metadata_for_space_literal(space_literal)
 
-        assert space.metadata is not None, f"Parent should be set for {space_literal} space"
-        assert isinstance(space.metadata, DataGroupMetadata), (
-            f"Parent should be DataGroupMetadata for {space_literal} space"
-        )
-        assert space.metadata.layout_key == expected_metadata.layout_key, (
-            f"Layout key mismatch for {space_literal} space"
-        )
-        assert space.metadata.file_name == expected_metadata.file_name, f"File name mismatch for {space_literal} space"
-
-
-def test_get_spaces_all_have_parent(ontology):
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-
-    spaces = label_row._get_spaces()
-
-    assert len(spaces) == 9  # 9 modalities in the test data
-
-    for space in spaces:
-        assert space.metadata is not None, f"Parent should be set for space {space.space_id}"
-        assert isinstance(space.metadata, DataGroupMetadata), (
-            f"Parent should be DataGroupMetadata for space {space.space_id}"
-        )
+        assert space.metadata is not None
+        assert isinstance(space.metadata, DataGroupMetadata)
+        assert space.metadata.layout_key == expected_metadata.layout_key
+        assert space.metadata.file_name == expected_metadata.file_name
 
 
 def test_get_space_by_id(ontology):

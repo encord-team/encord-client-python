@@ -10,23 +10,26 @@ from encord.utilities.type_utilities import exhaustive_guard
 
 
 @dataclass(frozen=True)
-class SpaceMetadata:
+class DataGroupMetadata:
+    """Metadata for spaces originating from a data group."""
+
     layout_key: Optional[str]
     file_name: str
 
 
 @dataclass(frozen=True)
-class DataGroupMetadata(SpaceMetadata):
-    """Metadata for spaces originating from a data group."""
-
-
-@dataclass(frozen=True)
-class SceneMetadata(SpaceMetadata):
+class SceneMetadata:
     """Metadata for spaces originating from a scene."""
 
     stream_id: str
     event_index: int
     uri: str
+    layout_key: None
+    file_name: str
+    """The name of the file, including extension, extracted from the URI."""
+
+
+SpaceMetadata = Union[DataGroupMetadata, SceneMetadata]
 
 
 class BaseSpaceInfo(TypedDict):
