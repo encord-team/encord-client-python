@@ -22,7 +22,7 @@ def test_put_classification_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
     # Act
     new_classification_instance = text_classification.create_instance()
@@ -73,7 +73,7 @@ def test_put_classification_on_frame_where_classification_exists_video_space(ont
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
     classification_instance_1 = text_classification.create_instance()
     classification_instance_2 = text_classification.create_instance()
@@ -100,7 +100,7 @@ def test_put_classification_on_frames_with_overwrite_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
     classification_instance_1 = text_classification.create_instance()
     classification_instance_2 = text_classification.create_instance()
@@ -133,7 +133,7 @@ def test_put_classification_on_invalid_frames(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
     classification_instance_1 = text_classification.create_instance()
 
@@ -153,7 +153,7 @@ def test_remove_classification_from_frames_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
     new_classification_instance = text_classification.create_instance()
     video_space_1.put_classification_instance(classification_instance=new_classification_instance, frames=[0, 1, 2])
@@ -186,7 +186,7 @@ def test_remove_classification_from_all_frames_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
     new_classification_instance = text_classification.create_instance()
     video_space_1.put_classification_instance(classification_instance=new_classification_instance, frames=[0, 1, 2])
@@ -218,7 +218,7 @@ def test_remove_classification_from_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
     new_classification_instance = text_classification.create_instance()
     video_space_1.put_classification_instance(classification_instance=new_classification_instance, frames=[0, 2, 3])
@@ -245,7 +245,7 @@ def test_get_classification_annotations(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_classification_instance = text_classification.create_instance()
 
     name_1 = "james"
@@ -293,7 +293,7 @@ def test_get_classification_annotations_by_frames(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     text_classification_instance = text_classification.create_instance()
     checklist_classification_instance = checklist_classification.create_instance()
 
@@ -355,7 +355,7 @@ def test_get_classification_annotations_with_filter_classifications(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     classification_instance_1 = text_classification.create_instance()
     classification_instance_2 = text_classification.create_instance()
 
@@ -414,7 +414,7 @@ def test_get_classification_annotations_from_classification_instance(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     classification_instance_1 = text_classification.create_instance()
     classification_instance_2 = text_classification.create_instance()
 
@@ -465,7 +465,7 @@ def test_update_annotation_from_object_annotation(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     classification_instance_1 = text_classification.create_instance()
 
     name = "james@encord.com"

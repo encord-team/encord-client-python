@@ -26,31 +26,31 @@ html_obj_ontology_item = all_types_structure.get_child_by_hash("textFeatureNodeH
 @pytest.fixture
 def uninitialised_image_space(ontology):
     label_row = LabelRowV2(ALL_MODALITIES_DATA_GROUP, Mock(), ontology)
-    return label_row._get_space(id="image-uuid", type_="image")
+    return label_row.get_space(id="image-uuid", type_="image")
 
 
 @pytest.fixture
 def uninitialised_video_space(ontology):
     label_row = LabelRowV2(ALL_MODALITIES_DATA_GROUP, Mock(), ontology)
-    return label_row._get_space(id="video-uuid", type_="video")
+    return label_row.get_space(id="video-uuid", type_="video")
 
 
 @pytest.fixture
 def uninitialised_audio_space(ontology):
     label_row = LabelRowV2(ALL_MODALITIES_DATA_GROUP, Mock(), ontology)
-    return label_row._get_space(id="audio-uuid", type_="audio")
+    return label_row.get_space(id="audio-uuid", type_="audio")
 
 
 @pytest.fixture
 def uninitialised_text_space(ontology):
     label_row = LabelRowV2(ALL_MODALITIES_DATA_GROUP, Mock(), ontology)
-    return label_row._get_space(id="text-uuid", type_="text")
+    return label_row.get_space(id="text-uuid", type_="text")
 
 
 @pytest.fixture
 def uninitialised_html_space(ontology):
     label_row = LabelRowV2(ALL_MODALITIES_DATA_GROUP, Mock(), ontology)
-    return label_row._get_space(id="html-uuid", type_="html")
+    return label_row.get_space(id="html-uuid", type_="html")
 
 
 def test_get_object_instances_requires_initialisation(ontology):

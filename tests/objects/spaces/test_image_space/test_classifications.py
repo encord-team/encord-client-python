@@ -30,7 +30,7 @@ def test_put_classification_on_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
+    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
 
     # Act
     new_classification_instance = text_classification.create_instance()
@@ -80,7 +80,7 @@ def test_put_classification_on_frame_where_classification_instance_exists_on_ima
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
+    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
 
     classification_instance_1 = text_classification.create_instance()
 
@@ -105,7 +105,7 @@ def test_put_classification_on_frame_where_classification_of_same_ontology_item_
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
+    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
 
     classification_instance_1 = text_classification.create_instance()
     classification_instance_2 = text_classification.create_instance()
@@ -132,7 +132,7 @@ def test_put_classification_on_frames_with_overwrite_on_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
+    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
 
     classification_instance_1 = text_classification.create_instance()
     classification_instance_2 = text_classification.create_instance()
@@ -159,7 +159,7 @@ def test_remove_classification_from_image_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
+    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
 
     new_classification_instance = text_classification.create_instance()
     image_space_1.put_classification_instance(classification_instance=new_classification_instance)
@@ -186,7 +186,7 @@ def test_get_classification_annotations(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
+    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
     text_classification_instance = text_classification.create_instance()
     checklist_classification_instance = checklist_classification.create_instance()
 
@@ -233,7 +233,7 @@ def test_get_classification_annotations_with_filter_classifications(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
+    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
     text_classification_instance = text_classification.create_instance()
     checklist_classification_instance = checklist_classification.create_instance()
 
@@ -295,7 +295,7 @@ def test_get_classification_annotations_from_classification_instance(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
+    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
     text_classification_instance = text_classification.create_instance()
     checklist_classification_instance = checklist_classification.create_instance()
 
@@ -349,7 +349,7 @@ def test_update_annotation_from_object_annotation(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_IMAGES_NO_LABELS)
-    image_space_1 = label_row._get_space(id="image-1-uuid", type_="image")
+    image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
     classification_instance_1 = text_classification.create_instance()
 
     name = "james@encord.com"

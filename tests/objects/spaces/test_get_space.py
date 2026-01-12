@@ -83,12 +83,12 @@ def _get_expected_metadata_for_space_literal(space_literal: SpaceLiteral) -> Dat
 def test_space_metadata_is_populated_for_data_group(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
 
-    spaces = label_row._get_spaces()
+    spaces = label_row.get_spaces()
     assert len(spaces) == 9  # 9 modalities in the test data
 
     for space_literal in get_args(SpaceLiteral):
         space_id = _get_space_id_from_space_literal(space_literal)
-        space = label_row._get_space(id=space_id, type_=space_literal)
+        space = label_row.get_space(id=space_id, type_=space_literal)
 
         expected_metadata = _get_expected_metadata_for_space_literal(space_literal)
 
@@ -102,7 +102,7 @@ def test_get_space_by_id(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     for space_literal in get_args(SpaceLiteral):
         space_id = _get_space_id_from_space_literal(space_literal)
-        space = label_row._get_space(id=space_id, type_=space_literal)
+        space = label_row.get_space(id=space_id, type_=space_literal)
         assert space.space_id == space_id
 
 
@@ -110,7 +110,7 @@ def test_get_space_by_layout_key(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     for space_literal in get_args(SpaceLiteral):
         space_layout_key = _get_space_layout_key_from_space_literal(space_literal)
-        space = label_row._get_space(layout_key=space_layout_key, type_=space_literal)
+        space = label_row.get_space(layout_key=space_layout_key, type_=space_literal)
         assert space is not None
 
 
@@ -118,21 +118,21 @@ def test_get_space_that_do_not_exist(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
 
     with pytest.raises(LabelRowError) as no_such_space_error:
-        label_row._get_space(id="non-existent-video", type_="video")
+        label_row.get_space(id="non-existent-video", type_="video")
     assert (
         no_such_space_error.value.message
         == "Could not find space with given id 'non-existent-video'. Available space ids: ['video-uuid', 'image-uuid', 'text-uuid', 'audio-uuid', 'html-uuid', 'dicom-uuid', 'dicom-stack-uuid', 'image-sequence-uuid', 'pdf-uuid']"
     )
 
     with pytest.raises(LabelRowError) as no_such_layout_key_error:
-        label_row._get_space(layout_key="non-existent-layout", type_="video")
+        label_row.get_space(layout_key="non-existent-layout", type_="video")
     assert (
         no_such_layout_key_error.value.message
         == "Could not find space with given layout key 'non-existent-layout'. Available layout keys: ['main-video', 'main-image', 'main-text', 'main-audio', 'main-html', 'left-shoulder', 'xray-stack', 'main-image-sequence', 'main-pdf']"
     )
 
     with pytest.raises(LabelRowError) as incorrect_type_error:
-        label_row._get_space(id="image-uuid", type_="video")
+        label_row.get_space(id="image-uuid", type_="video")
     assert (
         incorrect_type_error.value.message
         == "Space with id 'image-uuid' is not of expected type 'video'. Found ImageSpace instead of VideoSpace."
