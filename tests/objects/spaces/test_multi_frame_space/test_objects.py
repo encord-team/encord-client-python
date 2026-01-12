@@ -49,7 +49,7 @@ def test_put_object_on_video_space(ontology):
     assert len(objects_on_space) == 1
     assert object_on_space._spaces == {video_space_1.space_id: video_space_1}
 
-    annotations = list(video_space_1.get_object_instance_annotations())
+    annotations = list(video_space_1.get_annotations(type_="object"))
     assert len(annotations) == 4
 
     first_annotation = annotations[0]
@@ -102,7 +102,7 @@ def test_put_object_on_frames_with_overwrite_on_video_space(ontology):
     )
 
     # Assert
-    object_annotations = list(video_space_1.get_object_instance_annotations())
+    object_annotations = list(video_space_1.get_annotations(type_="object"))
     annotation_on_frame_1 = object_annotations[1]
     assert annotation_on_frame_1.frame == 1
     assert annotation_on_frame_1.coordinates == coordinates_2
@@ -169,7 +169,7 @@ def test_remove_object_from_frames_on_video_space(ontology):
     assert object_on_space._spaces == {video_space_1.space_id: video_space_1}
 
     # But only two annotations
-    annotations_on_space = list(video_space_1.get_object_instance_annotations())
+    annotations_on_space = list(video_space_1.get_annotations(type_="object"))
     assert len(annotations_on_space) == 2
 
     first_annotation = annotations_on_space[0]
@@ -239,7 +239,7 @@ def test_remove_object_from_video_space(ontology):
     objects_on_space = video_space_1.get_object_instances()
     assert len(objects_on_space) == 0
 
-    annotations_on_space = list(video_space_1.get_object_instance_annotations())
+    annotations_on_space = list(video_space_1.get_annotations(type_="object"))
     assert len(annotations_on_space) == 0
 
     annotations_on_object = new_object_instance.get_annotations()
@@ -273,12 +273,12 @@ def test_add_object_to_two_spaces(ontology):
     entities = video_space_1.get_object_instances()
     assert len(entities) == 1
 
-    annotations_on_video_space_1 = list(video_space_1.get_object_instance_annotations())
+    annotations_on_video_space_1 = list(video_space_1.get_annotations(type_="object"))
     first_annotation_on_video_space_1 = annotations_on_video_space_1[0]
     assert len(annotations_on_video_space_1) == 3
     assert first_annotation_on_video_space_1.coordinates == box_coordinates_1
 
-    annotations_on_video_space_2 = list(video_space_2.get_object_instance_annotations())
+    annotations_on_video_space_2 = list(video_space_2.get_annotations(type_="object"))
     first_annotation_on_video_space_2 = annotations_on_video_space_2[0]
     assert len(annotations_on_video_space_2) == 2
     assert first_annotation_on_video_space_2.coordinates == box_coordinates_2
@@ -374,7 +374,7 @@ def test_get_object_annotations(ontology):
     )
 
     # Act
-    object_annotations = list(video_space_1.get_object_instance_annotations())
+    object_annotations = list(video_space_1.get_annotations(type_="object"))
     first_annotation = object_annotations[0]
     second_annotation = object_annotations[1]
 
@@ -438,7 +438,7 @@ def test_get_object_annotations_by_frame(ontology):
     )
 
     # Act
-    object_annotations_by_frame = video_space_1.get_object_instance_annotations_by_frame()
+    object_annotations_by_frame = video_space_1.get_annotations_by_frame(type_="object")
 
     # Assert
     assert list(object_annotations_by_frame.keys()) == [0, 1, 2, 3]
@@ -506,12 +506,12 @@ def test_get_object_annotations_with_filter_objects(ontology):
 
     # Act
     object_annotations_for_object_1 = list(
-        video_space_1.get_object_instance_annotations(filter_object_instances=[object_instance_1.object_hash])
+        video_space_1.get_annotations(type_="object", filter_instance_hashes=[object_instance_1.object_hash])
     )
     first_annotation_for_object_1 = object_annotations_for_object_1[0]
 
     object_annotations_for_object_2 = list(
-        video_space_1.get_object_instance_annotations(filter_object_instances=[object_instance_2.object_hash])
+        video_space_1.get_annotations(type_="object", filter_instance_hashes=[object_instance_2.object_hash])
     )
     first_annotation_for_object_2 = object_annotations_for_object_2[0]
 
@@ -643,7 +643,7 @@ def test_update_annotation_from_object_annotation(ontology):
     assert not DeepDiff(current_frame_dict, EXPECTED_CURRENT_LABELS_DICT)
 
     # Act
-    object_annotations = list(video_space_1.get_object_instance_annotations())
+    object_annotations = list(video_space_1.get_annotations(type_="object"))
     object_annotation = object_annotations[0]
 
     object_annotation.created_by = new_name

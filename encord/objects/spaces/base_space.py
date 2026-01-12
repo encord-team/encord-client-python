@@ -13,6 +13,7 @@ from typing import (
     Optional,
     TypeVar,
     Union,
+    overload,
 )
 
 from encord.common.time_parser import format_datetime_to_long_string
@@ -33,6 +34,7 @@ from encord.objects.types import (
     ObjectAnswerForNonGeometric,
     SpaceRange,
 )
+from encord.utilities.type_utilities import exhaustive_guard
 
 if TYPE_CHECKING:
     from encord.objects import ClassificationInstance, ObjectInstance
@@ -95,20 +97,61 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
     def remove_classification_instance(self, classification_hash: str) -> Optional[ClassificationInstance]:
         pass
 
-    def get_object_instance_annotations(
-        self, filter_object_instances: Optional[list[str]] = None
+    @overload
+    def get_annotations(
+        self,
+        type_: Literal["object"],
+        filter_instance_hashes: Optional[list[str]] = None,
     ) -> Iterator[ObjectAnnotationT]:
-        """Get all object instance annotations in the space.
+        pass
+
+    @overload
+    def get_annotations(
+        self,
+        type_: Literal["classification"],
+        filter_instance_hashes: Optional[list[str]] = None,
+    ) -> Iterator[Union[ClassificationAnnotationT, _GlobalClassificationAnnotation]]:
+        pass
+
+    def get_annotations(
+        self,
+        type_: Literal["object", "classification"],
+        filter_instance_hashes: Optional[list[str]] = None,
+    ) -> Iterator[Union[ObjectAnnotationT, ClassificationAnnotationT, _GlobalClassificationAnnotation]]:
+        """Get annotations in the space by type.
+
+        This method retrieves all annotations of a specified type (object or classification)
+        within the space. Annotations are returned as an iterator and created lazily as the
+        iterator is consumed.
 
         Args:
-            filter_object_instances: Optional list of object hashes to filter by.
-                If provided, only annotations for these objects will be returned.
+            type_: The type of annotations to retrieve. Must be either:
+                - "object": Returns object annotations
+                - "classification": Returns classification annotations (including global classifications)
+            filter_instance_hashes: Optional list of instance hashes to filter by.
+                If provided, only annotations matching these hashes will be returned.
+                For objects, these should be object hashes; for classifications, classification hashes.
 
         Returns:
-            Iterator[ObjectAnnotationT]: Iterator over all object annotations in the space.
-                The concrete type depends on the Space subclass.
-                Annotations are created lazily as the iterator is consumed.
+            When type_ is "object":
+                Iterator[ObjectAnnotationT]: Iterator over object annotations in the space.
+                The concrete annotation type depends on the Space subclass.
+
+            When type_ is "classification":
+                Iterator[Union[ClassificationAnnotationT, _GlobalClassificationAnnotation]]:
+                Iterator over classification annotations, including global classifications.
         """
+        self._label_row._check_labelling_is_initalised()
+        if type_ == "object":
+            return self._get_object_annotations(filter_object_instances=filter_instance_hashes)
+        elif type_ == "classification":
+            return self._get_classification_annotations(filter_classification_instances=filter_instance_hashes)
+        else:
+            exhaustive_guard(type_, message=f"Invalid type_: {type_}")
+
+    def _get_object_annotations(
+        self, filter_object_instances: Optional[list[str]] = None
+    ) -> Iterator[ObjectAnnotationT]:
         self._label_row._check_labelling_is_initalised()
         filter_set = set(filter_object_instances) if filter_object_instances is not None else None
 
@@ -118,20 +161,9 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
             if filter_set is None or obj_hash in filter_set
         )
 
-    def get_classification_instance_annotations(
+    def _get_classification_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
     ) -> Iterator[Union[ClassificationAnnotationT, _GlobalClassificationAnnotation]]:
-        """Get all classification instance annotations in the space.
-
-        Args:
-            filter_classification_instances: Optional list of classification hashes to filter by.
-                If provided, only annotations for these classifications will be returned.
-
-        Returns:
-            Iterator[ClassificationAnnotationT]: Iterator over all classification annotations in the space.
-                The concrete type depends on the Space subclass.
-                Annotations are created lazily as the iterator is consumed.
-        """
         self._label_row._check_labelling_is_initalised()
         filter_set = set(filter_classification_instances) if filter_classification_instances is not None else None
 

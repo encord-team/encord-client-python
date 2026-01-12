@@ -38,5 +38,5 @@ def test_global_classifications_on_data_group(ontology):
     # Assert
     assert len(label_row._get_classification_instances(include_spaces=True)) == total_spaces + 1
     video_space = label_row._get_space(id="video-uuid", type_="video")
-    annotations = list(video_space.get_classification_instance_annotations())
+    annotations = list(video_space.get_annotations(type_="classification"))
     assert len(annotations) == 1

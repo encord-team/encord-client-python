@@ -19,6 +19,7 @@ from typing import (
     Tuple,
     Union,
     cast,
+    overload,
 )
 
 from encord.common.range_manager import RangeManager
@@ -63,6 +64,7 @@ from encord.objects.types import (
     SpaceFrameData,
     _is_global_classification_on_space,
 )
+from encord.utilities.type_utilities import exhaustive_guard
 
 logger = logging.getLogger(__name__)
 
@@ -759,6 +761,13 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
     def _get_object_annotation_on_frame(self, object_hash: str, frame: int = 0) -> _GeometricFrameObjectAnnotation:
         return _GeometricFrameObjectAnnotation(space=self, object_instance=self._objects_map[object_hash], frame=frame)
 
+    def _get_classification_annotation_on_frame(
+        self, classification_hash: str, frame: int = 0
+    ) -> _FrameClassificationAnnotation:
+        return _FrameClassificationAnnotation(
+            space=self, classification_instance=self._classifications_map[classification_hash], frame=frame
+        )
+
     def _create_object_annotation(self, obj_hash: str) -> _GeometricFrameObjectAnnotation:
         """Not supported multiframe spaces - use _get_object_annotation_on_frame() instead.
 
@@ -772,7 +781,7 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         )
 
     def _create_classification_annotation(self, classification_hash: str) -> _FrameClassificationAnnotation:
-        """Not supported for MutliFrameSpace - MultiFrameSpace handles classifications per-frame.
+        """Not supported for MultiFrameSpace - MultiFrameSpace handles classifications per-frame.
 
         VideoSpace has frame-specific annotations, so it overrides get_classification_instance_annotations()
         with its own implementation that iterates through all frames.
@@ -782,19 +791,9 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             "Use get_classification_instance_annotations() to get all annotations across all frames."
         )
 
-    def get_object_instance_annotations(
+    def _get_object_annotations(
         self, filter_object_instances: Optional[list[str]] = None
     ) -> Iterator[_GeometricFrameObjectAnnotation]:
-        """Get all object instance annotations in the video space.
-
-        Args:
-            filter_object_instances: Optional list of object hashes to filter by.
-                If provided, only annotations for these objects will be returned.
-
-        Returns:
-            Iterator[_GeometricFrameObjectAnnotation]: Iterator over all object annotations across all frames,
-                sorted by frame number. Annotations are created lazily as the iterator is consumed.
-        """
         self._label_row._check_labelling_is_initalised()
         filter_set = set(filter_object_instances) if filter_object_instances is not None else None
 
@@ -805,13 +804,48 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             if filter_set is None or obj_hash in filter_set
         )
 
-    def get_object_instance_annotations_by_frame(self) -> Dict[int, List[_GeometricFrameObjectAnnotation]]:
-        """Get all object instance annotations organized by frame number.
+    @overload
+    def get_annotations_by_frame(
+        self,
+        type_: Literal["object"],
+    ) -> Dict[int, List[_GeometricFrameObjectAnnotation]]:
+        pass
+
+    @overload
+    def get_annotations_by_frame(
+        self,
+        type_: Literal["classification"],
+    ) -> Dict[int, List[_FrameClassificationAnnotation]]:
+        pass
+
+    def get_annotations_by_frame(
+        self,
+        type_: Literal["object", "classification"],
+    ) -> Union[Dict[int, List[_GeometricFrameObjectAnnotation]], Dict[int, List[_FrameClassificationAnnotation]]]:
+        """Get all annotations organized by frame number.
+
+        Args:
+            type_: Type of annotations to retrieve:
+                - "object": Get object instance annotations
+                - "classification": Get classification instance annotations
 
         Returns:
-            Dict[int, List[_GeometricFrameObjectAnnotation]]: Dictionary mapping frame numbers to lists of
-                object annotations on that frame.
+            Dictionary mapping frame numbers to lists of annotations on that frame.
+            The annotation type depends on the type_ parameter:
+            - When type_="object": Dict[int, List[_GeometricFrameObjectAnnotation]]
+            - When type_="classification": Dict[int, List[_FrameClassificationAnnotation]]
         """
+        self._label_row._check_labelling_is_initalised()
+        if type_ == "object":
+            return self._get_object_annotations_by_frame()
+        elif type_ == "classification":
+            return self._get_classification_instance_annotations_by_frame()
+        else:
+            exhaustive_guard(type_, message=f"Unrecognized type {type_}")
+
+    def _get_object_annotations_by_frame(
+        self,
+    ) -> Dict[int, List[_GeometricFrameObjectAnnotation]]:
         self._label_row._check_labelling_is_initalised()
         ret: Dict[int, List[_GeometricFrameObjectAnnotation]] = {}
 
@@ -823,20 +857,25 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
 
         return ret
 
-    def get_classification_instance_annotations(
+    def _get_classification_instance_annotations_by_frame(
+        self,
+    ) -> Dict[int, List[_FrameClassificationAnnotation]]:
+        self._label_row._check_labelling_is_initalised()
+        ret: Dict[int, List[_FrameClassificationAnnotation]] = {}
+
+        for frame, classification_to_annotation_data_map in sorted(
+            self._frames_to_classification_hash_to_annotation_data.items()
+        ):
+            ret[frame] = [
+                self._get_classification_annotation_on_frame(frame=frame, classification_hash=classification_hash)
+                for classification_hash in classification_to_annotation_data_map.keys()
+            ]
+
+        return ret
+
+    def _get_classification_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
     ) -> Iterator[Union[_FrameClassificationAnnotation, _GlobalClassificationAnnotation]]:
-        """Get all classification instance annotations in the space.
-
-        Args:
-            filter_classification_instances: Optional list of classification hashes to filter by.
-                If provided, only annotations for these classifications will be returned.
-
-        Returns:
-            Iterator[Union[_FrameClassificationAnnotation, GlobalClassificationAnnotation]]:
-                Iterator over all classification annotations (both frame-based and global),
-                sorted by frame number for frame-based annotations. Annotations are created lazily as the iterator is consumed.
-        """
         self._label_row._check_labelling_is_initalised()
         filter_set = set(filter_classification_instances) if filter_classification_instances is not None else None
 

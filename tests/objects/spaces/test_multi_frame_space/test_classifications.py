@@ -41,7 +41,7 @@ def test_put_classification_on_video_space(ontology):
     assert len(classifications_on_space) == 1
     assert classification_on_space._spaces == {video_space_1.space_id: video_space_1}
 
-    annotations = list(video_space_1.get_classification_instance_annotations())
+    annotations = list(video_space_1.get_annotations(type_="classification"))
     assert len(annotations) == 4
 
     first_annotation = annotations[0]
@@ -117,7 +117,7 @@ def test_put_classification_on_frames_with_overwrite_on_video_space(ontology):
         classification_instance=classification_instance_2, frames=[1], on_overlap="replace"
     )
 
-    annotations_on_classifications = list(video_space_1.get_classification_instance_annotations())
+    annotations_on_classifications = list(video_space_1.get_annotations(type_="classification"))
 
     assert len(annotations_on_classifications) == 3
     annotation_on_frame_0 = annotations_on_classifications[0]
@@ -158,7 +158,7 @@ def test_remove_classification_from_frames_on_video_space(ontology):
     new_classification_instance = text_classification.create_instance()
     video_space_1.put_classification_instance(classification_instance=new_classification_instance, frames=[0, 1, 2])
 
-    annotations_before_removing = list(video_space_1.get_classification_instance_annotations())
+    annotations_before_removing = list(video_space_1.get_annotations(type_="classification"))
     annotation_to_be_removed = annotations_before_removing[1]
 
     assert len(annotations_before_removing) == 3
@@ -172,7 +172,7 @@ def test_remove_classification_from_frames_on_video_space(ontology):
     # Assert
     assert frames_removed == [1]
 
-    annotations_after_removing = list(video_space_1.get_classification_instance_annotations())
+    annotations_after_removing = list(video_space_1.get_annotations(type_="classification"))
     assert len(annotations_after_removing) == 2
 
     annotations_on_classification_after_removing = new_classification_instance.get_annotations()
@@ -191,7 +191,7 @@ def test_remove_classification_from_all_frames_on_video_space(ontology):
     new_classification_instance = text_classification.create_instance()
     video_space_1.put_classification_instance(classification_instance=new_classification_instance, frames=[0, 1, 2])
 
-    annotations_before_removing = list(video_space_1.get_classification_instance_annotations())
+    annotations_before_removing = list(video_space_1.get_annotations(type_="classification"))
     annotation_to_be_removed = annotations_before_removing[1]
 
     assert len(annotations_before_removing) == 3
@@ -204,7 +204,7 @@ def test_remove_classification_from_all_frames_on_video_space(ontology):
     # Assert
     assert frames_removed == [0, 1, 2]
 
-    annotations_after_removing = list(video_space_1.get_classification_instance_annotations())
+    annotations_after_removing = list(video_space_1.get_annotations(type_="classification"))
     assert len(annotations_after_removing) == 0
 
     annotations_on_classification_after_removing = new_classification_instance.get_annotations()
@@ -224,7 +224,7 @@ def test_remove_classification_from_video_space(ontology):
     video_space_1.put_classification_instance(classification_instance=new_classification_instance, frames=[0, 2, 3])
     classifications_on_space = video_space_1.get_classification_instances()
     assert len(classifications_on_space) == 1
-    annotations = list(video_space_1.get_classification_instance_annotations())
+    annotations = list(video_space_1.get_annotations(type_="classification"))
     assert len(annotations) == 3
 
     # Act
@@ -237,7 +237,7 @@ def test_remove_classification_from_video_space(ontology):
     classifications_on_space = video_space_1.get_classification_instances()
     assert len(classifications_on_space) == 0
 
-    annotations = list(video_space_1.get_classification_instance_annotations())
+    annotations = list(video_space_1.get_annotations(type_="classification"))
     assert len(annotations) == 0
 
 
@@ -269,7 +269,7 @@ def test_get_classification_annotations(ontology):
     )
 
     # Act
-    classification_annotations = list(video_space_1.get_classification_instance_annotations())
+    classification_annotations = list(video_space_1.get_annotations(type_="classification"))
     first_annotation = classification_annotations[0]
     second_annotation = classification_annotations[1]
 
@@ -287,6 +287,68 @@ def test_get_classification_annotations(ontology):
     assert second_annotation.classification_hash == new_classification_instance.classification_hash
     assert second_annotation.last_edited_by == name_1
     assert second_annotation.last_edited_at == date1
+
+
+def test_get_classification_annotations_by_frames(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
+    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    text_classification_instance = text_classification.create_instance()
+    checklist_classification_instance = checklist_classification.create_instance()
+
+    name_1 = "james"
+    name_2 = "timmy"
+
+    date1 = datetime(2020, 1, 1)
+    date2 = datetime(2020, 5, 5)
+
+    video_space_1.put_classification_instance(
+        classification_instance=text_classification_instance,
+        frames=[1, 2],
+        last_edited_by=name_1,
+        last_edited_at=date1,
+    )
+
+    video_space_1.put_classification_instance(
+        classification_instance=checklist_classification_instance,
+        frames=[0, 2, 3],
+        last_edited_by=name_2,
+        last_edited_at=date2,
+    )
+
+    # Act
+    classification_annotations_by_frame = video_space_1.get_annotations_by_frame(type_="classification")
+
+    # Assert
+    assert list(classification_annotations_by_frame.keys()) == [0, 1, 2, 3]
+    annotations_on_frame_0 = classification_annotations_by_frame[0]
+    assert len(annotations_on_frame_0) == 1
+
+    annotations_on_frame_2 = classification_annotations_by_frame[2]
+    assert len(annotations_on_frame_2) == 2
+
+    first_annotation_on_frame_0 = annotations_on_frame_0[0]
+    assert first_annotation_on_frame_0.frame == 0
+    assert first_annotation_on_frame_0.space.space_id == "video-1-uuid"
+    assert first_annotation_on_frame_0.last_edited_by == name_2
+    assert first_annotation_on_frame_0.last_edited_at == date2
+    assert first_annotation_on_frame_0.classification_hash == checklist_classification_instance.classification_hash
+
+    first_annotation_on_frame_2 = annotations_on_frame_2[0]
+    second_annotation_on_frame_2 = annotations_on_frame_2[1]
+
+    assert first_annotation_on_frame_2.space.space_id == "video-1-uuid"
+    assert first_annotation_on_frame_2.classification_hash == text_classification_instance.classification_hash
+    assert first_annotation_on_frame_2.frame == 2
+    assert first_annotation_on_frame_2.last_edited_by == name_1
+    assert first_annotation_on_frame_2.last_edited_at == date1
+
+    assert second_annotation_on_frame_2.space.space_id == "video-1-uuid"
+    assert second_annotation_on_frame_2.frame == 2
+    assert second_annotation_on_frame_2.classification_hash == checklist_classification_instance.classification_hash
+    assert second_annotation_on_frame_2.last_edited_by == name_2
+    assert second_annotation_on_frame_2.last_edited_at == date2
 
 
 def test_get_classification_annotations_with_filter_classifications(ontology):
@@ -319,15 +381,15 @@ def test_get_classification_annotations_with_filter_classifications(ontology):
 
     # Act
     annotations_for_classification_1 = list(
-        video_space_1.get_classification_instance_annotations(
-            filter_classification_instances=[classification_instance_1.classification_hash]
+        video_space_1.get_annotations(
+            type_="classification", filter_instance_hashes=[classification_instance_1.classification_hash]
         )
     )
     first_annotation_for_classification_1 = annotations_for_classification_1[0]
 
     annotations_for_classification_2 = list(
-        video_space_1.get_classification_instance_annotations(
-            filter_classification_instances=[classification_instance_2.classification_hash]
+        video_space_1.get_annotations(
+            type_="classification", filter_instance_hashes=[classification_instance_2.classification_hash]
         )
     )
     first_annotation_for_classification_2 = annotations_for_classification_2[0]
@@ -444,7 +506,7 @@ def test_update_annotation_from_object_annotation(ontology):
     assert not DeepDiff(current_frame_dict, EXPECTED_CURRENT_LABELS_DICT)
 
     # Act
-    classification_annotations = list(video_space_1.get_classification_instance_annotations())
+    classification_annotations = list(video_space_1.get_annotations(type_="classification"))
     classification_annotation = classification_annotations[0]
 
     classification_annotation.created_by = new_name

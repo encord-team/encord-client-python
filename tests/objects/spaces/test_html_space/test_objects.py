@@ -45,7 +45,7 @@ def test_put_object_on_space(ontology):
     assert len(objects_on_space) == 1
     assert object_on_space._spaces == {html_space_1.space_id: html_space_1}
 
-    annotations = list(html_space_1.get_object_instance_annotations())
+    annotations = list(html_space_1.get_annotations(type_="object"))
     assert len(annotations) == 1
 
     first_annotation = annotations[0]
@@ -80,7 +80,7 @@ def test_put_object_with_multiple_ranges(ontology):
     )
 
     # Assert
-    annotations = list(html_space_1.get_object_instance_annotations())
+    annotations = list(html_space_1.get_annotations(type_="object"))
     first_annotation = annotations[0]
     assert len(annotations) == 1
     assert first_annotation.coordinates == HtmlCoordinates(range=html_ranges)
@@ -128,7 +128,7 @@ def test_put_objects_with_replace_overlapping_strategy(ontology):
     html_space_1.put_object_instance(object_instance=new_object_instance, ranges=range_2, on_overlap="replace")
 
     # Assert
-    object_annotations = list(html_space_1.get_object_instance_annotations())
+    object_annotations = list(html_space_1.get_annotations(type_="object"))
     assert len(object_annotations) == 1
     assert object_annotations[0].coordinates == HtmlCoordinates(range=[range_2])
     assert object_annotations[0].ranges == [range_2]
@@ -156,7 +156,7 @@ def test_remove_object_from_html_space(ontology):
     objects_on_space = html_space_1.get_object_instances()
     assert len(objects_on_space) == 0
 
-    annotations_on_space = list(html_space_1.get_object_instance_annotations())
+    annotations_on_space = list(html_space_1.get_annotations(type_="object"))
     assert len(annotations_on_space) == 0
 
     annotations_on_object = list(new_object_instance.get_annotations())
@@ -188,7 +188,7 @@ def test_add_object_to_two_spaces(ontology):
     objects = html_space_1.get_object_instances()
     assert len(objects) == 1
 
-    annotations_on_html_space_1 = list(html_space_1.get_object_instance_annotations())
+    annotations_on_html_space_1 = list(html_space_1.get_annotations(type_="object"))
     assert len(annotations_on_html_space_1) == 1
 
     first_annotation_on_html_space_1 = annotations_on_html_space_1[0]
@@ -197,7 +197,7 @@ def test_add_object_to_two_spaces(ontology):
     )  # Coordinates here for backwards compatibility
     assert first_annotation_on_html_space_1.ranges == [range_1]
 
-    annotations_on_html_space_2 = list(html_space_2.get_object_instance_annotations())
+    annotations_on_html_space_2 = list(html_space_2.get_annotations(type_="object"))
     first_annotation_on_html_space_2 = annotations_on_html_space_2[0]
     assert len(annotations_on_html_space_2) == 1
     assert first_annotation_on_html_space_2.coordinates == HtmlCoordinates(
@@ -310,7 +310,7 @@ def test_get_object_annotations(ontology):
     )
 
     # Act
-    object_annotations = list(html_space_1.get_object_instance_annotations())
+    object_annotations = list(html_space_1.get_annotations(type_="object"))
     first_annotation = object_annotations[0]
     second_annotation = object_annotations[1]
 
@@ -369,12 +369,12 @@ def test_get_object_annotations_with_filter_objects(ontology):
 
     # Act
     object_annotations_for_object_1 = list(
-        html_space_1.get_object_instance_annotations(filter_object_instances=[object_instance_1.object_hash])
+        html_space_1.get_annotations(type_="object", filter_instance_hashes=[object_instance_1.object_hash])
     )
     first_annotation_for_object_1 = object_annotations_for_object_1[0]
 
     object_annotations_for_object_2 = list(
-        html_space_1.get_object_instance_annotations(filter_object_instances=[object_instance_2.object_hash])
+        html_space_1.get_annotations(type_="object", filter_instance_hashes=[object_instance_2.object_hash])
     )
     first_annotation_for_object_2 = object_annotations_for_object_2[0]
 
@@ -518,7 +518,7 @@ def test_update_annotation_from_object_annotation_using_coordinates(ontology):
     assert not DeepDiff(current_object_answers_dict, EXPECTED_CURRENT_OBJECT_ANSWERS_DICT)
 
     # Act
-    object_annotations = list(html_space_1.get_object_instance_annotations())
+    object_annotations = list(html_space_1.get_annotations(type_="object"))
     object_annotation = object_annotations[0]
 
     object_annotation.created_by = new_name
@@ -530,7 +530,7 @@ def test_update_annotation_from_object_annotation_using_coordinates(ontology):
     )  # This is a backwards compatible flow. Should change it via object_annotation.ranges
 
     # Assert
-    updated_annotations = list(html_space_1.get_object_instance_annotations())
+    updated_annotations = list(html_space_1.get_annotations(type_="object"))
     assert len(updated_annotations) == 1
     assert updated_annotations[0].coordinates == HtmlCoordinates(range=[new_range])
     assert updated_annotations[0].created_by == new_name
@@ -619,7 +619,7 @@ def test_update_annotation_from_object_annotation(ontology):
     assert not DeepDiff(current_object_answers_dict, EXPECTED_CURRENT_OBJECT_ANSWERS_DICT)
 
     # Act
-    object_annotations = list(html_space_1.get_object_instance_annotations())
+    object_annotations = list(html_space_1.get_annotations(type_="object"))
     object_annotation = object_annotations[0]
 
     object_annotation.created_by = new_name
@@ -722,7 +722,7 @@ def test_update_annotation_for_object_reflected_on_different_spaces(ontology):
     assert not DeepDiff(current_object_answers_dict, EXPECTED_CURRENT_OBJECT_ANSWERS_DICT)
 
     # Act
-    object_annotations = list(html_space_1.get_object_instance_annotations())
+    object_annotations = list(html_space_1.get_annotations(type_="object"))
     object_annotation = object_annotations[0]
 
     object_annotation.created_by = new_name
@@ -735,7 +735,7 @@ def test_update_annotation_for_object_reflected_on_different_spaces(ontology):
     new_label_row_dict = label_row.to_encord_dict()
     new_object_answers_dict = new_label_row_dict["object_answers"]
 
-    object_annotation_on_html_space_2 = list(html_space_2.get_object_instance_annotations())[0]
+    object_annotation_on_html_space_2 = list(html_space_2.get_annotations(type_="object"))[0]
 
     # Metadata of object on space is updated (because its the same object)
     assert object_annotation_on_html_space_2.created_by == new_name
