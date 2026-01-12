@@ -106,15 +106,13 @@ from encord.objects.spaces.annotation.base_annotation import (
 from encord.objects.spaces.base_space import Space, SpaceT
 from encord.objects.spaces.html_space import HTMLSpace
 from encord.objects.spaces.image_space import ImageSpace
-from encord.objects.spaces.multiframe_space import image_sequence_space
-from encord.objects.spaces.multiframe_space.image_sequence_space import ImageSequenceSpace
 from encord.objects.spaces.multiframe_space.medical_file_space import MedicalFileSpace
 from encord.objects.spaces.multiframe_space.medical_stack_space import MedicalStackSpace
 from encord.objects.spaces.multiframe_space.pdf_space import PdfSpace
 from encord.objects.spaces.multiframe_space.video_space import VideoSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
-from encord.objects.spaces.types import ChildInfo, ImageSequenceSpaceInfo, MedicalStackSpaceInfo, SpaceInfo
+from encord.objects.spaces.types import ChildInfo, SpaceInfo
 from encord.objects.types import (
     AttributeDict,
     BaseFrameObject,
@@ -159,7 +157,6 @@ SpaceLiteral = Literal[
 SpaceClass = Union[
     VideoSpace,
     ImageSpace,
-    ImageSequenceSpace,
     AudioSpace,
     TextSpace,
     HTMLSpace,
@@ -201,7 +198,7 @@ def _get_space_class_from_space_literal(space_literal: SpaceLiteral) -> Type[Spa
     elif space_literal == "image":
         return ImageSpace
     elif space_literal == "image_sequence":
-        return ImageSequenceSpace
+        return VideoSpace
     elif space_literal == "audio":
         return AudioSpace
     elif space_literal == "text":
@@ -866,7 +863,7 @@ class LabelRowV2:
         pass
 
     @overload
-    def _get_space(self, *, id: str, type_: Literal["image_sequence"]) -> ImageSequenceSpace:
+    def _get_space(self, *, id: str, type_: Literal["image_sequence"]) -> VideoSpace:
         pass
 
     @overload
@@ -902,7 +899,7 @@ class LabelRowV2:
         pass
 
     @overload
-    def _get_space(self, *, layout_key: str, type_: Literal["image_sequence"]) -> ImageSequenceSpace:
+    def _get_space(self, *, layout_key: str, type_: Literal["image_sequence"]) -> VideoSpace:
         pass
 
     @overload
@@ -2575,6 +2572,7 @@ class LabelRowV2:
                     number_of_frames=space_info["number_of_frames"],
                     width=space_info["width"],
                     height=space_info["height"],
+                    is_image_sequence=False,
                 )
                 res[space_id] = video_space
             elif space_info["space_type"] == SpaceType.IMAGE:
@@ -2586,12 +2584,15 @@ class LabelRowV2:
                 )
                 res[space_id] = image_space
             elif space_info["space_type"] == SpaceType.IMAGE_SEQUENCE:
-                image_sequence_space = ImageSequenceSpace(
+                # Image sequence is exactly the same as a video, so we reuse the same class
+
+                image_sequence_space = VideoSpace(
                     space_id=space_id,
                     label_row=self,
                     number_of_frames=space_info["number_of_frames"],
                     width=space_info["width"],
                     height=space_info["height"],
+                    is_image_sequence=True,
                 )
                 res[space_id] = image_sequence_space
             elif space_info["space_type"] == SpaceType.AUDIO:
