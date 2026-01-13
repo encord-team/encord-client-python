@@ -24,10 +24,8 @@ def _get_space_id_from_space_literal(space_literal: SpaceLiteral) -> str:
         return "text-uuid"
     elif space_literal == "html":
         return "html-uuid"
-    elif space_literal == "medical_file":
+    elif space_literal == "medical":
         return "dicom-uuid"
-    elif space_literal == "medical_stack":
-        return "dicom-stack-uuid"
     elif space_literal == "pdf":
         return "pdf-uuid"
     else:
@@ -47,10 +45,8 @@ def _get_space_layout_key_from_space_literal(space_literal: SpaceLiteral) -> str
         return "main-text"
     elif space_literal == "html":
         return "main-html"
-    elif space_literal == "medical_file":
+    elif space_literal == "medical":
         return "left-shoulder"
-    elif space_literal == "medical_stack":
-        return "xray-stack"
     elif space_literal == "pdf":
         return "main-pdf"
     else:
@@ -70,10 +66,8 @@ def _get_expected_metadata_for_space_literal(space_literal: SpaceLiteral) -> Dat
         return DataGroupMetadata(layout_key="main-text", file_name="text.txt")
     elif space_literal == "html":
         return DataGroupMetadata(layout_key="main-html", file_name="document.html")
-    elif space_literal == "medical_file":
+    elif space_literal == "medical":
         return DataGroupMetadata(layout_key="left-shoulder", file_name="left-shoulder.dcm")
-    elif space_literal == "medical_stack":
-        return DataGroupMetadata(layout_key="xray-stack", file_name="xray-stack.dcm")
     elif space_literal == "pdf":
         return DataGroupMetadata(layout_key="main-pdf", file_name="document.pdf")
     else:
