@@ -24,7 +24,7 @@ def test_global_classifications_on_data_group(ontology):
     assert len(label_row.get_classification_instances()) == 1
 
     # Add global classification to each space
-    total_spaces = len(label_row._get_spaces())
+    total_spaces = len(label_row.get_spaces())
     for space in label_row._space_map.values():
         global_classification_on_space = global_classification.create_instance()
         space.put_classification_instance(classification_instance=global_classification_on_space)
@@ -37,6 +37,6 @@ def test_global_classifications_on_data_group(ontology):
 
     # Assert
     assert len(label_row._get_classification_instances(include_spaces=True)) == total_spaces + 1
-    video_space = label_row._get_space(id="video-uuid", type_="video")
+    video_space = label_row.get_space(id="video-uuid", type_="video")
     annotations = list(video_space.get_annotations(type_="classification"))
     assert len(annotations) == 1

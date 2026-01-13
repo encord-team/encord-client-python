@@ -26,7 +26,7 @@ def test_put_object_on_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
 
     # Act
     range_1 = HtmlRange(start=HtmlNode(xpath="start", offset=0), end=HtmlNode(xpath="end", offset=1))
@@ -60,7 +60,7 @@ def test_put_object_with_multiple_ranges(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
 
     # Act
     new_object_instance = html_text_obj_ontology_item.create_instance()
@@ -94,7 +94,7 @@ def test_put_objects_with_error_overlapping_strategy(ontology):
 
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
     new_object_instance = html_text_obj_ontology_item.create_instance()
     html_space_1.put_object_instance(
         object_instance=new_object_instance,
@@ -120,7 +120,7 @@ def test_put_objects_with_replace_overlapping_strategy(ontology):
 
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
     new_object_instance = html_text_obj_ontology_item.create_instance()
     html_space_1.put_object_instance(object_instance=new_object_instance, ranges=range_1)
 
@@ -138,7 +138,7 @@ def test_remove_object_from_html_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
     new_object_instance = html_text_obj_ontology_item.create_instance()
 
     range_1 = HtmlRange(start=HtmlNode(xpath="start", offset=0), end=HtmlNode(xpath="end", offset=1))
@@ -167,8 +167,8 @@ def test_add_object_to_two_spaces(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
-    html_space_2 = label_row._get_space(id="html-2-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
+    html_space_2 = label_row.get_space(id="html-2-uuid", type_="html")
 
     new_object_instance = html_text_obj_ontology_item.create_instance()
     range_1 = HtmlRange(start=HtmlNode(xpath="start", offset=0), end=HtmlNode(xpath="end", offset=1))
@@ -210,8 +210,8 @@ def test_update_attribute_for_object_which_exist_on_two_spaces(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
-    html_space_2 = label_row._get_space(id="html-2-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
+    html_space_2 = label_row.get_space(id="html-2-uuid", type_="html")
 
     new_object_instance = html_text_obj_ontology_item.create_instance()
     range_1 = HtmlRange(start=HtmlNode(xpath="start", offset=0), end=HtmlNode(xpath="end", offset=1))
@@ -282,7 +282,7 @@ def test_get_object_annotations(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
     object_instance_1 = html_text_obj_ontology_item.create_instance()
     object_instance_2 = html_text_obj_ontology_item.create_instance()
 
@@ -340,7 +340,7 @@ def test_get_object_annotations_with_filter_objects(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
     object_instance_1 = html_text_obj_ontology_item.create_instance()
     object_instance_2 = html_text_obj_ontology_item.create_instance()
 
@@ -406,7 +406,7 @@ def test_get_object_annotations_from_object_instance(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
     object_instance_1 = html_text_obj_ontology_item.create_instance()
     object_instance_2 = html_text_obj_ontology_item.create_instance()
 
@@ -468,7 +468,7 @@ def test_update_annotation_from_object_annotation_using_coordinates(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
     object_instance = html_text_obj_ontology_item.create_instance()
 
     current_range = HtmlRange(start=HtmlNode(xpath="start", offset=0), end=HtmlNode(xpath="end", offset=1))
@@ -569,7 +569,7 @@ def test_update_annotation_from_object_annotation(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
     object_instance = html_text_obj_ontology_item.create_instance()
 
     current_range = HtmlRange(start=HtmlNode(xpath="start", offset=0), end=HtmlNode(xpath="end", offset=1))
@@ -662,8 +662,8 @@ def test_update_annotation_for_object_reflected_on_different_spaces(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
-    html_space_2 = label_row._get_space(id="html-2-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
+    html_space_2 = label_row.get_space(id="html-2-uuid", type_="html")
     object_instance = html_text_obj_ontology_item.create_instance()
 
     current_range = HtmlRange(start=HtmlNode(xpath="start", offset=0), end=HtmlNode(xpath="end", offset=1))

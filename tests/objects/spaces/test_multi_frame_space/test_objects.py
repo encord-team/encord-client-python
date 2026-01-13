@@ -25,7 +25,7 @@ def test_put_object_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
     # Act
     new_object_instance = box_ontology_item.create_instance()
@@ -62,7 +62,7 @@ def test_put_object_on_frames_where_object_already_exists_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_object_instance = box_ontology_item.create_instance()
     video_space_1.put_object_instance(
         object_instance=new_object_instance,
@@ -89,7 +89,7 @@ def test_put_object_on_frames_with_overwrite_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_object_instance = box_ontology_item.create_instance()
 
     coordinates_1 = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
@@ -112,7 +112,7 @@ def test_put_object_on_invalid_frames(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_object_instance = box_ontology_item.create_instance()
 
     coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
@@ -141,7 +141,7 @@ def test_remove_object_from_frames_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     video_space_1.put_object_instance(
@@ -186,7 +186,7 @@ def test_remove_object_from_all_frames_on_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     video_space_1.put_object_instance(
@@ -218,7 +218,7 @@ def test_remove_object_from_video_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
     video_space_1.put_object_instance(
@@ -250,8 +250,8 @@ def test_add_object_to_two_spaces(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
-    video_space_2 = label_row._get_space(id="video-2-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
+    video_space_2 = label_row.get_space(id="video-2-uuid", type_="video")
 
     new_object_instance = box_ontology_item.create_instance()
     box_coordinates_1 = BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5)
@@ -288,8 +288,8 @@ def test_update_attribute_for_object_which_exist_on_two_spaces(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
-    video_space_2 = label_row._get_space(id="video-2-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
+    video_space_2 = label_row.get_space(id="video-2-uuid", type_="video")
 
     new_object_instance = box_with_attributes_ontology_item.create_instance()
     box_coordinates_1 = BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5)
@@ -345,7 +345,7 @@ def test_get_object_annotations(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_object_instance = box_ontology_item.create_instance()
 
     coordinates_1 = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
@@ -400,7 +400,7 @@ def test_get_object_annotations_by_frame(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     object_instance_1 = box_ontology_item.create_instance()
     object_instance_2 = box_ontology_item.create_instance()
 
@@ -475,7 +475,7 @@ def test_get_object_annotations_with_filter_objects(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     object_instance_1 = box_ontology_item.create_instance()
     object_instance_2 = box_ontology_item.create_instance()
 
@@ -537,7 +537,7 @@ def test_get_object_annotations_from_object_instance(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     object_instance_1 = box_ontology_item.create_instance()
     object_instance_2 = box_ontology_item.create_instance()
 
@@ -595,7 +595,7 @@ def test_update_annotation_from_object_annotation(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row._get_space(id="video-1-uuid", type_="video")
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     object_instance = box_ontology_item.create_instance()
 
     coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)

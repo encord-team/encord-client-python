@@ -22,7 +22,7 @@ def test_place_classification_on_html_space(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
 
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
 
     # Act
     new_classification_instance = text_classification.create_instance()
@@ -80,7 +80,7 @@ def test_place_classification_where_classification_already_exists(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
 
     classification_instance_1 = text_classification.create_instance()
 
@@ -101,7 +101,7 @@ def test_place_classification_on_where_classification_of_same_class_already_exis
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
 
     classification_instance_1 = text_classification.create_instance()
     classification_instance_2 = text_classification.create_instance()
@@ -128,7 +128,7 @@ def test_place_classification_replace_overlapping_strategy_exists(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
 
     classification_instance_1 = text_classification.create_instance()
     classification_instance_2 = text_classification.create_instance()
@@ -153,7 +153,7 @@ def test_remove_classification_from_html_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
 
     new_classification_instance = text_classification.create_instance()
     html_space_1.put_classification_instance(classification_instance=new_classification_instance)
@@ -180,7 +180,7 @@ def test_get_classification_annotations(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
 
     text_classification_instance = text_classification.create_instance()
     checklist_classification_instance = checklist_classification.create_instance()
@@ -228,7 +228,7 @@ def test_get_classification_annotations_with_filter_classifications(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
     text_classification_instance = text_classification.create_instance()
     checklist_classification_instance = checklist_classification.create_instance()
 
@@ -288,7 +288,7 @@ def test_get_classification_annotations_from_classification_instance(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
     text_classification_instance = text_classification.create_instance()
     checklist_classification_instance = checklist_classification.create_instance()
 
@@ -340,7 +340,7 @@ def test_update_annotation_from_classification_annotation(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
-    html_space_1 = label_row._get_space(id="html-1-uuid", type_="html")
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
     classification_instance_1 = text_classification.create_instance()
     classification_instance_1.set_answer("Hi there")
 

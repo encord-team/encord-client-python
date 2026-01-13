@@ -846,11 +846,19 @@ class LabelRowV2:
             raise LabelRowError("This function is only supported for label rows of image or image group data types.")
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
-    def _get_spaces(self) -> list[Space]:
+    def get_spaces(self) -> list[Space]:
+        """Retrieves all spaces in the data unit.
+
+        Use this to view the available spaces. To work on a specific space, we
+        recommend using `LabelRowV2.get_space()`.
+
+        Returns:
+            A list of all Space objects.
+        """
         return list(self._space_map.values())
 
     @overload
-    def _get_space(
+    def get_space(
         self,
         *,
         id: str,
@@ -859,74 +867,74 @@ class LabelRowV2:
         pass
 
     @overload
-    def _get_space(self, *, id: str, type_: Literal["image"]) -> ImageSpace:
+    def get_space(self, *, id: str, type_: Literal["image"]) -> ImageSpace:
         pass
 
     @overload
-    def _get_space(self, *, id: str, type_: Literal["image_sequence"]) -> VideoSpace:
+    def get_space(self, *, id: str, type_: Literal["image_sequence"]) -> VideoSpace:
         pass
 
     @overload
-    def _get_space(self, *, id: str, type_: Literal["audio"]) -> AudioSpace:
+    def get_space(self, *, id: str, type_: Literal["audio"]) -> AudioSpace:
         pass
 
     @overload
-    def _get_space(self, *, id: str, type_: Literal["text"]) -> TextSpace:
+    def get_space(self, *, id: str, type_: Literal["text"]) -> TextSpace:
         pass
 
     @overload
-    def _get_space(self, *, id: str, type_: Literal["html"]) -> HTMLSpace:
+    def get_space(self, *, id: str, type_: Literal["html"]) -> HTMLSpace:
         pass
 
     @overload
-    def _get_space(self, *, id: str, type_: Literal["medical_file"]) -> MedicalFileSpace:
+    def get_space(self, *, id: str, type_: Literal["medical_file"]) -> MedicalFileSpace:
         pass
 
     @overload
-    def _get_space(self, *, id: str, type_: Literal["medical_stack"]) -> MedicalStackSpace:
+    def get_space(self, *, id: str, type_: Literal["medical_stack"]) -> MedicalStackSpace:
         pass
 
     @overload
-    def _get_space(self, *, id: str, type_: Literal["pdf"]) -> PdfSpace:
+    def get_space(self, *, id: str, type_: Literal["pdf"]) -> PdfSpace:
         pass
 
     @overload
-    def _get_space(self, *, layout_key: str, type_: Literal["video"]) -> VideoSpace:
+    def get_space(self, *, layout_key: str, type_: Literal["video"]) -> VideoSpace:
         pass
 
     @overload
-    def _get_space(self, *, layout_key: str, type_: Literal["image"]) -> ImageSpace:
+    def get_space(self, *, layout_key: str, type_: Literal["image"]) -> ImageSpace:
         pass
 
     @overload
-    def _get_space(self, *, layout_key: str, type_: Literal["image_sequence"]) -> VideoSpace:
+    def get_space(self, *, layout_key: str, type_: Literal["image_sequence"]) -> VideoSpace:
         pass
 
     @overload
-    def _get_space(self, *, layout_key: str, type_: Literal["audio"]) -> AudioSpace:
+    def get_space(self, *, layout_key: str, type_: Literal["audio"]) -> AudioSpace:
         pass
 
     @overload
-    def _get_space(self, *, layout_key: str, type_: Literal["text"]) -> TextSpace:
+    def get_space(self, *, layout_key: str, type_: Literal["text"]) -> TextSpace:
         pass
 
     @overload
-    def _get_space(self, *, layout_key: str, type_: Literal["html"]) -> HTMLSpace:
+    def get_space(self, *, layout_key: str, type_: Literal["html"]) -> HTMLSpace:
         pass
 
     @overload
-    def _get_space(self, *, layout_key: str, type_: Literal["medical_file"]) -> MedicalFileSpace:
+    def get_space(self, *, layout_key: str, type_: Literal["medical_file"]) -> MedicalFileSpace:
         pass
 
     @overload
-    def _get_space(self, *, layout_key: str, type_: Literal["medical_stack"]) -> MedicalStackSpace:
+    def get_space(self, *, layout_key: str, type_: Literal["medical_stack"]) -> MedicalStackSpace:
         pass
 
     @overload
-    def _get_space(self, *, layout_key: str, type_: Literal["pdf"]) -> PdfSpace:
+    def get_space(self, *, layout_key: str, type_: Literal["pdf"]) -> PdfSpace:
         pass
 
-    def _get_space(
+    def get_space(
         self,
         *,
         id: Optional[str] = None,
@@ -934,9 +942,6 @@ class LabelRowV2:
         type_: SpaceLiteral,
     ) -> Space:
         """Retrieves a single space which matches the specified id and type.
-
-        **BETA**: This feature is in beta. The Space API is experimental and may change
-        in future versions. Use with caution in production environments.
 
         Throws an exception if more than one or no space with the specified id and type is found.
 
@@ -2658,47 +2663,47 @@ class LabelRowV2:
     ) -> None:
         for space_id, space_info in spaces_info.items():
             if space_info["space_type"] == SpaceType.VIDEO:
-                video_space = self._get_space(id=space_id, type_="video")
+                video_space = self.get_space(id=space_id, type_="video")
                 video_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.IMAGE:
-                image_space = self._get_space(id=space_id, type_="image")
+                image_space = self.get_space(id=space_id, type_="image")
                 image_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.IMAGE_SEQUENCE:
-                image_sequence_space = self._get_space(id=space_id, type_="image_sequence")
+                image_sequence_space = self.get_space(id=space_id, type_="image_sequence")
                 image_sequence_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.AUDIO:
-                audio_space = self._get_space(id=space_id, type_="audio")
+                audio_space = self.get_space(id=space_id, type_="audio")
                 audio_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.TEXT:
-                text_space = self._get_space(id=space_id, type_="text")
+                text_space = self.get_space(id=space_id, type_="text")
                 text_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.HTML:
-                html_space = self._get_space(id=space_id, type_="html")
+                html_space = self.get_space(id=space_id, type_="html")
                 html_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.MEDICAL_FILE:
-                medical_file_space = self._get_space(id=space_id, type_="medical_file")
+                medical_file_space = self.get_space(id=space_id, type_="medical_file")
                 medical_file_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.MEDICAL_STACK:
-                medical_stack_space = self._get_space(id=space_id, type_="medical_stack")
+                medical_stack_space = self.get_space(id=space_id, type_="medical_stack")
                 medical_stack_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.PDF:
-                pdf_space = self._get_space(id=space_id, type_="pdf")
+                pdf_space = self.get_space(id=space_id, type_="pdf")
                 pdf_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
@@ -3011,7 +3016,7 @@ class LabelRowV2:
                     if space_id is None:
                         raise LabelRowError("Object action does not contain spaceId")
 
-                    space = self._get_space(id=space_id, type_="video")
+                    space = self.get_space(id=space_id, type_="video")
                     space._set_answer_from_list(object_hash, answers_list=[answer_dict])
 
     def _create_new_object_instance(self, frame_object_label: FrameObject, frame: int) -> ObjectInstance:

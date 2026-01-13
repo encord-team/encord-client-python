@@ -26,7 +26,7 @@ def test_put_object_on_audio_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
-    audio_space_1 = label_row._get_space(id="audio-1-uuid", type_="audio")
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
 
     # Act
     new_object_instance = audio_obj_ontology_item.create_instance()
@@ -64,7 +64,7 @@ def test_put_objects_with_error_overlapping_strategy(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
-    audio_space_1 = label_row._get_space(id="audio-1-uuid", type_="audio")
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
     new_object_instance = audio_obj_ontology_item.create_instance()
     audio_space_1.put_object_instance(
         object_instance=new_object_instance,
@@ -89,7 +89,7 @@ def test_put_objects_with_merge_overlapping_strategy(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
-    audio_space_1 = label_row._get_space(id="audio-1-uuid", type_="audio")
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
     new_object_instance = audio_obj_ontology_item.create_instance()
     audio_space_1.put_object_instance(
         object_instance=new_object_instance,
@@ -110,7 +110,7 @@ def test_put_objects_with_replace_overlapping_strategy(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
-    audio_space_1 = label_row._get_space(id="audio-1-uuid", type_="audio")
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
     new_object_instance = audio_obj_ontology_item.create_instance()
     audio_space_1.put_object_instance(
         object_instance=new_object_instance,
@@ -131,7 +131,7 @@ def test_place_object_on_invalid_ranges_on_audio_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
-    audio_space_1 = label_row._get_space(id="audio-1-uuid", type_="audio")
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
     new_object_instance = audio_obj_ontology_item.create_instance()
 
     # Act
@@ -158,7 +158,7 @@ def test_remove_object_from_ranges_on_audio_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
-    audio_space_1 = label_row._get_space(id="audio-1-uuid", type_="audio")
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
     new_object_instance = audio_obj_ontology_item.create_instance()
 
     audio_space_1.put_object_instance(object_instance=new_object_instance, ranges=Range(start=100, end=500))
@@ -197,7 +197,7 @@ def test_remove_object_from_all_ranges_on_audio_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
-    audio_space_1 = label_row._get_space(id="audio-1-uuid", type_="audio")
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
     new_object_instance = audio_obj_ontology_item.create_instance()
 
     audio_space_1.put_object_instance(object_instance=new_object_instance, ranges=Range(start=100, end=500))
@@ -227,7 +227,7 @@ def test_remove_object_from_audio_space(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
-    audio_space_1 = label_row._get_space(id="audio-1-uuid", type_="audio")
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
     new_object_instance = audio_obj_ontology_item.create_instance()
 
     audio_space_1.put_object_instance(object_instance=new_object_instance, ranges=Range(start=0, end=100))
@@ -255,8 +255,8 @@ def test_add_object_to_two_spaces(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
-    audio_space_1 = label_row._get_space(id="audio-1-uuid", type_="audio")
-    audio_space_2 = label_row._get_space(id="audio-2-uuid", type_="audio")
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
+    audio_space_2 = label_row.get_space(id="audio-2-uuid", type_="audio")
 
     new_object_instance = audio_obj_ontology_item.create_instance()
     range_1 = Range(start=0, end=100)
@@ -297,8 +297,8 @@ def test_update_attribute_for_object_which_exist_on_two_spaces(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
-    audio_space_1 = label_row._get_space(id="audio-1-uuid", type_="audio")
-    audio_space_2 = label_row._get_space(id="audio-2-uuid", type_="audio")
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
+    audio_space_2 = label_row.get_space(id="audio-2-uuid", type_="audio")
 
     new_object_instance = audio_obj_ontology_item.create_instance()
     range_1 = Range(start=0, end=100)
@@ -363,7 +363,7 @@ def test_get_object_annotations(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
-    audio_space_1 = label_row._get_space(id="audio-1-uuid", type_="audio")
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
     object_instance_1 = audio_obj_ontology_item.create_instance()
     object_instance_2 = audio_obj_ontology_item.create_instance()
 
@@ -421,7 +421,7 @@ def test_get_object_annotations_with_filter_objects(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
-    audio_space_1 = label_row._get_space(id="audio-1-uuid", type_="audio")
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
     object_instance_1 = audio_obj_ontology_item.create_instance()
     object_instance_2 = audio_obj_ontology_item.create_instance()
 
@@ -487,7 +487,7 @@ def test_get_object_annotations_from_object_instance(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
-    audio_space_1 = label_row._get_space(id="audio-1-uuid", type_="audio")
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
     object_instance_1 = audio_obj_ontology_item.create_instance()
     object_instance_2 = audio_obj_ontology_item.create_instance()
 
@@ -549,7 +549,7 @@ def test_update_annotation_from_object_annotation_using_coordinates(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
-    audio_space_1 = label_row._get_space(id="audio-1-uuid", type_="audio")
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
     object_instance = audio_obj_ontology_item.create_instance()
 
     current_range = Range(start=0, end=100)
@@ -644,7 +644,7 @@ def test_update_annotation_from_object_annotation(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
-    audio_space_1 = label_row._get_space(id="audio-1-uuid", type_="audio")
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
     object_instance = audio_obj_ontology_item.create_instance()
 
     current_range = Range(start=0, end=100)
@@ -737,8 +737,8 @@ def test_update_annotation_for_object_reflected_on_different_spaces(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
-    audio_space_1 = label_row._get_space(id="audio-1-uuid", type_="audio")
-    audio_space_2 = label_row._get_space(id="audio-2-uuid", type_="audio")
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
+    audio_space_2 = label_row.get_space(id="audio-2-uuid", type_="audio")
     object_instance = audio_obj_ontology_item.create_instance()
 
     current_range = Range(start=0, end=100)
