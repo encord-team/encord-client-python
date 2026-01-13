@@ -37,13 +37,13 @@ def test_add_dynamic_attributes_to_frames_on_object_on_video_space(ontology):
     answer_on_frame_1_and_2 = "Frame 1 and 2"
 
     # Act
-    video_space_1.set_answer_on_frames(
+    video_space_1.set_dynamic_answer(
         object_instance=new_object_instance,
         frames=[0],
         attribute=key_point_dynamic_text_attribute,
         answer=answer_on_frame_0,
     )
-    video_space_1.set_answer_on_frames(
+    video_space_1.set_dynamic_answer(
         object_instance=new_object_instance,
         frames=[1, 2],
         attribute=key_point_dynamic_text_attribute,
@@ -51,7 +51,7 @@ def test_add_dynamic_attributes_to_frames_on_object_on_video_space(ontology):
     )
 
     # Assert
-    actual_answers = video_space_1.get_answer_on_frames(
+    actual_answers = video_space_1.get_dynamic_answer(
         object_instance=new_object_instance,
         frames=[0, 1, 2],
         attribute=key_point_dynamic_text_attribute,
@@ -84,19 +84,19 @@ def test_remove_dynamic_attributes_from_frame_on_video_space(ontology):
 
     answer = "Answers"
 
-    video_space_1.set_answer_on_frames(
+    video_space_1.set_dynamic_answer(
         object_instance=new_object_instance, frames=[0, 1, 2], attribute=key_point_dynamic_text_attribute, answer=answer
     )
 
     # Act
-    video_space_1.remove_answer_from_frame(
+    video_space_1.remove_dynamic_answer(
         object_instance=new_object_instance,
         attribute=key_point_dynamic_text_attribute,
         frame=1,  # Remove from frame 1, should left with frame 1 and 2
     )
 
     # Assert
-    actual_answers = video_space_1.get_answer_on_frames(
+    actual_answers = video_space_1.get_dynamic_answer(
         object_instance=new_object_instance,
         frames=[0, 1, 2],
         attribute=key_point_dynamic_text_attribute,
@@ -123,7 +123,7 @@ def test_remove_object_from_frame_removes_dynamic_attributes_from_those_frames(o
         coordinates=point_coordinates,
     )
     answer = "Answers"
-    video_space_1.set_answer_on_frames(
+    video_space_1.set_dynamic_answer(
         object_instance=new_object_instance, frames=[0, 1, 2], attribute=key_point_dynamic_text_attribute, answer=answer
     )
 
@@ -131,7 +131,7 @@ def test_remove_object_from_frame_removes_dynamic_attributes_from_those_frames(o
     video_space_1.remove_object_instance_from_frames(object_instance=new_object_instance, frames=[1])
 
     # Assert
-    actual_answers = video_space_1.get_answer_on_frames(
+    actual_answers = video_space_1.get_dynamic_answer(
         object_instance=new_object_instance,
         frames=[0, 1, 2],
         attribute=key_point_dynamic_text_attribute,
@@ -158,7 +158,7 @@ def test_remove_object_removes_dynamic_attributes_for_that_object(ontology):
         coordinates=point_coordinates,
     )
     answer = "Answers"
-    video_space_1.set_answer_on_frames(
+    video_space_1.set_dynamic_answer(
         object_instance=new_object_instance, frames=[0, 1, 2], attribute=key_point_dynamic_text_attribute, answer=answer
     )
 
@@ -167,7 +167,7 @@ def test_remove_object_removes_dynamic_attributes_for_that_object(ontology):
 
     # Assert
     with pytest.raises(LabelRowError) as e:
-        video_space_1.get_answer_on_frames(
+        video_space_1.get_dynamic_answer(
             object_instance=new_object_instance,
             frames=[0, 1, 2],
             attribute=key_point_dynamic_text_attribute,
@@ -193,7 +193,7 @@ def test_add_dynamic_attributes_to_frames_where_object_does_not_exist_on_video_s
     answer_on_frame_1 = "Frame 1"
 
     # Act
-    video_space_1.set_answer_on_frames(
+    video_space_1.set_dynamic_answer(
         object_instance=new_object_instance,
         frames=[1],  # Setting answer on frame 1, but object only exists on frame 0
         attribute=key_point_dynamic_text_attribute,
@@ -201,7 +201,7 @@ def test_add_dynamic_attributes_to_frames_where_object_does_not_exist_on_video_s
     )
 
     # Assert
-    actual_answers = video_space_1.get_answer_on_frames(
+    actual_answers = video_space_1.get_dynamic_answer(
         object_instance=new_object_instance,
         frames=[0, 1],
         attribute=key_point_dynamic_text_attribute,
@@ -222,7 +222,7 @@ def test_add_dynamic_attributes_object_which_does_not_exist_on_video_space(ontol
 
     # Act
     with pytest.raises(LabelRowError) as e:
-        video_space_1.set_answer_on_frames(
+        video_space_1.set_dynamic_answer(
             object_instance=new_object_instance,  # Object does not yet exist on this space
             frames=[0],
             attribute=key_point_dynamic_text_attribute,

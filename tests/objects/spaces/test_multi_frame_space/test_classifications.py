@@ -165,13 +165,11 @@ def test_remove_classification_from_frames_on_video_space(ontology):
     assert annotation_to_be_removed.frame == 1
 
     # Act
-    frames_removed = video_space_1.remove_classification_instance_from_frames(
-        classification_instance=new_classification_instance, frames=[1, 10]
+    video_space_1.remove_classification_instance(
+        classification_hash=new_classification_instance.classification_hash, frames=[1, 10]
     )
 
     # Assert
-    assert frames_removed == [1]
-
     annotations_after_removing = list(video_space_1.get_annotations(type_="classification"))
     assert len(annotations_after_removing) == 2
 
@@ -197,13 +195,11 @@ def test_remove_classification_from_all_frames_on_video_space(ontology):
     assert len(annotations_before_removing) == 3
 
     # Act
-    frames_removed = video_space_1.remove_classification_instance_from_frames(
-        classification_instance=new_classification_instance, frames=[0, 1, 2, 10]
+    video_space_1.remove_classification_instance(
+        classification_hash=new_classification_instance.classification_hash, frames=[0, 1, 2, 10]
     )
 
     # Assert
-    assert frames_removed == [0, 1, 2]
-
     annotations_after_removing = list(video_space_1.get_annotations(type_="classification"))
     assert len(annotations_after_removing) == 0
 

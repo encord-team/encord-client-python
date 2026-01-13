@@ -145,7 +145,7 @@ class TestUninitialisedVideoSpace:
         new_object_instance = box_with_attributes_ontology_item.create_instance()
 
         with pytest.raises(LabelRowError) as exc_info:
-            uninitialised_video_space.set_answer_on_frames(
+            uninitialised_video_space.set_dynamic_answer(
                 object_instance=new_object_instance,
                 frames=[1],
                 answer="test answer",
@@ -158,7 +158,7 @@ class TestUninitialisedVideoSpace:
         new_object_instance = box_with_attributes_ontology_item.create_instance()
 
         with pytest.raises(LabelRowError) as exc_info:
-            uninitialised_video_space.remove_answer_from_frame(
+            uninitialised_video_space.remove_dynamic_answer(
                 object_instance=new_object_instance,
                 attribute=box_text_attribute_ontology_item,
                 frame=1,
@@ -170,7 +170,7 @@ class TestUninitialisedVideoSpace:
         new_object_instance = box_with_attributes_ontology_item.create_instance()
 
         with pytest.raises(LabelRowError) as exc_info:
-            uninitialised_video_space.get_answer_on_frames(
+            uninitialised_video_space.get_dynamic_answer(
                 object_instance=new_object_instance,
                 frames=[1],
                 attribute=box_text_attribute_ontology_item,
@@ -195,7 +195,7 @@ class TestUninitialisedVideoSpace:
         classification_instance = text_classification.create_instance()
 
         with pytest.raises(LabelRowError) as exc_info:
-            uninitialised_video_space.remove_classification_instance_from_frames(
+            uninitialised_video_space.remove_classification_instance(
                 classification_instance=classification_instance,
                 frames=[1],
             )
