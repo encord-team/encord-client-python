@@ -152,3 +152,25 @@ class PdfSpace(MultiFrameSpace):
             confidence=confidence,
             manual_annotation=manual_annotation,
         )
+
+    def remove_object_instance(
+        self,
+        object_hash: str,
+        pages: Optional[Frames] = None,
+    ) -> Optional[ObjectInstance]:
+        """Remove an object instance from pages on the pdf space. If no pages are provided, the object instance is removed
+        from ALL pages in the pdf.
+
+        Args:
+            object_hash: The hash identifier of the object instance to remove.
+            pages: The pages the object instance is to be removed from.
+
+        Returns:
+            Optional[ObjectInstance]: The removed object instance, or None if the object wasn't found.
+        """
+        return super().remove_object_instance(object_hash=object_hash, frames=pages)
+
+    def remove_classification_instance(
+        self, classification_hash: str, pages: Optional[Frames] = None
+    ) -> Optional[ClassificationInstance]:
+        return super().remove_classification_instance(classification_hash=classification_hash, frames=pages)
