@@ -287,31 +287,31 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             manual_annotation=manual_annotation,
         )
 
-    def remove_object_instance_from_frames(
+    def _remove_object_instance(self, object_instance: ObjectInstance) -> None:
+        object_hash = object_instance.object_hash
+        object_instance._remove_from_space(self.space_id)
+        self._object_hash_to_dynamic_answer_manager.pop(object_instance.object_hash)
+        self._object_hash_to_range_manager.pop(object_hash)
+
+        frames_to_remove: list[int] = []
+        for frame, object_to_annotation_data_map in self._frames_to_object_hash_to_annotation_data.items():
+            if object_hash in object_to_annotation_data_map:
+                object_to_annotation_data_map.pop(object_hash)
+
+            if not bool(object_to_annotation_data_map):
+                frames_to_remove.append(frame)
+
+        # If no objects on frame, remove it from the map
+        for frame in frames_to_remove:
+            self._frames_to_object_hash_to_annotation_data.pop(frame)
+
+        self._objects_map.pop(object_hash, None)
+
+    def _remove_object_instance_from_frames(
         self,
         object_instance: ObjectInstance,
         frames: Frames,
     ) -> List[int]:
-        """Remove an object instance from specific frames in the space.
-
-        If the object is removed from all frames, it will be completely removed from the space.
-        All dynamic answers associated with the object on these frames will also be removed.
-
-        Args:
-            object_instance: The object instance to remove from frames.
-            frames: Frame numbers or ranges to remove the object from. Can be:
-                - A single frame number (int)
-                - A list of frame numbers (List[int])
-                - A Range object, specifying the start and end of the range (Range)
-                - A list of Range objects for multiple ranges (List[Range])
-
-        Returns:
-            List[int]: List of frame numbers where the object was actually removed.
-                Empty if the object didn't exist on any of the specified frames.
-        """
-        self._label_row._check_labelling_is_initalised()
-        self._method_not_supported_for_object_instance_with_frames(object_instance=object_instance)
-
         frame_list = frames_class_to_frames_list(frames)
 
         # Remove all dynamic answers from these frames
@@ -900,38 +900,33 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
 
         return chain(frame_annotations, global_annotations)
 
-    def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
-        """Completely remove an object instance from all frames in the space.
-
-        This removes the object from all frames it appears on and cleans up all associated data.
+    def remove_object_instance(
+        self,
+        object_hash: str,
+        frames: Optional[Frames] = None,
+    ) -> Optional[ObjectInstance]:
+        """Remove an object instance from frames in a space. If no frames are provided, the object instance is removed
+        from ALL frames in the space.
 
         Args:
             object_hash: The hash identifier of the object instance to remove.
+            frames: The frames the object instance is to be removed from.
 
         Returns:
             Optional[ObjectInstance]: The removed object instance, or None if the object wasn't found.
         """
         self._label_row._check_labelling_is_initalised()
-        object_instance = self._objects_map.pop(object_hash, None)
+        object_instance = self._objects_map.get(object_hash, None)
 
         if object_instance is None:
             return None
 
-        object_instance._remove_from_space(self.space_id)
-        self._object_hash_to_dynamic_answer_manager.pop(object_instance.object_hash)
-        self._object_hash_to_range_manager.pop(object_hash)
+        self._method_not_supported_for_object_instance_with_frames(object_instance=object_instance)
 
-        frames_to_remove: list[int] = []
-        for frame, object_to_annotation_data_map in self._frames_to_object_hash_to_annotation_data.items():
-            if object_hash in object_to_annotation_data_map:
-                object_to_annotation_data_map.pop(object_hash)
-
-            if not bool(object_to_annotation_data_map):
-                frames_to_remove.append(frame)
-
-        # If no objects on frame, remove it from the map
-        for frame in frames_to_remove:
-            self._frames_to_object_hash_to_annotation_data.pop(frame)
+        if frames is not None:
+            self._remove_object_instance_from_frames(object_instance=object_instance, frames=frames)
+        else:
+            self._remove_object_instance(object_instance=object_instance)
 
         return object_instance
 

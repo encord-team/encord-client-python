@@ -128,7 +128,7 @@ def test_remove_object_from_frame_removes_dynamic_attributes_from_those_frames(o
     )
 
     # Act
-    video_space_1.remove_object_instance_from_frames(object_instance=new_object_instance, frames=[1])
+    video_space_1.remove_object_instance(object_hash=new_object_instance.object_hash, frames=[1])
 
     # Assert
     actual_answers = video_space_1.get_dynamic_answer(

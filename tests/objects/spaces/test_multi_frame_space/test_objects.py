@@ -151,14 +151,12 @@ def test_remove_object_from_frames_on_video_space(ontology):
     )
 
     # Act
-    frames_removed = video_space_1.remove_object_instance_from_frames(
-        object_instance=new_object_instance,
+    video_space_1.remove_object_instance(
+        object_hash=new_object_instance.object_hash,
         frames=[1, 10],
     )
 
     # Assert
-    assert frames_removed == [1]
-
     object_instances = label_row._get_object_instances(include_spaces=True)
     assert len(object_instances) == 1
 
@@ -196,8 +194,8 @@ def test_remove_object_from_all_frames_on_video_space(ontology):
     )
 
     # Act
-    video_space_1.remove_object_instance_from_frames(
-        object_instance=new_object_instance,
+    video_space_1.remove_object_instance(
+        object_hash=new_object_instance.object_hash,
         frames=[0, 1, 2],
     )
 

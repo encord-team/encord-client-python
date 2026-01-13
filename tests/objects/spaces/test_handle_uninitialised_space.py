@@ -134,7 +134,7 @@ class TestUninitialisedVideoSpace:
         new_object_instance = box_ontology_item.create_instance()
 
         with pytest.raises(LabelRowError) as exc_info:
-            uninitialised_video_space.remove_object_instance_from_frames(
+            uninitialised_video_space.remove_object_instance(
                 object_instance=new_object_instance,
                 frames=[1],
             )
