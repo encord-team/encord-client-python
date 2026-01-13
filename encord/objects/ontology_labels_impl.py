@@ -847,6 +847,14 @@ class LabelRowV2:
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
     def get_spaces(self) -> list[Space]:
+        """Retrieves all spaces in the data unit.
+
+        Use this to view the available spaces. To work on a specific space, we
+        recommend using `LabelRowV2.get_space()`.
+
+        Returns:
+            A list of all Space objects.
+        """
         return list(self._space_map.values())
 
     @overload
@@ -934,9 +942,6 @@ class LabelRowV2:
         type_: SpaceLiteral,
     ) -> Space:
         """Retrieves a single space which matches the specified id and type.
-
-        **BETA**: This feature is in beta. The Space API is experimental and may change
-        in future versions. Use with caution in production environments.
 
         Throws an exception if more than one or no space with the specified id and type is found.
 
