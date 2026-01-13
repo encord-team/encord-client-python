@@ -257,6 +257,10 @@ class _ObjectAnnotation(_Annotation):
         self._object_instance = object_instance
 
     @property
+    def object_instance(self) -> ObjectInstance:
+        return self._object_instance
+
+    @property
     def object_hash(self) -> str:
         """Get the hash of the object instance."""
         return self._object_instance.object_hash
@@ -281,6 +285,10 @@ class _ClassificationAnnotation(_Annotation):
     def __init__(self, space: Space, classification_instance: ClassificationInstance):
         super().__init__(space)
         self._classification_instance = classification_instance
+
+    @property
+    def classification_instance(self) -> ClassificationInstance:
+        return self._classification_instance
 
     @property
     def classification_hash(self) -> str:
