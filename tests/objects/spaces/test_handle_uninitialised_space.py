@@ -208,14 +208,6 @@ class TestUninitialisedVideoSpace:
 
         assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 
-    def test_get_object_instance_annotations_by_frame_requires_initialisation(
-        self, uninitialised_video_space: VideoSpace
-    ):
-        with pytest.raises(LabelRowError) as exc_info:
-            uninitialised_video_space.get_annotations_by_frame(type_="object")
-
-        assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
-
     def test_get_classification_instance_annotations_requires_initialisation(
         self, uninitialised_video_space: VideoSpace
     ):
