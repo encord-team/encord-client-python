@@ -135,7 +135,7 @@ class TestUninitialisedVideoSpace:
 
         with pytest.raises(LabelRowError) as exc_info:
             uninitialised_video_space.remove_object_instance(
-                object_instance=new_object_instance,
+                object_hash=new_object_instance.object_hash,
                 frames=[1],
             )
 
@@ -196,7 +196,7 @@ class TestUninitialisedVideoSpace:
 
         with pytest.raises(LabelRowError) as exc_info:
             uninitialised_video_space.remove_classification_instance(
-                classification_instance=classification_instance,
+                classification_hash=classification_instance.classification_hash,
                 frames=[1],
             )
 

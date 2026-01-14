@@ -1161,9 +1161,9 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             coordinates = get_geometric_coordinates_from_frame_object_dict(frame_object_dict=obj)
             object_frame_instance_info = _AnnotationMetadata.from_dict(obj)
             self.put_object_instance(
-                object_instance=object_instance,
-                coordinates=coordinates,
-                frames=frame,
+                object_instance,
+                frame,
+                coordinates,
                 created_at=object_frame_instance_info.created_at,
                 created_by=object_frame_instance_info.created_by,
                 last_edited_at=object_frame_instance_info.last_edited_at,
@@ -1190,8 +1190,8 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
 
             classification_frame_instance_info = _AnnotationMetadata.from_dict(classification)
             self.put_classification_instance(
-                classification_instance=classification_instance,
-                frames=frame,
+                classification_instance,
+                frame,
                 created_at=classification_frame_instance_info.created_at,
                 created_by=classification_frame_instance_info.created_by,
                 last_edited_at=classification_frame_instance_info.last_edited_at,
