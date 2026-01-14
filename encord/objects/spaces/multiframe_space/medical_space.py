@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, List, TypedDict
+from typing import TYPE_CHECKING, List
 
 from typing_extensions import TypeGuard
 
@@ -14,16 +14,6 @@ if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
 
 logger = logging.getLogger(__name__)
-
-
-class MedicalStackInfo(TypedDict):
-    frames: List[DicomFrameInfo]
-
-
-class MedicalFileInfo(TypedDict):
-    width: int
-    height: int
-    number_of_frames: int
 
 
 def _is_medical_file(space_info: SpaceInfo) -> TypeGuard[MedicalFileSpaceInfo]:
@@ -47,20 +37,14 @@ class MedicalSpace(MultiFrameSpace):
         label_row: LabelRowV2,
         space_info: SpaceInfo,
     ):
-        self._width: int | None = None
-        self._height: int | None = None
-        self._number_of_frames: int
-        self._frames: List[DicomFrameInfo] | None = None
         self._space_info = space_info
+        self._number_of_frames: int
 
         if _is_medical_file(space_info):
-            self._width = space_info["width"]
-            self._height = space_info["height"]
             self._number_of_frames = space_info["number_of_frames"]
 
         elif _is_medical_stack(space_info):
             self._number_of_frames = len(space_info["frames"])
-            self._frames = space_info["frames"]
 
         else:
             raise LabelRowError("This medical space has invalid space information.")
