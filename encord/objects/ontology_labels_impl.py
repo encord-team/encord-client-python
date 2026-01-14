@@ -106,8 +106,7 @@ from encord.objects.spaces.annotation.base_annotation import (
 from encord.objects.spaces.base_space import Space, SpaceT
 from encord.objects.spaces.html_space import HTMLSpace
 from encord.objects.spaces.image_space import ImageSpace
-from encord.objects.spaces.multiframe_space.medical_file_space import MedicalFileSpace
-from encord.objects.spaces.multiframe_space.medical_stack_space import MedicalStackSpace
+from encord.objects.spaces.multiframe_space.medical_space import MedicalSpace
 from encord.objects.spaces.multiframe_space.pdf_space import PdfSpace
 from encord.objects.spaces.multiframe_space.video_space import VideoSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
@@ -151,17 +150,14 @@ LABELLING_NOT_INITIALISED_ERROR_MESSAGE = (
 
 
 # Type mapping for runtime validation in get_space
-SpaceLiteral = Literal[
-    "video", "image", "image_sequence", "audio", "text", "html", "medical_file", "medical_stack", "pdf"
-]
+SpaceLiteral = Literal["video", "image", "image_sequence", "audio", "text", "html", "medical", "pdf"]
 SpaceClass = Union[
     VideoSpace,
     ImageSpace,
     AudioSpace,
     TextSpace,
     HTMLSpace,
-    MedicalFileSpace,
-    MedicalStackSpace,
+    MedicalSpace,
     PdfSpace,
 ]
 
@@ -180,10 +176,8 @@ def _get_space_literal_from_space_enum(space_enum: SpaceType) -> SpaceLiteral:
         return "text"
     elif space_enum == SpaceType.HTML:
         return "html"
-    elif space_enum == SpaceType.MEDICAL_FILE:
-        return "medical_file"
-    elif space_enum == SpaceType.MEDICAL_STACK:
-        return "medical_stack"
+    elif space_enum == SpaceType.MEDICAL_FILE or space_enum == SpaceType.MEDICAL_STACK:
+        return "medical"
     elif space_enum == SpaceType.PDF:
         return "pdf"
     elif space_enum == SpaceType.POINT_CLOUD or space_enum == SpaceType.SCENE_IMAGE:
@@ -205,10 +199,8 @@ def _get_space_class_from_space_literal(space_literal: SpaceLiteral) -> Type[Spa
         return TextSpace
     elif space_literal == "html":
         return HTMLSpace
-    elif space_literal == "medical_file":
-        return MedicalFileSpace
-    elif space_literal == "medical_stack":
-        return MedicalStackSpace
+    elif space_literal == "medical":
+        return MedicalSpace
     elif space_literal == "pdf":
         return PdfSpace
     else:
@@ -887,11 +879,7 @@ class LabelRowV2:
         pass
 
     @overload
-    def get_space(self, *, id: str, type_: Literal["medical_file"]) -> MedicalFileSpace:
-        pass
-
-    @overload
-    def get_space(self, *, id: str, type_: Literal["medical_stack"]) -> MedicalStackSpace:
+    def get_space(self, *, id: str, type_: Literal["medical"]) -> MedicalSpace:
         pass
 
     @overload
@@ -923,11 +911,7 @@ class LabelRowV2:
         pass
 
     @overload
-    def get_space(self, *, layout_key: str, type_: Literal["medical_file"]) -> MedicalFileSpace:
-        pass
-
-    @overload
-    def get_space(self, *, layout_key: str, type_: Literal["medical_stack"]) -> MedicalStackSpace:
+    def get_space(self, *, layout_key: str, type_: Literal["medical"]) -> MedicalSpace:
         pass
 
     @overload
@@ -2625,19 +2609,14 @@ class LabelRowV2:
                 )
                 res[space_id] = html_space
             elif space_info["space_type"] == SpaceType.MEDICAL_FILE:
-                medical_file_space = MedicalFileSpace(
+                medical_file_space = MedicalSpace(
                     space_id=space_id,
                     label_row=self,
                     space_info=space_info,
-                    number_of_frames=space_info["number_of_frames"],
-                    width=space_info["width"],
-                    height=space_info["height"],
                 )
                 res[space_id] = medical_file_space
             elif space_info["space_type"] == SpaceType.MEDICAL_STACK:
-                medical_stack_space = MedicalStackSpace(
-                    space_id=space_id, label_row=self, space_info=space_info, frames=space_info["frames"]
-                )
+                medical_stack_space = MedicalSpace(space_id=space_id, label_row=self, space_info=space_info)
                 res[space_id] = medical_stack_space
             elif space_info["space_type"] == SpaceType.PDF:
                 pdf_space = PdfSpace(
@@ -2693,12 +2672,12 @@ class LabelRowV2:
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.MEDICAL_FILE:
-                medical_file_space = self.get_space(id=space_id, type_="medical_file")
+                medical_file_space = self.get_space(id=space_id, type_="medical")
                 medical_file_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.MEDICAL_STACK:
-                medical_stack_space = self.get_space(id=space_id, type_="medical_stack")
+                medical_stack_space = self.get_space(id=space_id, type_="medical")
                 medical_stack_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
