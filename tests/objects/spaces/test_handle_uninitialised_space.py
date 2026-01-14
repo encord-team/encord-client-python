@@ -134,8 +134,8 @@ class TestUninitialisedVideoSpace:
         new_object_instance = box_ontology_item.create_instance()
 
         with pytest.raises(LabelRowError) as exc_info:
-            uninitialised_video_space.remove_object_instance_from_frames(
-                object_instance=new_object_instance,
+            uninitialised_video_space.remove_object_instance(
+                object_hash=new_object_instance.object_hash,
                 frames=[1],
             )
 
@@ -145,7 +145,7 @@ class TestUninitialisedVideoSpace:
         new_object_instance = box_with_attributes_ontology_item.create_instance()
 
         with pytest.raises(LabelRowError) as exc_info:
-            uninitialised_video_space.set_answer_on_frames(
+            uninitialised_video_space.set_dynamic_answer(
                 object_instance=new_object_instance,
                 frames=[1],
                 answer="test answer",
@@ -158,7 +158,7 @@ class TestUninitialisedVideoSpace:
         new_object_instance = box_with_attributes_ontology_item.create_instance()
 
         with pytest.raises(LabelRowError) as exc_info:
-            uninitialised_video_space.remove_answer_from_frame(
+            uninitialised_video_space.remove_dynamic_answer(
                 object_instance=new_object_instance,
                 attribute=box_text_attribute_ontology_item,
                 frame=1,
@@ -170,7 +170,7 @@ class TestUninitialisedVideoSpace:
         new_object_instance = box_with_attributes_ontology_item.create_instance()
 
         with pytest.raises(LabelRowError) as exc_info:
-            uninitialised_video_space.get_answer_on_frames(
+            uninitialised_video_space.get_dynamic_answer(
                 object_instance=new_object_instance,
                 frames=[1],
                 attribute=box_text_attribute_ontology_item,
@@ -195,8 +195,8 @@ class TestUninitialisedVideoSpace:
         classification_instance = text_classification.create_instance()
 
         with pytest.raises(LabelRowError) as exc_info:
-            uninitialised_video_space.remove_classification_instance_from_frames(
-                classification_instance=classification_instance,
+            uninitialised_video_space.remove_classification_instance(
+                classification_hash=classification_instance.classification_hash,
                 frames=[1],
             )
 
@@ -205,14 +205,6 @@ class TestUninitialisedVideoSpace:
     def test_get_object_instance_annotations_requires_initialisation(self, uninitialised_video_space: VideoSpace):
         with pytest.raises(LabelRowError) as exc_info:
             uninitialised_video_space.get_annotations(type_="object")
-
-        assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
-
-    def test_get_object_instance_annotations_by_frame_requires_initialisation(
-        self, uninitialised_video_space: VideoSpace
-    ):
-        with pytest.raises(LabelRowError) as exc_info:
-            uninitialised_video_space.get_annotations_by_frame(type_="object")
 
         assert exc_info.value.message == LABELLING_NOT_INITIALISED_ERROR_MESSAGE
 

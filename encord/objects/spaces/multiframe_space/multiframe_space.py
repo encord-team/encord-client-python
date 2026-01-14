@@ -287,31 +287,31 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             manual_annotation=manual_annotation,
         )
 
-    def remove_object_instance_from_frames(
+    def _remove_object_instance(self, object_instance: ObjectInstance) -> None:
+        object_hash = object_instance.object_hash
+        object_instance._remove_from_space(self.space_id)
+        self._object_hash_to_dynamic_answer_manager.pop(object_instance.object_hash)
+        self._object_hash_to_range_manager.pop(object_hash)
+
+        frames_to_remove: list[int] = []
+        for frame, object_to_annotation_data_map in self._frames_to_object_hash_to_annotation_data.items():
+            if object_hash in object_to_annotation_data_map:
+                object_to_annotation_data_map.pop(object_hash)
+
+            if not bool(object_to_annotation_data_map):
+                frames_to_remove.append(frame)
+
+        # If no objects on frame, remove it from the map
+        for frame in frames_to_remove:
+            self._frames_to_object_hash_to_annotation_data.pop(frame)
+
+        self._objects_map.pop(object_hash, None)
+
+    def _remove_object_instance_from_frames(
         self,
         object_instance: ObjectInstance,
         frames: Frames,
     ) -> List[int]:
-        """Remove an object instance from specific frames in the space.
-
-        If the object is removed from all frames, it will be completely removed from the space.
-        All dynamic answers associated with the object on these frames will also be removed.
-
-        Args:
-            object_instance: The object instance to remove from frames.
-            frames: Frame numbers or ranges to remove the object from. Can be:
-                - A single frame number (int)
-                - A list of frame numbers (List[int])
-                - A Range object, specifying the start and end of the range (Range)
-                - A list of Range objects for multiple ranges (List[Range])
-
-        Returns:
-            List[int]: List of frame numbers where the object was actually removed.
-                Empty if the object didn't exist on any of the specified frames.
-        """
-        self._label_row._check_labelling_is_initalised()
-        self._method_not_supported_for_object_instance_with_frames(object_instance=object_instance)
-
         frame_list = frames_class_to_frames_list(frames)
 
         # Remove all dynamic answers from these frames
@@ -439,7 +439,7 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         else:
             raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
 
-    def set_answer_on_frames(
+    def set_dynamic_answer(
         self,
         object_instance: ObjectInstance,
         frames: Frames,
@@ -496,7 +496,7 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
 
         dynamic_answer_manager.set_answer(answer, attribute, frames=valid_frames)
 
-    def remove_answer_from_frame(
+    def remove_dynamic_answer(
         self,
         object_instance: ObjectInstance,
         attribute: Attribute,
@@ -527,7 +527,7 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
 
         dynamic_answer_manager.delete_answer(attribute, frames=frame, filter_answer=filter_answer)
 
-    def get_answer_on_frames(
+    def get_dynamic_answer(
         self,
         object_instance: ObjectInstance,
         frames: Frames,
@@ -703,27 +703,23 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             ranges_to_add
         )
 
-    def remove_classification_instance_from_frames(
+    def _remove_classification_instance(
+        self,
+        classification_instance: ClassificationInstance,
+    ) -> None:
+        classification_instance._remove_from_space(self.space_id)
+        for frame, classification in self._frames_to_classification_hash_to_annotation_data.items():
+            if classification_instance.classification_hash in classification:
+                classification.pop(classification_instance.classification_hash)
+
+        self._classification_hash_to_range_manager.pop(classification_instance.classification_hash)
+        self._classifications_map.pop(classification_instance.classification_hash)
+
+    def _remove_classification_instance_from_frames(
         self,
         classification_instance: ClassificationInstance,
         frames: Frames,
     ) -> List[int]:
-        """Remove a classification instance from specific frames in the space.
-
-        If the classification is removed from all frames, it will be completely removed from the space.
-
-        Args:
-            classification_instance: The classification instance to remove from frames.
-            frames: Frame numbers or ranges to remove the classification from. Can be:
-                - A single frame number (int)
-                - A list of frame numbers (List[int])
-                - A Range object, specifying the start and end of the range (Range)
-                - A list of Range objects for multiple ranges (List[Range])
-
-        Returns:
-            List[int]: List of frame numbers where the classification was actually removed.
-                Empty if the classification didn't exist on any of the specified frames.
-        """
         self._label_row._check_labelling_is_initalised()
         self._method_not_supported_for_classification_instance_with_frames(
             classification_instance=classification_instance
@@ -805,75 +801,6 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             if filter_set is None or obj_hash in filter_set
         )
 
-    @overload
-    def get_annotations_by_frame(
-        self,
-        type_: Literal["object"],
-    ) -> Dict[int, List[_GeometricFrameObjectAnnotation]]:
-        pass
-
-    @overload
-    def get_annotations_by_frame(
-        self,
-        type_: Literal["classification"],
-    ) -> Dict[int, List[_FrameClassificationAnnotation]]:
-        pass
-
-    def get_annotations_by_frame(
-        self,
-        type_: Literal["object", "classification"],
-    ) -> Union[Dict[int, List[_GeometricFrameObjectAnnotation]], Dict[int, List[_FrameClassificationAnnotation]]]:
-        """Get all annotations organized by frame number.
-
-        Args:
-            type_: Type of annotations to retrieve:
-                - "object": Get object instance annotations
-                - "classification": Get classification instance annotations
-
-        Returns:
-            Dictionary mapping frame numbers to lists of annotations on that frame.
-            The annotation type depends on the type_ parameter:
-            - When type_="object": Dict[int, List[_GeometricFrameObjectAnnotation]]
-            - When type_="classification": Dict[int, List[_FrameClassificationAnnotation]]
-        """
-        self._label_row._check_labelling_is_initalised()
-        if type_ == "object":
-            return self._get_object_annotations_by_frame()
-        elif type_ == "classification":
-            return self._get_classification_instance_annotations_by_frame()
-        else:
-            exhaustive_guard(type_, message=f"Unrecognized type {type_}")
-
-    def _get_object_annotations_by_frame(
-        self,
-    ) -> Dict[int, List[_GeometricFrameObjectAnnotation]]:
-        self._label_row._check_labelling_is_initalised()
-        ret: Dict[int, List[_GeometricFrameObjectAnnotation]] = {}
-
-        for frame, object_to_annotation_data_map in sorted(self._frames_to_object_hash_to_annotation_data.items()):
-            ret[frame] = [
-                self._get_object_annotation_on_frame(frame=frame, object_hash=object_hash)
-                for object_hash in object_to_annotation_data_map.keys()
-            ]
-
-        return ret
-
-    def _get_classification_instance_annotations_by_frame(
-        self,
-    ) -> Dict[int, List[_FrameClassificationAnnotation]]:
-        self._label_row._check_labelling_is_initalised()
-        ret: Dict[int, List[_FrameClassificationAnnotation]] = {}
-
-        for frame, classification_to_annotation_data_map in sorted(
-            self._frames_to_classification_hash_to_annotation_data.items()
-        ):
-            ret[frame] = [
-                self._get_classification_annotation_on_frame(frame=frame, classification_hash=classification_hash)
-                for classification_hash in classification_to_annotation_data_map.keys()
-            ]
-
-        return ret
-
     def _get_classification_annotations(
         self, filter_classification_instances: Optional[list[str]] = None
     ) -> Iterator[Union[_FrameClassificationAnnotation, _GlobalClassificationAnnotation]]:
@@ -904,62 +831,62 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
 
         return chain(frame_annotations, global_annotations)
 
-    def remove_object_instance(self, object_hash: str) -> Optional[ObjectInstance]:
-        """Completely remove an object instance from all frames in the space.
-
-        This removes the object from all frames it appears on and cleans up all associated data.
+    def remove_object_instance(
+        self,
+        object_hash: str,
+        frames: Optional[Frames] = None,
+    ) -> Optional[ObjectInstance]:
+        """Remove an object instance from frames in a space. If no frames are provided, the object instance is removed
+        from ALL frames in the space.
 
         Args:
             object_hash: The hash identifier of the object instance to remove.
+            frames: The frames the object instance is to be removed from.
 
         Returns:
             Optional[ObjectInstance]: The removed object instance, or None if the object wasn't found.
         """
         self._label_row._check_labelling_is_initalised()
-        object_instance = self._objects_map.pop(object_hash, None)
+        object_instance = self._objects_map.get(object_hash, None)
 
         if object_instance is None:
             return None
 
-        object_instance._remove_from_space(self.space_id)
-        self._object_hash_to_dynamic_answer_manager.pop(object_instance.object_hash)
-        self._object_hash_to_range_manager.pop(object_hash)
+        self._method_not_supported_for_object_instance_with_frames(object_instance=object_instance)
 
-        frames_to_remove: list[int] = []
-        for frame, object_to_annotation_data_map in self._frames_to_object_hash_to_annotation_data.items():
-            if object_hash in object_to_annotation_data_map:
-                object_to_annotation_data_map.pop(object_hash)
-
-            if not bool(object_to_annotation_data_map):
-                frames_to_remove.append(frame)
-
-        # If no objects on frame, remove it from the map
-        for frame in frames_to_remove:
-            self._frames_to_object_hash_to_annotation_data.pop(frame)
+        if frames is not None:
+            self._remove_object_instance_from_frames(object_instance=object_instance, frames=frames)
+        else:
+            self._remove_object_instance(object_instance=object_instance)
 
         return object_instance
 
-    def remove_classification_instance(self, classification_hash: str) -> Optional[ClassificationInstance]:
-        """Completely remove a classification instance from all frames in the space.
+    def remove_classification_instance(
+        self, classification_hash: str, frames: Optional[Frames] = None
+    ) -> Optional[ClassificationInstance]:
+        """Removes a classification instance from frames in a space. If no frames are passed in, the instance is removed from ALL frames on the space.
 
         This removes the classification from all frames it appears on and cleans up all associated data.
 
         Args:
             classification_hash: The hash identifier of the classification instance to remove.
+            frames: An optional list of frames to remove the classification instance from.
+                    If not provided, the classification instance is removed from all frames on this space.
 
         Returns:
             Optional[ClassificationInstance]: The removed classification instance, or None if the classification wasn't found.
         """
         self._label_row._check_labelling_is_initalised()
-        classification_instance = self._classifications_map.pop(classification_hash, None)
+
+        classification_instance = self._classifications_map.get(classification_hash, None)
 
         if classification_instance is not None:
-            classification_instance._remove_from_space(self.space_id)
-            for frame, classification in self._frames_to_classification_hash_to_annotation_data.items():
-                if classification_hash in classification:
-                    classification.pop(classification_hash)
-
-            self._classification_hash_to_range_manager.pop(classification_instance.classification_hash)
+            if frames is not None:
+                self._remove_classification_instance_from_frames(
+                    classification_instance=classification_instance, frames=frames
+                )
+            else:
+                self._remove_classification_instance(classification_instance=classification_instance)
 
         return classification_instance
 
@@ -1234,9 +1161,9 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             coordinates = get_geometric_coordinates_from_frame_object_dict(frame_object_dict=obj)
             object_frame_instance_info = _AnnotationMetadata.from_dict(obj)
             self.put_object_instance(
-                object_instance=object_instance,
-                coordinates=coordinates,
-                frames=frame,
+                object_instance,
+                frame,
+                coordinates,
                 created_at=object_frame_instance_info.created_at,
                 created_by=object_frame_instance_info.created_by,
                 last_edited_at=object_frame_instance_info.last_edited_at,
@@ -1263,8 +1190,8 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
 
             classification_frame_instance_info = _AnnotationMetadata.from_dict(classification)
             self.put_classification_instance(
-                classification_instance=classification_instance,
-                frames=frame,
+                classification_instance,
+                frame,
                 created_at=classification_frame_instance_info.created_at,
                 created_by=classification_frame_instance_info.created_by,
                 last_edited_at=classification_frame_instance_info.last_edited_at,

@@ -151,14 +151,12 @@ def test_remove_object_from_frames_on_video_space(ontology):
     )
 
     # Act
-    frames_removed = video_space_1.remove_object_instance_from_frames(
-        object_instance=new_object_instance,
+    video_space_1.remove_object_instance(
+        object_hash=new_object_instance.object_hash,
         frames=[1, 10],
     )
 
     # Assert
-    assert frames_removed == [1]
-
     object_instances = label_row._get_object_instances(include_spaces=True)
     assert len(object_instances) == 1
 
@@ -196,8 +194,8 @@ def test_remove_object_from_all_frames_on_video_space(ontology):
     )
 
     # Act
-    video_space_1.remove_object_instance_from_frames(
-        object_instance=new_object_instance,
+    video_space_1.remove_object_instance(
+        object_hash=new_object_instance.object_hash,
         frames=[0, 1, 2],
     )
 
@@ -394,81 +392,6 @@ def test_get_object_annotations(ontology):
     assert second_annotation.coordinates == coordinates_1
     assert second_annotation.last_edited_by == name_1
     assert second_annotation.last_edited_at == date1
-
-
-def test_get_object_annotations_by_frame(ontology):
-    # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
-    object_instance_1 = box_ontology_item.create_instance()
-    object_instance_2 = box_ontology_item.create_instance()
-
-    coordinates_1 = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
-    coordinates_2 = BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5)
-
-    name_1 = "james"
-    name_2 = "timmy"
-
-    date1 = datetime(2020, 1, 1)
-    date2 = datetime(2020, 5, 5)
-
-    video_space_1.put_object_instance(
-        object_instance=object_instance_1,
-        frames=[1],
-        coordinates=coordinates_1,
-        last_edited_by=name_1,
-        last_edited_at=date1,
-    )
-
-    video_space_1.put_object_instance(
-        object_instance=object_instance_1,
-        frames=[0, 2, 3],
-        coordinates=coordinates_2,
-        last_edited_by=name_2,
-        last_edited_at=date2,
-    )
-
-    video_space_1.put_object_instance(
-        object_instance=object_instance_2,
-        frames=[1, 2],
-        coordinates=coordinates_1,
-        last_edited_by=name_1,
-        last_edited_at=date1,
-    )
-
-    # Act
-    object_annotations_by_frame = video_space_1.get_annotations_by_frame(type_="object")
-
-    # Assert
-    assert list(object_annotations_by_frame.keys()) == [0, 1, 2, 3]
-    annotations_on_frame_0 = object_annotations_by_frame[0]
-    assert len(annotations_on_frame_0) == 1
-
-    annotations_on_frame_2 = object_annotations_by_frame[2]
-    assert len(annotations_on_frame_2) == 2
-
-    first_annotation_on_frame_0 = annotations_on_frame_0[0]
-    assert first_annotation_on_frame_0.space.space_id == "video-1-uuid"
-    assert first_annotation_on_frame_0.coordinates == coordinates_2
-    assert first_annotation_on_frame_0.last_edited_by == name_2
-    assert first_annotation_on_frame_0.last_edited_at == date2
-    assert first_annotation_on_frame_0.object_hash == object_instance_1.object_hash
-
-    first_annotation_on_frame_2 = annotations_on_frame_2[0]
-    second_annotation_on_frame_2 = annotations_on_frame_2[1]
-
-    assert first_annotation_on_frame_2.space.space_id == "video-1-uuid"
-    assert first_annotation_on_frame_2.coordinates == coordinates_2
-    assert first_annotation_on_frame_2.last_edited_by == name_2
-    assert first_annotation_on_frame_2.last_edited_at == date2
-    assert first_annotation_on_frame_2.object_hash == object_instance_1.object_hash
-
-    assert second_annotation_on_frame_2.space.space_id == "video-1-uuid"
-    assert second_annotation_on_frame_2.coordinates == coordinates_1
-    assert second_annotation_on_frame_2.last_edited_by == name_1
-    assert second_annotation_on_frame_2.last_edited_at == date1
-    assert second_annotation_on_frame_2.object_hash == object_instance_2.object_hash
 
 
 def test_get_object_annotations_with_filter_objects(ontology):

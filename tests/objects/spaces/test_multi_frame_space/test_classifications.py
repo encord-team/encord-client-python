@@ -165,13 +165,11 @@ def test_remove_classification_from_frames_on_video_space(ontology):
     assert annotation_to_be_removed.frame == 1
 
     # Act
-    frames_removed = video_space_1.remove_classification_instance_from_frames(
-        classification_instance=new_classification_instance, frames=[1, 10]
+    video_space_1.remove_classification_instance(
+        classification_hash=new_classification_instance.classification_hash, frames=[1, 10]
     )
 
     # Assert
-    assert frames_removed == [1]
-
     annotations_after_removing = list(video_space_1.get_annotations(type_="classification"))
     assert len(annotations_after_removing) == 2
 
@@ -197,13 +195,11 @@ def test_remove_classification_from_all_frames_on_video_space(ontology):
     assert len(annotations_before_removing) == 3
 
     # Act
-    frames_removed = video_space_1.remove_classification_instance_from_frames(
-        classification_instance=new_classification_instance, frames=[0, 1, 2, 10]
+    video_space_1.remove_classification_instance(
+        classification_hash=new_classification_instance.classification_hash, frames=[0, 1, 2, 10]
     )
 
     # Assert
-    assert frames_removed == [0, 1, 2]
-
     annotations_after_removing = list(video_space_1.get_annotations(type_="classification"))
     assert len(annotations_after_removing) == 0
 
@@ -287,68 +283,6 @@ def test_get_classification_annotations(ontology):
     assert second_annotation.classification_hash == new_classification_instance.classification_hash
     assert second_annotation.last_edited_by == name_1
     assert second_annotation.last_edited_at == date1
-
-
-def test_get_classification_annotations_by_frames(ontology):
-    # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
-    text_classification_instance = text_classification.create_instance()
-    checklist_classification_instance = checklist_classification.create_instance()
-
-    name_1 = "james"
-    name_2 = "timmy"
-
-    date1 = datetime(2020, 1, 1)
-    date2 = datetime(2020, 5, 5)
-
-    video_space_1.put_classification_instance(
-        classification_instance=text_classification_instance,
-        frames=[1, 2],
-        last_edited_by=name_1,
-        last_edited_at=date1,
-    )
-
-    video_space_1.put_classification_instance(
-        classification_instance=checklist_classification_instance,
-        frames=[0, 2, 3],
-        last_edited_by=name_2,
-        last_edited_at=date2,
-    )
-
-    # Act
-    classification_annotations_by_frame = video_space_1.get_annotations_by_frame(type_="classification")
-
-    # Assert
-    assert list(classification_annotations_by_frame.keys()) == [0, 1, 2, 3]
-    annotations_on_frame_0 = classification_annotations_by_frame[0]
-    assert len(annotations_on_frame_0) == 1
-
-    annotations_on_frame_2 = classification_annotations_by_frame[2]
-    assert len(annotations_on_frame_2) == 2
-
-    first_annotation_on_frame_0 = annotations_on_frame_0[0]
-    assert first_annotation_on_frame_0.frame == 0
-    assert first_annotation_on_frame_0.space.space_id == "video-1-uuid"
-    assert first_annotation_on_frame_0.last_edited_by == name_2
-    assert first_annotation_on_frame_0.last_edited_at == date2
-    assert first_annotation_on_frame_0.classification_hash == checklist_classification_instance.classification_hash
-
-    first_annotation_on_frame_2 = annotations_on_frame_2[0]
-    second_annotation_on_frame_2 = annotations_on_frame_2[1]
-
-    assert first_annotation_on_frame_2.space.space_id == "video-1-uuid"
-    assert first_annotation_on_frame_2.classification_hash == text_classification_instance.classification_hash
-    assert first_annotation_on_frame_2.frame == 2
-    assert first_annotation_on_frame_2.last_edited_by == name_1
-    assert first_annotation_on_frame_2.last_edited_at == date1
-
-    assert second_annotation_on_frame_2.space.space_id == "video-1-uuid"
-    assert second_annotation_on_frame_2.frame == 2
-    assert second_annotation_on_frame_2.classification_hash == checklist_classification_instance.classification_hash
-    assert second_annotation_on_frame_2.last_edited_by == name_2
-    assert second_annotation_on_frame_2.last_edited_at == date2
 
 
 def test_get_classification_annotations_with_filter_classifications(ontology):
