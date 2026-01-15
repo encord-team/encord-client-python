@@ -73,6 +73,8 @@ from encord.objects.coordinates import (
     BitmaskCoordinates,
     BoundingBoxCoordinates,
     Coordinates,
+    Cuboid2DIsometricCoordinates,
+    Cuboid2DPerspectiveCoordinates,
     CuboidCoordinates,
     HtmlCoordinates,
     PointCoordinate,
@@ -2444,6 +2446,8 @@ class LabelRowV2:
             encord_object["skeleton"] = coordinates.to_dict()
         elif isinstance(coordinates, CuboidCoordinates):
             encord_object["cuboid"] = coordinates.to_dict()
+        elif isinstance(coordinates, (Cuboid2DPerspectiveCoordinates, Cuboid2DIsometricCoordinates)):
+            encord_object["cuboid_2d"] = coordinates.to_dict()
         else:
             raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
 

@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Type, TypedDict, Union, cast
+from typing import Any, Dict, List, Optional, Type, Union, cast
 
 from encord.exceptions import LabelRowError
 from encord.objects.bitmask import BitmaskCoordinates
@@ -25,6 +25,7 @@ from encord.objects.types import (
     BaseFrameObject,
     BoundingBoxDict,
     BoundingBoxFrameCoordinatesDict,
+    Cuboid2DFrameCoordinatesDict,
     FrameObject,
     Point3DFrameCoordinatesDict,
     PointDict,
@@ -34,6 +35,8 @@ from encord.objects.types import (
     PolylineFrameCoordinatesDict,
     RotatableBoundingBoxDict,
     RotatableBoundingBoxFrameCoordinatesDict,
+    is_offset,
+    is_perspective,
 )
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
@@ -171,6 +174,121 @@ class CuboidCoordinates:
             "orientation": self.orientation,
             "size": self.size,
         }
+
+
+@dataclass(frozen=True)
+class Cuboid2DPerspectiveCoordinates:
+    """Represents a 2.5D prism with perspective projection.
+
+    The back face shrinks and moves towards the vanishing point.
+
+    Attributes:
+        front (List[PointCoordinate]): The vertices of the front face as a list of PointCoordinate objects.
+        vanishing_point (PointCoordinate): The point where parallel lines appear to converge.
+        scale_ratio (float): The size of the back face relative to the front face (0.0 to N).
+            - 2.0: Back face is twice the size.
+            - 1.0: No depth (back matches front).
+            - 0.5: Back face is half the size.
+            - 0.0: Back face recedes infinitely to the vanishing point.
+
+    Examples:
+        >>> cuboid = Cuboid2DPerspectiveCoordinates(
+        ...     front=[PointCoordinate(x=0, y=0), PointCoordinate(x=0.1, y=0),
+        ...            PointCoordinate(x=0.1, y=0.1), PointCoordinate(x=0, y=0.1)],
+        ...     vanishing_point=PointCoordinate(x=0.4, y=0.3),
+        ...     scale_ratio=0.75
+        ... )
+    """
+
+    front: List[PointCoordinate]
+    vanishing_point: PointCoordinate
+    scale_ratio: float
+
+    def to_dict(self) -> Dict:
+        """Convert the coordinates to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the cuboid 2D coordinates.
+        """
+        front_flat = [c for point in self.front for c in (point.x, point.y)]
+        return {
+            "front": front_flat,
+            "vanishingPoint": {"x": self.vanishing_point.x, "y": self.vanishing_point.y},
+            "scaleRatio": self.scale_ratio,
+        }
+
+
+@dataclass(frozen=True)
+class Cuboid2DIsometricCoordinates:
+    """Represents a 2.5D prism with parallel (isometric) projection.
+
+    The back face remains the same size as the front but is shifted by the offset.
+
+    Attributes:
+        front (List[PointCoordinate]): The vertices of the front face as a list of PointCoordinate objects.
+        offset (PointCoordinate): The translation vector {x, y} to shift the back face.
+
+    Examples:
+        >>> cuboid = Cuboid2DIsometricCoordinates(
+        ...     front=[PointCoordinate(x=0, y=0), PointCoordinate(x=0.1, y=0),
+        ...            PointCoordinate(x=0.1, y=0.1), PointCoordinate(x=0, y=0.1)],
+        ...     offset=PointCoordinate(x=0.05, y=-0.05)
+        ... )
+    """
+
+    front: List[PointCoordinate]
+    offset: PointCoordinate
+
+    def to_dict(self) -> Dict:
+        """Convert the coordinates to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the cuboid 2D coordinates.
+        """
+        front_flat = [c for point in self.front for c in (point.x, point.y)]
+        return {
+            "front": front_flat,
+            "offset": {"x": self.offset.x, "y": self.offset.y},
+        }
+
+
+Cuboid2DCoordinates = Union[Cuboid2DPerspectiveCoordinates, Cuboid2DIsometricCoordinates]
+"""Union type for 2D cuboid coordinates - either perspective or isometric projection."""
+
+
+def cuboid_2d_coordinates_from_dict(d: Cuboid2DFrameCoordinatesDict) -> Cuboid2DCoordinates:
+    """Create a Cuboid2DCoordinates instance from a dictionary.
+
+    Args:
+        d (dict): A dictionary containing cuboid_2d coordinates information.
+
+    Returns:
+        Cuboid2DCoordinates: Either Cuboid2DPerspectiveCoordinates or Cuboid2DIsometricCoordinates.
+    """
+    cuboid_2d_dict = d["cuboid_2d"]
+    front_flat = cuboid_2d_dict["front"]
+    front = [PointCoordinate(x=front_flat[i], y=front_flat[i + 1]) for i in range(0, len(front_flat), 2)]
+
+    if is_perspective(cuboid_2d_dict):
+        vp = cuboid_2d_dict["vanishingPoint"]
+        vanishing_point = PointCoordinate(x=vp["x"], y=vp["y"])
+        scale_ratio = cuboid_2d_dict.get("scaleRatio")
+        if scale_ratio is None:
+            raise LabelRowError("Cuboid2D perspective projection requires scaleRatio")
+        return Cuboid2DPerspectiveCoordinates(
+            front=front,
+            vanishing_point=vanishing_point,
+            scale_ratio=cast(float, scale_ratio),
+        )
+    elif is_offset(cuboid_2d_dict):
+        off = cuboid_2d_dict["offset"]
+        offset = PointCoordinate(x=off["x"], y=off["y"])
+        return Cuboid2DIsometricCoordinates(
+            front=front,
+            offset=offset,
+        )
+    else:
+        raise LabelRowError("Cuboid2D must have either (vanishingPoint and scaleRatio) or offset")
 
 
 @dataclass(frozen=True)
@@ -561,7 +679,6 @@ class HtmlCoordinates(BaseDTO):
 
 NON_GEOMETRIC_COORDINATES = {AudioCoordinates, TextCoordinates, HtmlCoordinates}
 
-
 Coordinates = Union[
     AudioCoordinates,
     TextCoordinates,
@@ -575,6 +692,8 @@ Coordinates = Union[
     SkeletonCoordinates,
     BitmaskCoordinates,
     CuboidCoordinates,
+    Cuboid2DPerspectiveCoordinates,
+    Cuboid2DIsometricCoordinates,
 ]
 
 GeometricCoordinates = Union[
@@ -585,6 +704,8 @@ GeometricCoordinates = Union[
     PolylineCoordinates,
     SkeletonCoordinates,
     BitmaskCoordinates,
+    Cuboid2DPerspectiveCoordinates,
+    Cuboid2DIsometricCoordinates,
 ]
 
 ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] = {
@@ -596,6 +717,7 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] 
     Shape.SKELETON: [SkeletonCoordinates],
     Shape.BITMASK: [BitmaskCoordinates],
     Shape.CUBOID: [CuboidCoordinates],
+    Shape.CUBOID_2D: [Cuboid2DPerspectiveCoordinates, Cuboid2DIsometricCoordinates],
     Shape.AUDIO: [AudioCoordinates],
     Shape.TEXT: [TextCoordinates, HtmlCoordinates],
 }
@@ -636,6 +758,9 @@ def add_coordinates_to_frame_object_dict(
     elif isinstance(coordinates, CuboidCoordinates):
         result["cuboid"] = coordinates.to_dict()
         result["shape"] = Shape.CUBOID.value
+    elif isinstance(coordinates, (Cuboid2DPerspectiveCoordinates, Cuboid2DIsometricCoordinates)):
+        result["cuboid_2d"] = coordinates.to_dict()
+        result["shape"] = Shape.CUBOID_2D.value
     else:
         raise NotImplementedError(f"adding coordinates for this type not yet implemented {type(coordinates)}")
 
@@ -649,6 +774,8 @@ def get_coordinates_from_frame_object_dict(frame_object_dict: FrameObject) -> Co
         return RotatableBoundingBoxCoordinates.from_dict(frame_object_dict)
     elif frame_object_dict["shape"] == Shape.POLYGON:
         return PolygonCoordinates.from_dict(frame_object_dict)
+    elif frame_object_dict["shape"] == Shape.CUBOID_2D:
+        return cuboid_2d_coordinates_from_dict(frame_object_dict)
     elif frame_object_dict["shape"] == Shape.POINT:
         coords = frame_object_dict["point"]["0"]
         if "x" in coords and "y" in coords and "z" in coords:

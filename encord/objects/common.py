@@ -39,6 +39,7 @@ class Shape(StringEnum):
     AUDIO = "audio"
     TEXT = "text"
     CUBOID = "cuboid"
+    CUBOID_2D = "cuboid_2d"
 
 
 class DeidentifyRedactTextMode(Enum):

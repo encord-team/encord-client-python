@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Literal, Optional, TypedDict, Union
 
+from typing_extensions import TypeGuard
+
 from encord.objects.common import Shape
 from encord.objects.html_node import HtmlNode
 
@@ -61,6 +63,39 @@ class PolygonFrameCoordinatesDictRequired(TypedDict):
 
 class PolygonFrameCoordinatesDict(PolygonFrameCoordinatesDictRequired, total=False):
     polygons: Optional[PolygonDict]  # This was introduced to support complex polygons.
+
+
+class Cuboid2DPerspectiveDict(TypedDict):
+    """Perspective projection cuboid dict with vanishing point and scale ratio."""
+
+    front: List[float]  # Flat array of coordinates [x1, y1, x2, y2, ...]
+    vanishingPoint: PointDict
+    scaleRatio: float
+
+
+class Cuboid2DIsometricDict(TypedDict):
+    """Isometric projection cuboid dict with offset."""
+
+    front: List[float]  # Flat array of coordinates [x1, y1, x2, y2, ...]
+    offset: PointDict
+
+
+Cuboid2DDict = Union[Cuboid2DPerspectiveDict, Cuboid2DIsometricDict]
+"""Union type for 2D cuboid dict - either perspective or isometric projection."""
+
+
+def is_perspective(cuboid: Cuboid2DDict) -> TypeGuard[Cuboid2DPerspectiveDict]:
+    # We check for a key unique to the perspective dictionary
+    return "vanishingPoint" in cuboid
+
+
+def is_offset(cuboid: Cuboid2DDict) -> TypeGuard[Cuboid2DIsometricDict]:
+    # We check for a key unique to the isometric dictionary
+    return "offset" in cuboid
+
+
+class Cuboid2DFrameCoordinatesDict(TypedDict):
+    cuboid_2d: Cuboid2DDict
 
 
 class AnswerDict(TypedDict):
@@ -127,9 +162,19 @@ class PointFrameObject3D(BaseFrameObject, Point3DFrameCoordinatesDict):
 
 PointFrameObject = Union[PointFrameObject2D, PointFrameObject3D]
 
+
+class Cuboid2DFrameObject(BaseFrameObject, Cuboid2DFrameCoordinatesDict):
+    shape: Literal[Shape.CUBOID_2D]
+
+
 """ Frame object in the label blob. Contains shape data, and is differentiated by the 'shape' field. """
 FrameObject = Union[
-    BoundingBoxFrameObject, RotatableBoundingBoxFrameObject, PolygonFrameObject, PointFrameObject, PolylineFrameObject
+    BoundingBoxFrameObject,
+    RotatableBoundingBoxFrameObject,
+    PolygonFrameObject,
+    PointFrameObject,
+    PolylineFrameObject,
+    Cuboid2DFrameObject,
 ]
 
 
