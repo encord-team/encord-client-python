@@ -21,7 +21,6 @@ from typing import (
     Iterable,
     List,
     Literal,
-    Mapping,
     Optional,
     Sequence,
     Set,

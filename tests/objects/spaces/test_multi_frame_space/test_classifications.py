@@ -129,6 +129,39 @@ def test_put_classification_on_frames_with_overwrite_on_video_space(ontology):
     assert annotation_on_frame_1.classification_hash == classification_instance_2.classification_hash
 
 
+def test_put_classification_on_frames_with_overwrite_all_frames_on_video_space(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
+
+    classification_instance_1 = text_classification.create_instance()
+    classification_instance_2 = text_classification.create_instance()
+    text_answer_1 = "Answer 1"
+    text_answer_2 = "Answer 2"
+
+    classification_instance_1.set_answer(answer=text_answer_1)
+    classification_instance_2.set_answer(answer=text_answer_2)
+
+    video_space_1.put_classification_instance(classification_instance=classification_instance_1, frames=[0])
+
+    # Act
+    video_space_1.put_classification_instance(
+        classification_instance=classification_instance_2,
+        frames=[0],  # Replace all frames that the existing classification exists on
+        on_overlap="replace",
+    )
+
+    # Assert
+    assert len(video_space_1.get_classification_instances()) == 1
+    annotations_on_classifications = list(video_space_1.get_annotations(type_="classification"))
+
+    assert len(annotations_on_classifications) == 1
+    annotation_on_frame_0 = annotations_on_classifications[0]
+    assert annotation_on_frame_0.frame == 0
+    assert annotation_on_frame_0.classification_hash == classification_instance_2.classification_hash
+
+
 def test_put_classification_on_invalid_frames(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
