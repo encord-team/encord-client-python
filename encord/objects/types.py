@@ -269,13 +269,19 @@ class SpaceFrameData(TypedDict):
     range: List[List[int]]
 
 
-SpaceRange = Union[SpaceHtmlData, SpaceFrameData]
+class SpaceSegmentationData(TypedDict):
+    type: Literal["frame"]
+    range: List[List[int]]
+    segmentation: str
+
+
+SpaceRange = Union[SpaceHtmlData, SpaceFrameData, SpaceSegmentationData]
 
 
 class ObjectAnswerForNonGeometric(BaseFrameObject):
     """For non-geometric modalities, metadata is contained in object answers, instead of frame"""
 
-    shape: Union[Literal[Shape.TEXT], Literal[Shape.AUDIO]]
+    shape: Union[Literal[Shape.TEXT], Literal[Shape.AUDIO], Literal[Shape.SEGMENTATION]]
     classifications: List[AttributeDict]
     range: Union[List[List[int]], None]
     spaces: Dict[str, SpaceRange]  # Important for non-geometric shapes, where space info must live on ObjectAnswer

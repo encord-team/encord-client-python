@@ -720,6 +720,7 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] 
     Shape.CUBOID_2D: [Cuboid2DPerspectiveCoordinates, Cuboid2DIsometricCoordinates],
     Shape.AUDIO: [AudioCoordinates],
     Shape.TEXT: [TextCoordinates, HtmlCoordinates],
+    Shape.SEGMENTATION: [],  # Segmentation uses RLE-encoded strings in space data, not traditional coordinates
 }
 
 
