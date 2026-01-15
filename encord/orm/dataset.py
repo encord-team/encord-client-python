@@ -1160,8 +1160,7 @@ class DatasetLinkItems:
 
 
 class CreateDatasetPayload(BaseDTO):
-    """
-    Payload for creating a new dataset.
+    """Payload for creating a new dataset.
 
     Arg:
         title: Title of the dataset to create.
