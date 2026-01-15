@@ -13,8 +13,7 @@ from encord.orm.base_dto import BaseDTO
 
 
 class ActionableWorkflowNodeType(StringEnum):
-    """Enumeration of workflow node types that can produce actionable editor logs.
-    """
+    """Enumeration of workflow node types that can produce actionable editor logs."""
 
     ANNOTATION = "ANNOTATION"
     REVIEW = "REVIEW"
@@ -24,8 +23,7 @@ class ActionableWorkflowNodeType(StringEnum):
 
 
 class EditorLogsActionCategory(StringEnum):
-    """High-level category describing the source or domain of an editor log action.
-    """
+    """High-level category describing the source or domain of an editor log action."""
 
     OBJECT = "object"
     CLASSIFICATION = "classification"
@@ -91,8 +89,7 @@ class ObjectAttributes(LabelAttributes, BaseDTO):
 
 
 class ClassificationAttributes(LabelAttributes, BaseDTO):
-    """Attributes specific to classification-level editor actions.
-    """
+    """Attributes specific to classification-level editor actions."""
 
     classification_hash: str
 
@@ -111,15 +108,13 @@ class EditorLogGeneralAction(EditorLogCommon):
 
 
 class EditorLogClassification(EditorLogCommon, ClassificationAttributes):
-    """Editor log entry representing actions performed on classification labels.
-    """
+    """Editor log entry representing actions performed on classification labels."""
 
     action_category: Literal[EditorLogsActionCategory.CLASSIFICATION]
 
 
 class EditorLogObject(EditorLogCommon, ObjectAttributes):
-    """Editor log entry representing actions performed on object labels.
-    """
+    """Editor log entry representing actions performed on object labels."""
 
     action_category: Literal[EditorLogsActionCategory.OBJECT]
 

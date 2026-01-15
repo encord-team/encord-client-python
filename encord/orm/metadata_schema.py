@@ -12,5 +12,6 @@ class GeospatialCoordinates(BaseModel):
         latitude (float): Latitude in degrees, ranging from -90.0 to 90.0.
         longitude (float): Longitude in degrees, ranging from -180.0 to 180.0.
     """
+
     latitude: float = Field(..., ge=-90.0, le=90.0)
     longitude: float = Field(..., ge=-180.0, le=180.0)
