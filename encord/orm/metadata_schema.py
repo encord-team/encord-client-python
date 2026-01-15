@@ -2,8 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class GeospatialCoordinates(BaseModel):
-    """
-    Geographic coordinates represented by latitude and longitude.
+    """Geographic coordinates represented by latitude and longitude.
 
     This model is used to describe a precise location on the Earth's surface.
     Values are validated to fall within standard geographic bounds.
