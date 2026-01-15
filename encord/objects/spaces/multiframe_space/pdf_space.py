@@ -1,23 +1,16 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Optional
 
 from encord.constants.enums import SpaceType
-from encord.objects.answers import NumericAnswerValue
-from encord.objects.attributes import Attribute
 from encord.objects.coordinates import GeometricCoordinates
 from encord.objects.frames import Frames
-from encord.objects.ontology_object_instance import AnswersForFrames
-from encord.objects.spaces.annotation.geometric_annotation import (
-    _FrameClassificationAnnotation,
-    _GeometricFrameObjectAnnotation,
-)
 from encord.objects.spaces.multiframe_space.multiframe_space import FrameOverlapStrategy, MultiFrameSpace
 from encord.objects.spaces.types import PdfSpaceInfo, SpaceInfo
 
 if TYPE_CHECKING:
-    from encord.objects import ClassificationInstance, ObjectInstance, Option
+    from encord.objects import ClassificationInstance, ObjectInstance
     from encord.objects.ontology_labels_impl import LabelRowV2
 
 

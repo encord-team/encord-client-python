@@ -39,7 +39,14 @@ from encord.objects.coordinates import (
     add_coordinates_to_frame_object_dict,
     get_geometric_coordinates_from_frame_object_dict,
 )
-from encord.objects.frames import Frames, Ranges, frames_class_to_frames_list, ranges_list_to_ranges, ranges_to_list
+from encord.objects.frames import (
+    Frames,
+    Range,
+    Ranges,
+    frames_class_to_frames_list,
+    ranges_list_to_ranges,
+    ranges_to_list,
+)
 from encord.objects.internal_helpers import _infer_attribute_from_answer
 from encord.objects.label_utils import create_frame_classification_dict, create_frame_object_dict
 from encord.objects.ontology_object_instance import AnswersForFrames, DynamicAnswerManager, check_coordinate_type
@@ -137,22 +144,15 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         We therefore need to remove those other classification instances from the frames.
         """
 
-        conflicting_frames = frames_class_to_frames_list(conflicting_ranges) if conflicting_ranges else []
-        for frame in conflicting_frames:
-            if frame not in self._frames_to_classification_hash_to_annotation_data:
-                continue
+        existing_classification_instance: ClassificationInstance | None = None
+        for cls in self._classifications_map.values():
+            if cls.ontology_item.feature_node_hash == classification.ontology_item.feature_node_hash:
+                existing_classification_instance = cls
 
-            # Find all classification_hashes on this frame that belong to the same ontology Classification
-            hashes_to_remove = []
-            for classification_hash in self._frames_to_classification_hash_to_annotation_data[frame].keys():
-                if classification_hash in self._classifications_map:
-                    existing_classification = self._classifications_map[classification_hash]
-                    if existing_classification._ontology_classification == classification._ontology_classification:
-                        hashes_to_remove.append(classification_hash)
-
-            # Remove the conflicting classification_hash entries
-            for hash_to_remove in hashes_to_remove:
-                self._frames_to_classification_hash_to_annotation_data[frame].pop(hash_to_remove, None)
+        if existing_classification_instance is not None:
+            self._remove_classification_instance_from_frames(
+                classification_instance=existing_classification_instance, frames=conflicting_ranges
+            )
 
     def _are_frames_valid(self, frames: List[int]) -> None:
         max_frame = max(frames)
@@ -720,11 +720,6 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         classification_instance: ClassificationInstance,
         frames: Frames,
     ) -> List[int]:
-        self._label_row._check_labelling_is_initalised()
-        self._method_not_supported_for_classification_instance_with_frames(
-            classification_instance=classification_instance
-        )
-
         frame_list = frames_class_to_frames_list(frames)
 
         # Keeps track of frames that are actually removed. User might pass in frames that the classification does not exist on.

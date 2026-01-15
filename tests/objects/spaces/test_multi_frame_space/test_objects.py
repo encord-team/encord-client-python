@@ -108,6 +108,34 @@ def test_put_object_on_frames_with_overwrite_on_video_space(ontology):
     assert annotation_on_frame_1.coordinates == coordinates_2
 
 
+def test_put_object_on_frames_with_overwrite_all_frames_on_video_space(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
+    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
+    new_object_instance = box_ontology_item.create_instance()
+
+    coordinates_1 = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
+    coordinates_2 = BoundingBoxCoordinates(height=0.5, width=0.5, top_left_x=0.5, top_left_y=0.5)
+    video_space_1.put_object_instance(object_instance=new_object_instance, frames=[0], coordinates=coordinates_1)
+
+    # Act
+    video_space_1.put_object_instance(
+        object_instance=new_object_instance,
+        frames=[0],  # Overrides the exissting object instance on all frames
+        coordinates=coordinates_2,
+        on_overlap="replace",
+    )
+
+    # Assert
+    assert len(video_space_1.get_object_instances()) == 1
+
+    object_annotations = list(video_space_1.get_annotations(type_="object"))
+    annotation_on_frame_1 = object_annotations[0]
+    assert annotation_on_frame_1.frame == 0
+    assert annotation_on_frame_1.coordinates == coordinates_2
+
+
 def test_put_object_on_invalid_frames(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
