@@ -40,6 +40,7 @@ class Shape(StringEnum):
     TEXT = "text"
     CUBOID = "cuboid"
     CUBOID_2D = "cuboid_2d"
+    SEGMENTATION = "segmentation"
 
 
 class DeidentifyRedactTextMode(Enum):
