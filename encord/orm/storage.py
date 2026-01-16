@@ -19,8 +19,7 @@ except ImportError:
 
 
 class StorageItemType(CamelStrEnum):
-    """
-    Type of item stored in Encord storage.
+    """Type of item stored in Encord storage.
 
     **Values:**
 
