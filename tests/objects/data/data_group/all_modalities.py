@@ -1070,6 +1070,5 @@ DATA_GROUP_METADATA = LabelRowMetadata(
         "dicom-stack-uuid": MEDICAL_STACK_SPACE_INFO,
         "image-sequence-uuid": IMAGE_SEQUENCE_SPACE_INFO,
         "pdf-uuid": PDF_SPACE_INFO,
-        "point-cloud-uuid": POINT_CLOUD_SPACE_INFO,
     },
 )

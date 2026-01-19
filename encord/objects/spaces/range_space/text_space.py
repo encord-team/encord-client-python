@@ -28,10 +28,9 @@ class TextSpace(RangeSpace):
             raise LabelRowError(f"Range starting with {start_of_range} is invalid. Negative ranges are not supported.")
 
     def _to_space_dict(self) -> SpaceInfo:
-        labels = self._build_labels_dict()
         return TextSpaceInfo(
             space_type=SpaceType.TEXT,
-            labels=labels,
+            labels={},
         )
 
     def _parse_space_dict(

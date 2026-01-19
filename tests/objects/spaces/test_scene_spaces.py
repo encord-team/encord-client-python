@@ -16,10 +16,9 @@ from encord.objects.spaces.range_space.point_cloud_space import PointCloudFileSp
 from encord.objects.spaces.types import PointCloudFileSpaceInfo
 from encord.objects.types import SegmentationObject
 from tests.objects.data.all_types_ontology_structure import all_types_structure
-from tests.objects.data.data_group.scene import SCENE_METADATA, SCENE_NO_LABELS
+from tests.objects.data.data_group.scene import SCENE_METADATA, SCENE_NO_LABELS, SCENE_WITH_LABELS
 
 segmentation_ontology_item = all_types_structure.get_child_by_hash("segmentationFeatureNodeHash", Object)
-box_ontology_item = all_types_structure.get_child_by_hash("MjI2NzEy", Object)
 cuboid_ontology_item = all_types_structure.get_child_by_hash("cuboidFeatureNodeHash", Object)
 box_with_attributes_ontology_item = all_types_structure.get_child_by_hash("MTA2MjAx", Object)
 box_text_attribute_ontology_item = box_with_attributes_ontology_item.get_child_by_hash("OTkxMjU1", type_=Attribute)
@@ -50,12 +49,12 @@ def test_get_scene_space(ontology):
         label_row.get_space(id="path/to/file1.pcd", type_="video")  # wrong type
 
     # Get by stream name + index
-    space2 = label_row.get_space(stream_id="lidar1", stream_index=0, type_="point_cloud")
+    space2 = label_row.get_space(stream_id="lidar1", event_index=0, type_="point_cloud")
     assert space is space2
 
     with pytest.raises(LabelRowError) as exc_info:
-        label_row.get_space(stream_id="lidar1", stream_index=1, type_="point_cloud")
-    assert "Could not find space with given stream_id 'lidar1' and stream_index '1'" in str(exc_info.value)
+        label_row.get_space(stream_id="lidar1", event_index=1, type_="point_cloud")
+    assert "Could not find space with given stream_id 'lidar1' and event_index '1'" in str(exc_info.value)
 
     # get by file name
     space3 = label_row.get_space(file_name="file1.pcd", type_="point_cloud")
@@ -66,28 +65,39 @@ def test_tmp(ontology):
     label_row = LabelRowV2(SCENE_METADATA, Mock(), ontology)
     label_row.from_labels_dict(SCENE_NO_LABELS)
 
-    segmentation_cls = label_row.ontology_structure.get_child_by_hash("segmentationFeatureNodeHash", type_=Object)
-    cuboid_cls = label_row.ontology_structure.get_child_by_hash("cuboidFeatureNodeHash", type_=Object)
-    cuboid_instance = cuboid_cls.create_instance()
+    cuboid_instance = cuboid_ontology_item.create_instance()
+    cuboid_instance.set_for_frames(CuboidCoordinates(position=(0, 0, 0), orientation=(0, 0, 0), size=(1, 1, 1)))
+    label_row.add_object_instance(cuboid_instance)
+    res = label_row.to_encord_dict()
+    print(res)
 
-    # Add a point cloud segmentation on 2 files
+
+def test_parse_existing_labels(ontology):
+    label_row = LabelRowV2(SCENE_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(SCENE_WITH_LABELS)  # existing labels with 1 cuboid, 1 segmentation instance
+
+    # 3D labels are still on the "root", so on the old API.
+    root_instances = label_row.get_object_instances()
+    assert len(root_instances) == 1
+    assert root_instances[0].object_hash == "hash0"
+
+    # point cloud labels are on labelling spaces
     space1 = label_row.get_space(id="path/to/file1.pcd", type_="point_cloud")
     space2 = label_row.get_space(id="path/to/file2.pcd", type_="point_cloud")
-    segm_instance = ObjectInstance(segmentation_cls)
-    space1.put_object_instance(segm_instance, ranges=[Range(0, 5)])
-    space2.put_object_instance(segm_instance, ranges=[Range(10, 15)])
+    obj_instances = space1.get_object_instances()
+    obj_instances2 = space2.get_object_instances()
+    assert len(obj_instances) == 1
+    assert len(obj_instances2) == 1
+    # FIXME: this assertion should pass?
+    # assert obj_instances[0] is obj_instances2[0]
 
-    cuboid_instance.set_for_frames(
-        coordinates=CuboidCoordinates(position=(1, 1, 1), orientation=(0, 0, 0), size=(1, 2, 3)), frames=23
-    )
-    label_row.add_object_instance(cuboid_instance)
+    annotations1 = list(space1.get_annotations("object"))
+    assert len(annotations1) == 1
+    assert annotations1[0].ranges == [Range(0, 5)]
 
-    # Assert on full label_row.to_encord_dict()
-    result = label_row.to_encord_dict()
-    # issue here; in object_answers the segmentation seems valid
-    # but the object hash one only has a single objectHash field
-    # not sure if it's a problem or a mock setup issue.
-    print(result)
+    annotations2 = list(space2.get_annotations("object"))
+    assert len(annotations2) == 1
+    assert annotations2[0].ranges == [Range(10, 15)]
 
 
 def test_add_segmentation_instance_on_two_spaces(ontology):
@@ -130,7 +140,7 @@ def test_add_segmentation_instance_on_two_spaces(ontology):
                 "featureHash": "segmentationFeatureNodeHash",
                 "name": "segmentation object",
                 "color": "#4904a5",
-                "shape": "segmentation",
+                "shape": Shape.SEGMENTATION,
                 "value": "segmentation_object",
                 "range": [],
                 "spaces": {

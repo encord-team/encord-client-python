@@ -196,16 +196,10 @@ class HTMLSpace(Space[_HtmlObjectAnnotation, _GlobalClassificationAnnotation, Ht
         label_class = ontology.get_child_by_hash(feature_hash, type_=Object)
         return ObjectInstance(ontology_object=label_class, object_hash=object_hash)
 
-    def _build_labels_dict(self) -> dict[str, LabelBlob]:
-        """For HTML-based annotations, labels are stored in objects/classifications index"""
-        return {}
-
     def _to_space_dict(self) -> HtmlSpaceInfo:
-        """Export HTML space to dictionary format."""
-        labels = self._build_labels_dict()
         return HtmlSpaceInfo(
             space_type=SpaceType.HTML,
-            labels=labels,
+            labels={},
         )
 
     def _parse_space_dict(

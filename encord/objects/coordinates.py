@@ -771,6 +771,8 @@ def add_coordinates_to_frame_object_dict(
 def get_coordinates_from_frame_object_dict(frame_object_dict: FrameObject) -> Coordinates:
     if frame_object_dict["shape"] == Shape.BOUNDING_BOX:
         return BoundingBoxCoordinates.from_dict(frame_object_dict)
+    elif frame_object_dict["shape"] == Shape.SEGMENTATION:
+        raise ValueError("Segmentation do not have a Coordinates class")
     elif frame_object_dict["shape"] == Shape.ROTATABLE_BOUNDING_BOX:
         return RotatableBoundingBoxCoordinates.from_dict(frame_object_dict)
     elif frame_object_dict["shape"] == Shape.POLYGON:

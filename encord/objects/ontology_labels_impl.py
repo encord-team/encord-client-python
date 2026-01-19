@@ -927,7 +927,7 @@ class LabelRowV2:
         pass
 
     @overload
-    def get_space(self, *, stream_id: str, stream_index: int = 0, type_: Literal["point_cloud"]) -> PointCloudFileSpace:
+    def get_space(self, *, stream_id: str, event_index: int = 0, type_: Literal["point_cloud"]) -> PointCloudFileSpace:
         pass
 
     def get_space(
@@ -937,7 +937,7 @@ class LabelRowV2:
         layout_key: Optional[str] = None,
         type_: SpaceLiteral,
         stream_id: Optional[str] = None,
-        stream_index: int = 0,
+        event_index: int = 0,
         file_name: Optional[str] = None,
     ) -> Space:
         """Retrieves a single space which matches the specified id and type.
@@ -949,7 +949,7 @@ class LabelRowV2:
             layout_key: The layout key of the data unit within its data group layout.
             type_: Type to check the type of the space.
             stream_id: For scenes - the name of the stream to find.
-            stream_index: For scenes - the index of `stream_id`. Defaults to 0.
+            event_index: For scenes - the index of `stream_id`. Defaults to 0.
             file_name: The name of the file associated to the space
         Returns:
             The child node with the specified title and type.
@@ -976,13 +976,13 @@ class LabelRowV2:
                 if (
                     isinstance(element, PointCloudFileSpace)
                     and element.metadata.stream_id == stream_id
-                    and element.metadata.event_index == stream_index
+                    and element.metadata.event_index == event_index
                 ):
                     space = element
                     break
             if space is None:
                 raise LabelRowError(
-                    f"Could not find space with given stream_id '{stream_id}' and stream_index '{stream_index}'."
+                    f"Could not find space with given stream_id '{stream_id}' and event_index '{event_index}'."
                 )
 
         if file_name is not None:
@@ -2672,13 +2672,12 @@ class LabelRowV2:
                 # TODO: Implement Scene Images
                 pass
             elif space_info["space_type"] == SpaceType.POINT_CLOUD:
-                # Ensure scene_info exists in space_info for PointCloudFileSpaceInfo
                 if "scene_info" not in space_info:
-                    space_info["scene_info"] = {"stream_id": "", "event_index": 0, "uri": space_id}  # type: ignore[typeddict-item]
+                    raise LabelRowError("Missing 'scene_info' in Point Cloud space info.")
                 point_cloud_space = PointCloudFileSpace(
                     space_id=space_id,
                     label_row=self,
-                    space_info=space_info,  # type: ignore[arg-type]
+                    space_info=space_info,
                 )
                 res[space_id] = point_cloud_space
             else:
@@ -2951,7 +2950,6 @@ class LabelRowV2:
             ):
                 for frame, frame_data in labels.items():
                     frame_num = int(frame)
-                    # ^ here may be a problem
                     self._add_object_instances_from_objects(frame_data["objects"], frame_num)
                     self._add_classification_instances_from_classifications_frame(
                         frame_data["classifications"], classification_answers, frame_num

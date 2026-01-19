@@ -331,7 +331,8 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
         object_answers: dict[str, ObjectAnswerForGeometric],
         classification_answers: dict[str, ClassificationAnswer],
     ) -> None:
-        frame_label = space_info["labels"].get("0")
+        space_labels = cast(Dict[str, LabelBlob], space_info.get("labels"))
+        frame_label = space_labels.get("0")
         if frame_label is not None:
             self._parse_frame_label_dict(frame_label=frame_label, classification_answers=classification_answers)
 
