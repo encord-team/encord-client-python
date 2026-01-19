@@ -153,21 +153,17 @@ def points_to_rle_string(points: Set[int]) -> str:
 
 
 def rle_string_to_points(rle_string: str) -> Set[int]:
+    points: Set[int] = set()
     if not rle_string:
-        return set()
+        return points
 
     rle_counts = _string_to_rle(rle_string)
-    points = set()
     current_index = 0
 
     # RLE counts alternate between empty and present runs
     for i, count in enumerate(rle_counts):
-        if i % 2 == 0:
-            # Empty run - skip these indices
-            current_index += count
-        else:
-            # Present run - add these indices
+        if i % 2 != 0:
             points.update(range(current_index, current_index + count))
-            current_index += count
+        current_index += count
 
     return points

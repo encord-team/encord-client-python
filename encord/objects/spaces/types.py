@@ -113,7 +113,7 @@ class PointCloudFileSpaceInfo(TypedDict):
     labels: LabelBlob
 
 
-class SceneImageSpaceInfo(BaseSpaceInfo):
+class SceneImageSpaceInfo(TypedDict):
     space_type: Literal[SpaceType.SCENE_IMAGE]
     scene_info: FileInSceneInfo
     labels: LabelBlob

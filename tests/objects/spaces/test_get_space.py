@@ -86,13 +86,16 @@ def _get_expected_metadata_for_space_literal(space_literal: SpaceLiteral) -> Spa
         exhaustive_guard(space_literal, message=f"Missing implementation for space {space_literal}")
 
 
+ALL_GROUP_SPACES = set(get_args(SpaceLiteral)) - {"point_cloud"}  # no point cloud space in DATA_GROUP_METADATA
+
+
 def test_space_metadata_is_populated_for_data_group(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
 
     spaces = label_row.get_spaces()
-    assert len(spaces) == 10  # number of modalities in DATA_GROUP_METADATA
+    assert len(spaces) == 9  # number of modalities in DATA_GROUP_METADATA
 
-    for space_literal in get_args(SpaceLiteral):
+    for space_literal in ALL_GROUP_SPACES:
         space_id = _get_space_id_from_space_literal(space_literal)
         space = label_row.get_space(id=space_id, type_=space_literal)
 
@@ -105,7 +108,7 @@ def test_space_metadata_is_populated_for_data_group(ontology):
 
 def test_get_space_by_id(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    for space_literal in get_args(SpaceLiteral):
+    for space_literal in ALL_GROUP_SPACES:
         space_id = _get_space_id_from_space_literal(space_literal)
         space = label_row.get_space(id=space_id, type_=space_literal)
         assert space.space_id == space_id
@@ -113,9 +116,7 @@ def test_get_space_by_id(ontology):
 
 def test_get_space_by_layout_key(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    for space_literal in get_args(SpaceLiteral):
-        if space_literal == "point_cloud":
-            continue  # point clouds belongs to scenes which don't have layout keys
+    for space_literal in ALL_GROUP_SPACES:
         space_layout_key = _get_space_layout_key_from_space_literal(space_literal)
         space = label_row.get_space(layout_key=space_layout_key, type_=space_literal)
         assert space is not None
