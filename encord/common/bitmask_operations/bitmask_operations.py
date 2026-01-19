@@ -167,8 +167,7 @@ def rle_string_to_points(rle_string: str) -> Set[int]:
             current_index += count
         else:
             # Present run - add these indices
-            for j in range(count):
-                points.add(current_index)
-                current_index += 1
+            points.update(range(current_index, current_index + count))
+            current_index += count
 
     return points

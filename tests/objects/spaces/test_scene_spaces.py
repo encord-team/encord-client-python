@@ -180,7 +180,7 @@ def test_add_segmentation_instance_on_two_spaces(ontology):
             },
             "path/to/file2.pcd": {
                 "space_type": SpaceType.POINT_CLOUD,
-                "scene_info": {"event_index": 0, "stream_id": "lidar1", "uri": "path/to/file1.pcd"},
+                "scene_info": {"event_index": 0, "stream_id": "lidar1", "uri": "path/to/file2.pcd"},
                 "labels": {
                     "objects": [
                         {
