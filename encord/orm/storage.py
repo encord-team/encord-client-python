@@ -273,12 +273,14 @@ class DataGroupGrid(BaseDTO):
     Args:
         layout_contents: Ordered list of item UUIDs to display in the grid.
         name: Optional name of the data group.
+        settings: Optional[Union[Dict, LayoutSettings]] = None
         client_metadata: Optional custom metadata to associate with the data group.
     """
 
     layout_type: Literal["default-grid"] = "default-grid"
     layout_contents: List[UUID]
     name: Optional[str] = None
+    settings: Optional[Union[Dict, LayoutSettings]] = None
     client_metadata: Optional[Dict[str, Any]] = None
 
 
@@ -288,12 +290,14 @@ class DataGroupCarousel(BaseDTO):
     Args:
         layout_contents: Ordered list of item UUIDs to display in the carousel.
         name: Optional name of the data group.
+        settings: Optional extra settings for the layout.
         client_metadata: Optional custom metadata to associate with the data group.
     """
 
     layout_type: Literal["default-list"] = "default-list"
     layout_contents: List[UUID]
     name: Optional[str] = None
+    settings: Optional[Union[Dict, LayoutSettings]] = None
     client_metadata: Optional[Dict[str, Any]] = None
 
 
