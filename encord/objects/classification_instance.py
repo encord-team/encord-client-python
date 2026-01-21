@@ -32,7 +32,7 @@ from typing import (
 
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
-from encord.constants.enums import DataType, is_geometric
+from encord.constants.enums import DATA_TYPES_WITH_UNKNOWN_LAST_FRAME, DataType, is_geometric
 from encord.exceptions import LabelRowError
 from encord.objects.answers import Answer, NumericAnswerValue, ValueType, _get_static_answer_map
 from encord.objects.attributes import (
@@ -118,7 +118,7 @@ class ClassificationInstance:
 
     @property
     def _last_frame(self) -> Union[int, float]:
-        if self._parent is None or self._parent.data_type is DataType.DICOM:
+        if self._parent is None or self._parent.data_type in DATA_TYPES_WITH_UNKNOWN_LAST_FRAME:
             return float("inf")
         elif self._parent is not None and not is_geometric(self._parent.data_type):
             # For audio and text files, the entire file is treated as one frame
