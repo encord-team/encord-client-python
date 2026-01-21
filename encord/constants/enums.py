@@ -11,7 +11,7 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Set
 
 from encord.common.enum import StringEnum
 
@@ -78,3 +78,9 @@ class SpaceType(StringEnum):
     SCENE_IMAGE = "scene_image"
     POINT_CLOUD = "point_cloud"
     PDF = "pdf"
+
+
+DATA_TYPES_WITH_UNKNOWN_LAST_FRAME: Set[DataType] = {
+    DataType.DICOM,
+    DataType.SCENE,  # Scene duration is currently unknown
+}

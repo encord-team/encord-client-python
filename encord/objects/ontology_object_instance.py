@@ -32,7 +32,7 @@ from typing import (
 from encord.common.deprecated import deprecated
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import parse_datetime
-from encord.constants.enums import DataType
+from encord.constants.enums import DATA_TYPES_WITH_UNKNOWN_LAST_FRAME, DataType
 from encord.exceptions import LabelRowError
 from encord.objects import ChecklistAttribute, RadioAttribute, Shape, TextAttribute
 from encord.objects.answers import Answer, NumericAnswerValue, _get_static_answer_map, get_default_answer_from_attribute
@@ -158,7 +158,7 @@ class ObjectInstance:
 
     @property
     def _last_frame(self) -> Union[int, float]:
-        if self._parent is None or self._parent.data_type is DataType.DICOM:
+        if self._parent is None or self._parent.data_type in DATA_TYPES_WITH_UNKNOWN_LAST_FRAME:
             return float("inf")
         else:
             return self._parent.number_of_frames
