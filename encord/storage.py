@@ -17,8 +17,11 @@ import time
 from datetime import datetime
 from math import ceil
 from pathlib import Path
-from typing import Any, Collection, Dict, Iterable, List, Literal, Optional, Sequence, TextIO, Union
+from typing import TYPE_CHECKING, Any, Collection, Dict, Iterable, List, Literal, Optional, Sequence, TextIO, Union
 from uuid import UUID
+
+if TYPE_CHECKING:
+    from encord.scene import Scene
 
 import requests
 
@@ -1863,6 +1866,39 @@ class StorageItem:
             self.refetch_data(get_signed_url=True)
 
         return self._orm_item.signed_url
+
+    def get_scene(self) -> "Scene":
+        """Fetch scene data with signed URLs and return a Scene object.
+
+        This method fetches the complete scene definition from the backend,
+        including all streams with signed URLs for accessing point clouds,
+        images, and other assets.
+
+        Returns:
+            Scene: A Scene object for working with the scene data.
+
+        Raises:
+            ValueError: If the storage item is not a scene type.
+            EncordException: If the scene data cannot be fetched.
+
+        Example:
+            >>> storage_item = encord_user_client.get_storage_item(scene_uuid)
+            >>> scene = storage_item.get_scene()
+            >>> for pc_stream in scene.get_point_cloud_streams():
+            ...     print(f"Stream: {pc_stream.stream_id}, Events: {pc_stream.num_events}")
+        """
+        if self.item_type != StorageItemType.SCENE:
+            raise ValueError(f"Cannot get scene from item of type {self.item_type}. Expected SCENE type.")
+
+        from encord.orm.scene import SceneData
+        from encord.scene import Scene
+
+        scene_data = self._api_client.get(
+            f"scene/{self.uuid}",
+            params=None,
+            result_type=SceneData,
+        )
+        return Scene(scene_data)
 
     def get_summary(self) -> StorageItemSummary:
         """Retrieve a summary of the item, including linked datasets and other information.
