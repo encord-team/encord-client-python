@@ -1,0 +1,234 @@
+"""ORM models for Scene data structures.
+
+These models represent the scene JSON structure returned by the backend API
+for composite and self-contained scenes with point clouds, cameras, and
+frame of reference (FOR) hierarchies.
+"""
+
+from __future__ import annotations
+
+from enum import Enum
+from typing import Any, Dict, List, Literal, Optional, Union, overload
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class AxisDirection(str, Enum):
+    """Direction that an axis points in world or camera coordinates."""
+
+    FORWARD = "forward"
+    BACKWARD = "backward"
+    LEFT = "left"
+    RIGHT = "right"
+    UP = "up"
+    DOWN = "down"
+
+
+class Convention(BaseModel):
+    """Axis direction convention for world or camera coordinates."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    x: AxisDirection
+    y: AxisDirection
+    z: AxisDirection
+
+
+class SceneType(str, Enum):
+    """Type of scene - composite (multiple assets) or self-contained."""
+
+    COMPOSITE = "composite"
+    SELF_CONTAINED = "self_contained"
+
+
+class StreamEntityType(str, Enum):
+    """Type of entity in a stream."""
+
+    IMAGE = "image"
+    POINT_CLOUD = "point_cloud"
+    FRAME_OF_REFERENCE = "frame_of_reference"
+    CAMERA_PARAMETERS = "camera_parameters"
+
+
+# --- Event Types ---
+
+
+class URIEvent(BaseModel):
+    """Event with a URI and timestamp, used for images and point clouds."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    uri: str
+    timestamp: float
+
+
+class FrameOfReferenceEvent(BaseModel):
+    """Event representing a frame of reference at a specific timestamp.
+
+    The rotation is a 9-element array representing a 3x3 rotation matrix
+    in row-major order.
+
+    The position is a 3-element array [x, y, z].
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    parent_FOR: Optional[str] = Field(default=None, alias="parentFOR")
+    rotation: List[float]  # 9 elements (3x3 rotation matrix, row-major)
+    position: List[float]  # 3 elements [x, y, z]
+    timestamp: Optional[float] = None
+
+
+class CameraIntrinsics(BaseModel):
+    """Camera intrinsic parameters."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    type: str = "simple"
+    model: Optional[str] = None
+    fx: float
+    fy: float
+    ox: float
+    oy: float
+    dfx: Optional[float] = None
+    dfy: Optional[float] = None
+    dox: Optional[float] = None
+    doy: Optional[float] = None
+    skew: float = 0.0
+
+
+class CameraExtrinsics(BaseModel):
+    """Camera extrinsic parameters (rotation and position)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    rotation: List[float]  # 9 elements (3x3 rotation matrix, row-major)
+    position: List[float]  # 3 elements [x, y, z]
+
+
+class CameraParametersEvent(BaseModel):
+    """Event with camera parameters (intrinsics and extrinsics)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    timestamp: float
+    widthPx: int = Field(alias="widthPx")
+    heightPx: int = Field(alias="heightPx")
+    intrinsics: CameraIntrinsics
+    extrinsics: CameraExtrinsics
+
+
+# --- Stream Types ---
+
+
+class ImageStream(BaseModel):
+    """Stream containing image events."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    entityType: Literal["image"] = Field(alias="entityType")
+    events: List[URIEvent]
+    cameraId: Optional[str] = Field(default=None, alias="cameraId")
+    frameOfReferenceId: Optional[str] = Field(default=None, alias="frameOfReferenceId")
+
+
+class PointCloudStream(BaseModel):
+    """Stream containing point cloud events."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    entityType: Literal["point_cloud"] = Field(alias="entityType")
+    events: List[URIEvent]
+    frameOfReferenceId: Optional[str] = Field(default=None, alias="frameOfReferenceId")
+
+
+class FrameOfReferenceStream(BaseModel):
+    """Stream containing frame of reference events."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    entityType: Literal["frame_of_reference"] = Field(alias="entityType")
+    events: List[FrameOfReferenceEvent]
+
+
+class CameraParametersStream(BaseModel):
+    """Stream containing camera parameter events."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    entityType: Literal["camera_parameters"] = Field(alias="entityType")
+    events: List[CameraParametersEvent]
+    frameOfReferenceId: Optional[str] = Field(default=None, alias="frameOfReferenceId")
+
+
+# Union of all stream types
+StreamData = Union[ImageStream, PointCloudStream, FrameOfReferenceStream, CameraParametersStream]
+
+# Stream kind literals
+StreamKind = Literal["image", "point_cloud", "frame_of_reference", "camera_parameters"]
+
+
+class StreamWrapper(BaseModel):
+    """Wrapper around a stream with metadata."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    type: str  # "event"
+    id: str
+    stream: Dict[str, Any]  # Parsed dynamically based on entityType
+
+    def get_stream_data(self) -> StreamData:
+        """Parse and return the typed stream data."""
+        entity_type = self.stream.get("entityType")
+        if entity_type == "image":
+            return ImageStream.model_validate(self.stream)
+        elif entity_type == "point_cloud":
+            return PointCloudStream.model_validate(self.stream)
+        elif entity_type == "frame_of_reference":
+            return FrameOfReferenceStream.model_validate(self.stream)
+        elif entity_type == "camera_parameters":
+            return CameraParametersStream.model_validate(self.stream)
+        else:
+            raise ValueError(f"Unknown entity type: {entity_type}")
+
+
+class SceneData(BaseModel):
+    """Scene data model representing the full scene structure.
+
+    This matches the JSON structure returned by the backend's GET /scene/{uuid} endpoint.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    type: str  # "composite" or "self_contained"
+    worldConvention: Convention = Field(alias="worldConvention")
+    cameraConvention: Convention = Field(alias="cameraConvention")
+    defaultGroundHeight: Optional[float] = Field(default=None, alias="defaultGroundHeight")
+    streams: Dict[str, StreamWrapper]
+
+    @overload
+    def get_streams(self, kind: Literal["image"]) -> Dict[str, ImageStream]: ...
+
+    @overload
+    def get_streams(self, kind: Literal["point_cloud"]) -> Dict[str, PointCloudStream]: ...
+
+    @overload
+    def get_streams(self, kind: Literal["frame_of_reference"]) -> Dict[str, FrameOfReferenceStream]: ...
+
+    @overload
+    def get_streams(self, kind: Literal["camera_parameters"]) -> Dict[str, CameraParametersStream]: ...
+
+    def get_streams(self, kind: StreamKind) -> Dict[str, StreamData]:  # type: ignore[misc]
+        result: Dict[str, Any] = {}
+        for stream_id, wrapper in self.streams.items():
+            if wrapper.stream.get("entityType") == kind:
+                if kind == "image":
+                    result[stream_id] = ImageStream.model_validate(wrapper.stream)
+                elif kind == "point_cloud":
+                    result[stream_id] = PointCloudStream.model_validate(wrapper.stream)
+                elif kind == "frame_of_reference":
+                    result[stream_id] = FrameOfReferenceStream.model_validate(wrapper.stream)
+                elif kind == "camera_parameters":
+                    result[stream_id] = CameraParametersStream.model_validate(wrapper.stream)
+        return result
