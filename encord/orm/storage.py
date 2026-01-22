@@ -273,7 +273,7 @@ class DataGroupGrid(BaseDTO):
     Args:
         layout_contents: Ordered list of item UUIDs to display in the grid.
         name: Optional name of the data group.
-        settings: Optional[Union[Dict, LayoutSettings]] = None
+        settings: Optional extra settings for the layout.
         client_metadata: Optional custom metadata to associate with the data group.
     """
 
