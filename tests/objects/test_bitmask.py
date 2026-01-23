@@ -1,11 +1,15 @@
 import numpy as np
+import pytest
 
 from encord.common.bitmask_operations.bitmask_operations import (
     _mask_to_rle,
     _rle_to_mask,
     _rle_to_string,
     _string_to_rle,
+    points_to_rle_string,
+    rle_string_to_points,
     serialise_bitmask,
+    sparse_indices_to_rle_counts,
     transpose_bytearray,
 )
 from encord.objects.bitmask import (
@@ -117,3 +121,47 @@ def test_serialise_bitmask_empty():
     mask_decoded = BitmaskCoordinates(mask_encoded).to_numpy_array()
 
     assert np.array_equal(mask, mask_decoded)  # Mask is inverted and the test fails.
+
+
+@pytest.mark.parametrize(
+    "indices,expected",
+    [
+        ([], []),
+        ([0, 1, 2, 3], [0, 4]),
+        ([0, 1, 2, 7, 8, 9, 10], [0, 3, 4, 4]),
+        ([3, 1, 2, 0], [0, 4]),  # Unsorted input
+    ],
+)
+def test_sparse_indices_to_rle_counts(indices, expected):
+    assert sparse_indices_to_rle_counts(indices) == expected
+
+
+@pytest.mark.parametrize(
+    "points,expected",
+    [
+        (set(), ""),
+        ({0, 1, 2, 3}, "04"),
+        ({0, 1, 2, 7, 8, 9, 10}, "0341"),
+    ],
+)
+def test_points_to_rle_string(points, expected):
+    assert points_to_rle_string(points) == expected
+
+
+@pytest.mark.parametrize(
+    "rle_string,expected",
+    [
+        ("", set()),
+        ("04", {0, 1, 2, 3}),
+        ("0341", {0, 1, 2, 7, 8, 9, 10}),
+    ],
+)
+def test_rle_string_to_points(rle_string, expected):
+    assert rle_string_to_points(rle_string) == expected
+
+
+def test_points_rle_roundtrip():
+    original_points = {0, 5, 10, 11, 12, 100, 101, 102, 103, 104, 105}
+    encoded = points_to_rle_string(original_points)
+    decoded = rle_string_to_points(encoded)
+    assert decoded == original_points

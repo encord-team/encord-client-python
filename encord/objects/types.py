@@ -160,6 +160,12 @@ class PointFrameObject3D(BaseFrameObject, Point3DFrameCoordinatesDict):
     shape: Literal[Shape.POINT]
 
 
+class SegmentationObject(BaseFrameObject):
+    shape: Literal[Shape.SEGMENTATION]
+    segmentation: str
+    """RLE encoded segmentation string"""
+
+
 PointFrameObject = Union[PointFrameObject2D, PointFrameObject3D]
 
 
@@ -167,7 +173,6 @@ class Cuboid2DFrameObject(BaseFrameObject, Cuboid2DFrameCoordinatesDict):
     shape: Literal[Shape.CUBOID_2D]
 
 
-""" Frame object in the label blob. Contains shape data, and is differentiated by the 'shape' field. """
 FrameObject = Union[
     BoundingBoxFrameObject,
     RotatableBoundingBoxFrameObject,
@@ -175,7 +180,9 @@ FrameObject = Union[
     PointFrameObject,
     PolylineFrameObject,
     Cuboid2DFrameObject,
+    SegmentationObject,
 ]
+""" Frame object in the label blob. Contains shape data, and is differentiated by the 'shape' field. """
 
 
 class FrameClassificationRequired(TypedDict):
@@ -275,7 +282,7 @@ SpaceRange = Union[SpaceHtmlData, SpaceFrameData]
 class ObjectAnswerForNonGeometric(BaseFrameObject):
     """For non-geometric modalities, metadata is contained in object answers, instead of frame"""
 
-    shape: Union[Literal[Shape.TEXT], Literal[Shape.AUDIO]]
+    shape: Union[Literal[Shape.TEXT], Literal[Shape.AUDIO], Literal[Shape.SEGMENTATION]]
     classifications: List[AttributeDict]
     range: Union[List[List[int]], None]
     spaces: Dict[str, SpaceRange]  # Important for non-geometric shapes, where space info must live on ObjectAnswer

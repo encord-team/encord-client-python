@@ -41,7 +41,7 @@ RangeClassificationOverlapStrategy = Union[
 
 
 class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, RangeClassificationOverlapStrategy]):
-    """Abstract base class for spaces that manage one dimensional range-based annotations. (Audio, Text and HTML).
+    """Abstract base class for spaces that manage one dimensional range-based annotations. (Audio, Text, HTML, Point cloud segmentation).
     This class extracts common logic for managing object and classification instances
     across ranges.
     """
@@ -293,10 +293,6 @@ class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, 
         ontology = self._label_row._ontology.structure
         label_class = ontology.get_child_by_hash(feature_hash, type_=Object)
         return ObjectInstance(ontology_object=label_class, object_hash=object_hash)
-
-    def _build_labels_dict(self) -> dict[str, LabelBlob]:
-        """For range-based annotations, labels are stored in objects/classifications index"""
-        return {}
 
     def _to_object_answers(self, existing_object_answers: Dict[str, ObjectAnswer]) -> dict[str, ObjectAnswer]:
         ret: Dict[str, ObjectAnswerForNonGeometric] = {}

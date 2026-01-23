@@ -6,7 +6,7 @@ import pytest
 from encord.exceptions import LabelRowError
 from encord.objects import LabelRowV2
 from encord.objects.ontology_labels_impl import SpaceLiteral
-from encord.objects.spaces.types import DataGroupMetadata
+from encord.objects.spaces.types import DataGroupMetadata, SceneMetadata, SpaceMetadata
 from encord.utilities.type_utilities import exhaustive_guard
 from tests.objects.data.data_group.all_modalities import DATA_GROUP_METADATA
 
@@ -28,6 +28,8 @@ def _get_space_id_from_space_literal(space_literal: SpaceLiteral) -> str:
         return "dicom-uuid"
     elif space_literal == "pdf":
         return "pdf-uuid"
+    elif space_literal == "point_cloud":
+        return "point-cloud-uuid"
     else:
         exhaustive_guard(space_literal, message=f"Missing implementation for space {space_literal}")
 
@@ -49,11 +51,13 @@ def _get_space_layout_key_from_space_literal(space_literal: SpaceLiteral) -> str
         return "left-shoulder"
     elif space_literal == "pdf":
         return "main-pdf"
+    elif space_literal == "point_cloud":
+        return "main-point-cloud"
     else:
         exhaustive_guard(space_literal, message=f"Missing implementation for space {space_literal}")
 
 
-def _get_expected_metadata_for_space_literal(space_literal: SpaceLiteral) -> DataGroupMetadata:
+def _get_expected_metadata_for_space_literal(space_literal: SpaceLiteral) -> SpaceMetadata:
     if space_literal == "video":
         return DataGroupMetadata(layout_key="main-video", file_name="video.mp4")
     elif space_literal == "image":
@@ -70,31 +74,41 @@ def _get_expected_metadata_for_space_literal(space_literal: SpaceLiteral) -> Dat
         return DataGroupMetadata(layout_key="left-shoulder", file_name="left-shoulder.dcm")
     elif space_literal == "pdf":
         return DataGroupMetadata(layout_key="main-pdf", file_name="document.pdf")
+    elif space_literal == "point_cloud":
+        return SceneMetadata(
+            stream_id="lidar-top",
+            event_index=0,
+            uri="https://mybucket/files/point_clouds/lidar-top.pcd",
+            file_name="lidar-top.pcd",
+            layout_key=None,
+        )
     else:
         exhaustive_guard(space_literal, message=f"Missing implementation for space {space_literal}")
+
+
+ALL_GROUP_SPACES = set(get_args(SpaceLiteral)) - {"point_cloud"}  # no point cloud space in DATA_GROUP_METADATA
 
 
 def test_space_metadata_is_populated_for_data_group(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
 
     spaces = label_row.get_spaces()
-    assert len(spaces) == 9  # 9 modalities in the test data
+    assert len(spaces) == 9  # number of modalities in DATA_GROUP_METADATA
 
-    for space_literal in get_args(SpaceLiteral):
+    for space_literal in ALL_GROUP_SPACES:
         space_id = _get_space_id_from_space_literal(space_literal)
         space = label_row.get_space(id=space_id, type_=space_literal)
 
         expected_metadata = _get_expected_metadata_for_space_literal(space_literal)
 
         assert space.metadata is not None
-        assert isinstance(space.metadata, DataGroupMetadata)
         assert space.metadata.layout_key == expected_metadata.layout_key
         assert space.metadata.file_name == expected_metadata.file_name
 
 
 def test_get_space_by_id(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    for space_literal in get_args(SpaceLiteral):
+    for space_literal in ALL_GROUP_SPACES:
         space_id = _get_space_id_from_space_literal(space_literal)
         space = label_row.get_space(id=space_id, type_=space_literal)
         assert space.space_id == space_id
@@ -102,7 +116,7 @@ def test_get_space_by_id(ontology):
 
 def test_get_space_by_layout_key(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
-    for space_literal in get_args(SpaceLiteral):
+    for space_literal in ALL_GROUP_SPACES:
         space_layout_key = _get_space_layout_key_from_space_literal(space_literal)
         space = label_row.get_space(layout_key=space_layout_key, type_=space_literal)
         assert space is not None

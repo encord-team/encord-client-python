@@ -111,6 +111,7 @@ from encord.objects.spaces.multiframe_space.medical_space import MedicalSpace
 from encord.objects.spaces.multiframe_space.pdf_space import PdfSpace
 from encord.objects.spaces.multiframe_space.video_space import VideoSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
+from encord.objects.spaces.range_space.point_cloud_space import PointCloudFileSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
 from encord.objects.spaces.types import ChildInfo, SpaceInfo
 from encord.objects.types import (
@@ -151,7 +152,7 @@ LABELLING_NOT_INITIALISED_ERROR_MESSAGE = (
 
 
 # Type mapping for runtime validation in get_space
-SpaceLiteral = Literal["video", "image", "image_sequence", "audio", "text", "html", "medical", "pdf"]
+SpaceLiteral = Literal["video", "image", "image_sequence", "audio", "text", "html", "medical", "pdf", "point_cloud"]
 SpaceClass = Union[
     VideoSpace,
     ImageSpace,
@@ -160,6 +161,7 @@ SpaceClass = Union[
     HTMLSpace,
     MedicalSpace,
     PdfSpace,
+    PointCloudFileSpace,
 ]
 
 
@@ -204,6 +206,8 @@ def _get_space_class_from_space_literal(space_literal: SpaceLiteral) -> Type[Spa
         return MedicalSpace
     elif space_literal == "pdf":
         return PdfSpace
+    elif space_literal == "point_cloud":
+        return PointCloudFileSpace
     else:
         exhaustive_guard(space_literal, message=f"Missing space class for space type {space_literal}")
 
@@ -851,12 +855,7 @@ class LabelRowV2:
         return list(self._space_map.values())
 
     @overload
-    def get_space(
-        self,
-        *,
-        id: str,
-        type_: Literal["video"],
-    ) -> VideoSpace:
+    def get_space(self, *, id: str, type_: Literal["video"]) -> VideoSpace:
         pass
 
     @overload
@@ -885,6 +884,10 @@ class LabelRowV2:
 
     @overload
     def get_space(self, *, id: str, type_: Literal["pdf"]) -> PdfSpace:
+        pass
+
+    @overload
+    def get_space(self, *, id: str, type_: Literal["point_cloud"]) -> PointCloudFileSpace:
         pass
 
     @overload
@@ -919,12 +922,23 @@ class LabelRowV2:
     def get_space(self, *, layout_key: str, type_: Literal["pdf"]) -> PdfSpace:
         pass
 
+    @overload
+    def get_space(self, *, file_name: str, type_: Literal["point_cloud"]) -> PointCloudFileSpace:
+        pass
+
+    @overload
+    def get_space(self, *, stream_id: str, event_index: int = 0, type_: Literal["point_cloud"]) -> PointCloudFileSpace:
+        pass
+
     def get_space(
         self,
         *,
         id: Optional[str] = None,
         layout_key: Optional[str] = None,
         type_: SpaceLiteral,
+        stream_id: Optional[str] = None,
+        event_index: int = 0,
+        file_name: Optional[str] = None,
     ) -> Space:
         """Retrieves a single space which matches the specified id and type.
 
@@ -934,6 +948,9 @@ class LabelRowV2:
             id: The id of the space to find.
             layout_key: The layout key of the data unit within its data group layout.
             type_: Type to check the type of the space.
+            stream_id: For scenes - the name of the stream to find.
+            event_index: For scenes - the index of `stream_id`. Defaults to 0.
+            file_name: The name of the file associated to the space
         Returns:
             The child node with the specified title and type.
         Raises:
@@ -953,6 +970,28 @@ class LabelRowV2:
             space_id = self._layout_key_to_space_id.get(layout_key)
             if space_id is not None:
                 space = self._space_map[space_id]
+
+        if stream_id is not None:
+            for element in self._space_map.values():
+                if (
+                    isinstance(element, PointCloudFileSpace)
+                    and element.metadata.stream_id == stream_id
+                    and element.metadata.event_index == event_index
+                ):
+                    space = element
+                    break
+            if space is None:
+                raise LabelRowError(
+                    f"Could not find space with given stream_id '{stream_id}' and event_index '{event_index}'."
+                )
+
+        if file_name is not None:
+            for element in self._space_map.values():
+                if isinstance(element, PointCloudFileSpace) and element.metadata.file_name == file_name:
+                    space = element
+                    break
+            if space is None:
+                raise LabelRowError(f"Could not find space with given file_name '{file_name}'.")
 
         if space is None:
             space_identifier_error_message = ""
@@ -2553,7 +2592,7 @@ class LabelRowV2:
                 continue
 
             # Store layout_key -> space_id mapping if child_info is present
-            child_info = cast(Optional[ChildInfo], space_info.get("child_info", None))
+            child_info = cast(Optional[ChildInfo], space_info.get("child_info"))
             if child_info is not None:
                 self._layout_key_to_space_id[child_info["layout_key"]] = space_id
 
@@ -2629,9 +2668,18 @@ class LabelRowV2:
                     number_of_pages=space_info["number_of_pages"],
                 )
                 res[space_id] = pdf_space
-            elif space_info["space_type"] == SpaceType.SCENE_IMAGE or space_info["space_type"] == SpaceType.POINT_CLOUD:
+            elif space_info["space_type"] == SpaceType.SCENE_IMAGE:
                 # TODO: Implement Scene Images
                 pass
+            elif space_info["space_type"] == SpaceType.POINT_CLOUD:
+                if "scene_info" not in space_info:
+                    raise LabelRowError("Missing 'scene_info' in Point Cloud space info.")
+                point_cloud_space = PointCloudFileSpace(
+                    space_id=space_id,
+                    label_row=self,
+                    space_info=space_info,
+                )
+                res[space_id] = point_cloud_space
             else:
                 exhaustive_guard(space_info["space_type"], message="Missing initialisation for space.")
 
@@ -2689,9 +2737,15 @@ class LabelRowV2:
                 pdf_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
-            elif space_info["space_type"] == SpaceType.SCENE_IMAGE or space_info["space_type"] == SpaceType.POINT_CLOUD:
+            elif space_info["space_type"] == SpaceType.SCENE_IMAGE:
                 # TODO: Enable this when we implement Scene images
                 pass
+            elif space_info["space_type"] == SpaceType.POINT_CLOUD:
+                point_cloud_space = self._space_map[space_id]
+                if isinstance(point_cloud_space, PointCloudFileSpace):
+                    point_cloud_space._parse_space_dict(
+                        space_info, object_answers=object_answers, classification_answers=classification_answers
+                    )
             else:
                 exhaustive_guard(
                     space_info["space_type"],

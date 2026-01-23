@@ -9,6 +9,7 @@ from encord.objects.spaces.types import (
     MedicalFileSpaceInfo,
     MedicalStackSpaceInfo,
     PdfSpaceInfo,
+    PointCloudFileSpaceInfo,
     TextSpaceInfo,
     VideoSpaceInfo,
 )
@@ -91,6 +92,15 @@ MEDICAL_STACK_SPACE_INFO: MedicalStackSpaceInfo = {
     "labels": {},
 }
 
+POINT_CLOUD_SPACE_INFO: PointCloudFileSpaceInfo = {
+    "space_type": SpaceType.POINT_CLOUD,
+    "labels": {"objects": [], "classifications": []},
+    "scene_info": {
+        "stream_id": "lidar-top",
+        "event_index": 0,
+        "uri": "https://mybucket/files/point_clouds/lidar-top.pcd",
+    },
+}
 
 PDF_SPACE_INFO: PdfSpaceInfo = {
     "space_type": SpaceType.PDF,
