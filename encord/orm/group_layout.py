@@ -29,10 +29,12 @@ class LayoutSettings(BaseDTO):
     Args:
         fixed_layout: If True, the layout is fixed and panes cannot be added/removed or changed.
         tile_settings: Optional mapping from tile keys to their settings.
+        has_multilayer_labels: If true, the labels apply to all items in the data group. Only applicable for images of the same aspect ratios.
     """
 
     fixed_layout: bool = False
     tile_settings: Optional[Dict[str, TileSettings]] = None
+    has_multilayer_labels: Optional[bool] = None
 
 
 class DataUnitTile(BaseDTO):
