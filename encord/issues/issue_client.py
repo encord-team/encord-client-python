@@ -1,34 +1,37 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from enum import auto
-from typing import List, Literal, Union
+from typing import Annotated, Iterable, List, Literal, Set, Type, Union
 from uuid import UUID
 
 from encord.http.v2.api_client import ApiClient
 from encord.orm.analytics import CamelStrEnum
-from encord.orm.base_dto import BaseDTO
+from encord.orm.base_dto import BaseDTO, Field
 
 
-class _IssueAnchorType(CamelStrEnum):
+class IssueAnchorType(CamelStrEnum):
     DATA_UNIT = auto()
     FRAME = auto()
     FRAME_COORDINATE = auto()
+    FRAME_RANGE = auto()
+    ANNOTATION = auto()
 
 
 class _FileIssueAnchor(BaseDTO):
-    type: Literal[_IssueAnchorType.DATA_UNIT] = _IssueAnchorType.DATA_UNIT
+    type: Literal[IssueAnchorType.DATA_UNIT] = IssueAnchorType.DATA_UNIT
     data_uuid: UUID
 
 
 class _FrameIssueAnchor(BaseDTO):
-    type: Literal[_IssueAnchorType.FRAME] = _IssueAnchorType.FRAME
+    type: Literal[IssueAnchorType.FRAME] = IssueAnchorType.FRAME
     data_uuid: UUID
     frame_index: int
 
 
 class _CoordinateIssueAnchor(BaseDTO):
-    type: Literal[_IssueAnchorType.FRAME_COORDINATE] = _IssueAnchorType.FRAME_COORDINATE
+    type: Literal[IssueAnchorType.FRAME_COORDINATE] = IssueAnchorType.FRAME_COORDINATE
     data_uuid: UUID
     frame_index: int
     x: float
@@ -46,6 +49,53 @@ class _NewIssue(BaseDTO):
 
 class _CreateIssuesPayload(BaseDTO):
     issues: List[_NewIssue]
+
+
+class GetIssuesParam(BaseDTO):
+    data_unit: UUID
+
+
+class IssueComment(BaseDTO):
+    content: str
+    author_email: str
+    created_at: datetime
+
+
+class IssueTag(BaseDTO):
+    name: str
+
+
+class _BaseIssue(BaseDTO):
+    type: IssueAnchorType
+    data_uuid: UUID
+    comments: List[IssueComment]
+    tags: Set[IssueTag]
+
+
+class FileIssue(_BaseIssue):
+    type: Literal[IssueAnchorType.DATA_UNIT] = IssueAnchorType.DATA_UNIT
+
+
+class FrameIssue(_BaseIssue):
+    type: Literal[IssueAnchorType.FRAME] = IssueAnchorType.FRAME
+    frame_index: int
+
+
+class _IssueCoordinate(BaseDTO):
+    x: float
+    y: float
+
+
+class CoordinateIssue(_BaseIssue):
+    type: Literal[IssueAnchorType.FRAME_COORDINATE] = IssueAnchorType.FRAME_COORDINATE
+    frame_index: int
+    coordinate: _IssueCoordinate
+
+
+Issue = Annotated[
+    Union[FileIssue, FrameIssue, CoordinateIssue],
+    Field(discriminator="type"),
+]
 
 
 class _IssueClient:
@@ -68,12 +118,22 @@ class _IssueClient:
             result_type=None,
         )
 
+    def get_issues(self, *, project_uuid: UUID, data_uuid: UUID) -> Iterable[Issue]:
+        return self._api_client.get_paged_iterator(
+            path=f"/projects/{project_uuid}/issues",
+            params=GetIssuesParam(data_unit=data_uuid),
+            result_type=Issue,
+        )
+
 
 class TaskIssues:
     def __init__(self, api_client: ApiClient, project_uuid: UUID, data_uuid: UUID):
         self._issue_client = _IssueClient(api_client=api_client)
         self._project_uuid = project_uuid
         self._data_uuid = data_uuid
+
+    def list(self) -> Iterable[Issue]:
+        return self._issue_client.get_issues(project_uuid=self._project_uuid, data_uuid=self._data_uuid)
 
     def add_file_issue(self, comment: str, issue_tags: List[str]) -> None:
         """Adds a file issue.
