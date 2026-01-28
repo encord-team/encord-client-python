@@ -122,7 +122,7 @@ class _IssueClient:
         return self._api_client.get_paged_iterator(
             path=f"/projects/{project_uuid}/issues",
             params=GetIssuesParam(data_unit=data_uuid),
-            result_type=Issue,
+            result_type=Issue,  # type: ignore[arg-type]
         )
 
 
