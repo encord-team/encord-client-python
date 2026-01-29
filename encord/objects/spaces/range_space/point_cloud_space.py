@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Any, Dict, Union, cast
 
 from encord.common.bitmask_operations.bitmask_operations import (
     _rle_to_string,
+    ranges_to_rle_counts,
     rle_string_to_points,
-    sparse_indices_to_rle_counts,
 )
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import format_datetime_to_long_string
@@ -168,8 +168,6 @@ class PointCloudFileSpace(RangeSpace):
 
 
 def _to_rle_string(manager: RangeManager) -> str:
-    points: list[int] = []
-    for range_obj in manager.get_ranges():
-        points.extend(range(range_obj.start, range_obj.end + 1))
-    rle_counts = sparse_indices_to_rle_counts(points)
+    ranges = [(r.start, r.end) for r in manager.get_ranges()]
+    rle_counts = ranges_to_rle_counts(ranges)
     return _rle_to_string(rle_counts)
