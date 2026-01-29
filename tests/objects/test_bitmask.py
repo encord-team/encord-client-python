@@ -6,7 +6,6 @@ from encord.common.bitmask_operations.bitmask_operations import (
     _rle_to_mask,
     _rle_to_string,
     _string_to_rle,
-    points_to_rle_string,
     rle_string_to_points,
     serialise_bitmask,
     sparse_indices_to_rle_counts,
@@ -129,23 +128,10 @@ def test_serialise_bitmask_empty():
         ([], []),
         ([0, 1, 2, 3], [0, 4]),
         ([0, 1, 2, 7, 8, 9, 10], [0, 3, 4, 4]),
-        ([3, 1, 2, 0], [0, 4]),  # Unsorted input
     ],
 )
 def test_sparse_indices_to_rle_counts(indices, expected):
     assert sparse_indices_to_rle_counts(indices) == expected
-
-
-@pytest.mark.parametrize(
-    "points,expected",
-    [
-        (set(), ""),
-        ({0, 1, 2, 3}, "04"),
-        ({0, 1, 2, 7, 8, 9, 10}, "0341"),
-    ],
-)
-def test_points_to_rle_string(points, expected):
-    assert points_to_rle_string(points) == expected
 
 
 @pytest.mark.parametrize(
@@ -162,6 +148,8 @@ def test_rle_string_to_points(rle_string, expected):
 
 def test_points_rle_roundtrip():
     original_points = {0, 5, 10, 11, 12, 100, 101, 102, 103, 104, 105}
-    encoded = points_to_rle_string(original_points)
+    sorted_points = sorted(original_points)
+    rle_counts = sparse_indices_to_rle_counts(sorted_points)
+    encoded = _rle_to_string(rle_counts)
     decoded = rle_string_to_points(encoded)
     assert decoded == original_points

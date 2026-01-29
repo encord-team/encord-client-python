@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Dict, Union, cast
 
-from encord.common.bitmask_operations.bitmask_operations import points_to_rle_string, rle_string_to_points
+from encord.common.bitmask_operations.bitmask_operations import (
+    _rle_to_string,
+    rle_string_to_points,
+    sparse_indices_to_rle_counts,
+)
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import format_datetime_to_long_string
 from encord.constants.enums import SpaceType
@@ -164,7 +168,8 @@ class PointCloudFileSpace(RangeSpace):
 
 
 def _to_rle_string(manager: RangeManager) -> str:
-    points: set[int] = set()
+    points: list[int] = []
     for range_obj in manager.get_ranges():
-        points.update(range(range_obj.start, range_obj.end + 1))
-    return points_to_rle_string(points)
+        points.extend(range(range_obj.start, range_obj.end + 1))
+    rle_counts = sparse_indices_to_rle_counts(points)
+    return _rle_to_string(rle_counts)
