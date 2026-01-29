@@ -8,7 +8,7 @@ frame of reference (FOR) hierarchies.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Union, overload
+from typing import Annotated, Any, Dict, List, Literal, Optional, Union, overload
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -80,13 +80,103 @@ class FrameOfReferenceEvent(BaseModel):
     timestamp: Optional[float] = None
 
 
+class RadialDistortionModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["radial"]
+    k1: float
+    k2: float
+    k3: float
+
+
+class PlumbBobDistortionModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["plumb_bob"]
+    k1: float
+    k2: float
+    k3: float
+    t1: float
+    t2: float
+
+
+class FishEyeDistortionModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["fisheye"]
+    k1: float
+    k2: float
+    k3: float
+    k4: float
+
+
+class RationalPolynomialDistortionModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["rational_polynomial"]
+    k1: float
+    k2: float
+    k3: float
+    k4: float
+    k5: float
+    k6: float
+    t1: float
+    t2: float
+
+
+class EquidistantDistortionModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["equidistant"]
+    k1: float
+    k2: float
+    k3: float
+    k4: float
+
+
+class PinholeDistortionModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["pinhole"]
+
+
+class DivisionDistortionModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["division"]
+    k: float
+
+
+class UCMDistortionModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["ucm"]
+    xi: float
+    k1: float
+    k2: float
+    k3: float
+
+
+DistortionModel = Annotated[
+    RadialDistortionModel
+    | PlumbBobDistortionModel
+    | FishEyeDistortionModel
+    | RationalPolynomialDistortionModel
+    | EquidistantDistortionModel
+    | PinholeDistortionModel
+    | DivisionDistortionModel
+    | UCMDistortionModel,
+    Field(discriminator="type"),
+]
+
+
 class CameraIntrinsics(BaseModel):
     """Camera intrinsic parameters."""
 
     model_config = ConfigDict(populate_by_name=True)
 
     type: str = "simple"
-    model: Optional[str] = None
+    model: Optional[DistortionModel] = None
     fx: float
     fy: float
     ox: float
@@ -99,7 +189,7 @@ class CameraIntrinsics(BaseModel):
 
 
 class CameraExtrinsics(BaseModel):
-    """Camera extrinsic parameters (rotation and position)."""
+    """DEPRECATED: Camera extrinsic parameters (rotation and position)."""
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -116,7 +206,11 @@ class CameraParametersEvent(BaseModel):
     widthPx: int = Field(alias="widthPx")
     heightPx: int = Field(alias="heightPx")
     intrinsics: CameraIntrinsics
-    extrinsics: CameraExtrinsics
+
+    """Deprecated legacy stuff: all transforms should use frame of reference ID"""
+    extrinsics: Optional[CameraExtrinsics] = None
+
+    frameOfReferenceId: Optional[str] = Field(default=None, alias="frameOfReferenceId")
 
 
 # --- Stream Types ---
@@ -130,7 +224,6 @@ class ImageStream(BaseModel):
     entityType: Literal["image"] = Field(alias="entityType")
     events: List[URIEvent]
     cameraId: Optional[str] = Field(default=None, alias="cameraId")
-    frameOfReferenceId: Optional[str] = Field(default=None, alias="frameOfReferenceId")
 
 
 class PointCloudStream(BaseModel):
