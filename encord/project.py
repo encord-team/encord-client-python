@@ -547,6 +547,7 @@ class Project:
         """
         return self._client.get_data(data_hash, get_signed_url)
 
+    @deprecated(version="0.1.187", alternative=".get_editor_logs")
     def get_label_logs(
         self,
         user_hash: Optional[str] = None,
@@ -557,7 +558,9 @@ class Project:
         before: Optional[datetime.datetime] = None,
         user_email: Optional[str] = None,
     ) -> List[LabelLog]:
-        """Get label logs, which represent the actions taken in the UI to create labels.
+        """DEPRECATED: Use :meth:`~encord.project.Project.get_editor_logs` instead.
+
+        Get label logs, which represent the actions taken in the UI to create labels.
 
         All arguments can be left as `None` if no filtering should be applied.
 
@@ -572,6 +575,9 @@ class Project:
 
         Returns:
             List of label logs.
+
+        See Also:
+            get_editor_logs: Replacement for retrieving activity logs.
         """
         return self._client.get_label_logs(
             user_hash,
