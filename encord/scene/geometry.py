@@ -8,9 +8,7 @@ from numpy.typing import NDArray
 from encord.objects.coordinates import CuboidCoordinates
 
 
-def euler_to_rotation_matrix(
-    alpha: float, beta: float, gamma: float
-) -> NDArray[np.float64]:
+def euler_to_rotation_matrix(alpha: float, beta: float, gamma: float) -> NDArray[np.float64]:
     """Convert Euler angles to a 3x3 rotation matrix.
 
     Uses ZYX intrinsic rotation order (yaw-pitch-roll convention):

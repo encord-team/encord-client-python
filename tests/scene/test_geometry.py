@@ -27,14 +27,16 @@ def test_points_in_axis_aligned_cuboid() -> None:
         size=(2.0, 2.0, 2.0),
     )
 
-    points = np.array([
-        [0.0, 0.0, 0.0],  # Inside (center)
-        [0.5, 0.5, 0.5],  # Inside
-        [1.0, 0.0, 0.0],  # On edge
-        [1.5, 0.0, 0.0],  # Outside
-        [-1.0, -1.0, -1.0],  # On corner
-        [2.0, 0.0, 0.0],  # Outside
-    ])
+    points = np.array(
+        [
+            [0.0, 0.0, 0.0],  # Inside (center)
+            [0.5, 0.5, 0.5],  # Inside
+            [1.0, 0.0, 0.0],  # On edge
+            [1.5, 0.0, 0.0],  # Outside
+            [-1.0, -1.0, -1.0],  # On corner
+            [2.0, 0.0, 0.0],  # Outside
+        ]
+    )
 
     result = points_in_cuboid(points, cuboid)
     expected = np.array([True, True, True, False, True, False])
@@ -50,12 +52,14 @@ def test_points_in_rotated_cuboid() -> None:
         size=(4.0, 2.0, 2.0),  # Long in X direction (but rotated to Y)
     )
 
-    points = np.array([
-        [0.0, 0.0, 0.0],  # Inside (center)
-        [0.0, 1.5, 0.0],  # Inside (along rotated X axis = world Y)
-        [1.5, 0.0, 0.0],  # Outside (beyond half-width in world X)
-        [0.0, 2.5, 0.0],  # Outside (beyond half-length in world Y)
-    ])
+    points = np.array(
+        [
+            [0.0, 0.0, 0.0],  # Inside (center)
+            [0.0, 1.5, 0.0],  # Inside (along rotated X axis = world Y)
+            [1.5, 0.0, 0.0],  # Outside (beyond half-width in world X)
+            [0.0, 2.5, 0.0],  # Outside (beyond half-length in world Y)
+        ]
+    )
 
     result = points_in_cuboid(points, cuboid)
     expected = np.array([True, True, False, False])
@@ -70,12 +74,14 @@ def test_points_in_translated_cuboid() -> None:
         size=(2.0, 2.0, 2.0),
     )
 
-    points = np.array([
-        [10.0, 20.0, 30.0],  # Inside (center)
-        [10.5, 20.5, 30.5],  # Inside
-        [0.0, 0.0, 0.0],  # Outside (far from cuboid)
-        [12.0, 20.0, 30.0],  # Outside
-    ])
+    points = np.array(
+        [
+            [10.0, 20.0, 30.0],  # Inside (center)
+            [10.5, 20.5, 30.5],  # Inside
+            [0.0, 0.0, 0.0],  # Outside (far from cuboid)
+            [12.0, 20.0, 30.0],  # Outside
+        ]
+    )
 
     result = points_in_cuboid(points, cuboid)
     expected = np.array([True, True, False, False])
@@ -90,13 +96,15 @@ def test_points_in_cuboid_indices() -> None:
         size=(2.0, 2.0, 2.0),
     )
 
-    points = np.array([
-        [0.0, 0.0, 0.0],  # 0: Inside
-        [5.0, 0.0, 0.0],  # 1: Outside
-        [0.5, 0.5, 0.5],  # 2: Inside
-        [10.0, 10.0, 10.0],  # 3: Outside
-        [-0.5, -0.5, -0.5],  # 4: Inside
-    ])
+    points = np.array(
+        [
+            [0.0, 0.0, 0.0],  # 0: Inside
+            [5.0, 0.0, 0.0],  # 1: Outside
+            [0.5, 0.5, 0.5],  # 2: Inside
+            [10.0, 10.0, 10.0],  # 3: Outside
+            [-0.5, -0.5, -0.5],  # 4: Inside
+        ]
+    )
 
     indices = points_in_cuboid_indices(points, cuboid)
     expected = np.array([0, 2, 4])

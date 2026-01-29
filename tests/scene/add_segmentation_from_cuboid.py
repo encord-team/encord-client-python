@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from encord.objects import Object
 from encord.objects.coordinates import CuboidCoordinates
-from encord.objects.frames import Range, frames_to_ranges
+from encord.objects.frames import frames_to_ranges
 from encord.scene import points_in_cuboid_indices
 from encord.user_client import EncordUserClient
 
@@ -89,7 +89,6 @@ for obj in row.get_object_instances():
             point_cloud = scene.load_point_cloud_in_world_coordinates(stream_id, event_index=frame_idx)
             print(f"  Loaded {point_cloud.num_points} points (world coordinates)")
 
-
             # Find points inside the cuboid
             indices = points_in_cuboid_indices(point_cloud.points, cuboid)
             print(f"  Found {len(indices)} points inside cuboid")
@@ -106,7 +105,7 @@ for obj in row.get_object_instances():
             segm_obj = segm_cls.create_instance()
             pcd_space = row.get_space(stream_id=stream_id, event_index=frame_idx, type_="point_cloud")
             pcd_space.put_object_instance(segm_obj, ranges)
-            print(f"  Added segmentation annotation")
+            print("  Added segmentation annotation")
 
 # Save the labels
 row.save()
