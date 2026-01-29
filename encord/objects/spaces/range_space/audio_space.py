@@ -33,11 +33,10 @@ class AudioSpace(RangeSpace):
             )
 
     def _to_space_dict(self) -> SpaceInfo:
-        labels = self._build_labels_dict()
         return AudioSpaceInfo(
             space_type=SpaceType.AUDIO,
             duration_ms=self._duration_ms,
-            labels=labels,
+            labels={},
         )
 
     def _parse_space_dict(

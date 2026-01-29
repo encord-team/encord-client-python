@@ -19,7 +19,6 @@ from typing import (
     Tuple,
     Union,
     cast,
-    overload,
 )
 
 from encord.common.range_manager import RangeManager
@@ -1105,9 +1104,12 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         object_answers: dict[str, ObjectAnswerForGeometric],
         classification_answers: dict[str, ClassificationAnswer],
     ) -> None:
-        for frame_str, frame_label in space_info["labels"].items():
+        space_labels = cast(Dict[str, LabelBlob], space_info.get("labels"))
+        for frame_str, frame_label in space_labels.items():
             self._parse_frame_label_dict(
-                frame=int(frame_str), frame_label=frame_label, classification_answers=classification_answers
+                frame=int(frame_str),
+                frame_label=frame_label,
+                classification_answers=classification_answers,
             )
 
         for answer in object_answers.values():

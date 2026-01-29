@@ -1,10 +1,13 @@
 import numpy as np
+import pytest
 
 from encord.common.bitmask_operations.bitmask_operations import (
     _mask_to_rle,
     _rle_to_mask,
     _rle_to_string,
     _string_to_rle,
+    ranges_to_rle_counts,
+    rle_string_to_points,
     serialise_bitmask,
     transpose_bytearray,
 )
@@ -117,3 +120,38 @@ def test_serialise_bitmask_empty():
     mask_decoded = BitmaskCoordinates(mask_encoded).to_numpy_array()
 
     assert np.array_equal(mask, mask_decoded)  # Mask is inverted and the test fails.
+
+
+@pytest.mark.parametrize(
+    "ranges,expected",
+    [
+        ([], []),
+        ([(0, 3)], [0, 4]),
+        ([(0, 2), (7, 10)], [0, 3, 4, 4]),
+        ([(5, 5)], [5, 1]),
+    ],
+)
+def test_ranges_to_rle_counts(ranges, expected):
+    assert ranges_to_rle_counts(ranges) == expected
+
+
+@pytest.mark.parametrize(
+    "rle_string,expected",
+    [
+        ("", set()),
+        ("04", {0, 1, 2, 3}),
+        ("0341", {0, 1, 2, 7, 8, 9, 10}),
+    ],
+)
+def test_rle_string_to_points(rle_string, expected):
+    assert rle_string_to_points(rle_string) == expected
+
+
+def test_ranges_rle_roundtrip():
+    # Ranges: 0, 5, 10-12, 100-105
+    ranges = [(0, 0), (5, 5), (10, 12), (100, 105)]
+    expected_points = {0, 5, 10, 11, 12, 100, 101, 102, 103, 104, 105}
+    rle_counts = ranges_to_rle_counts(ranges)
+    encoded = _rle_to_string(rle_counts)
+    decoded = rle_string_to_points(encoded)
+    assert decoded == expected_points

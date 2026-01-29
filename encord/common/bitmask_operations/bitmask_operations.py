@@ -1,5 +1,5 @@
 from itertools import groupby
-from typing import List, Sequence, Tuple
+from typing import List, Sequence, Set, Tuple
 
 
 def _string_to_rle(mask_string: str) -> List[int]:
@@ -100,3 +100,49 @@ def transpose_bytearray(byte_data: bytes, shape: Tuple[int, int]) -> bytes:
             transposed_byte_data[col * rows + row] = byte_data[row * cols + col]
 
     return transposed_byte_data
+
+
+def ranges_to_rle_counts(ranges: Sequence[Tuple[int, int]]) -> List[int]:
+    """Convert sorted non-overlapping ranges to RLE counts.
+
+    This is O(number of ranges) rather than O(number of points), making it
+    efficient for large point sets represented as ranges.
+
+    Args:
+        ranges: Sorted list of (start, end) tuples representing inclusive ranges.
+                Ranges must be non-overlapping and sorted by start.
+
+    Returns:
+        List of RLE counts alternating between empty and present runs
+    """
+    if len(ranges) == 0:
+        return []
+
+    run_lengths: List[int] = []
+    prev_end = -1
+
+    for start, end in ranges:
+        empty_run_length = start - prev_end - 1
+        present_run_length = end - start + 1
+        run_lengths.append(empty_run_length)
+        run_lengths.append(present_run_length)
+        prev_end = end
+
+    return run_lengths
+
+
+def rle_string_to_points(rle_string: str) -> Set[int]:
+    points: Set[int] = set()
+    if not rle_string:
+        return points
+
+    rle_counts = _string_to_rle(rle_string)
+    current_index = 0
+
+    # RLE counts alternate between empty and present runs
+    for i, count in enumerate(rle_counts):
+        if i % 2 != 0:
+            points.update(range(current_index, current_index + count))
+        current_index += count
+
+    return points
