@@ -10,6 +10,12 @@ from encord.utilities.type_utilities import exhaustive_guard
 
 
 @dataclass(frozen=True)
+class RootSpaceMetadata:
+    layout_key: None = None
+    file_name: str | None = None  # Root space might be a data group, which will have no filename
+
+
+@dataclass(frozen=True)
 class DataGroupMetadata:
     """Metadata for spaces originating from a data group."""
 
@@ -29,7 +35,7 @@ class SceneMetadata:
     """The name of the file, including extension, extracted from the URI."""
 
 
-SpaceMetadata = Union[DataGroupMetadata, SceneMetadata]
+SpaceMetadata = Union[DataGroupMetadata, SceneMetadata, RootSpaceMetadata]
 
 
 class BaseSpaceInfo(TypedDict):
@@ -60,6 +66,12 @@ class ImageSequenceSpaceInfo(BaseSpaceInfo):
 class ImageSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.IMAGE]
     child_info: NotRequired[ChildInfo]
+    width: int
+    height: int
+
+
+class MultiLayerImageSpaceInfo(BaseSpaceInfo):
+    space_type: Literal[SpaceType.MULTI_LAYER_IMAGE]
     width: int
     height: int
 
@@ -137,6 +149,7 @@ SpaceInfo = Union[
     SceneImageSpaceInfo,
     PointCloudFileSpaceInfo,
     PdfSpaceInfo,
+    MultiLayerImageSpaceInfo,
 ]
 
 
