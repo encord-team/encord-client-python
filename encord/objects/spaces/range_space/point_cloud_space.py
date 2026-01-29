@@ -97,12 +97,15 @@ class PointCloudFileSpace(RangeSpace):
                 "value": _lower_snake_case(ontology_object.name),
                 "segmentation": _to_rle_string(range_manager),
                 "createdAt": format_datetime_to_long_string(annotation_metadata.created_at),
-                "createdBy": annotation_metadata.created_by,
                 "lastEditedAt": format_datetime_to_long_string(annotation_metadata.last_edited_at),
-                "lastEditedBy": annotation_metadata.last_edited_by,
                 "confidence": annotation_metadata.confidence,
                 "manualAnnotation": annotation_metadata.manual_annotation,
             }
+
+            if annotation_metadata.created_by is not None:
+                segmentation_obj["createdBy"] = annotation_metadata.created_by
+            if annotation_metadata.last_edited_by is not None:
+                segmentation_obj["lastEditedBy"] = annotation_metadata.last_edited_by
 
             objects.append(segmentation_obj)
 
@@ -128,10 +131,8 @@ class PointCloudFileSpace(RangeSpace):
                 object_answer: ObjectAnswerForNonGeometric = {
                     "classifications": list(reversed(all_static_answers)),
                     "objectHash": obj.object_hash,
-                    "createdBy": annotation_metadata.created_by,
                     "createdAt": format_datetime_to_long_string(annotation_metadata.created_at),
                     "lastEditedAt": format_datetime_to_long_string(annotation_metadata.last_edited_at),
-                    "lastEditedBy": annotation_metadata.last_edited_by,
                     "manualAnnotation": annotation_metadata.manual_annotation,
                     "featureHash": obj.feature_hash,
                     "name": obj.ontology_item.name,
@@ -141,6 +142,13 @@ class PointCloudFileSpace(RangeSpace):
                     "range": [],
                     "spaces": {self.space_id: new_space_data},
                 }
+
+                # Only include createdBy and lastEditedBy if they have actual values
+                # When None, the backend will use the current user as default
+                if annotation_metadata.created_by is not None:
+                    object_answer["createdBy"] = annotation_metadata.created_by
+                if annotation_metadata.last_edited_by is not None:
+                    object_answer["lastEditedBy"] = annotation_metadata.last_edited_by
 
                 ret[obj.object_hash] = object_answer
 

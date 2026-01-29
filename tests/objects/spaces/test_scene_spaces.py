@@ -9,7 +9,6 @@ from encord.exceptions import LabelRowError
 from encord.objects import Classification, LabelRowV2, Object
 from encord.objects.attributes import Attribute
 from encord.objects.common import Shape
-from encord.objects.coordinates import CuboidCoordinates
 from encord.objects.frames import Range
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.spaces.range_space.point_cloud_space import PointCloudFileSpace
@@ -59,17 +58,6 @@ def test_get_scene_space(ontology):
     # get by file name
     space3 = label_row.get_space(file_name="file1.pcd", type_="point_cloud")
     assert space3 is space
-
-
-def test_tmp(ontology):
-    label_row = LabelRowV2(SCENE_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(SCENE_NO_LABELS)
-
-    cuboid_instance = cuboid_ontology_item.create_instance()
-    cuboid_instance.set_for_frames(CuboidCoordinates(position=(0, 0, 0), orientation=(0, 0, 0), size=(1, 1, 1)))
-    label_row.add_object_instance(cuboid_instance)
-    res = label_row.to_encord_dict()
-    print(res)
 
 
 def test_parse_existing_labels(ontology):
@@ -263,3 +251,54 @@ def test_point_cloud_segmentation_serde(ontology):
     original_range_tuples = [(r.start, r.end) for r in original_ranges]
     decoded_range_tuples = [(r.start, r.end) for r in decoded_ranges]
     assert decoded_range_tuples == original_range_tuples
+
+
+def test_point_cloud_segmentation_without_created_by(ontology) -> None:
+    label_row = LabelRowV2(SCENE_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(SCENE_NO_LABELS)
+
+    segmentation_cls = label_row.ontology_structure.get_child_by_hash("segmentationFeatureNodeHash", type_=Object)
+    space = label_row.get_space(id="path/to/file1.pcd", type_="point_cloud")
+
+    segm_instance = ObjectInstance(segmentation_cls)
+    # Don't provide created_by or last_edited_by
+    space.put_object_instance(segm_instance, ranges=[Range(0, 5)])
+
+    result = label_row.to_encord_dict()
+
+    # createdBy and lastEditedBy should not be present - will be set as the SDK user in the BE
+    space_labels = result["spaces"]["path/to/file1.pcd"]["labels"]["objects"][0]
+    assert "createdBy" not in space_labels
+    assert "lastEditedBy" not in space_labels
+
+    obj_answer = result["object_answers"][segm_instance.object_hash]
+    assert "createdBy" not in obj_answer
+    assert "lastEditedBy" not in obj_answer
+
+
+def test_point_cloud_segmentation_with_created_by(ontology) -> None:
+    label_row = LabelRowV2(SCENE_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(SCENE_NO_LABELS)
+
+    segmentation_cls = label_row.ontology_structure.get_child_by_hash("segmentationFeatureNodeHash", type_=Object)
+    space = label_row.get_space(id="path/to/file1.pcd", type_="point_cloud")
+
+    segm_instance = ObjectInstance(segmentation_cls)
+    # Provide created_by and last_edited_by
+    space.put_object_instance(
+        segm_instance,
+        ranges=[Range(0, 5)],
+        created_by="creator@example.com",
+        last_edited_by="editor@example.com",
+    )
+
+    result = label_row.to_encord_dict()
+
+    # createdBy and lastEditedBy should be present with correct values
+    space_labels = result["spaces"]["path/to/file1.pcd"]["labels"]["objects"][0]
+    assert space_labels["createdBy"] == "creator@example.com"
+    assert space_labels["lastEditedBy"] == "editor@example.com"
+
+    obj_answer = result["object_answers"][segm_instance.object_hash]
+    assert obj_answer["createdBy"] == "creator@example.com"
+    assert obj_answer["lastEditedBy"] == "editor@example.com"
