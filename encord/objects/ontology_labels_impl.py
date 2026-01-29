@@ -110,7 +110,7 @@ from encord.objects.spaces.image_space import ImageSpace
 from encord.objects.spaces.multiframe_space.medical_space import MedicalSpace
 from encord.objects.spaces.multiframe_space.pdf_space import PdfSpace
 from encord.objects.spaces.multiframe_space.video_space import VideoSpace
-from encord.objects.spaces.multilayer_image_space import MultiLayerImageSpace
+from encord.objects.spaces.multilayer_image_space import MultilayerImageSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
 from encord.objects.spaces.types import ChildInfo, SpaceInfo
@@ -156,7 +156,7 @@ SpaceLiteral = Literal[
     "video", "image", "image_sequence", "audio", "text", "html", "medical", "pdf", "multilayer_image"
 ]
 SpaceClass = Union[
-    VideoSpace, ImageSpace, AudioSpace, TextSpace, HTMLSpace, MedicalSpace, PdfSpace, MultiLayerImageSpace
+    VideoSpace, ImageSpace, AudioSpace, TextSpace, HTMLSpace, MedicalSpace, PdfSpace, MultilayerImageSpace
 ]
 
 
@@ -180,7 +180,7 @@ def _get_space_literal_from_space_enum(space_enum: SpaceType) -> SpaceLiteral:
         return "pdf"
     elif space_enum == SpaceType.POINT_CLOUD or space_enum == SpaceType.SCENE_IMAGE:
         raise LabelRowError(f"Space {space_enum} not yet implemented.")
-    elif space_enum == SpaceType.MULTI_LAYER_IMAGE:
+    elif space_enum == SpaceType.MULTILAYER_IMAGE:
         return "multilayer_image"
     else:
         exhaustive_guard(space_enum, message=f"Missing space literal for space enum {space_enum}")
@@ -204,7 +204,7 @@ def _get_space_class_from_space_literal(space_literal: SpaceLiteral) -> Type[Spa
     elif space_literal == "pdf":
         return PdfSpace
     elif space_literal == "multilayer_image":
-        return MultiLayerImageSpace
+        return MultilayerImageSpace
     else:
         exhaustive_guard(space_literal, message=f"Missing space class for space type {space_literal}")
 
@@ -889,7 +889,7 @@ class LabelRowV2:
         pass
 
     @overload
-    def get_space(self, *, id: str, type_: Literal["multilayer_image"]) -> MultiLayerImageSpace:
+    def get_space(self, *, id: str, type_: Literal["multilayer_image"]) -> MultilayerImageSpace:
         pass
 
     @overload
@@ -2554,8 +2554,8 @@ class LabelRowV2:
 
         for space_id, space_info in spaces_info.items():
             if space_id == "root":
-                if space_info["space_type"] == SpaceType.MULTI_LAYER_IMAGE:
-                    multilayer_image_space = MultiLayerImageSpace(
+                if space_info["space_type"] == SpaceType.MULTILAYER_IMAGE:
+                    multilayer_image_space = MultilayerImageSpace(
                         space_id="root",
                         label_row=self,
                         space_info=space_info,
@@ -2647,8 +2647,8 @@ class LabelRowV2:
             elif space_info["space_type"] == SpaceType.SCENE_IMAGE or space_info["space_type"] == SpaceType.POINT_CLOUD:
                 # TODO: Implement Scene Images
                 pass
-            elif space_info["space_type"] == SpaceType.MULTI_LAYER_IMAGE:
-                multilayer_image_space = MultiLayerImageSpace(
+            elif space_info["space_type"] == SpaceType.MULTILAYER_IMAGE:
+                multilayer_image_space = MultilayerImageSpace(
                     space_id=space_id,
                     label_row=self,
                     space_info=space_info,
@@ -2716,7 +2716,7 @@ class LabelRowV2:
             elif space_info["space_type"] == SpaceType.SCENE_IMAGE or space_info["space_type"] == SpaceType.POINT_CLOUD:
                 # TODO: Enable this when we implement Scene images
                 pass
-            elif space_info["space_type"] == SpaceType.MULTI_LAYER_IMAGE:
+            elif space_info["space_type"] == SpaceType.MULTILAYER_IMAGE:
                 multilayer_image_space = self.get_space(id=space_id, type_="multilayer_image")
                 multilayer_image_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers

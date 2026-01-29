@@ -70,8 +70,8 @@ class ImageSpaceInfo(BaseSpaceInfo):
     height: int
 
 
-class MultiLayerImageSpaceInfo(BaseSpaceInfo):
-    space_type: Literal[SpaceType.MULTI_LAYER_IMAGE]
+class MultilayerImageSpaceInfo(BaseSpaceInfo):
+    space_type: Literal[SpaceType.MULTILAYER_IMAGE]
     width: int
     height: int
 
@@ -146,7 +146,7 @@ SpaceInfo = Union[
     SceneImageSpaceInfo,
     PointCloudSpaceInfo,
     PdfSpaceInfo,
-    MultiLayerImageSpaceInfo,
+    MultilayerImageSpaceInfo,
 ]
 
 
@@ -170,8 +170,8 @@ def _get_space_info_from_space_enum(space_enum: SpaceType) -> Type[SpaceInfo]:
         return MedicalStackSpaceInfo
     elif space_enum == SpaceType.PDF:
         return PdfSpaceInfo
-    elif space_enum == SpaceType.MULTI_LAYER_IMAGE:
-        return MultiLayerImageSpaceInfo
+    elif space_enum == SpaceType.MULTILAYER_IMAGE:
+        return MultilayerImageSpaceInfo
     elif space_enum == SpaceType.POINT_CLOUD or space_enum == SpaceType.SCENE_IMAGE:
         raise LabelRowError(f"Space for {space_enum} not yet implemented.")
     else:
