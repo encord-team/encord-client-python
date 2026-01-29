@@ -66,6 +66,7 @@ from encord.objects.classification_instance import (
 from encord.objects.constants import (  # pylint: disable=unused-import # for backward compatibility
     DEFAULT_CONFIDENCE,
     DEFAULT_MANUAL_ANNOTATION,
+    ROOT_SPACE_ID,
 )
 from encord.objects.coordinates import (
     AudioCoordinates,
@@ -110,6 +111,7 @@ from encord.objects.spaces.image_space import ImageSpace
 from encord.objects.spaces.multiframe_space.medical_space import MedicalSpace
 from encord.objects.spaces.multiframe_space.pdf_space import PdfSpace
 from encord.objects.spaces.multiframe_space.video_space import VideoSpace
+from encord.objects.spaces.multilayer_image_space import MultilayerImageSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
 from encord.objects.spaces.types import ChildInfo, SpaceInfo
@@ -151,15 +153,11 @@ LABELLING_NOT_INITIALISED_ERROR_MESSAGE = (
 
 
 # Type mapping for runtime validation in get_space
-SpaceLiteral = Literal["video", "image", "image_sequence", "audio", "text", "html", "medical", "pdf"]
+SpaceLiteral = Literal[
+    "video", "image", "image_sequence", "audio", "text", "html", "medical", "pdf", "multilayer_image"
+]
 SpaceClass = Union[
-    VideoSpace,
-    ImageSpace,
-    AudioSpace,
-    TextSpace,
-    HTMLSpace,
-    MedicalSpace,
-    PdfSpace,
+    VideoSpace, ImageSpace, AudioSpace, TextSpace, HTMLSpace, MedicalSpace, PdfSpace, MultilayerImageSpace
 ]
 
 
@@ -183,6 +181,8 @@ def _get_space_literal_from_space_enum(space_enum: SpaceType) -> SpaceLiteral:
         return "pdf"
     elif space_enum == SpaceType.POINT_CLOUD or space_enum == SpaceType.SCENE_IMAGE:
         raise LabelRowError(f"Space {space_enum} not yet implemented.")
+    elif space_enum == SpaceType.MULTILAYER_IMAGE:
+        return "multilayer_image"
     else:
         exhaustive_guard(space_enum, message=f"Missing space literal for space enum {space_enum}")
 
@@ -204,6 +204,8 @@ def _get_space_class_from_space_literal(space_literal: SpaceLiteral) -> Type[Spa
         return MedicalSpace
     elif space_literal == "pdf":
         return PdfSpace
+    elif space_literal == "multilayer_image":
+        return MultilayerImageSpace
     else:
         exhaustive_guard(space_literal, message=f"Missing space class for space type {space_literal}")
 
@@ -885,6 +887,10 @@ class LabelRowV2:
 
     @overload
     def get_space(self, *, id: str, type_: Literal["pdf"]) -> PdfSpace:
+        pass
+
+    @overload
+    def get_space(self, *, id: str, type_: Literal["multilayer_image"]) -> MultilayerImageSpace:
         pass
 
     @overload
@@ -2548,9 +2554,19 @@ class LabelRowV2:
             return res
 
         for space_id, space_info in spaces_info.items():
-            if space_id == "root":
-                # TODO: Enable reading root space info
-                continue
+            if space_id == ROOT_SPACE_ID:
+                if space_info["space_type"] == SpaceType.MULTILAYER_IMAGE:
+                    multilayer_image_space = MultilayerImageSpace(
+                        space_id=ROOT_SPACE_ID,
+                        label_row=self,
+                        space_info=space_info,
+                        width=space_info["width"],
+                        height=space_info["height"],
+                    )
+                    res[ROOT_SPACE_ID] = multilayer_image_space
+                else:
+                    # TODO: Enable reading root space info
+                    continue
 
             # Store layout_key -> space_id mapping if child_info is present
             child_info = cast(Optional[ChildInfo], space_info.get("child_info", None))
@@ -2632,6 +2648,15 @@ class LabelRowV2:
             elif space_info["space_type"] == SpaceType.SCENE_IMAGE or space_info["space_type"] == SpaceType.POINT_CLOUD:
                 # TODO: Implement Scene Images
                 pass
+            elif space_info["space_type"] == SpaceType.MULTILAYER_IMAGE:
+                multilayer_image_space = MultilayerImageSpace(
+                    space_id=space_id,
+                    label_row=self,
+                    space_info=space_info,
+                    width=space_info["width"],
+                    height=space_info["height"],
+                )
+                res[ROOT_SPACE_ID] = multilayer_image_space
             else:
                 exhaustive_guard(space_info["space_type"], message="Missing initialisation for space.")
 
@@ -2692,6 +2717,11 @@ class LabelRowV2:
             elif space_info["space_type"] == SpaceType.SCENE_IMAGE or space_info["space_type"] == SpaceType.POINT_CLOUD:
                 # TODO: Enable this when we implement Scene images
                 pass
+            elif space_info["space_type"] == SpaceType.MULTILAYER_IMAGE:
+                multilayer_image_space = self.get_space(id=space_id, type_="multilayer_image")
+                multilayer_image_space._parse_space_dict(
+                    space_info, object_answers=object_answers, classification_answers=classification_answers
+                )
             else:
                 exhaustive_guard(
                     space_info["space_type"],

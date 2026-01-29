@@ -45,3 +45,5 @@ AVAILABLE_COLORS = (
     "#653294",
     "#AB149E",
 )
+
+ROOT_SPACE_ID = "root"
