@@ -29,6 +29,7 @@ from encord.objects.spaces.types import (
     ChildInfo,
     DataGroupMetadata,
     FileInSceneInfo,
+    RootSpaceMetadata,
     SceneMetadata,
     SpaceInfo,
     SpaceMetadata,
@@ -75,7 +76,7 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
 
     def __init__(self, space_id: str, label_row: LabelRowV2, space_info: SpaceInfo):
         self.space_id = space_id
-        self.metadata = self._extract_metadata_from_space_info(space_info)
+        self.metadata = self._extract_metadata_from_space_info(space_id, space_info)
         self._label_row = label_row
         self._objects_map: dict[str, ObjectInstance] = dict()
         self._classifications_map: dict[str, ClassificationInstance] = dict()
@@ -356,7 +357,10 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
             )
 
     @staticmethod
-    def _extract_metadata_from_space_info(space_info: SpaceInfo) -> SpaceMetadata:
+    def _extract_metadata_from_space_info(space_id: str, space_info: SpaceInfo) -> SpaceMetadata:
+        if space_id == "root":
+            return RootSpaceMetadata()
+
         child_info: Optional[ChildInfo] = space_info.get("child_info")  # type: ignore[assignment]
         if child_info is not None:
             return DataGroupMetadata(
