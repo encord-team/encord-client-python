@@ -4,6 +4,7 @@ import logging
 from typing import TYPE_CHECKING, Dict, cast
 
 from encord.constants.enums import SpaceType
+from encord.objects.constants import ROOT_SPACE_ID
 from encord.objects.spaces.image_space import ImageSpace
 from encord.objects.spaces.types import MultilayerImageSpaceInfo, SpaceInfo
 from encord.objects.types import (
@@ -44,7 +45,7 @@ class MultilayerImageSpace(ImageSpace):
                     classifications=classifications,
                     space_range={"range": [], "type": "frame"},
                 )
-            elif self.space_id == "root":
+            elif self.space_id == ROOT_SPACE_ID:
                 classification_answer = {
                     "classifications": classifications,
                     "classificationHash": classification.classification_hash,
