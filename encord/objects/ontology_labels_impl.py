@@ -110,7 +110,7 @@ from encord.objects.spaces.image_space import ImageSpace
 from encord.objects.spaces.multiframe_space.medical_space import MedicalSpace
 from encord.objects.spaces.multiframe_space.pdf_space import PdfSpace
 from encord.objects.spaces.multiframe_space.video_space import VideoSpace
-from encord.objects.spaces.multilayer_image_space import MultiLayerImageSpace
+from encord.objects.spaces.multilayer_image_space import MultilayerImageSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
 from encord.objects.spaces.range_space.point_cloud_space import PointCloudFileSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
@@ -186,7 +186,7 @@ def _get_space_literal_from_space_enum(space_enum: SpaceType) -> SpaceLiteral:
         return "pdf"
     elif space_enum == SpaceType.POINT_CLOUD or space_enum == SpaceType.SCENE_IMAGE:
         raise LabelRowError(f"Space {space_enum} not yet implemented.")
-    elif space_enum == SpaceType.MULTI_LAYER_IMAGE:
+    elif space_enum == SpaceType.MULTILAYER_IMAGE:
         return "multilayer_image"
     else:
         exhaustive_guard(space_enum, message=f"Missing space literal for space enum {space_enum}")
@@ -2591,8 +2591,8 @@ class LabelRowV2:
 
         for space_id, space_info in spaces_info.items():
             if space_id == "root":
-                if space_info["space_type"] == SpaceType.MULTI_LAYER_IMAGE:
-                    multilayer_image_space = MultiLayerImageSpace(
+                if space_info["space_type"] == SpaceType.MULTILAYER_IMAGE:
+                    multilayer_image_space = MultilayerImageSpace(
                         space_id="root",
                         label_row=self,
                         space_info=space_info,

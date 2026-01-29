@@ -23,7 +23,7 @@ from encord.objects.spaces.annotation.geometric_annotation import (
 from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
 from encord.objects.spaces.base_space import Space
 from encord.objects.spaces.multiframe_space.multiframe_space import FrameOverlapStrategy
-from encord.objects.spaces.types import ImageSpaceInfo, MultiLayerImageSpaceInfo, SpaceInfo
+from encord.objects.spaces.types import ImageSpaceInfo, MultilayerImageSpaceInfo, SpaceInfo
 from encord.objects.types import (
     AttributeDict,
     ClassificationAnswer,
@@ -311,7 +311,7 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
             classifications=classification_list,
         )
 
-    def _to_space_dict(self) -> ImageSpaceInfo | MultiLayerImageSpaceInfo:
+    def _to_space_dict(self) -> ImageSpaceInfo | MultilayerImageSpaceInfo:
         """Export image space to dictionary format."""
         label_hashes: list[str] = list(self._objects_map.keys())
         label_hashes.extend(list(self._classifications_map.keys()))

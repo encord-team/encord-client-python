@@ -70,8 +70,8 @@ class ImageSpaceInfo(BaseSpaceInfo):
     height: int
 
 
-class MultiLayerImageSpaceInfo(BaseSpaceInfo):
-    space_type: Literal[SpaceType.MULTI_LAYER_IMAGE]
+class MultilayerImageSpaceInfo(BaseSpaceInfo):
+    space_type: Literal[SpaceType.MULTILAYER_IMAGE]
     width: int
     height: int
 
@@ -149,7 +149,7 @@ SpaceInfo = Union[
     SceneImageSpaceInfo,
     PointCloudFileSpaceInfo,
     PdfSpaceInfo,
-    MultiLayerImageSpaceInfo,
+    MultilayerImageSpaceInfo,
 ]
 
 
