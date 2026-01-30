@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from enum import auto
-from typing import Annotated, Iterable, List, Literal, Optional, Set, Type, Union
+from typing import Annotated, Iterable, List, Literal, Optional, Union
 from uuid import UUID
 
 from encord.http.v2.api_client import ApiClient
@@ -53,6 +53,7 @@ class _CreateIssuesPayload(BaseDTO):
 
 class GetIssuesParam(BaseDTO):
     data_unit_id: UUID
+    page_token: Optional[str] = None
 
 
 class IssueComment(BaseDTO):
