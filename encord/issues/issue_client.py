@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from enum import auto
-from typing import Annotated, Iterable, List, Literal, Set, Type, Union
+from typing import Annotated, Iterable, List, Literal, Optional, Set, Type, Union
 from uuid import UUID
 
 from encord.http.v2.api_client import ApiClient
@@ -52,7 +52,7 @@ class _CreateIssuesPayload(BaseDTO):
 
 
 class GetIssuesParam(BaseDTO):
-    data_unit: UUID
+    data_unit_id: UUID
 
 
 class IssueComment(BaseDTO):
@@ -65,11 +65,18 @@ class IssueTag(BaseDTO):
     name: str
 
 
+class IssueResolution(BaseDTO):
+    is_resolved: bool
+    created_at: datetime
+    actor_email: Optional[str]
+
+
 class _BaseIssue(BaseDTO):
     type: IssueAnchorType
     data_uuid: UUID
     comments: List[IssueComment]
-    tags: Set[IssueTag]
+    tags: List[IssueTag]
+    resolution_history: List[IssueResolution]
 
 
 class FileIssue(_BaseIssue):
@@ -92,8 +99,29 @@ class CoordinateIssue(_BaseIssue):
     coordinate: _IssueCoordinate
 
 
+class _IssueFrameRange(BaseDTO):
+    """Represents a range of frames [start, end] inclusive"""
+
+    start: int
+    end: int
+
+
+class FrameRangeIssue(_BaseIssue):
+    """Issue anchored to a range of frames"""
+
+    type: Literal[IssueAnchorType.FRAME_RANGE] = IssueAnchorType.FRAME_RANGE
+    frame_ranges: List[_IssueFrameRange]
+
+
+class AnnotationIssue(_BaseIssue):
+    """Issue anchored to a specific annotation (label rejection or annotation feedback)"""
+
+    type: Literal[IssueAnchorType.ANNOTATION] = IssueAnchorType.ANNOTATION
+    annotation_id: str
+
+
 Issue = Annotated[
-    Union[FileIssue, FrameIssue, CoordinateIssue],
+    Union[FileIssue, FrameIssue, CoordinateIssue, FrameRangeIssue, AnnotationIssue],
     Field(discriminator="type"),
 ]
 
@@ -121,7 +149,7 @@ class _IssueClient:
     def get_issues(self, *, project_uuid: UUID, data_uuid: UUID) -> Iterable[Issue]:
         return self._api_client.get_paged_iterator(
             path=f"/projects/{project_uuid}/issues",
-            params=GetIssuesParam(data_unit=data_uuid),
+            params=GetIssuesParam(data_unit_id=data_uuid),
             result_type=Issue,  # type: ignore[arg-type]
         )
 
