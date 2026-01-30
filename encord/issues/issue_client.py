@@ -162,6 +162,27 @@ class TaskIssues:
         self._data_uuid = data_uuid
 
     def list(self) -> Iterable[Issue]:
+        """Lists all issues (comment threads) for this task.
+
+        Returns an iterator of issues anchored to different parts of the data unit:
+        - FileIssue: Issues anchored to the entire data unit
+        - FrameIssue: Issues anchored to a specific frame
+        - CoordinateIssue: Issues anchored to specific coordinates on a frame
+        - FrameRangeIssue: Issues anchored to a range of frames
+        - AnnotationIssue: Issues anchored to a specific annotation
+
+        Each issue includes comments, tags, and resolution history.
+
+        Returns:
+            Iterable[Issue]: An iterator of Issue objects (discriminated union of all issue types).
+
+        Example:
+            >>> for issue in task.issues.list():
+            ...     if isinstance(issue, FileIssue):
+            ...         print(f"File issue: {issue.comments[0].content}")
+            ...     elif isinstance(issue, FrameIssue):
+            ...         print(f"Frame {issue.frame_index}: {issue.comments[0].content}")
+        """
         return self._issue_client.get_issues(project_uuid=self._project_uuid, data_uuid=self._data_uuid)
 
     def add_file_issue(self, comment: str, issue_tags: List[str]) -> None:
