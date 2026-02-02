@@ -465,6 +465,7 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
                         "classificationHash": classification.classification_hash,
                         "featureHash": classification.feature_hash,
                         "range": [[0, 0]],
+                        "spaces": {},
                     }
                 else:
                     classification_index_element = {

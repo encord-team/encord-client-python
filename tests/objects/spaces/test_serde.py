@@ -133,7 +133,7 @@ def test_read_and_export_multilayer_image_labels(ontology):
     label_row = LabelRowV2(DATA_GROUP_MULTILAYER_IMAGE_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_MULTILAYER_IMAGE_LABELS)
 
-    video_space = label_row.get_space(id="root", type_="multilayer_image")
+    video_space = label_row.get_space(id="root", type_="image")
     assert len(video_space.get_object_instances()) == 2
     assert video_space.get_object_instances()[0].object_hash == "object1"
     assert len(list(video_space.get_annotations(type_="object"))) == 2

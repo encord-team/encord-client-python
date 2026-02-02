@@ -1,16 +1,17 @@
 import datetime
 
 from encord.constants.enums import DataType, SpaceType
-from encord.objects.spaces.types import MultilayerImageSpaceInfo
+from encord.objects.spaces.types import ImageSpaceInfo
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
 
 DATA_GROUP_DATA_HASH = "data-group-multi-layer-image-data-hash"
 
-MULTILAYER_SPACE_INFO: MultilayerImageSpaceInfo = {
-    "space_type": SpaceType.MULTILAYER_IMAGE,
+MULTILAYER_SPACE_INFO: ImageSpaceInfo = {
+    "space_type": SpaceType.IMAGE,
     "height": 100,
     "width": 200,
     "labels": {},
+    "has_multilayer_labels": True,
 }
 
 DATA_GROUP_MULTILAYER_IMAGE_METADATA = LabelRowMetadata(
@@ -114,15 +115,17 @@ DATA_GROUP_MULTILAYER_IMAGE_LABELS = {
                 }
             ],
             "spaces": {},
+            "range": [[0, 0]],
         },
     },
     "object_actions": {},
     "label_status": "LABEL_IN_PROGRESS",
     "spaces": {
         "root": {
-            "space_type": SpaceType.MULTILAYER_IMAGE,
+            "space_type": SpaceType.IMAGE,
             "height": 100,
             "width": 200,
+            "has_multilayer_labels": True,
             "labels": {
                 "0": {
                     "objects": [

@@ -111,7 +111,6 @@ from encord.objects.spaces.image_space import ImageSpace
 from encord.objects.spaces.multiframe_space.medical_space import MedicalSpace
 from encord.objects.spaces.multiframe_space.pdf_space import PdfSpace
 from encord.objects.spaces.multiframe_space.video_space import VideoSpace
-from encord.objects.spaces.multilayer_image_space import MultilayerImageSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
 from encord.objects.spaces.range_space.point_cloud_space import PointCloudFileSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
@@ -2602,7 +2601,9 @@ class LabelRowV2:
                     res[ROOT_SPACE_ID] = multilayer_image_space
                 else:
                     # TODO: Enable reading root space info
-                    continue
+                    pass
+
+                continue
 
             # Store layout_key -> space_id mapping if child_info is present
             child_info = cast(Optional[ChildInfo], space_info.get("child_info"))
