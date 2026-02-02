@@ -148,6 +148,9 @@ class _IssueClient:
         )
 
     def get_issues(self, *, project_uuid: UUID, data_uuid: UUID) -> Iterable[Issue]:
+        # Type ignore needed: Issue is Annotated[Union[FileIssue, FrameIssue, ...], Field(discriminator="type")]
+        # which is a Pydantic discriminated union. The type checker sees this as incompatible with Type[T]
+        # expected by get_paged_iterator, but Pydantic handles discriminated unions correctly at runtime.
         return self._api_client.get_paged_iterator(
             path=f"/projects/{project_uuid}/issues",
             params=GetIssuesParam(data_unit_id=data_uuid),
