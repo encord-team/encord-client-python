@@ -2,7 +2,7 @@ import inspect
 import json
 import uuid
 from http import HTTPStatus
-from typing import Callable, Dict, Iterator, List, Optional, Sequence, Type, TypeVar, Union, Any
+from typing import Callable, Dict, Iterator, List, Optional, Sequence, Type, TypeVar, Union
 from urllib.parse import urljoin
 
 import requests
@@ -75,7 +75,7 @@ class ApiClient:
         self,
         path: str,
         params: BaseDTO,
-        result_type: Union[Type[T], Any],  # Accept Union types for discriminated unions
+        result_type: Type[T],
         allow_none: bool = False,
     ) -> Iterator[T]:
         if not hasattr(params, "page_token"):
