@@ -73,7 +73,6 @@ class IssueResolution(BaseDTO):
 
 
 class _BaseIssue(BaseDTO):
-    type: IssueAnchorType
     data_uuid: UUID
     comments: List[IssueComment]
     tags: List[IssueTag]
@@ -121,10 +120,7 @@ class AnnotationIssue(_BaseIssue):
     annotation_id: str
 
 
-Issue = Annotated[
-    Union[FileIssue, FrameIssue, CoordinateIssue, FrameRangeIssue, AnnotationIssue],
-    Field(discriminator="type"),
-]
+Issue = Union[FileIssue, FrameIssue, CoordinateIssue, FrameRangeIssue, AnnotationIssue]
 
 
 class _IssueClient:
@@ -151,7 +147,7 @@ class _IssueClient:
         return self._api_client.get_paged_iterator(
             path=f"/projects/{project_uuid}/issues",
             params=GetIssuesParam(data_unit_id=data_uuid),
-            result_type=Issue,  # type: ignore[arg-type]
+            result_type=Issue,
         )
 
 
