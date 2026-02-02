@@ -89,7 +89,7 @@ class FrameIssue(_BaseIssue):
     frame_index: int
 
 
-class _IssueCoordinate(BaseDTO):
+class IssueCoordinate(BaseDTO):
     x: float
     y: float
 
@@ -97,7 +97,7 @@ class _IssueCoordinate(BaseDTO):
 class CoordinateIssue(_BaseIssue):
     type: Literal[IssueAnchorType.FRAME_COORDINATE] = IssueAnchorType.FRAME_COORDINATE
     frame_index: int
-    coordinate: _IssueCoordinate
+    coordinate: IssueCoordinate
 
 
 class _IssueFrameRange(BaseDTO):
