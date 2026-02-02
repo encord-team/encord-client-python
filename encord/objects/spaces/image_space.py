@@ -23,7 +23,7 @@ from encord.objects.spaces.annotation.geometric_annotation import (
 from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
 from encord.objects.spaces.base_space import Space
 from encord.objects.spaces.multiframe_space.multiframe_space import FrameOverlapStrategy
-from encord.objects.spaces.types import ImageSpaceInfo, MultilayerImageSpaceInfo, SpaceInfo
+from encord.objects.spaces.types import ImageSpaceInfo, SpaceInfo
 from encord.objects.types import (
     AttributeDict,
     ClassificationAnswer,
@@ -45,12 +45,21 @@ if TYPE_CHECKING:
 class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotation, FrameOverlapStrategy]):
     """Image space implementation for single-frame image annotations."""
 
-    def __init__(self, space_id: str, label_row: LabelRowV2, space_info: SpaceInfo, width: int, height: int):
+    def __init__(
+        self,
+        space_id: str,
+        label_row: LabelRowV2,
+        space_info: SpaceInfo,
+        width: int,
+        height: int,
+        has_multilayer_labels: bool,
+    ):
         super().__init__(space_id, label_row, space_info)
         self._object_hash_to_annotation_data: dict[str, _GeometricAnnotationData] = dict()
 
         self._width = width
         self._height = height
+        self._has_multilayer_labels = has_multilayer_labels
 
     def put_object_instance(
         self,
@@ -311,7 +320,7 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
             classifications=classification_list,
         )
 
-    def _to_space_dict(self) -> ImageSpaceInfo | MultilayerImageSpaceInfo:
+    def _to_space_dict(self) -> ImageSpaceInfo:
         """Export image space to dictionary format."""
         label_hashes: list[str] = list(self._objects_map.keys())
         label_hashes.extend(list(self._classifications_map.keys()))
@@ -323,6 +332,7 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
             labels={
                 "0": frame_label,
             },
+            has_multilayer_labels=self._has_multilayer_labels,
         )
 
     def _parse_space_dict(
@@ -444,19 +454,30 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
                     classification_instance=classification,
                     classifications=classifications,
                     space_range={"range": [], "type": "frame"},
+                    on_root=self._has_multilayer_labels,
                 )
             else:
-                classification_index_element: ClassificationAnswer = {
-                    "classifications": classifications,
-                    "classificationHash": classification.classification_hash,
-                    "featureHash": classification.feature_hash,
-                    "spaces": {
-                        self.space_id: {
-                            "range": [[0, 0]],  # For images, there is only one frame
-                            "type": "frame",
-                        }
-                    },
-                }
+                classification_index_element: ClassificationAnswer
+
+                if self._has_multilayer_labels:
+                    classification_index_element = {
+                        "classifications": classifications,
+                        "classificationHash": classification.classification_hash,
+                        "featureHash": classification.feature_hash,
+                        "range": [[0, 0]],
+                    }
+                else:
+                    classification_index_element = {
+                        "classifications": classifications,
+                        "classificationHash": classification.classification_hash,
+                        "featureHash": classification.feature_hash,
+                        "spaces": {
+                            self.space_id: {
+                                "range": [[0, 0]],  # For images, there is only one frame
+                                "type": "frame",
+                            }
+                        },
+                    }
 
                 ret[classification.classification_hash] = classification_index_element
 

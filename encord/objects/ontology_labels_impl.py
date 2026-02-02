@@ -187,8 +187,6 @@ def _get_space_literal_from_space_enum(space_enum: SpaceType) -> SpaceLiteral:
         return "pdf"
     elif space_enum == SpaceType.POINT_CLOUD or space_enum == SpaceType.SCENE_IMAGE:
         raise LabelRowError(f"Space {space_enum} not yet implemented.")
-    elif space_enum == SpaceType.MULTILAYER_IMAGE:
-        return "multilayer_image"
     else:
         exhaustive_guard(space_enum, message=f"Missing space literal for space enum {space_enum}")
 
@@ -2592,13 +2590,14 @@ class LabelRowV2:
 
         for space_id, space_info in spaces_info.items():
             if space_id == ROOT_SPACE_ID:
-                if space_info["space_type"] == SpaceType.MULTILAYER_IMAGE:
-                    multilayer_image_space = MultilayerImageSpace(
+                if space_info["space_type"] == SpaceType.IMAGE and space_info["has_multilayer_labels"]:
+                    multilayer_image_space = ImageSpace(
                         space_id=ROOT_SPACE_ID,
                         label_row=self,
                         space_info=space_info,
                         width=space_info["width"],
                         height=space_info["height"],
+                        has_multilayer_labels=True,
                     )
                     res[ROOT_SPACE_ID] = multilayer_image_space
                 else:
@@ -2628,6 +2627,7 @@ class LabelRowV2:
                     space_info=space_info,
                     width=space_info["width"],
                     height=space_info["height"],
+                    has_multilayer_labels=False,
                 )
                 res[space_id] = image_space
             elif space_info["space_type"] == SpaceType.IMAGE_SEQUENCE:

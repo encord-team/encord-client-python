@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from datetime import datetime
 from itertools import chain
+from os import WCONTINUED
 from typing import (
     TYPE_CHECKING,
     Dict,
@@ -310,6 +311,7 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
         classification_instance: ClassificationInstance,
         classifications: List[AttributeDict],
         space_range: SpaceRange,
+        on_root: bool,
     ) -> ClassificationAnswer:
         annotation_data = self._global_classification_hash_to_annotation_data[
             classification_instance.classification_hash
@@ -320,15 +322,20 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
             "classifications": classifications,
             "classificationHash": classification_instance.classification_hash,
             "featureHash": classification_instance.feature_hash,
-            "spaces": {self.space_id: space_range},
+            "spaces": {} if on_root else {self.space_id: space_range},
             "createdBy": annotation_metadata.created_by,
             "createdAt": format_datetime_to_long_string(annotation_metadata.created_at),
             "lastEditedBy": annotation_metadata.last_edited_by,
             "lastEditedAt": format_datetime_to_long_string(annotation_metadata.last_edited_at),
             "confidence": annotation_metadata.confidence,
             "manualAnnotation": annotation_metadata.manual_annotation,
-            "range": [],
         }
+
+        if on_root:
+            if space_range["type"] == "html":
+                pass
+            elif space_range["type"] == "frame":
+                classification_index_element["range"] = space_range["range"]
 
         return classification_index_element
 
