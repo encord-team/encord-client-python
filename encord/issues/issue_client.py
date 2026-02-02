@@ -148,7 +148,8 @@ class _IssueClient:
         return self._api_client.get_paged_iterator(
             path=f"/projects/{project_uuid}/issues",
             params=GetIssuesParam(data_unit_id=data_uuid),
-            result_type=Issue,  # type: ignore[arg-type] - Issue is a Pydantic discriminated union; type checker doesn't recognize it as Type[T] but it works correctly at runtime
+            result_type=Issue,  # type: ignore[arg-type]
+            # Issue is a Pydantic discriminated union; type checker doesn't recognize it as Type[T] but it works correctly at runtime
         )
 
 
