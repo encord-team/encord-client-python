@@ -3,12 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from enum import auto
-from typing import Annotated, Iterable, List, Literal, Optional, Union
+from typing import Iterable, List, Literal, Optional, Union
 from uuid import UUID
 
 from encord.http.v2.api_client import ApiClient
 from encord.orm.analytics import CamelStrEnum
-from encord.orm.base_dto import BaseDTO, Field
+from encord.orm.base_dto import BaseDTO
 
 
 class IssueAnchorType(CamelStrEnum):
@@ -121,10 +121,7 @@ class AnnotationIssue(_BaseIssue):
     annotation_id: str
 
 
-Issue = Annotated[
-    Union[FileIssue, FrameIssue, CoordinateIssue, FrameRangeIssue, AnnotationIssue],
-    Field(discriminator="type"),
-]
+Issue = Union[FileIssue, FrameIssue, CoordinateIssue, FrameRangeIssue, AnnotationIssue]
 
 
 class _IssueClient:
