@@ -100,7 +100,7 @@ class CoordinateIssue(_BaseIssue):
     coordinate: IssueCoordinate
 
 
-class _IssueFrameRange(BaseDTO):
+class IssueFrameRange(BaseDTO):
     """Represents a range of frames [start, end] inclusive"""
 
     start: int
@@ -111,7 +111,7 @@ class FrameRangeIssue(_BaseIssue):
     """Issue anchored to a range of frames"""
 
     type: Literal[IssueAnchorType.FRAME_RANGE] = IssueAnchorType.FRAME_RANGE
-    frame_ranges: List[_IssueFrameRange]
+    frame_ranges: List[IssueFrameRange]
 
 
 class AnnotationIssue(_BaseIssue):
