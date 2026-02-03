@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Dict
 from unittest.mock import MagicMock
 from uuid import uuid4
@@ -6,7 +7,7 @@ import pytest
 
 from encord.orm.workflow import WorkflowAgentNode, WorkflowDTO
 from encord.workflow import Workflow
-from encord.workflow.stages.agent import AgentStage
+from encord.workflow.stages.agent import AgentStage, AgentTask, AgentTaskStatus
 from encord.workflow.stages.review import ReviewStage
 
 raw_agent_workflow: Dict[str, Any] = {
@@ -54,3 +55,43 @@ def test_agent_project_with_pathway_serialisation_deserialisation() -> None:
     agent_stage = workflow_obj.get_stage(name="Pre-labeler")
     assert isinstance(agent_stage, AgentStage)
     assert agent_stage.pathways
+
+
+def test_agent_stage_get_tasks_no_http_requests() -> None:
+    """Verify that iterating through agent tasks and accessing issues property doesn't make HTTP requests."""
+    workflow_dto = WorkflowDTO.from_dict(raw_agent_workflow)
+    workflow_client = MagicMock()
+    api_client = MagicMock()
+    workflow_client.api_client = api_client
+    workflow_obj = Workflow(workflow_client, uuid4(), workflow_orm=workflow_dto)
+    agent_stage = workflow_obj.get_stage(name="Pre-labeler")
+
+    # Mock get_tasks to return some tasks
+    mock_tasks = [
+        AgentTask(
+            uuid=uuid4(),
+            created_at=datetime.now(),
+            updated_at=datetime.now(),
+            data_hash=uuid4(),
+            data_title=f"data unit {i}",
+            label_branch_name="main",
+            assignee=None,
+            last_actioned_by=None,
+            status=AgentTaskStatus.NEW,
+        )
+        for i in range(3)
+    ]
+    workflow_client.get_tasks.return_value = iter(mock_tasks)
+
+    # Iterate through tasks and access issues property
+    for task in agent_stage.get_tasks():
+        # Just accessing the issues property should not trigger HTTP calls
+        assert task.issues is not None
+
+    # Verify no HTTP requests were made during iteration
+    # Check all common HTTP methods on the api_client
+    api_client.get.assert_not_called()
+    api_client.post.assert_not_called()
+    api_client.put.assert_not_called()
+    api_client.patch.assert_not_called()
+    api_client.delete.assert_not_called()
