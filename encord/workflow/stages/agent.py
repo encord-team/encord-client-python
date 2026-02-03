@@ -108,7 +108,8 @@ class AgentTask(WorkflowTask):
     @property
     def issues(self) -> TaskIssues:
         """Returns the issue client for the task."""
-        assert self._task_issues
+        if self._task_issues is None:
+            raise RuntimeError("Task issues are not initialized for this task.")
         return self._task_issues
 
 
