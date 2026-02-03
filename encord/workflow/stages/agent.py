@@ -7,6 +7,7 @@ from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.http.bundle import Bundle
+from encord.issues.issue_client import TaskIssues
 from encord.orm.workflow import WorkflowStageType
 from encord.workflow.common import TasksQueryParams, WorkflowAction, WorkflowStageBase, WorkflowTask
 
@@ -104,6 +105,12 @@ class AgentTask(WorkflowTask):
             bundle=bundle,
         )
 
+    @property
+    def issues(self) -> TaskIssues:
+        """Returns the issue client for the task."""
+        assert self._task_issues
+        return self._task_issues
+
 
 class _AgentTasksQueryParams(TasksQueryParams):
     user_emails: Optional[List[str]] = None
@@ -163,4 +170,9 @@ class AgentStage(WorkflowStageBase):
         for task in self._workflow_client.get_tasks(self.uuid, params, type_=AgentTask):
             task._stage_uuid = self.uuid
             task._workflow_client = self._workflow_client
+            task._task_issues = TaskIssues(
+                api_client=self._workflow_client.api_client,
+                project_uuid=self._workflow_client.project_hash,
+                data_uuid=task.data_hash,
+            )
             yield task
