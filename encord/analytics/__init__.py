@@ -1,3 +1,2 @@
-from encord.analytics.task_actions import TaskAction, TaskActionType
-
-__all__ = ["TaskAction", "TaskActionType"]
+# This module is deprecated. Use encord.orm.analytics instead.
+__all__ = []

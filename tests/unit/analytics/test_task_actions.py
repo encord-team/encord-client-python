@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from encord.analytics.task_actions import TaskAction, TaskActionType
+from encord.orm.analytics import TaskAction, TaskActionType
 
 
 def test_task_action_type_enum_values():

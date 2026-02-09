@@ -13,7 +13,6 @@ import datetime
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Union
 from uuid import UUID
 
-from encord.analytics.task_actions import TaskAction, TaskActionType, _TaskActionsClient
 from encord.client import EncordClientProject
 from encord.collection import ProjectCollection
 from encord.common.deprecated import deprecated
@@ -28,6 +27,9 @@ from encord.orm.analytics import (
     CollaboratorTimer,
     CollaboratorTimerParams,
     CollaboratorTimersGroupBy,
+    TaskAction,
+    TaskActionParams,
+    TaskActionType,
     TimeSpent,
     TimeSpentParams,
 )
@@ -897,8 +899,8 @@ class Project:
         before: Optional[datetime.datetime] = None,
         actor_email: Union[str, List[str], None] = None,
         action_type: Union[TaskActionType, List[TaskActionType], None] = None,
-        workflow_stage_uuid: Union[UUID, List[UUID], None] = None,
-        data_unit_uuid: Union[UUID, List[UUID], None] = None,
+        workflow_stage_uuid: Union[UUID, List[UUID], str, List[str], None] = None,
+        data_unit_uuid: Union[UUID, List[UUID], str, List[str], None] = None,
     ) -> Iterable[TaskAction]:
         """
         Retrieve task action events for this project.
@@ -917,9 +919,9 @@ class Project:
             action_type: Filter by action type (ASSIGN, SUBMIT, APPROVE, etc.).
                         Can be a single TaskActionType, list, or None.
             workflow_stage_uuid: Filter by workflow stage UUID(s).
-                                Can be a single UUID, list, or None.
+                                Can be a single UUID, string, list, or None.
             data_unit_uuid: Filter by data unit UUID(s).
-                           Can be a single UUID, list, or None.
+                           Can be a single UUID, string, list, or None.
 
         Returns:
             Iterable[TaskAction]: An iterator of task action objects with automatic pagination.
@@ -930,16 +932,22 @@ class Project:
             >>> for action in project.get_task_actions(after=seven_days_ago):
             ...     print(f"{action.action_type} by {action.actor_email}")
         """
-        client = _TaskActionsClient(api_client=self._api_client)
-        return client.get_task_actions(
+        # Use current time for before if not provided
+        if before is None:
+            before = datetime.datetime.utcnow()
+
+        # Create params and delegate to client
+        params = TaskActionParams(
             project_uuid=UUID(self.project_hash),
             after=after,
             before=before,
-            actor_email=actor_email,
-            action_type=action_type,
-            workflow_stage_uuid=workflow_stage_uuid,
-            data_unit_uuid=data_unit_uuid,
+            actor_email=ensure_list(actor_email),
+            action_type=ensure_list(action_type),
+            workflow_stage_uuid=ensure_uuid_list(workflow_stage_uuid),
+            data_unit_uuid=ensure_uuid_list(data_unit_uuid),
         )
+
+        yield from self._client.get_task_actions(params)
 
     def list_datasets(self) -> Iterable[ProjectDataset]:
         """List all datasets associated with the project.

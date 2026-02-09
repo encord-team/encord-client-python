@@ -2,7 +2,7 @@ from datetime import datetime
 from unittest.mock import patch
 from uuid import UUID
 
-from encord.analytics.task_actions import TaskAction, TaskActionType
+from encord.orm.analytics import TaskAction, TaskActionType
 
 
 def test_project_get_task_actions_returns_iterator(project):
@@ -19,7 +19,7 @@ def test_project_get_task_actions_returns_iterator(project):
     )
 
     # Mock the iterator behavior
-    with patch.object(project._api_client, "get_paged_iterator", return_value=iter([action_data])):
+    with patch.object(project._client, "get_task_actions", return_value=iter([action_data])):
         after = datetime(2026, 2, 1, 0, 0, 0)
         results = list(project.get_task_actions(after=after))
 
@@ -30,26 +30,28 @@ def test_project_get_task_actions_returns_iterator(project):
 
 def test_project_get_task_actions_with_filters(project):
     """Test Project.get_task_actions passes filters correctly."""
-    with patch.object(project._api_client, "get_paged_iterator", return_value=iter([])) as mock_get_paged:
+    with patch.object(project._client, "get_task_actions", return_value=iter([])) as mock_get_task_actions:
         after = datetime(2026, 2, 1, 0, 0, 0)
         before = datetime(2026, 2, 9, 0, 0, 0)
 
-        list(project.get_task_actions(
-            after=after,
-            before=before,
-            actor_email=["user1@example.com", "user2@example.com"],
-            action_type=[TaskActionType.SUBMIT, TaskActionType.REJECT],
-        ))
+        list(
+            project.get_task_actions(
+                after=after,
+                before=before,
+                actor_email=["user1@example.com", "user2@example.com"],
+                action_type=[TaskActionType.SUBMIT, TaskActionType.REJECT],
+            )
+        )
 
         # Verify the API was called with correct parameters
-        mock_get_paged.assert_called_once()
+        mock_get_task_actions.assert_called_once()
 
 
 def test_project_get_task_actions_single_actor_email(project):
     """Test Project.get_task_actions accepts single actor email."""
-    with patch.object(project._api_client, "get_paged_iterator", return_value=iter([])) as mock_get_paged:
+    with patch.object(project._client, "get_task_actions", return_value=iter([])) as mock_get_task_actions:
         after = datetime(2026, 2, 1, 0, 0, 0)
         list(project.get_task_actions(after=after, actor_email="user@example.com"))
 
         # Should not raise any errors
-        assert mock_get_paged.called
+        assert mock_get_task_actions.called

@@ -10,6 +10,8 @@ from encord.utilities.project_user import ProjectUserRole
 
 
 class CamelStrEnum(str, Enum):
+    """Base enum class that converts snake_case names to camelCase values."""
+
     # noinspection PyMethodParameters
     def _generate_next_value_(name, start, count, last_values) -> str:  # type: ignore
         return snake_to_camel(name)
@@ -118,3 +120,59 @@ class TimeSpent(BaseDTO):
     dataset_title: str
     workflow_task_uuid: Optional[UUID] = None
     workflow_stage: Optional[BaseWorkflowNode] = None
+
+
+class TaskActionType(CamelStrEnum):
+    """Task action event types from workflow_task_events_v2 table."""
+
+    ASSIGN = auto()
+    APPROVE = auto()
+    SUBMIT = auto()
+    MOVE = auto()
+    REJECT = auto()
+    RELEASE = auto()
+    SKIP = auto()
+
+
+class TaskAction(BaseDTO):
+    """Task action event returned by the task actions endpoint.
+
+    Args:
+        timestamp: Time when the action occurred.
+        action_type: Type of action (e.g., ASSIGN, SUBMIT, APPROVE).
+        project_uuid: UUID of the project.
+        workflow_stage_uuid: UUID of the workflow stage.
+        task_uuid: UUID of the task.
+        data_unit_uuid: UUID of the data unit.
+        actor_email: Email address of the user who performed the action.
+    """
+
+    timestamp: datetime
+    action_type: TaskActionType
+    project_uuid: UUID
+    workflow_stage_uuid: UUID
+    task_uuid: UUID
+    data_unit_uuid: UUID
+    actor_email: str
+
+
+class TaskActionParams(BaseDTO):
+    """Parameters for get_task_actions API call.
+
+    Args:
+        project_uuid: UUID of the project to query.
+        after: Start of the time window (inclusive).
+        before: End of the time window (exclusive).
+        actor_email: Optional list of user email addresses to filter by.
+        action_type: Optional list of action types to filter by.
+        workflow_stage_uuid: Optional list of workflow stage UUIDs to filter by.
+        data_unit_uuid: Optional list of data unit UUIDs to filter by.
+    """
+
+    project_uuid: UUID
+    after: datetime
+    before: datetime
+    actor_email: Optional[List[str]] = None
+    action_type: Optional[List[TaskActionType]] = None
+    workflow_stage_uuid: Optional[List[UUID]] = None
+    data_unit_uuid: Optional[List[UUID]] = None
