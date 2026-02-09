@@ -133,14 +133,14 @@ def test_read_and_export_multilayer_image_labels(ontology):
     label_row = LabelRowV2(DATA_GROUP_MULTILAYER_IMAGE_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_MULTILAYER_IMAGE_LABELS)
 
-    video_space = label_row.get_space(id="root", type_="image")
-    assert len(video_space.get_object_instances()) == 2
-    assert video_space.get_object_instances()[0].object_hash == "object1"
-    assert len(list(video_space.get_annotations(type_="object"))) == 2
-    classification_instances = video_space.get_classification_instances()
+    multilayer_image_space = label_row.get_space(id="root", type_="image")
+    assert len(multilayer_image_space.get_object_instances()) == 2
+    assert multilayer_image_space.get_object_instances()[0].object_hash == "object1"
+    assert len(list(multilayer_image_space.get_annotations(type_="object"))) == 2
+    classification_instances = multilayer_image_space.get_classification_instances()
     assert len(classification_instances) == 1
     assert classification_instances[0].classification_hash == "classification1"
-    assert len(list(video_space.get_annotations(type_="classification"))) == 1
+    assert len(list(multilayer_image_space.get_annotations(type_="classification"))) == 1
 
     # Verify round-trip serialization
     output_dict = label_row.to_encord_dict()
@@ -149,7 +149,6 @@ def test_read_and_export_multilayer_image_labels(ontology):
         output_dict,
         exclude_regex_paths=[
             r".*\['trackHash'\]",
-            r".*\['child_info'\]",
         ],
         ignore_order_func=lambda x: x.path().endswith("['objects']"),
     )
