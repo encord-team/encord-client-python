@@ -2760,7 +2760,7 @@ class LabelRowV2:
                 if isinstance(point_cloud_space, PointCloudFileSpace):
                     point_cloud_space._parse_space_dict(
                         space_info, object_answers=object_answers, classification_answers=classification_answers
-                )
+                    )
             else:
                 exhaustive_guard(
                     space_info["space_type"],
