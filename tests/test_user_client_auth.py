@@ -257,16 +257,14 @@ def test_v2_api_when_initialised_with_bearer_auth(mock_send, bearer_token):
         assert mock_call.args[0].headers["Authorization"] == f"Bearer {bearer_token}"
 
 
+@pytest.mark.parametrize("tilde_path", [Path("~/fake_key"), "~/fake_key"])
 @patch.object(Session, "send")
-def test_create_with_ssh_private_key_expands_tilde_in_path(mock_send, tmp_path):
+def test_create_with_ssh_private_key_expands_tilde_in_path(mock_send, tmp_path, tilde_path):
     mock_send.side_effect = make_side_effects()
 
     # Write the private key to a temp file
     key_file = tmp_path / "test_key"
     key_file.write_text(PRIVATE_KEY_PEM)
-
-    # Create a path with ~ that will be expanded to our temp file
-    tilde_path = Path("~/fake_key")
 
     with patch.object(Path, "expanduser", return_value=key_file):
         user_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key_path=tilde_path)
