@@ -10,8 +10,6 @@ from encord.utilities.project_user import ProjectUserRole
 
 
 class CamelStrEnum(str, Enum):
-    """Base enum class that converts snake_case names to camelCase values."""
-
     # noinspection PyMethodParameters
     def _generate_next_value_(name, start, count, last_values) -> str:  # type: ignore
         return snake_to_camel(name)

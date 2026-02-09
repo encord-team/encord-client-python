@@ -1209,7 +1209,7 @@ class EncordClientProject(EncordClient):
         yield from self._api_client.get_paged_iterator(
             f"projects/{params.project_uuid}/analytics/task-actions",
             params=params,
-            result_type=TaskAction,  # type: ignore[arg-type]
+            result_type=TaskAction,
         )
 
     def get_label_validation_errors(self, label_hash: str) -> List[str]:
