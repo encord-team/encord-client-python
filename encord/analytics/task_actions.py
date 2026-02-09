@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import auto
-from typing import Iterable, List, Optional, Union
+from typing import TYPE_CHECKING, Iterable, List, Optional, Union
 from uuid import UUID
 
-from encord.http.v2.api_client import ApiClient
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
+
+if TYPE_CHECKING:
+    from encord.http.v2.api_client import ApiClient
 
 
 class TaskActionType(CamelStrEnum):
@@ -47,7 +49,7 @@ class _GetTaskActionsParams(BaseDTO):
 
 
 class _TaskActionsClient:
-    def __init__(self, api_client: ApiClient) -> None:
+    def __init__(self, api_client: "ApiClient") -> None:
         self._api_client = api_client
 
     def get_task_actions(
