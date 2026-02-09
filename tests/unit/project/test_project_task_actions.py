@@ -1,8 +1,6 @@
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from uuid import UUID
-
-import pytest
 
 from encord.analytics.task_actions import TaskAction, TaskActionType
 

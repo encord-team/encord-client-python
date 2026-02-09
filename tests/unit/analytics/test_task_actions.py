@@ -1,8 +1,6 @@
 from datetime import datetime
 from uuid import UUID
 
-import pytest
-
 from encord.analytics.task_actions import TaskAction, TaskActionType
 
 
