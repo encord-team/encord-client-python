@@ -174,3 +174,4 @@ class TaskActionParams(BaseDTO):
     action_type: Optional[List[TaskActionType]] = None
     workflow_stage_uuid: Optional[List[UUID]] = None
     data_unit_uuid: Optional[List[UUID]] = None
+    page_token: Optional[str] = None

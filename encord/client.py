@@ -1207,7 +1207,7 @@ class EncordClientProject(EncordClient):
 
     def get_task_actions(self, params: TaskActionParams) -> Iterable[TaskAction]:
         yield from self._api_client.get_paged_iterator(
-            f"projects/{params.project_uuid}/analytics/task-actions",
+            f"analytics/task-actions",
             params=params,
             result_type=TaskAction,
         )
