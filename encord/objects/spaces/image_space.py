@@ -325,6 +325,7 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
         label_hashes: list[str] = list(self._objects_map.keys())
         label_hashes.extend(list(self._classifications_map.keys()))
         frame_label = self._build_frame_label_dict()
+
         return ImageSpaceInfo(
             space_type=SpaceType.IMAGE,
             width=self._width,
@@ -332,7 +333,6 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
             labels={
                 "0": frame_label,
             },
-            has_multilayer_labels=self._has_multilayer_labels,
         )
 
     def _parse_space_dict(

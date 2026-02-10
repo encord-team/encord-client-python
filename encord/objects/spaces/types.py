@@ -11,8 +11,8 @@ from encord.utilities.type_utilities import exhaustive_guard
 
 @dataclass(frozen=True)
 class RootSpaceMetadata:
+    file_name: str
     layout_key: None = None
-    file_name: str | None = None  # Root space might be a data group, which will have no filename
 
 
 @dataclass(frozen=True)
@@ -47,6 +47,10 @@ class ChildInfo(TypedDict):
     file_name: str
 
 
+class RootInfo(TypedDict):
+    file_name: str
+
+
 class VideoSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.VIDEO]
     child_info: NotRequired[ChildInfo]
@@ -66,9 +70,9 @@ class ImageSequenceSpaceInfo(BaseSpaceInfo):
 class ImageSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.IMAGE]
     child_info: NotRequired[ChildInfo]
+    root_info: NotRequired[RootInfo]
     width: int
     height: int
-    has_multilayer_labels: bool
 
 
 class TextSpaceInfo(BaseSpaceInfo):

@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from itertools import chain
-from os import WCONTINUED
 from typing import (
     TYPE_CHECKING,
     Dict,
@@ -329,6 +327,7 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
             "lastEditedAt": format_datetime_to_long_string(annotation_metadata.last_edited_at),
             "confidence": annotation_metadata.confidence,
             "manualAnnotation": annotation_metadata.manual_annotation,
+            "range": [],
         }
 
         if on_root:
@@ -366,7 +365,8 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
     @staticmethod
     def _extract_metadata_from_space_info(space_id: str, space_info: SpaceInfo) -> SpaceMetadata:
         if space_id == "root":
-            return RootSpaceMetadata()
+            if space_info["space_type"] == "image" and space_info["root_info"] is not None:
+                return RootSpaceMetadata(file_name=space_info["root_info"]["file_name"])
 
         child_info: Optional[ChildInfo] = space_info.get("child_info")  # type: ignore[assignment]
         if child_info is not None:

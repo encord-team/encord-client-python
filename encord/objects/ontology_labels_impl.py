@@ -2589,7 +2589,7 @@ class LabelRowV2:
 
         for space_id, space_info in spaces_info.items():
             if space_id == ROOT_SPACE_ID:
-                if space_info["space_type"] == SpaceType.IMAGE and space_info["has_multilayer_labels"]:
+                if space_info["space_type"] == SpaceType.IMAGE:
                     multilayer_image_space = ImageSpace(
                         space_id=ROOT_SPACE_ID,
                         label_row=self,

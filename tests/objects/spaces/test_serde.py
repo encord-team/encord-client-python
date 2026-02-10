@@ -123,7 +123,7 @@ def test_read_and_export_all_space_labels(ontology):
         output_dict,
         exclude_regex_paths=[
             r".*\['trackHash'\]",
-            r".*\['child_info'\]",
+            r".*\['child_info'\]",  # We don't read this info in the BE
         ],
         ignore_order_func=lambda x: x.path().endswith("['objects']"),
     )
@@ -149,6 +149,7 @@ def test_read_and_export_multilayer_image_labels(ontology):
         output_dict,
         exclude_regex_paths=[
             r".*\['trackHash'\]",
+            r".*\['root_info'\]",  # We don't read this info in the BE
         ],
         ignore_order_func=lambda x: x.path().endswith("['objects']"),
     )

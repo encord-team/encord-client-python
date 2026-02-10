@@ -6,12 +6,15 @@ from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelSt
 
 DATA_GROUP_DATA_HASH = "data-group-multi-layer-image-data-hash"
 
+FILE_NAME = "multilayer image data group"
 MULTILAYER_SPACE_INFO: ImageSpaceInfo = {
     "space_type": SpaceType.IMAGE,
     "height": 100,
     "width": 200,
     "labels": {},
-    "has_multilayer_labels": True,
+    "root_info": {
+        "file_name": FILE_NAME,
+    },
 }
 
 DATA_GROUP_MULTILAYER_IMAGE_METADATA = LabelRowMetadata(
@@ -125,7 +128,9 @@ DATA_GROUP_MULTILAYER_IMAGE_LABELS = {
             "space_type": SpaceType.IMAGE,
             "height": 100,
             "width": 200,
-            "has_multilayer_labels": True,
+            "root_info": {
+                "file_name": FILE_NAME,
+            },
             "labels": {
                 "0": {
                     "objects": [
