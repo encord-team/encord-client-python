@@ -10,6 +10,12 @@ from encord.utilities.type_utilities import exhaustive_guard
 
 
 @dataclass(frozen=True)
+class RootSpaceMetadata:
+    file_name: str
+    layout_key: None = None
+
+
+@dataclass(frozen=True)
 class DataGroupMetadata:
     """Metadata for spaces originating from a data group."""
 
@@ -29,7 +35,7 @@ class SceneMetadata:
     """The name of the file, including extension, extracted from the URI."""
 
 
-SpaceMetadata = Union[DataGroupMetadata, SceneMetadata]
+SpaceMetadata = Union[DataGroupMetadata, SceneMetadata, RootSpaceMetadata]
 
 
 class BaseSpaceInfo(TypedDict):
@@ -38,6 +44,10 @@ class BaseSpaceInfo(TypedDict):
 
 class ChildInfo(TypedDict):
     layout_key: str
+    file_name: str
+
+
+class RootInfo(TypedDict):
     file_name: str
 
 
@@ -60,6 +70,7 @@ class ImageSequenceSpaceInfo(BaseSpaceInfo):
 class ImageSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.IMAGE]
     child_info: NotRequired[ChildInfo]
+    root_info: NotRequired[RootInfo]
     width: int
     height: int
 

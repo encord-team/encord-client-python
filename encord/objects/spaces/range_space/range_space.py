@@ -366,6 +366,7 @@ class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, 
                         classification_instance=classification,
                         classifications=reversed_classification_attributes,
                         space_range={"range": [], "type": "frame"},
+                        on_root=False,
                     )
                 else:
                     classification_answer = {

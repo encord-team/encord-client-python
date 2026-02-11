@@ -1074,6 +1074,7 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
                     classification_instance=classification_instance,
                     classifications=classifications,
                     space_range={"range": [], "type": "frame"},
+                    on_root=False,
                 )
                 ret[classification_instance.classification_hash] = classification_answer
             else:
