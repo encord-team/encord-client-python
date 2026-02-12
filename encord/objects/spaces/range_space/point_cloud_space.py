@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any, Dict, Union, cast
 
 from encord.common.bitmask_operations.bitmask_operations import (
@@ -26,6 +27,8 @@ from encord.objects.types import (
     SpaceFrameData,
 )
 from encord.objects.utils import _lower_snake_case
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
@@ -54,10 +57,28 @@ class PointCloudFileSpace(RangeSpace):
         # Point cloud spaces have a single labels dict (not frame-keyed)
         labels = cast(LabelBlob, space_info.get("labels", {}))
 
+        seen_object_hashes: dict[str, str] = {}
+
         for obj_data in labels.get("objects", []):
             segmentation = obj_data.get("segmentation", "")
             if not isinstance(segmentation, str) or not segmentation:
                 continue
+
+            object_hash = obj_data["objectHash"]
+            feature_hash = obj_data.get("featureHash", "")
+            if object_hash in seen_object_hashes:
+                prev_segmentation = seen_object_hashes[object_hash]
+                if segmentation != prev_segmentation:
+                    feature_name = str(obj_data.get("name", feature_hash))
+                    logger.warning(
+                        "Duplicate objectHash '%s' (feature='%s') found in point cloud space '%s' "
+                        "during label parsing with different segmentation data. Skipping duplicate entry.",
+                        object_hash,
+                        feature_name,
+                        self.space_id,
+                    )
+                continue
+            seen_object_hashes[object_hash] = segmentation
 
             points = rle_string_to_points(segmentation)
             ranges = frames_to_ranges(points)
@@ -65,9 +86,7 @@ class PointCloudFileSpace(RangeSpace):
             if not ranges:
                 continue
 
-            object_instance = self._create_new_object(
-                feature_hash=obj_data["featureHash"], object_hash=obj_data["objectHash"]
-            )
+            object_instance = self._create_new_object(feature_hash=obj_data["featureHash"], object_hash=object_hash)
 
             frame_info_dict = {k: v for k, v in obj_data.items() if v is not None}
             frame_info_dict.setdefault("confidence", 1.0)
@@ -83,6 +102,13 @@ class PointCloudFileSpace(RangeSpace):
                 manual_annotation=object_frame_instance_info.manual_annotation,
                 confidence=object_frame_instance_info.confidence,
             )
+
+            # Populate static attribute answers from object_answers
+            object_answer = object_answers.get(object_hash)
+            if object_answer is not None:
+                answer_list = object_answer.get("classifications", [])
+                if answer_list:
+                    object_instance.set_answer_from_list(answer_list)
 
     def _build_labels_dict(self) -> LabelBlob:
         objects: list[FrameObject] = []

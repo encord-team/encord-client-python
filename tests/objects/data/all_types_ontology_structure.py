@@ -424,7 +424,16 @@ all_types_structure = OntologyStructure(
             color="#4904a5",
             shape=Shape.SEGMENTATION,
             feature_node_hash="segmentationFeatureNodeHash",
-            attributes=[],
+            attributes=[
+                TextAttribute(
+                    uid=[10, 1],
+                    feature_node_hash="sourceCuboidHashFeatureHash",
+                    name="source_cuboid_hash",
+                    required=False,
+                    dynamic=False,
+                    archived=False,
+                ),
+            ],
         ),
         Object(
             uid=11,

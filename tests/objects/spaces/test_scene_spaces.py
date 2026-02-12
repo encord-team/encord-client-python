@@ -1,3 +1,4 @@
+import copy
 from typing import cast
 from unittest.mock import Mock
 
@@ -7,7 +8,7 @@ from deepdiff import DeepDiff
 from encord.constants.enums import DataType, SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects import Classification, LabelRowV2, Object
-from encord.objects.attributes import Attribute
+from encord.objects.attributes import Attribute, TextAttribute
 from encord.objects.common import Shape
 from encord.objects.frames import Range
 from encord.objects.ontology_object_instance import ObjectInstance
@@ -18,6 +19,9 @@ from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.scene import SCENE_METADATA, SCENE_NO_LABELS, SCENE_WITH_LABELS
 
 segmentation_ontology_item = all_types_structure.get_child_by_hash("segmentationFeatureNodeHash", Object)
+segmentation_text_attribute = segmentation_ontology_item.get_child_by_hash(
+    "sourceCuboidHashFeatureHash", type_=TextAttribute
+)
 cuboid_ontology_item = all_types_structure.get_child_by_hash("cuboidFeatureNodeHash", Object)
 box_with_attributes_ontology_item = all_types_structure.get_child_by_hash("MTA2MjAx", Object)
 box_text_attribute_ontology_item = box_with_attributes_ontology_item.get_child_by_hash("OTkxMjU1", type_=Attribute)
@@ -302,3 +306,67 @@ def test_point_cloud_segmentation_with_created_by(ontology) -> None:
     obj_answer = result["object_answers"][segm_instance.object_hash]
     assert obj_answer["createdBy"] == "creator@example.com"
     assert obj_answer["lastEditedBy"] == "editor@example.com"
+
+
+def test_point_cloud_segmentation_parses_static_attributes(ontology):
+    # Add object_answers with a classification (static attribute answer)
+    scene_with_classifications = copy.deepcopy(SCENE_NO_LABELS)
+    scene_with_classifications["object_answers"] = {
+        "obj_with_attr": {
+            "classifications": [
+                {
+                    "name": "source_cuboid_hash",
+                    "value": "source_cuboid_hash",
+                    "answers": "NTPWb2r8",
+                    "featureHash": "sourceCuboidHashFeatureHash",
+                    "manualAnnotation": True,
+                }
+            ],
+            "objectHash": "obj_with_attr",
+            "manualAnnotation": True,
+            "featureHash": "segmentationFeatureNodeHash",
+            "name": "segmentation object",
+            "color": "#4904a5",
+            "shape": "segmentation",
+            "value": "segmentation_object",
+            "range": [],
+            "spaces": {
+                "path/to/file1.pcd": {"range": [], "type": "frame"},
+            },
+        },
+    }
+    scene_with_classifications["spaces"]["path/to/file1.pcd"] = {
+        "space_type": SpaceType.POINT_CLOUD,
+        "scene_info": {"event_index": 0, "stream_id": "lidar1", "uri": "path/to/file1.pcd"},
+        "labels": {
+            "objects": [
+                {
+                    "shape": "segmentation",
+                    "objectHash": "obj_with_attr",
+                    "featureHash": "segmentationFeatureNodeHash",
+                    "name": "segmentation object",
+                    "color": "#4904a5",
+                    "value": "segmentation_object",
+                    "segmentation": "06",
+                    "confidence": 1.0,
+                    "createdAt": "Thu, 09 Feb 2023 14:12:03 UTC",
+                    "manualAnnotation": True,
+                },
+            ],
+            "classifications": [],
+        },
+    }
+
+    label_row = LabelRowV2(SCENE_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(scene_with_classifications)
+
+    space = label_row.get_space(id="path/to/file1.pcd", type_="point_cloud")
+    obj_instances = space.get_object_instances()
+    assert len(obj_instances) == 1
+
+    obj = obj_instances[0]
+    assert obj.object_hash == "obj_with_attr"
+
+    # The static attribute should be populated from object_answers
+    answer = obj.get_answer(segmentation_text_attribute)
+    assert answer == "NTPWb2r8"
