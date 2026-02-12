@@ -558,7 +558,7 @@ class Project:
         before: Optional[datetime.datetime] = None,
         user_email: Optional[str] = None,
     ) -> List[LabelLog]:
-        """DEPRECATED: Use :meth:`~encord.project.Project.get_editor_logs` instead.
+        """DEPRECATED: Use :meth:`encord.project.Project.get_editor_logs`  instead.
 
         Get label logs, which represent the actions taken in the UI to create labels.
 
