@@ -10,8 +10,6 @@ from enum import StrEnum, auto
 from pathlib import Path
 from typing import Annotated, Literal, Optional, Union
 
-from typing_extensions import TypeAlias
-
 from pydantic import (
     AliasChoices,
     AnyUrl,
@@ -24,6 +22,7 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+from typing_extensions import TypeAlias
 
 # ---------------------------------------------------------------------------
 # snake2camel utility
