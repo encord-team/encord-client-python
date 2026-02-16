@@ -35,7 +35,7 @@ from __future__ import annotations
 
 import datetime
 from dataclasses import dataclass, field
-from typing import Any, Sequence
+from typing import Any, Sequence, cast
 
 from encord.exceptions import EncordException
 
@@ -177,11 +177,15 @@ class EulerRotation:
 class MatrixRotation:
     """3x3 rotation matrix (9 floats, row-major)."""
 
-    values: tuple[float, float, float, float, float, float, float, float, float]
+    values: Sequence[float]
     _inner: _InputRotationMatrix | None = field(init=False, repr=False, compare=False, default=None)
 
     def __post_init__(self) -> None:
-        self._inner = _InputRotationMatrix.model_construct(root=self.values)
+        if len(self.values) != 9:
+            raise ValueError(f"Rotation matrix requires exactly 9 values, got {len(self.values)}")
+        self._inner = _InputRotationMatrix.model_construct(
+            root=cast(tuple[float, float, float, float, float, float, float, float, float], tuple(self.values))
+        )
 
     def _to_dict(self) -> dict[str, str | list[float]]:
         return {"type": "rotation_matrix", "values": list(self.values)}
@@ -211,28 +215,18 @@ class CompositePose:
 class AffinePose:
     """4x4 affine transform matrix (16 floats, row-major)."""
 
-    matrix: tuple[
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-    ]
+    matrix: Sequence[float]
     _inner: _InputAffineTransform | None = field(init=False, repr=False, compare=False, default=None)
 
     def __post_init__(self) -> None:
-        self._inner = _InputAffineTransform.model_construct(root=self.matrix)
+        if len(self.matrix) != 16:
+            raise ValueError(f"Affine transform requires exactly 16 values, got {len(self.matrix)}")
+        self._inner = _InputAffineTransform.model_construct(
+            root=cast(
+                tuple[float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float],
+                tuple(self.matrix),
+            )
+        )
 
     def _to_dict(self) -> dict[str, str | list[float]]:
         return {"type": "affine_transform", "matrix": list(self.matrix)}
@@ -276,9 +270,9 @@ class SimpleIntrinsics:
 class AdvancedIntrinsics:
     """Advanced camera intrinsics (full calibration matrices)."""
 
-    k: tuple[float, ...] | None = None
-    r: tuple[float, ...] | None = None
-    p: tuple[float, ...] | None = None
+    k: Sequence[float] | None = None
+    r: Sequence[float] | None = None
+    p: Sequence[float] | None = None
     model: str | None = None
 
     def _to_dict(self) -> dict[str, str | list[float]]:
@@ -353,7 +347,7 @@ def euler_pose(
 
 
 def matrix_pose(
-    rotation: tuple[float, float, float, float, float, float, float, float, float],
+    rotation: Sequence[float],
     x: float,
     y: float,
     z: float,
@@ -362,7 +356,8 @@ def matrix_pose(
 
     Args:
         rotation: Nine floats in row-major order representing a 3x3
-            rotation matrix.
+            rotation matrix.  Accepts any sequence (list, tuple, numpy
+            array, etc.).
         x: Translation along the world *x*-axis.
         y: Translation along the world *y*-axis.
         z: Translation along the world *z*-axis.
@@ -374,30 +369,14 @@ def matrix_pose(
 
 
 def affine_transform(
-    matrix: tuple[
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-        float,
-    ],
+    matrix: Sequence[float],
 ) -> AffinePose:
     """Create a pose from a 4x4 affine transform matrix.
 
     Args:
         matrix: Sixteen floats in row-major order.  The bottom row must
-            be ``[0, 0, 0, 1]``.
+            be ``[0, 0, 0, 1]``.  Accepts any sequence (list, tuple,
+            numpy array, etc.).
     """
     return AffinePose(matrix=matrix)
 
@@ -448,9 +427,9 @@ def intrinsics_advanced(
         model: Optional distortion model name.
     """
     return AdvancedIntrinsics(
-        k=tuple(k) if k is not None else None,
-        r=tuple(r) if r is not None else None,
-        p=tuple(p) if p is not None else None,
+        k=k,
+        r=r,
+        p=p,
         model=model,
     )
 
@@ -1098,8 +1077,8 @@ class SceneBuilder:
 
             # 3. Advanced intrinsics matrix-length checks.
             if isinstance(sb, CameraStreamBuilder):
-                for idx, event in enumerate(sb._events):
-                    intr = event.intrinsics
+                for idx, cam_event in enumerate(sb._events):
+                    intr = cam_event.intrinsics
                     if isinstance(intr, AdvancedIntrinsics):
                         if intr.k is not None and len(intr.k) != 9:
                             errors.append(
