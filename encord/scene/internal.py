@@ -6,7 +6,7 @@ import datetime
 import math
 import re
 from dataclasses import dataclass
-from enum import StrEnum, auto
+from enum import Enum
 from pathlib import Path
 from typing import Annotated, Literal, Optional, Union
 
@@ -59,7 +59,7 @@ class CamelModelApi(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-class Direction(StrEnum):
+class Direction(str, Enum):
     UP = "up"
     DOWN = "down"
     LEFT = "left"
@@ -117,15 +117,15 @@ DEFAULT_CONVENTION: Convention = Convention(x=Direction.FORWARD, y=Direction.LEF
 # ---------------------------------------------------------------------------
 
 
-class SelfContainedFormat(StrEnum):
-    PCD = auto()
-    PLY = auto()
-    LAS = auto()
-    LAZ = auto()
-    E57 = auto()
-    MCAP = auto()
-    BAG = auto()
-    DB3 = auto()
+class SelfContainedFormat(str, Enum):
+    PCD = "pcd"
+    PLY = "ply"
+    LAS = "las"
+    LAZ = "laz"
+    E57 = "e57"
+    MCAP = "mcap"
+    BAG = "bag"
+    DB3 = "db3"
 
 
 # ---------------------------------------------------------------------------
@@ -251,11 +251,11 @@ EulerOrientation = tuple[float, float, float]
 Size = tuple[float, float, float]
 
 
-class GeometryType(StrEnum):
-    CUBOID = auto()
-    ELLIPSOID = auto()
-    LINE = auto()
-    MODEL = auto()
+class GeometryType(str, Enum):
+    CUBOID = "cuboid"
+    ELLIPSOID = "ellipsoid"
+    LINE = "line"
+    MODEL = "model"
 
 
 class Pose(CamelModelApi):
@@ -299,14 +299,10 @@ Geometry = Annotated[
 # ---------------------------------------------------------------------------
 
 
-@dataclass(kw_only=True)
-class _EventMixin:
-    timestamp: float | None = None
-
-
 @dataclass
-class ModelEvent(_EventMixin):
+class ModelEvent:
     geometries: list[Geometry]
+    timestamp: Optional[float] = None
 
 
 # ---------------------------------------------------------------------------
@@ -608,7 +604,7 @@ class InputURIEvent(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-class InputEntityType(StrEnum):
+class InputEntityType(str, Enum):
     POINT_CLOUD = "point_cloud"
     FRAME_OF_REFERENCE = "frame_of_reference"
     IMAGE = "image"
@@ -616,11 +612,11 @@ class InputEntityType(StrEnum):
     CAMERA_PARAMETERS = "camera_parameters"
 
     @classmethod
-    def _missing_(cls, value: object | str) -> InputEntityType:
+    def _missing_(cls, value: object) -> InputEntityType:
         if not isinstance(value, str):
             raise ValueError(f"Unknown entity type: {value} is not a string")
         if value == "camera":
-            return InputEntityType.CAMERA_PARAMETERS
+            return cls.CAMERA_PARAMETERS
         raise ValueError(f"Unknown entity type: {value}")
 
 
