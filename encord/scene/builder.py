@@ -37,12 +37,30 @@ import datetime
 from dataclasses import dataclass, field
 from typing import Any, Sequence, cast
 
+
 from encord.exceptions import EncordException
 
 # Internal types -- imported as private, never exposed to the user.
-from encord.scene.internal import Direction  # public enum, re-exported
+from encord.scene.internal import (
+    CameraIntrinsicsAdvanced as _CameraIntrinsicsAdvanced,
+)
+from encord.scene.internal import (
+    CameraIntrinsicsSimple as _CameraIntrinsicsSimple,
+)
+from encord.scene.internal import (
+    Direction,  # public enum, re-exported
+)
+from encord.scene.internal import (
+    DivisionDistortionModel as _DivisionDistortionModel,
+)
+from encord.scene.internal import (
+    FishEyeDistortionModel as _FishEyeDistortionModel,
+)
 from encord.scene.internal import (
     InputAffineTransform as _InputAffineTransform,
+)
+from encord.scene.internal import (
+    InputCompositePose as _InputCompositePose,
 )
 from encord.scene.internal import (
     InputEulerRotation as _InputEulerRotation,
@@ -54,7 +72,25 @@ from encord.scene.internal import (
     InputQuaternion as _InputQuaternion,
 )
 from encord.scene.internal import (
+    InputRotation as _InputRotation,
+)
+from encord.scene.internal import (
     InputRotationMatrix as _InputRotationMatrix,
+)
+from encord.scene.internal import (
+    PinholeDistortionModel as _PinholeDistortionModel,
+)
+from encord.scene.internal import (
+    PlumbBobDistortionModel as _PlumbBobDistortionModel,
+)
+from encord.scene.internal import (
+    RadialDistortionModel as _RadialDistortionModel,
+)
+from encord.scene.internal import (
+    RationalPolynomialDistortionModel as _RationalPolynomialDistortionModel,
+)
+from encord.scene.internal import (
+    UCMDistortionModel as _UCMDistortionModel,
 )
 
 __all__ = [
@@ -127,8 +163,9 @@ class Position:
     def __post_init__(self) -> None:
         self._inner = _InputPosition.model_construct(x=self.x, y=self.y, z=self.z)
 
-    def _to_dict(self) -> dict[str, float]:
-        return {"x": self.x, "y": self.y, "z": self.z}
+    def _to_internal(self) -> _InputPosition:
+        assert self._inner is not None
+        return self._inner
 
 
 # --- Rotation types ---
@@ -147,14 +184,9 @@ class QuaternionRotation:
     def __post_init__(self) -> None:
         self._inner = _InputQuaternion.model_construct(x=self.qx, y=self.qy, z=self.qz, w=self.qw)
 
-    def _to_dict(self) -> dict[str, str | float]:
-        return {
-            "type": "quaternion",
-            "qx": self.qx,
-            "qy": self.qy,
-            "qz": self.qz,
-            "qw": self.qw,
-        }
+    def _to_internal(self) -> _InputQuaternion:
+        assert self._inner is not None
+        return self._inner
 
 
 @dataclass(slots=True)
@@ -169,8 +201,9 @@ class EulerRotation:
     def __post_init__(self) -> None:
         self._inner = _InputEulerRotation.model_construct(x=self.rx, y=self.ry, z=self.rz)
 
-    def _to_dict(self) -> dict[str, str | float]:
-        return {"type": "euler", "rx": self.rx, "ry": self.ry, "rz": self.rz}
+    def _to_internal(self) -> _InputEulerRotation:
+        assert self._inner is not None
+        return self._inner
 
 
 @dataclass(slots=True)
@@ -187,8 +220,9 @@ class MatrixRotation:
             root=cast(tuple[float, float, float, float, float, float, float, float, float], tuple(self.values))
         )
 
-    def _to_dict(self) -> dict[str, str | list[float]]:
-        return {"type": "rotation_matrix", "values": list(self.values)}
+    def _to_internal(self) -> _InputRotationMatrix:
+        assert self._inner is not None
+        return self._inner
 
 
 Rotation = QuaternionRotation | EulerRotation | MatrixRotation
@@ -204,11 +238,11 @@ class CompositePose:
     rotation: Rotation
     position: Position
 
-    def _to_dict(self) -> dict[str, Any]:
-        return {
-            "rotation": self.rotation._to_dict(),
-            "position": self.position._to_dict(),
-        }
+    def _to_internal(self) -> _InputCompositePose:
+        return _InputCompositePose.model_construct(
+            rotation=_InputRotation.model_construct(root=self.rotation._to_internal()),
+            position=self.position._to_internal(),
+        )
 
 
 @dataclass(slots=True)
@@ -223,22 +257,49 @@ class AffinePose:
             raise ValueError(f"Affine transform requires exactly 16 values, got {len(self.matrix)}")
         self._inner = _InputAffineTransform.model_construct(
             root=cast(
-                tuple[float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float],
+                tuple[
+                    float,
+                    float,
+                    float,
+                    float,
+                    float,
+                    float,
+                    float,
+                    float,
+                    float,
+                    float,
+                    float,
+                    float,
+                    float,
+                    float,
+                    float,
+                    float,
+                ],
                 tuple(self.matrix),
             )
         )
 
-    def _to_dict(self) -> dict[str, str | list[float]]:
-        return {"type": "affine_transform", "matrix": list(self.matrix)}
+    def _to_internal(self) -> _InputAffineTransform:
+        assert self._inner is not None
+        return self._inner
 
 
 Pose = CompositePose | AffinePose
 
 
 # --- Intrinsics types ---
-# Not backed by _inner because the internal Pydantic models validate
-# eagerly (e.g. matrix-length checks) while the builder defers
-# validation to build().
+
+_INTRINSICS_EXTRA_FIELDS = frozenset({"dfx", "dfy", "dox", "doy", "skew"})
+
+_DISTORTION_MODEL_MAP: dict[str, Any] = {
+    "radial": _RadialDistortionModel,
+    "plumb_bob": _PlumbBobDistortionModel,
+    "fisheye": _FishEyeDistortionModel,
+    "rational_polynomial": _RationalPolynomialDistortionModel,
+    "pinhole": _PinholeDistortionModel,
+    "division": _DivisionDistortionModel,
+    "ucm": _UCMDistortionModel,
+}
 
 
 @dataclass(slots=True)
@@ -252,18 +313,27 @@ class SimpleIntrinsics:
     model: str | None = None
     extra: dict[str, float] = field(default_factory=dict, repr=False)
 
-    def _to_dict(self) -> dict[str, str | float]:
-        d: dict[str, str | float] = {
-            "type": "simple",
-            "fx": self.fx,
-            "fy": self.fy,
-            "ox": self.ox,
-            "oy": self.oy,
-        }
+    def _to_internal(self) -> _CameraIntrinsicsSimple:
+        distortion_model = None
         if self.model is not None:
-            d["model"] = self.model
-        d.update(self.extra)
-        return d
+            model_params = {k: v for k, v in self.extra.items() if k not in _INTRINSICS_EXTRA_FIELDS}
+            cls = _DISTORTION_MODEL_MAP.get(self.model)
+            if cls is not None:
+                distortion_model = cls.model_construct(type=self.model, **model_params)
+
+        return _CameraIntrinsicsSimple.model_construct(
+            type="simple",
+            fx=self.fx,
+            fy=self.fy,
+            ox=self.ox,
+            oy=self.oy,
+            model=distortion_model,
+            dfx=self.extra.get("dfx"),
+            dfy=self.extra.get("dfy"),
+            dox=self.extra.get("dox"),
+            doy=self.extra.get("doy"),
+            skew=self.extra.get("skew"),
+        )
 
 
 @dataclass(slots=True)
@@ -275,17 +345,21 @@ class AdvancedIntrinsics:
     p: Sequence[float] | None = None
     model: str | None = None
 
-    def _to_dict(self) -> dict[str, str | list[float]]:
-        d: dict[str, str | list[float]] = {"type": "advanced"}
-        if self.k is not None:
-            d["k"] = list(self.k)
-        if self.r is not None:
-            d["r"] = list(self.r)
-        if self.p is not None:
-            d["p"] = list(self.p)
+    def _to_internal(self) -> _CameraIntrinsicsAdvanced:
+        distortion_model = None
         if self.model is not None:
-            d["model"] = self.model
-        return d
+            cls = _DISTORTION_MODEL_MAP.get(self.model)
+            if cls is not None:
+                distortion_model = cls.model_construct(type=self.model)
+
+        return _CameraIntrinsicsAdvanced.model_construct(
+            type="advanced",
+            model=distortion_model,
+            k=list(self.k) if self.k is not None else None,
+            r=list(self.r) if self.r is not None else None,
+            p=list(self.p) if self.p is not None else None,
+            skew=None,
+        )
 
 
 Intrinsics = SimpleIntrinsics | AdvancedIntrinsics
@@ -492,8 +566,8 @@ def _serialise_uri_event(e: _URIEvent) -> dict[str, str | SerializedTimestamp]:
     return d
 
 
-def _serialise_pose(pose: Pose) -> dict[str, Any]:
-    return pose._to_dict()
+def _serialise_pose(pose: Pose) -> Any:
+    return pose._to_internal().model_dump()
 
 
 # -------------------------------------------------------------------
@@ -678,7 +752,7 @@ class CameraStreamBuilder(_StreamBuilderBase):
             ev: dict[str, Any] = {
                 "width_px": e.width_px,
                 "height_px": e.height_px,
-                "intrinsics": e.intrinsics._to_dict(),
+                "intrinsics": e.intrinsics._to_internal().model_dump(exclude_none=True),
             }
             if e.timestamp is not None:
                 ev["timestamp"] = e.timestamp
@@ -1081,17 +1155,11 @@ class SceneBuilder:
                     intr = cam_event.intrinsics
                     if isinstance(intr, AdvancedIntrinsics):
                         if intr.k is not None and len(intr.k) != 9:
-                            errors.append(
-                                f"Camera '{name}' event {idx}: " f"'k' must have 9 elements, got {len(intr.k)}"
-                            )
+                            errors.append(f"Camera '{name}' event {idx}: 'k' must have 9 elements, got {len(intr.k)}")
                         if intr.r is not None and len(intr.r) != 9:
-                            errors.append(
-                                f"Camera '{name}' event {idx}: " f"'r' must have 9 elements, got {len(intr.r)}"
-                            )
+                            errors.append(f"Camera '{name}' event {idx}: 'r' must have 9 elements, got {len(intr.r)}")
                         if intr.p is not None and len(intr.p) != 12:
-                            errors.append(
-                                f"Camera '{name}' event {idx}: " f"'p' must have 12 elements, got {len(intr.p)}"
-                            )
+                            errors.append(f"Camera '{name}' event {idx}: 'p' must have 12 elements, got {len(intr.p)}")
 
             # 4. Image → camera reference.
             if isinstance(sb, ImageStreamBuilder):

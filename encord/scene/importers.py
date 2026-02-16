@@ -18,10 +18,10 @@ from encord.scene.builder import (
     quaternion_pose,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _set_default_world_convention(builder: SceneBuilder) -> None:
     """Apply the common x-forward / y-left / z-up convention."""
@@ -37,6 +37,7 @@ def _join(root: str, path: str) -> str:
 # ---------------------------------------------------------------------------
 # 1. nuScenes
 # ---------------------------------------------------------------------------
+
 
 def from_nuscenes(
     *,
@@ -119,6 +120,7 @@ def from_nuscenes(
 # ---------------------------------------------------------------------------
 # 2. Scale AI
 # ---------------------------------------------------------------------------
+
 
 def from_scale_ai(
     task: dict[str, Any],
@@ -243,6 +245,7 @@ def _scale_ai_multi_frame(builder: SceneBuilder, task: dict[str, Any]) -> SceneB
 # ---------------------------------------------------------------------------
 # 3. Kognic / OpenLABEL
 # ---------------------------------------------------------------------------
+
 
 def from_kognic(
     openlabel: dict[str, Any],
@@ -372,6 +375,7 @@ def from_kognic(
 # ---------------------------------------------------------------------------
 # 4. Segments AI
 # ---------------------------------------------------------------------------
+
 
 def from_segments_ai(
     sample_attributes: dict[str, Any],
@@ -564,6 +568,7 @@ def _segments_ai_multi_sensor(builder: SceneBuilder, attrs: dict[str, Any]) -> S
 # ---------------------------------------------------------------------------
 # 5. Labelbox
 # ---------------------------------------------------------------------------
+
 
 def from_labelbox(
     row_data: dict[str, Any],
