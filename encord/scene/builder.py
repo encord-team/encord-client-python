@@ -37,7 +37,6 @@ import datetime
 from dataclasses import dataclass, field
 from typing import Any, Sequence, cast
 
-
 from encord.exceptions import EncordException
 
 # Internal types -- imported as private, never exposed to the user.
@@ -60,10 +59,37 @@ from encord.scene.internal import (
     InputAffineTransform as _InputAffineTransform,
 )
 from encord.scene.internal import (
+    InputCameraParamsEvent as _InputCameraParamsEvent,
+)
+from encord.scene.internal import (
+    InputCameraStream as _InputCameraStream,
+)
+from encord.scene.internal import (
     InputCompositePose as _InputCompositePose,
 )
 from encord.scene.internal import (
+    InputEntityType as _InputEntityType,
+)
+from encord.scene.internal import (
     InputEulerRotation as _InputEulerRotation,
+)
+from encord.scene.internal import (
+    InputFoREvent as _InputFoREvent,
+)
+from encord.scene.internal import (
+    InputFoRStream as _InputFoRStream,
+)
+from encord.scene.internal import (
+    InputImageStream as _InputImageStream,
+)
+from encord.scene.internal import (
+    InputModelStream as _InputModelStream,
+)
+from encord.scene.internal import (
+    InputPCDStream as _InputPCDStream,
+)
+from encord.scene.internal import (
+    InputPose as _InputPose,
 )
 from encord.scene.internal import (
     InputPosition as _InputPosition,
@@ -76,6 +102,9 @@ from encord.scene.internal import (
 )
 from encord.scene.internal import (
     InputRotationMatrix as _InputRotationMatrix,
+)
+from encord.scene.internal import (
+    InputURIEvent as _InputURIEvent,
 )
 from encord.scene.internal import (
     PinholeDistortionModel as _PinholeDistortionModel,
@@ -121,6 +150,10 @@ __all__ = [
     "quaternion_pose",
     # Intrinsics helpers
     "intrinsics_advanced",
+    "intrinsics_fisheye",
+    "intrinsics_pinhole",
+    "intrinsics_plumb_bob",
+    "intrinsics_radial",
     "intrinsics_simple",
     # Enum
     "Direction",
@@ -509,6 +542,128 @@ def intrinsics_advanced(
 
 
 # ===================================================================
+# Dedicated intrinsics convenience constructors
+# ===================================================================
+
+
+def intrinsics_pinhole(
+    fx: float,
+    fy: float,
+    ox: float,
+    oy: float,
+) -> SimpleIntrinsics:
+    """Build pinhole intrinsics (no distortion coefficients).
+
+    Args:
+        fx: Focal length along the *x*-axis (pixels).
+        fy: Focal length along the *y*-axis (pixels).
+        ox: Principal-point *x* offset (pixels).
+        oy: Principal-point *y* offset (pixels).
+        **extras: Optional extra fields (``dfx``, ``dfy``, ``dox``,
+            ``doy``, ``skew``).
+    """
+    return SimpleIntrinsics(fx=fx, fy=fy, ox=ox, oy=oy, model="pinhole")
+
+
+def intrinsics_radial(
+    fx: float,
+    fy: float,
+    ox: float,
+    oy: float,
+    *,
+    k1: float,
+    k2: float,
+    k3: float,
+) -> SimpleIntrinsics:
+    """Build intrinsics with a radial distortion model.
+
+    Args:
+        fx: Focal length along the *x*-axis (pixels).
+        fy: Focal length along the *y*-axis (pixels).
+        ox: Principal-point *x* offset (pixels).
+        oy: Principal-point *y* offset (pixels).
+        k1: First radial distortion coefficient.
+        k2: Second radial distortion coefficient.
+        k3: Third radial distortion coefficient.
+        **extras: Optional extra fields (``dfx``, ``dfy``, ``dox``,
+            ``doy``, ``skew``).
+    """
+    return SimpleIntrinsics(fx=fx, fy=fy, ox=ox, oy=oy, model="radial", extra={"k1": k1, "k2": k2, "k3": k3})
+
+
+def intrinsics_plumb_bob(
+    fx: float,
+    fy: float,
+    ox: float,
+    oy: float,
+    *,
+    k1: float,
+    k2: float,
+    k3: float,
+    t1: float,
+    t2: float,
+) -> SimpleIntrinsics:
+    """Build intrinsics with a plumb-bob (Brown-Conrady) distortion model.
+
+    Args:
+        fx: Focal length along the *x*-axis (pixels).
+        fy: Focal length along the *y*-axis (pixels).
+        ox: Principal-point *x* offset (pixels).
+        oy: Principal-point *y* offset (pixels).
+        k1: First radial distortion coefficient.
+        k2: Second radial distortion coefficient.
+        k3: Third radial distortion coefficient.
+        t1: First tangential distortion coefficient.
+        t2: Second tangential distortion coefficient.
+    """
+    return SimpleIntrinsics(
+        fx=fx,
+        fy=fy,
+        ox=ox,
+        oy=oy,
+        model="plumb_bob",
+        extra={"k1": k1, "k2": k2, "k3": k3, "t1": t1, "t2": t2},
+    )
+
+
+def intrinsics_fisheye(
+    fx: float,
+    fy: float,
+    ox: float,
+    oy: float,
+    *,
+    k1: float,
+    k2: float,
+    k3: float,
+    k4: float,
+) -> SimpleIntrinsics:
+    """Build intrinsics with a fisheye (Kannala-Brandt) distortion model.
+
+    Common in autonomous-vehicle camera rigs.
+
+    Args:
+        fx: Focal length along the *x*-axis (pixels).
+        fy: Focal length along the *y*-axis (pixels).
+        ox: Principal-point *x* offset (pixels).
+        oy: Principal-point *y* offset (pixels).
+        k1: First distortion coefficient.
+        k2: Second distortion coefficient.
+        k3: Third distortion coefficient.
+        k4: Fourth distortion coefficient.
+        **extras: Optional extra fields (``dfx``, ``dfy``, ``dox``,
+            ``doy``, ``skew``).
+    """
+    return SimpleIntrinsics(
+        fx=fx,
+        fy=fy,
+        ox=ox,
+        oy=oy,
+        model="fisheye",
+        extra={"k1": k1, "k2": k2, "k3": k3, "k4": k4},
+    )
+
+
+# ===================================================================
 # Internal event types
 # ===================================================================
 
@@ -550,24 +705,17 @@ class _StreamBuilderBase:
     def _event_count(self) -> int:
         raise NotImplementedError
 
-    def _build(self) -> dict[str, Any]:
+    def _to_internal(self) -> Any:
         raise NotImplementedError
 
 
 # -------------------------------------------------------------------
-# Helpers for serialising events inside _build()
+# Helpers for converting builder events to internal models
 # -------------------------------------------------------------------
 
 
-def _serialise_uri_event(e: _URIEvent) -> dict[str, str | SerializedTimestamp]:
-    d: dict[str, str | SerializedTimestamp] = {"uri": e.uri}
-    if e.timestamp is not None:
-        d["timestamp"] = e.timestamp
-    return d
-
-
-def _serialise_pose(pose: Pose) -> Any:
-    return pose._to_internal().model_dump()
+def _pose_to_internal(pose: Pose) -> _InputPose:
+    return _InputPose.model_construct(root=pose._to_internal())
 
 
 # -------------------------------------------------------------------
@@ -643,16 +791,13 @@ class PCDStreamBuilder(_StreamBuilderBase):
 
     # -- serialization ----------------------------------------------------
 
-    def _build(self) -> dict[str, Any]:
-        d: dict[str, Any] = {
-            "type": "point_cloud",
-            "events": [_serialise_uri_event(e) for e in self._events],
-        }
-        if self._frame_of_reference is not None:
-            d["frame_of_reference"] = self._frame_of_reference
-        if self._pose is not None:
-            d["pose"] = _serialise_pose(self._pose)
-        return d
+    def _to_internal(self) -> _InputPCDStream:
+        return _InputPCDStream.model_construct(
+            type=_InputEntityType.POINT_CLOUD,
+            events=[_InputURIEvent.model_construct(uri=e.uri, timestamp=e.timestamp) for e in self._events],
+            frame_of_reference=self._frame_of_reference,
+            pose=_pose_to_internal(self._pose) if self._pose is not None else None,
+        )
 
 
 # -------------------------------------------------------------------
@@ -746,26 +891,22 @@ class CameraStreamBuilder(_StreamBuilderBase):
 
     # -- serialization ----------------------------------------------------
 
-    def _build(self) -> dict[str, Any]:
-        events: list[dict[str, Any]] = []
-        for e in self._events:
-            ev: dict[str, Any] = {
-                "width_px": e.width_px,
-                "height_px": e.height_px,
-                "intrinsics": e.intrinsics._to_internal().model_dump(exclude_none=True),
-            }
-            if e.timestamp is not None:
-                ev["timestamp"] = e.timestamp
-            if e.extrinsics is not None:
-                ev["extrinsics"] = _serialise_pose(e.extrinsics)
-            events.append(ev)
-
-        d: dict[str, Any] = {"type": "camera", "events": events}
-        if self._frame_of_reference is not None:
-            d["frame_of_reference"] = self._frame_of_reference
-        if self._pose is not None:
-            d["pose"] = _serialise_pose(self._pose)
-        return d
+    def _to_internal(self) -> _InputCameraStream:
+        return _InputCameraStream.model_construct(
+            type=_InputEntityType.CAMERA_PARAMETERS,
+            events=[
+                _InputCameraParamsEvent.model_construct(
+                    width_px=e.width_px,
+                    height_px=e.height_px,
+                    intrinsics=e.intrinsics._to_internal(),
+                    timestamp=e.timestamp,
+                    extrinsics=_pose_to_internal(e.extrinsics) if e.extrinsics is not None else None,
+                )
+                for e in self._events
+            ],
+            frame_of_reference=self._frame_of_reference,
+            pose=_pose_to_internal(self._pose) if self._pose is not None else None,
+        )
 
 
 # -------------------------------------------------------------------
@@ -833,22 +974,19 @@ class FoRStreamBuilder(_StreamBuilderBase):
 
     # -- serialization ----------------------------------------------------
 
-    def _build(self) -> dict[str, Any]:
-        events: list[dict[str, Any]] = []
-        for e in self._events:
-            ev: dict[str, Any] = {"pose": _serialise_pose(e.pose)}
-            if e.timestamp is not None:
-                ev["timestamp"] = e.timestamp
-            events.append(ev)
-
-        d: dict[str, Any] = {
-            "type": "frame_of_reference",
-            "for_id": self._for_id,
-            "events": events,
-        }
-        if self._parent_for_id is not None:
-            d["parent_for_id"] = self._parent_for_id
-        return d
+    def _to_internal(self) -> _InputFoRStream:
+        return _InputFoRStream.model_construct(
+            type=_InputEntityType.FRAME_OF_REFERENCE,
+            id=self._for_id,
+            parent_FoR_id=self._parent_for_id,
+            events=[
+                _InputFoREvent.model_construct(
+                    timestamp=e.timestamp,
+                    pose=_pose_to_internal(e.pose),
+                )
+                for e in self._events
+            ],
+        )
 
 
 # -------------------------------------------------------------------
@@ -904,12 +1042,12 @@ class ImageStreamBuilder(_StreamBuilderBase):
 
     # -- serialization ----------------------------------------------------
 
-    def _build(self) -> dict[str, Any]:
-        return {
-            "type": "image",
-            "camera": self._camera,
-            "events": [_serialise_uri_event(e) for e in self._events],
-        }
+    def _to_internal(self) -> _InputImageStream:
+        return _InputImageStream.model_construct(
+            type=_InputEntityType.IMAGE,
+            camera=self._camera,
+            events=[_InputURIEvent.model_construct(uri=e.uri, timestamp=e.timestamp) for e in self._events],
+        )
 
 
 # -------------------------------------------------------------------
@@ -984,16 +1122,13 @@ class ModelStreamBuilder(_StreamBuilderBase):
 
     # -- serialization ----------------------------------------------------
 
-    def _build(self) -> dict[str, Any]:
-        d: dict[str, Any] = {
-            "type": "3d_model",
-            "events": [_serialise_uri_event(e) for e in self._events],
-        }
-        if self._frame_of_reference is not None:
-            d["frame_of_reference"] = self._frame_of_reference
-        if self._pose is not None:
-            d["pose"] = _serialise_pose(self._pose)
-        return d
+    def _to_internal(self) -> _InputModelStream:
+        return _InputModelStream.model_construct(
+            type=_InputEntityType.MODEL,
+            events=[_InputURIEvent.model_construct(uri=e.uri, timestamp=e.timestamp) for e in self._events],
+            frame_of_reference=self._frame_of_reference,
+            pose=_pose_to_internal(self._pose) if self._pose is not None else None,
+        )
 
 
 # ===================================================================
@@ -1189,7 +1324,7 @@ class SceneBuilder:
                         f"Available FoR streams: {for_stream_names or '{}'}"
                     )
 
-            streams_dict[name] = sb._build()
+            streams_dict[name] = sb._to_internal().model_dump(exclude_none=True)
 
         if errors:
             raise EncordException("Scene validation failed:\n- " + "\n- ".join(errors))
