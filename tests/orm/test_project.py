@@ -1,14 +1,16 @@
-from encord.orm.project import ProjectStatus
 import pytest
 
+from encord.orm.project import ProjectStatus
+
+
 @pytest.mark.parametrize(
-    ('status_str', 'expected_parsed_status'),
+    ("status_str", "expected_parsed_status"),
     [
-        ('inProgress', ProjectStatus.IN_PROGRESS),
+        ("inProgress", ProjectStatus.IN_PROGRESS),
         ("inReview", ProjectStatus.IN_REVIEW),
         ("someNewStatus1", ProjectStatus.UNKNOWN),
         ("someNewStatus2", ProjectStatus.UNKNOWN),
-    ]
+    ],
 )
 def test_project_status_unknown_fallback(
     status_str: str,
