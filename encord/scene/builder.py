@@ -35,7 +35,7 @@ from __future__ import annotations
 
 import datetime
 from dataclasses import dataclass, field
-from typing import Any, Sequence, cast
+from typing import Any, Sequence, Union, cast
 
 from encord.exceptions import EncordException
 
@@ -158,14 +158,14 @@ __all__ = [
 # Timestamp
 # ===================================================================
 
-Timestamp = int | float | datetime.datetime | datetime.time | None
-SerializedTimestamp = int | float | str
+Timestamp = Union[int, float, datetime.datetime, datetime.time, None]
+SerializedTimestamp = Union[int, float, str]
 
 
 def _serialize_timestamp(ts: Timestamp) -> SerializedTimestamp | None:
     if ts is None:
         return None
-    if isinstance(ts, datetime.datetime | datetime.time):
+    if isinstance(ts, (datetime.datetime, datetime.time)):
         return ts.isoformat()
     return ts
 
@@ -178,7 +178,7 @@ def _serialize_timestamp(ts: Timestamp) -> SerializedTimestamp | None:
 # --- Position ---
 
 
-@dataclass(slots=True)
+@dataclass
 class Position:
     """3-D position (translation)."""
 
@@ -198,7 +198,7 @@ class Position:
 # --- Rotation types ---
 
 
-@dataclass(slots=True)
+@dataclass
 class QuaternionRotation:
     """Unit-quaternion rotation."""
 
@@ -216,7 +216,7 @@ class QuaternionRotation:
         return self._inner
 
 
-@dataclass(slots=True)
+@dataclass
 class EulerRotation:
     """Euler-angle rotation (radians)."""
 
@@ -233,7 +233,7 @@ class EulerRotation:
         return self._inner
 
 
-@dataclass(slots=True)
+@dataclass
 class MatrixRotation:
     """3x3 rotation matrix (9 floats, row-major)."""
 
@@ -252,13 +252,13 @@ class MatrixRotation:
         return self._inner
 
 
-Rotation = QuaternionRotation | EulerRotation | MatrixRotation
+Rotation = Union[QuaternionRotation, EulerRotation, MatrixRotation]
 
 
 # --- Pose types ---
 
 
-@dataclass(slots=True)
+@dataclass
 class CompositePose:
     """Rotation + position pair."""
 
@@ -272,7 +272,7 @@ class CompositePose:
         )
 
 
-@dataclass(slots=True)
+@dataclass
 class AffinePose:
     """4x4 affine transform matrix (16 floats, row-major)."""
 
@@ -311,7 +311,7 @@ class AffinePose:
         return self._inner
 
 
-Pose = CompositePose | AffinePose
+Pose = Union[CompositePose, AffinePose]
 
 
 # --- Intrinsics types ---
@@ -329,7 +329,7 @@ _DISTORTION_MODEL_MAP: dict[str, Any] = {
 }
 
 
-@dataclass(slots=True)
+@dataclass
 class SimpleIntrinsics:
     """Simple camera intrinsics (focal length + principal point)."""
 
@@ -363,7 +363,7 @@ class SimpleIntrinsics:
         )
 
 
-@dataclass(slots=True)
+@dataclass
 class AdvancedIntrinsics:
     """Advanced camera intrinsics (full calibration matrices)."""
 
@@ -389,7 +389,7 @@ class AdvancedIntrinsics:
         )
 
 
-Intrinsics = SimpleIntrinsics | AdvancedIntrinsics
+Intrinsics = Union[SimpleIntrinsics, AdvancedIntrinsics]
 
 
 # ===================================================================
@@ -662,13 +662,13 @@ def intrinsics_fisheye(
 # ===================================================================
 
 
-@dataclass(slots=True)
+@dataclass
 class _URIEvent:
     uri: str
     timestamp: SerializedTimestamp | None = None
 
 
-@dataclass(slots=True)
+@dataclass
 class _CameraEvent:
     width_px: int
     height_px: int
@@ -677,7 +677,7 @@ class _CameraEvent:
     extrinsics: Pose | None = None
 
 
-@dataclass(slots=True)
+@dataclass
 class _FoREvent:
     pose: Pose
     timestamp: SerializedTimestamp | None = None
@@ -1130,7 +1130,7 @@ class ModelStreamBuilder(_StreamBuilderBase):
 # ===================================================================
 
 
-@dataclass(slots=True)
+@dataclass
 class _ConventionDict:
     x: str
     y: str
@@ -1273,7 +1273,7 @@ class SceneBuilder:
                 errors.append(f"Stream '{name}' has no events")
 
             # 2. URI must not be empty.
-            if isinstance(sb, PCDStreamBuilder | ImageStreamBuilder | ModelStreamBuilder):
+            if isinstance(sb, (PCDStreamBuilder, ImageStreamBuilder, ModelStreamBuilder)):
                 for idx, event in enumerate(sb._events):
                     if not event.uri:
                         errors.append(f"Stream '{name}' event {idx} has an empty URI")
@@ -1300,7 +1300,7 @@ class SceneBuilder:
                     )
 
             # 5. Frame-of-reference linkage.
-            if isinstance(sb, PCDStreamBuilder | CameraStreamBuilder | ModelStreamBuilder):
+            if isinstance(sb, (PCDStreamBuilder, CameraStreamBuilder, ModelStreamBuilder)):
                 ref = sb._frame_of_reference
                 if ref is not None and ref not in for_stream_names:
                     errors.append(

@@ -8,7 +8,9 @@ import re
 from dataclasses import dataclass
 from enum import StrEnum, auto
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Optional, Union
+
+from typing_extensions import TypeAlias
 
 from pydantic import (
     AliasChoices,
@@ -59,12 +61,12 @@ class CamelModelApi(BaseModel):
 
 
 class Direction(StrEnum):
-    UP = auto()
-    DOWN = auto()
-    LEFT = auto()
-    RIGHT = auto()
-    FORWARD = auto()
-    BACKWARD = auto()
+    UP = "up"
+    DOWN = "down"
+    LEFT = "left"
+    RIGHT = "right"
+    FORWARD = "forward"
+    BACKWARD = "backward"
 
 
 DIRECTION_TO_VECTOR: dict[Direction, tuple[int, int, int]] = {
@@ -193,13 +195,15 @@ class UCMDistortionModel(BaseModel):
 
 
 DistortionModel = Annotated[
-    RadialDistortionModel
-    | PlumbBobDistortionModel
-    | FishEyeDistortionModel
-    | RationalPolynomialDistortionModel
-    | PinholeDistortionModel
-    | DivisionDistortionModel
-    | UCMDistortionModel,
+    Union[
+        RadialDistortionModel,
+        PlumbBobDistortionModel,
+        FishEyeDistortionModel,
+        RationalPolynomialDistortionModel,
+        PinholeDistortionModel,
+        DivisionDistortionModel,
+        UCMDistortionModel,
+    ],
     Field(discriminator="type"),
 ]
 
@@ -236,7 +240,7 @@ class CameraIntrinsicsAdvanced(BaseModel):
     skew: Annotated[float | None, Field(description="Axis skew", validation_alias=AliasChoices("skew", "s"))] = None
 
 
-CameraIntrinsics = Annotated[CameraIntrinsicsSimple | CameraIntrinsicsAdvanced, Field(discriminator="type")]
+CameraIntrinsics = Annotated[Union[CameraIntrinsicsSimple, CameraIntrinsicsAdvanced], Field(discriminator="type")]
 
 
 # ---------------------------------------------------------------------------
@@ -286,7 +290,7 @@ class ModelGeometry(CamelModelApi):
 
 
 Geometry = Annotated[
-    CuboidGeometry | EllipsoidGeometry | LineGeometry | ModelGeometry,
+    Union[CuboidGeometry, EllipsoidGeometry, LineGeometry, ModelGeometry],
     Field(discriminator="type"),
 ]
 
@@ -427,7 +431,7 @@ class InputEulerRotation(BaseModel):
 
 
 def discriminate_rotation(arg: dict | tuple | list | object) -> str:
-    if isinstance(arg, list | tuple | InputRotationMatrix):
+    if isinstance(arg, (list, tuple, InputRotationMatrix)):
         return "matrix"
     elif isinstance(arg, dict):
         return "quaternion" if "w" in arg else "euler"
@@ -494,6 +498,7 @@ class InputAffineTransform(
 ):
     @model_validator(mode="after")
     def validate_affine_matrix(self) -> InputAffineTransform:
+        """Validate that the matrix is a proper affine matrix (orthogonal with det=1) & only translation"""
         m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33 = self.root
         _rot = InputRotationMatrix(root=(m00, m01, m02, m10, m11, m12, m20, m21, m22))
         if m03 != 0.0 or m13 != 0.0 or m23 != 0.0:
@@ -504,7 +509,7 @@ class InputAffineTransform(
 
 
 def discriminate_pose(arg: list | tuple | dict | InputCompositePose | InputAffineTransform) -> str:
-    return "affine" if isinstance(arg, list | tuple | InputAffineTransform) else "pose"
+    return "affine" if isinstance(arg, (list, tuple, InputAffineTransform)) else "pose"
 
 
 class InputPose(RootModel):
@@ -526,8 +531,8 @@ class InputPose(RootModel):
 FrameOfReferenceId = str
 CameraId = str
 
-FrameOfReferenceType = Annotated[
-    FrameOfReferenceId | None,
+FrameOfReferenceType: TypeAlias = Annotated[
+    Optional[FrameOfReferenceId],
     Field(
         description="A frame of reference to use as a base",
         examples=["ego_vehicle", "camera-left"],
@@ -535,8 +540,8 @@ FrameOfReferenceType = Annotated[
     ),
 ]
 
-PoseType = Annotated[
-    InputPose | None,
+PoseType: TypeAlias = Annotated[
+    Optional[InputPose],
     Field(
         description="A static transformation to apply the the chosen frame of reference",
         examples=[
@@ -548,8 +553,8 @@ PoseType = Annotated[
     ),
 ]
 
-Timestamp = Annotated[
-    int | float | datetime.datetime | datetime.time | None,
+Timestamp: TypeAlias = Annotated[
+    Union[int, float, datetime.datetime, datetime.time, None],
     Field(validation_alias=AliasChoices("timestamp", "time"), default=None),
 ]
 
@@ -622,7 +627,7 @@ class InputEntityType(StrEnum):
 
 class InputCameraStream(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    type: Literal[InputEntityType.CAMERA_PARAMETERS] = InputEntityType.CAMERA_PARAMETERS
+    type: Literal["camera_parameters"] = "camera_parameters"
     events: list[InputCameraParamsEvent]
     frame_of_reference: FrameOfReferenceType = None
     pose: PoseType = None
@@ -630,14 +635,14 @@ class InputCameraStream(BaseModel):
 
 class InputImageStream(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    type: Literal[InputEntityType.IMAGE] = InputEntityType.IMAGE
+    type: Literal["image"] = "image"
     camera: Annotated[CameraId, Field(description="ID or params of the camera associated with the image")]
     events: list[InputURIEvent]
 
 
 class InputModelStream(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    type: Literal[InputEntityType.MODEL] = InputEntityType.MODEL
+    type: Literal["model"] = "model"
     events: Annotated[
         list[InputURIEvent] | list[ModelEvent], Field(description="List of 3D models to place in the scene")
     ]
@@ -647,7 +652,7 @@ class InputModelStream(BaseModel):
 
 class InputPCDStream(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    type: Literal[InputEntityType.POINT_CLOUD] = InputEntityType.POINT_CLOUD
+    type: Literal["point_cloud"] = "point_cloud"
     events: Annotated[list[InputURIEvent], Field(description="List of point clouds")]
     frame_of_reference: FrameOfReferenceType = None
     pose: PoseType = None
@@ -655,7 +660,7 @@ class InputPCDStream(BaseModel):
 
 class InputFoRStream(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    type: Literal[InputEntityType.FRAME_OF_REFERENCE] = InputEntityType.FRAME_OF_REFERENCE
+    type: Literal["frame_of_reference"] = "frame_of_reference"
     id: Annotated[str, Field(description="ID of this frame of reference")]
     parent_FoR_id: Annotated[
         str | None,
@@ -667,8 +672,8 @@ class InputFoRStream(BaseModel):
     events: Annotated[list[InputFoREvent], Field(description="List of frame of reference")]
 
 
-InputStream = Annotated[
-    InputPCDStream | InputCameraStream | InputFoRStream | InputImageStream | InputModelStream,
+InputStream: TypeAlias = Annotated[
+    Union[InputPCDStream, InputCameraStream, InputFoRStream, InputImageStream, InputModelStream],
     Field(discriminator="type"),
 ]
 
@@ -687,7 +692,7 @@ class Streams(RootModel):
 
 
 def discriminate_content(arg: dict | str | InputPCDStream | Streams | object) -> str:
-    if isinstance(arg, str | ValidatedSceneUrlWithExtension):
+    if isinstance(arg, (str, ValidatedSceneUrlWithExtension)):
         return "urlWithExtension"
     if isinstance(arg, ValidatedSceneUrlWithFormat):
         return "urlWithFormat"
@@ -709,10 +714,12 @@ def discriminate_content(arg: dict | str | InputPCDStream | Streams | object) ->
 class SceneContent(
     RootModel[
         Annotated[
-            Annotated[Streams, Tag("streams")]
-            | Annotated[InputPCDStream, Tag("pcd")]
-            | Annotated[ValidatedSceneUrlWithExtension, Tag("urlWithExtension")]
-            | Annotated[ValidatedSceneUrlWithFormat, Tag("urlWithFormat")],
+            Union[
+                Annotated[Streams, Tag("streams")],
+                Annotated[InputPCDStream, Tag("pcd")],
+                Annotated[ValidatedSceneUrlWithExtension, Tag("urlWithExtension")],
+                Annotated[ValidatedSceneUrlWithFormat, Tag("urlWithFormat")],
+            ],
             Field(discriminator=Discriminator(discriminate_content)),
         ]
     ]
@@ -772,7 +779,7 @@ def discriminate_config(arg: dict | SceneContent | SceneWithConfig) -> str:
 class SceneOrSceneWithConfig(
     RootModel[
         Annotated[
-            Annotated[SceneContent, Tag("raw")] | Annotated[SceneWithConfig, Tag("config")],
+            Union[Annotated[SceneContent, Tag("raw")], Annotated[SceneWithConfig, Tag("config")]],
             Field(discriminator=Discriminator(discriminate_config)),
         ]
     ]
