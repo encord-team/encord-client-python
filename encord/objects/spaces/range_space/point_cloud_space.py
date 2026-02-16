@@ -84,6 +84,13 @@ class PointCloudFileSpace(RangeSpace):
                 confidence=object_frame_instance_info.confidence,
             )
 
+            # Populate static attribute answers from object_answers
+            object_answer = object_answers.get(obj_data["objectHash"])
+            if object_answer is not None:
+                answer_list = object_answer.get("classifications", [])
+                if answer_list:
+                    object_instance.set_answer_from_list(answer_list)
+
     def _build_labels_dict(self) -> LabelBlob:
         objects: list[FrameObject] = []
 

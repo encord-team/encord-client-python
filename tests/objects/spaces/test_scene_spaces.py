@@ -7,7 +7,7 @@ from deepdiff import DeepDiff
 from encord.constants.enums import DataType, SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects import Classification, LabelRowV2, Object
-from encord.objects.attributes import Attribute
+from encord.objects.attributes import Attribute, TextAttribute
 from encord.objects.common import Shape
 from encord.objects.frames import Range
 from encord.objects.ontology_object_instance import ObjectInstance
@@ -18,6 +18,7 @@ from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.scene import SCENE_METADATA, SCENE_NO_LABELS, SCENE_WITH_LABELS
 
 segmentation_ontology_item = all_types_structure.get_child_by_hash("segmentationFeatureNodeHash", Object)
+segmentation_text_attribute = segmentation_ontology_item.get_child_by_hash("testFeatureHash", type_=TextAttribute)
 cuboid_ontology_item = all_types_structure.get_child_by_hash("cuboidFeatureNodeHash", Object)
 box_with_attributes_ontology_item = all_types_structure.get_child_by_hash("MTA2MjAx", Object)
 box_text_attribute_ontology_item = box_with_attributes_ontology_item.get_child_by_hash("OTkxMjU1", type_=Attribute)
@@ -302,3 +303,19 @@ def test_point_cloud_segmentation_with_created_by(ontology) -> None:
     obj_answer = result["object_answers"][segm_instance.object_hash]
     assert obj_answer["createdBy"] == "creator@example.com"
     assert obj_answer["lastEditedBy"] == "editor@example.com"
+
+
+def test_point_cloud_segmentation_parses_static_attributes(ontology):
+    label_row = LabelRowV2(SCENE_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(SCENE_WITH_LABELS)
+
+    space = label_row.get_space(id="path/to/file1.pcd", type_="point_cloud")
+    obj_instances = space.get_object_instances()
+    assert len(obj_instances) == 1
+
+    obj = obj_instances[0]
+    assert obj.object_hash == "hash1"
+
+    # The static attribute should be populated from object_answers
+    answer = obj.get_answer(segmentation_text_attribute)
+    assert answer == "Test attribute answer"
