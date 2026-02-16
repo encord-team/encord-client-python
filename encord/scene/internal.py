@@ -615,9 +615,8 @@ class InputEntityType(StrEnum):
     def _missing_(cls, value: object | str) -> InputEntityType:
         if not isinstance(value, str):
             raise ValueError(f"Unknown entity type: {value} is not a string")
-        match value:
-            case "camera":
-                return InputEntityType.CAMERA_PARAMETERS
+        if value == "camera":
+            return InputEntityType.CAMERA_PARAMETERS
         raise ValueError(f"Unknown entity type: {value}")
 
 

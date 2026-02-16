@@ -123,40 +123,34 @@ from encord.scene.internal import (
 )
 
 __all__ = [
-    # Public domain types
-    "Pose",
-    "CompositePose",
-    "AffinePose",
-    "Rotation",
-    "QuaternionRotation",
-    "EulerRotation",
-    "MatrixRotation",
-    "Position",
-    "Intrinsics",
-    "SimpleIntrinsics",
     "AdvancedIntrinsics",
-    # Scene builder
-    "SceneBuilder",
-    # Stream builders
+    "AffinePose",
     "CameraStreamBuilder",
+    "CompositePose",
+    "Direction",
+    "EulerRotation",
     "FoRStreamBuilder",
     "ImageStreamBuilder",
+    "Intrinsics",
+    "MatrixRotation",
     "ModelStreamBuilder",
     "PCDStreamBuilder",
-    # Pose helpers
+    "Pose",
+    "Position",
+    "QuaternionRotation",
+    "Rotation",
+    "SceneBuilder",
+    "SimpleIntrinsics",
     "affine_transform",
     "euler_pose",
-    "matrix_pose",
-    "quaternion_pose",
-    # Intrinsics helpers
     "intrinsics_advanced",
     "intrinsics_fisheye",
     "intrinsics_pinhole",
     "intrinsics_plumb_bob",
     "intrinsics_radial",
     "intrinsics_simple",
-    # Enum
-    "Direction",
+    "matrix_pose",
+    "quaternion_pose",
 ]
 
 
