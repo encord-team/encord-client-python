@@ -24,6 +24,13 @@ from encord.scene.builder import (
     matrix_pose,
     quaternion_pose,
 )
+from encord.scene.importers import (
+    from_kognic,
+    from_labelbox,
+    from_nuscenes,
+    from_scale_ai,
+    from_segments_ai,
+)
 
 __all__ = [
     # Domain types
@@ -52,6 +59,12 @@ __all__ = [
     "intrinsics_simple",
     "matrix_pose",
     "quaternion_pose",
+    # Importers
+    "from_kognic",
+    "from_labelbox",
+    "from_nuscenes",
+    "from_scale_ai",
+    "from_segments_ai",
     # Enum
     "Direction",
 ]
