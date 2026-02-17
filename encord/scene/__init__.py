@@ -1,4 +1,5 @@
 from encord.scene.builder import (
+    ROOT_FOR,
     AdvancedIntrinsics,
     AffinePose,
     CameraStreamBuilder,
@@ -9,7 +10,6 @@ from encord.scene.builder import (
     ImageStreamBuilder,
     Intrinsics,
     MatrixRotation,
-    ModelStreamBuilder,
     PCDStreamBuilder,
     Pose,
     Position,
@@ -37,6 +37,7 @@ from encord.scene.importers import (
 )
 
 __all__ = [
+    "ROOT_FOR",
     "AdvancedIntrinsics",
     "AffinePose",
     "CameraStreamBuilder",
@@ -47,7 +48,6 @@ __all__ = [
     "ImageStreamBuilder",
     "Intrinsics",
     "MatrixRotation",
-    "ModelStreamBuilder",
     "PCDStreamBuilder",
     "Pose",
     "Position",

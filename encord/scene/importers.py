@@ -101,13 +101,12 @@ def from_nuscenes(
         cy = intrinsic_matrix[1][2]
 
         cam_stream_name = f"cam_{cam_name}"
-        cam_stream = builder.add_camera_stream(cam_stream_name, frame_of_reference="ego")
+        cam_stream = builder.add_camera_stream(cam_stream_name, frame_of_reference="ego", pose=cam_pose)
         cam_stream.add_event(
             cam_data["width"],
             cam_data["height"],
             intrinsics_simple(fx=fx, fy=fy, ox=cx, oy=cy),
             timestamp=timestamp,
-            extrinsics=cam_pose,
         )
 
         img_stream_name = f"img_{cam_name}"
@@ -173,13 +172,12 @@ def _scale_ai_single_frame(builder: SceneBuilder, task: dict[str, Any]) -> Scene
         pose = _scale_cam_pose(cam)
 
         cam_stream_name = f"cam_{cam_name}"
-        cam_stream = builder.add_camera_stream(cam_stream_name)
+        cam_stream = builder.add_camera_stream(cam_stream_name, pose=pose)
         cam_stream.add_event(
             cam.get("width", 0),
             cam.get("height", 0),
             _scale_cam_intrinsics(cam),
             timestamp=0,
-            extrinsics=pose,
         )
 
         img_stream_name = f"img_{cam_name}"
@@ -226,7 +224,11 @@ def _scale_ai_multi_frame(builder: SceneBuilder, task: dict[str, Any]) -> SceneB
             img_stream_name = f"img_{cam_name}"
 
             if cam_stream_name not in cam_builders:
-                cam_builders[cam_stream_name] = builder.add_camera_stream(cam_stream_name, frame_of_reference="ego")
+                cam_builders[cam_stream_name] = builder.add_camera_stream(
+                    cam_stream_name,
+                    frame_of_reference="ego",
+                    pose=_scale_cam_pose(cam),
+                )
                 img_builders[img_stream_name] = builder.add_image_stream(img_stream_name, camera=cam_stream_name)
 
             cam_builders[cam_stream_name].add_event(
@@ -234,7 +236,6 @@ def _scale_ai_multi_frame(builder: SceneBuilder, task: dict[str, Any]) -> SceneB
                 cam.get("height", 0),
                 _scale_cam_intrinsics(cam),
                 timestamp=ts,
-                extrinsics=_scale_cam_pose(cam),
             )
 
             img_builders[img_stream_name].add_event(uri=cam["url"], timestamp=ts)
@@ -346,18 +347,19 @@ def from_kognic(
                 cx = intrinsics.get("principal_point_x", 0.0)
                 cy = intrinsics.get("principal_point_y", 0.0)
 
-                ext_pose = None
-                extrinsics = sp.get("extrinsics", {})
-                if extrinsics:
-                    ext_val = extrinsics.get("val", [0, 0, 0, 0, 0, 0, 1])
-                    ext_pose = quaternion_pose(
-                        qx=ext_val[3] if len(ext_val) > 3 else 0.0,
-                        qy=ext_val[4] if len(ext_val) > 4 else 0.0,
-                        qz=ext_val[5] if len(ext_val) > 5 else 0.0,
-                        qw=ext_val[6] if len(ext_val) > 6 else 1.0,
-                        x=ext_val[0] if len(ext_val) > 0 else 0.0,
-                        y=ext_val[1] if len(ext_val) > 1 else 0.0,
-                        z=ext_val[2] if len(ext_val) > 2 else 0.0,
+                ext_data = sp.get("extrinsics", {})
+                if ext_data:
+                    ext_val = ext_data.get("val", [0, 0, 0, 0, 0, 0, 1])
+                    cam_builders[stream_name].set_pose(
+                        quaternion_pose(
+                            qx=ext_val[3] if len(ext_val) > 3 else 0.0,
+                            qy=ext_val[4] if len(ext_val) > 4 else 0.0,
+                            qz=ext_val[5] if len(ext_val) > 5 else 0.0,
+                            qw=ext_val[6] if len(ext_val) > 6 else 1.0,
+                            x=ext_val[0] if len(ext_val) > 0 else 0.0,
+                            y=ext_val[1] if len(ext_val) > 1 else 0.0,
+                            z=ext_val[2] if len(ext_val) > 2 else 0.0,
+                        )
                     )
 
                 cam_builders[stream_name].add_event(
@@ -365,7 +367,6 @@ def from_kognic(
                     height,
                     intrinsics_simple(fx=fx, fy=fy, ox=cx, oy=cy),
                     timestamp=ts,
-                    extrinsics=ext_pose,
                 )
                 img_builders[stream_name].add_event(uri=uri, timestamp=ts)
 
@@ -469,13 +470,16 @@ def _segments_ai_single(builder: SceneBuilder, attrs: dict[str, Any]) -> SceneBu
         if ego_data:
             cam_kwargs["frame_of_reference"] = "ego"
 
-        cam_stream = builder.add_camera_stream(cam_stream_name, **cam_kwargs)
+        cam_stream = builder.add_camera_stream(
+            cam_stream_name,
+            **cam_kwargs,
+            pose=_segments_ai_cam_pose(img_data),
+        )
         cam_stream.add_event(
             img_data.get("width", 0),
             img_data.get("height", 0),
             _segments_ai_cam_intrinsics(img_data),
             timestamp=0,
-            extrinsics=_segments_ai_cam_pose(img_data),
         )
 
         img_stream = builder.add_image_stream(img_stream_name, camera=cam_stream_name)
@@ -515,7 +519,11 @@ def _segments_ai_sequence(builder: SceneBuilder, attrs: dict[str, Any]) -> Scene
             img_stream_name = f"img_{cam_name}"
 
             if cam_stream_name not in cam_builders:
-                cam_builders[cam_stream_name] = builder.add_camera_stream(cam_stream_name, frame_of_reference="ego")
+                cam_builders[cam_stream_name] = builder.add_camera_stream(
+                    cam_stream_name,
+                    frame_of_reference="ego",
+                    pose=_segments_ai_cam_pose(img_data),
+                )
                 img_builders[img_stream_name] = builder.add_image_stream(img_stream_name, camera=cam_stream_name)
 
             cam_builders[cam_stream_name].add_event(
@@ -523,7 +531,6 @@ def _segments_ai_sequence(builder: SceneBuilder, attrs: dict[str, Any]) -> Scene
                 img_data.get("height", 0),
                 _segments_ai_cam_intrinsics(img_data),
                 timestamp=ts,
-                extrinsics=_segments_ai_cam_pose(img_data),
             )
             img_builders[img_stream_name].add_event(uri=img_data.get("url", ""), timestamp=ts)
 
@@ -549,7 +556,12 @@ def _segments_ai_multi_sensor(builder: SceneBuilder, attrs: dict[str, Any]) -> S
         elif "camera" in sensor_type or "image" in sensor_type:
             cam_stream_name = f"cam_{sensor_name}"
             img_stream_name = f"img_{sensor_name}"
-            cam_stream = builder.add_camera_stream(cam_stream_name, frame_of_reference="ego")
+            first_frame = (sensor.get("frames") or [sensor])[0]
+            cam_stream = builder.add_camera_stream(
+                cam_stream_name,
+                frame_of_reference="ego",
+                pose=_segments_ai_cam_pose(first_frame),
+            )
             img_stream = builder.add_image_stream(img_stream_name, camera=cam_stream_name)
 
             for frame_idx, frame in enumerate(sensor.get("frames", [sensor])):
@@ -558,7 +570,6 @@ def _segments_ai_multi_sensor(builder: SceneBuilder, attrs: dict[str, Any]) -> S
                     frame.get("height", 0),
                     _segments_ai_cam_intrinsics(frame),
                     timestamp=frame_idx,
-                    extrinsics=_segments_ai_cam_pose(frame),
                 )
                 img_stream.add_event(uri=frame.get("url", ""), timestamp=frame_idx)
 
@@ -656,19 +667,20 @@ def from_labelbox(
                 **distortion_kwargs,
             )
 
-            # Extrinsics
+            # Camera pose (sensor mount position)
             ext = img_data.get("extrinsic", {})
             ext_pos = ext.get("position", {})
             ext_rot = ext.get("rotation", {})
-            # Labelbox quaternion: {x, y, z, w} matches Encord's {qx, qy, qz, qw}
-            extrinsics_pose = quaternion_pose(
-                qx=ext_rot.get("x", 0.0),
-                qy=ext_rot.get("y", 0.0),
-                qz=ext_rot.get("z", 0.0),
-                qw=ext_rot.get("w", 1.0),
-                x=ext_pos.get("x", 0.0),
-                y=ext_pos.get("y", 0.0),
-                z=ext_pos.get("z", 0.0),
+            cam_builders[cam_stream_name].set_pose(
+                quaternion_pose(
+                    qx=ext_rot.get("x", 0.0),
+                    qy=ext_rot.get("y", 0.0),
+                    qz=ext_rot.get("z", 0.0),
+                    qw=ext_rot.get("w", 1.0),
+                    x=ext_pos.get("x", 0.0),
+                    y=ext_pos.get("y", 0.0),
+                    z=ext_pos.get("z", 0.0),
+                )
             )
 
             cam_builders[cam_stream_name].add_event(
@@ -676,7 +688,6 @@ def from_labelbox(
                 img_data.get("height", 0),
                 intrinsics,
                 timestamp=ts,
-                extrinsics=extrinsics_pose,
             )
             img_builders[img_stream_name].add_event(uri=img_data.get("url", ""), timestamp=ts)
 
