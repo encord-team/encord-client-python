@@ -1502,7 +1502,6 @@ class SceneBuilder:
         self,
         name: str,
         *,
-        for_id: str,
         parent_for_id: str | None = None,
     ) -> FoRStreamBuilder:
         """Add a frame-of-reference stream.
