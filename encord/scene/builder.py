@@ -1237,12 +1237,10 @@ class FoRStreamBuilder(_StreamBuilderBase):
         name: str,
         scene: SceneBuilder,
         *,
-        for_id: str,
         parent_for_id: str | None = None,
     ) -> None:
         super().__init__(name, scene)
         self._events: list[_FoREvent] = []
-        self._for_id = for_id
         self._parent_for_id = parent_for_id
 
     @property
