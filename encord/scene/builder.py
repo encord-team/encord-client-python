@@ -1296,7 +1296,7 @@ class FoRStreamBuilder(_StreamBuilderBase):
     def _to_internal(self) -> _InputFoRStream:
         return _InputFoRStream.model_construct(
             type=_InputEntityType.FRAME_OF_REFERENCE,
-            id=self._for_id,
+            id=self._name,
             parent_FoR_id=self._parent_for_id,
             events=[
                 _InputFoREvent.model_construct(
