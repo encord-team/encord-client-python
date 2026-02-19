@@ -1517,9 +1517,9 @@ class SceneBuilder:
                 stream, or :data:`ROOT_FOR` to attach to the scene
                 root.  Validated at build time.
         """
-        if for_id == ROOT_FOR:
+        if name == ROOT_FOR:
             raise EncordException(f"'{ROOT_FOR}' is reserved and cannot be used as a for_id")
-        sb = FoRStreamBuilder(name, self, for_id=for_id, parent_for_id=parent_for_id)
+        sb = FoRStreamBuilder(name, self, parent_for_id=parent_for_id)
         self._streams[name] = sb
         return sb
 
