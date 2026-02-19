@@ -1152,14 +1152,14 @@ class CameraStreamBuilder(_StreamBuilderBase):
         width: int,
         height: int,
         intrinsics: Intrinsics,
-        *,
-        timestamp: Timestamp = 0,
     ) -> CameraStreamBuilder:
         """Convenience for a camera whose parameters never change.
 
         Identical to :meth:`add_event` but defaults *timestamp* to ``0``.
         """
-        return self.add_event(width, height, intrinsics, timestamp=timestamp)
+        if len(self._events) != 0:
+            raise RuntimeError("Adding static event to stream with existing events")
+        return self.add_event(width, height, intrinsics)
 
     # -- mutators ---------------------------------------------------------
 
@@ -1531,6 +1531,11 @@ class SceneBuilder:
     ) -> ImageStreamBuilder:
         """Add an image stream linked to a camera stream.
 
+        There is a convenience wrapper add_image_stream_with_camera.
+        Unless the camera is doing something unusual like changing image
+        size, distortion arguments or attached frame of reference.
+        Prefer using that argument instead.
+
         Args:
             name: Unique stream name.  Re-using an existing name
                 silently overwrites the previous stream.
@@ -1690,6 +1695,6 @@ class SceneBuilder:
                 world_convention=self._world_convention,
                 camera_convention=self._camera_convention,
             )
-            return config.model_dump(exclude_none=True)
+            return config.model_dump()
 
-        return streams.model_dump(exclude_none=True)
+        return streams.model_dump()
