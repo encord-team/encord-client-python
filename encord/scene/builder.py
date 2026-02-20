@@ -91,96 +91,96 @@ from typing import Any, Sequence, Union, cast
 from encord.exceptions import EncordException
 
 # Internal types -- imported as private, never exposed to the user.
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     CameraIntrinsicsAdvanced as _CameraIntrinsicsAdvanced,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     CameraIntrinsicsSimple as _CameraIntrinsicsSimple,
 )
 
 # Pydantic models used for final serialization in build().
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     Convention as _Convention,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     Direction,  # public enum, re-exported
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     DivisionDistortionModel as _DivisionDistortionModel,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     FishEyeDistortionModel as _FishEyeDistortionModel,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     InputAffineTransform as _InputAffineTransform,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     InputCameraParamsEvent as _InputCameraParamsEvent,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     InputCameraStream as _InputCameraStream,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     InputCompositePose as _InputCompositePose,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     InputEntityType as _InputEntityType,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     InputEulerRotation as _InputEulerRotation,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     InputFoREvent as _InputFoREvent,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     InputFoRStream as _InputFoRStream,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     InputImageStream as _InputImageStream,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     InputPCDStream as _InputPCDStream,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     InputPose as _InputPose,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     InputPosition as _InputPosition,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     InputQuaternion as _InputQuaternion,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     InputRotation as _InputRotation,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     InputRotationMatrix as _InputRotationMatrix,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     InputURIEvent as _InputURIEvent,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     PinholeDistortionModel as _PinholeDistortionModel,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     PlumbBobDistortionModel as _PlumbBobDistortionModel,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     RadialDistortionModel as _RadialDistortionModel,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     RationalPolynomialDistortionModel as _RationalPolynomialDistortionModel,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     SceneContent as _SceneContent,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     SceneWithConfig as _SceneWithConfig,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     Streams as _Streams,
 )
-from encord.scene.internal import (
+from encord.scene.internal.upload import (
     UCMDistortionModel as _UCMDistortionModel,
 )
 

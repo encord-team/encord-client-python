@@ -1,10 +1,12 @@
-"""Self-contained Pydantic model for InputScene with all dependencies inlined."""
+"""Pydantic models for InputScene with all dependencies inlined.
+
+Shared types (Convention, Direction, distortion models, SelfContainedFormat) live in common_internal.
+"""
 
 from __future__ import annotations
 
 import datetime
 import math
-import re
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -24,187 +26,21 @@ from pydantic import (
 )
 from typing_extensions import TypeAlias
 
-# ---------------------------------------------------------------------------
-# snake2camel utility
-# ---------------------------------------------------------------------------
-
-
-def snake2camel(snake: str, start_lower: bool = False) -> str:
-    camel = snake.title()
-    camel = re.sub("([0-9A-Za-z])_(?=[0-9A-Z])", lambda m: m.group(1), camel)
-    if start_lower:
-        camel = re.sub("(^_*[A-Z])", lambda m: m.group(1).lower(), camel)
-    return camel
-
-
-def _snake2camel_api(x: str) -> str:
-    return snake2camel(x, start_lower=True)
-
-
-# ---------------------------------------------------------------------------
-# CamelModel / CamelModelApi base classes
-# ---------------------------------------------------------------------------
-
-
-class CamelModel(BaseModel):
-    model_config = ConfigDict(alias_generator=_snake2camel_api, populate_by_name=True)
-
-
-class CamelModelApi(BaseModel):
-    model_config = ConfigDict(alias_generator=_snake2camel_api, populate_by_name=True)
-
-
-# ---------------------------------------------------------------------------
-# Direction / Convention
-# ---------------------------------------------------------------------------
-
-
-class Direction(str, Enum):
-    UP = "up"
-    DOWN = "down"
-    LEFT = "left"
-    RIGHT = "right"
-    FORWARD = "forward"
-    BACKWARD = "backward"
-
-
-DIRECTION_TO_VECTOR: dict[Direction, tuple[int, int, int]] = {
-    Direction.RIGHT: (1, 0, 0),
-    Direction.LEFT: (-1, 0, 0),
-    Direction.UP: (0, 1, 0),
-    Direction.DOWN: (0, -1, 0),
-    Direction.FORWARD: (0, 0, 1),
-    Direction.BACKWARD: (0, 0, -1),
-}
-
-
-class Convention(BaseModel):
-    x: Annotated[Direction, Field(examples=["left"])]
-    y: Annotated[Direction, Field(examples=["up"])]
-    z: Annotated[Direction, Field(examples=["backward"])]
-
-    @model_validator(mode="after")
-    def check_valid_convention(self) -> Convention:
-        x_vec = DIRECTION_TO_VECTOR[self.x]
-        y_vec = DIRECTION_TO_VECTOR[self.y]
-        z_vec = DIRECTION_TO_VECTOR[self.z]
-        for axis in range(3):
-            non_zero_count = sum([x_vec[axis] != 0, y_vec[axis] != 0, z_vec[axis] != 0])
-            if non_zero_count != 1:
-                raise ValueError(
-                    f"Invalid coordinate system: x={self.x}, y={self.y}, z={self.z}. "
-                    "Each axis must be used by exactly one direction."
-                )
-        return self
-
-    def right_handed(self) -> bool:
-        x_vec = DIRECTION_TO_VECTOR[self.x]
-        y_vec = DIRECTION_TO_VECTOR[self.y]
-        z_vec = DIRECTION_TO_VECTOR[self.z]
-        cross: tuple[int, int, int] = (
-            x_vec[1] * y_vec[2] - x_vec[2] * y_vec[1],
-            x_vec[2] * y_vec[0] - x_vec[0] * y_vec[2],
-            x_vec[0] * y_vec[1] - x_vec[1] * y_vec[0],
-        )
-        return cross == z_vec
-
-
-DEFAULT_CONVENTION: Convention = Convention(x=Direction.FORWARD, y=Direction.LEFT, z=Direction.UP)
-
-
-# ---------------------------------------------------------------------------
-# SelfContainedFormat
-# ---------------------------------------------------------------------------
-
-
-class SelfContainedFormat(str, Enum):
-    PCD = "pcd"
-    PLY = "ply"
-    LAS = "las"
-    LAZ = "laz"
-    E57 = "e57"
-    MCAP = "mcap"
-    BAG = "bag"
-    DB3 = "db3"
-
-
-# ---------------------------------------------------------------------------
-# Distortion models & CameraIntrinsics
-# ---------------------------------------------------------------------------
-
-
-class RadialDistortionModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    type: Literal["radial"]
-    k1: float
-    k2: float
-    k3: float
-
-
-class PlumbBobDistortionModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    type: Literal["plumb_bob"]
-    k1: float
-    k2: float
-    k3: float
-    t1: float
-    t2: float
-
-
-class FishEyeDistortionModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    type: Literal["fisheye"]
-    k1: float
-    k2: float
-    k3: float
-    k4: float
-
-
-class RationalPolynomialDistortionModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    type: Literal["rational_polynomial"]
-    k1: float
-    k2: float
-    k3: float
-    k4: float
-    k5: float
-    k6: float
-    t1: float
-    t2: float
-
-
-class PinholeDistortionModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    type: Literal["pinhole"]
-
-
-class DivisionDistortionModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    type: Literal["division"]
-    k: float
-
-
-class UCMDistortionModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    type: Literal["ucm"]
-    xi: float
-    k1: float
-    k2: float
-    k3: float
-
-
-DistortionModel = Annotated[
-    Union[
-        RadialDistortionModel,
-        PlumbBobDistortionModel,
-        FishEyeDistortionModel,
-        RationalPolynomialDistortionModel,
-        PinholeDistortionModel,
-        DivisionDistortionModel,
-        UCMDistortionModel,
-    ],
-    Field(discriminator="type"),
-]
+from encord.scene.internal.common import CamelModel as CamelModel
+from encord.scene.internal.common import CamelModelApi as CamelModelApi
+from encord.scene.internal.common import Convention as Convention
+from encord.scene.internal.common import DEFAULT_CONVENTION as DEFAULT_CONVENTION
+from encord.scene.internal.common import Direction as Direction
+from encord.scene.internal.common import DIRECTION_TO_VECTOR as DIRECTION_TO_VECTOR
+from encord.scene.internal.common import DistortionModel as DistortionModel
+from encord.scene.internal.common import DivisionDistortionModel as DivisionDistortionModel
+from encord.scene.internal.common import FishEyeDistortionModel as FishEyeDistortionModel
+from encord.scene.internal.common import PinholeDistortionModel as PinholeDistortionModel
+from encord.scene.internal.common import PlumbBobDistortionModel as PlumbBobDistortionModel
+from encord.scene.internal.common import RadialDistortionModel as RadialDistortionModel
+from encord.scene.internal.common import RationalPolynomialDistortionModel as RationalPolynomialDistortionModel
+from encord.scene.internal.common import SelfContainedFormat as SelfContainedFormat
+from encord.scene.internal.common import UCMDistortionModel as UCMDistortionModel
 
 
 class CameraIntrinsicsSimple(BaseModel):
@@ -292,18 +128,6 @@ Geometry = Annotated[
     Union[CuboidGeometry, EllipsoidGeometry, LineGeometry, ModelGeometry],
     Field(discriminator="type"),
 ]
-
-
-# ---------------------------------------------------------------------------
-# ModelEvent (dataclass from event_models)
-# ---------------------------------------------------------------------------
-
-
-@dataclass
-class ModelEvent:
-    geometries: list[Geometry]
-    timestamp: Optional[float] = None
-
 
 # ---------------------------------------------------------------------------
 # Format mapping for URL extension validation
@@ -635,16 +459,6 @@ class InputImageStream(BaseModel):
     events: list[InputURIEvent]
 
 
-class InputModelStream(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    type: Literal["model"] = "model"
-    events: Annotated[
-        list[InputURIEvent] | list[ModelEvent], Field(description="List of 3D models to place in the scene")
-    ]
-    frame_of_reference: FrameOfReferenceType = None
-    pose: PoseType = None
-
-
 class InputPCDStream(BaseModel):
     model_config = ConfigDict(extra="forbid")
     type: Literal["point_cloud"] = "point_cloud"
@@ -668,7 +482,7 @@ class InputFoRStream(BaseModel):
 
 
 InputStream: TypeAlias = Annotated[
-    Union[InputPCDStream, InputCameraStream, InputFoRStream, InputImageStream, InputModelStream],
+    Union[InputPCDStream, InputCameraStream, InputFoRStream, InputImageStream],
     Field(discriminator="type"),
 ]
 
