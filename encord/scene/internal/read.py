@@ -23,13 +23,12 @@ from pydantic import (
     model_validator,
 )
 
+from encord.scene.internal.common import DEFAULT_CONVENTION as DEFAULT_CONVENTION
 from encord.scene.internal.common import CamelModelApi
 from encord.scene.internal.common import Convention as Convention
-from encord.scene.internal.common import DEFAULT_CONVENTION as DEFAULT_CONVENTION
 from encord.scene.internal.common import Direction as Direction
 from encord.scene.internal.common import DistortionModel as DistortionModel
 from encord.scene.internal.common import SelfContainedFormat as SelfContainedFormat
-
 
 # ---------------------------------------------------------------------------
 # SceneType
@@ -50,7 +49,6 @@ class EntityType(str, Enum):
     POINT_CLOUD = "point_cloud"
     FRAME_OF_REFERENCE = "frame_of_reference"
     IMAGE = "image"
-    MODEL = "model"
     CAMERA_PARAMETERS = "camera_parameters"
 
 

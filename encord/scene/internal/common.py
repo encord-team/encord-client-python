@@ -11,7 +11,6 @@ from typing import Annotated, Literal, Union
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-
 # ---------------------------------------------------------------------------
 # snake2camel utility
 # ---------------------------------------------------------------------------

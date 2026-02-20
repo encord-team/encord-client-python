@@ -86,7 +86,11 @@ from __future__ import annotations
 
 import datetime
 from dataclasses import dataclass, field
-from typing import Any, Sequence, Union, cast
+from typing import TYPE_CHECKING, Any, Sequence, Union, cast
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
 
 from encord.exceptions import EncordException
 
@@ -191,6 +195,7 @@ __all__ = [
     "CameraStreamBuilder",
     "CompositePose",
     "Direction",
+    "DynamicResolve",
     "EulerRotation",
     "FoRStreamBuilder",
     "ImageStreamBuilder",
@@ -1389,6 +1394,17 @@ class ImageStreamBuilder(_StreamBuilderBase):
         )
 
 
+class DynamicResolve:
+    """Dynamic byte resolver for use with :meth:`SceneBuilder.preview_localhost`.
+
+    Wraps a callable that receives the portion of the URI *after* the
+    matched prefix and returns the file content as ``bytes``.
+    """
+
+    def __init__(self, fn: Callable[[str], bytes]) -> None:
+        self._fn = fn
+
+
 # ===================================================================
 # Scene builder (top-level)
 # ===================================================================
@@ -1706,3 +1722,124 @@ class SceneBuilder:
             return config.model_dump()
 
         return streams.model_dump()
+
+    # -- preview ----------------------------------------------------------
+
+    def preview(self, *, domain: str = "app.encord.com") -> None:
+        """Build the scene and open it in the browser for preview."""
+        import json
+        import urllib.parse
+        import webbrowser
+
+        raw = json.dumps(self.build())
+        url = f"https://{domain}/data/preview?scene={urllib.parse.quote(raw)}"
+        webbrowser.open(url)
+
+    def preview_localhost(
+        self,
+        mapping: dict[str, Path | DynamicResolve],
+        *,
+        domain: str = "app.encord.com",
+        port: int = 8000,
+    ) -> None:
+        """Build the scene, serve assets from local files, and open in the browser.
+
+        Every URI value in the built scene whose string starts with a key in
+        *mapping* is rewritten to ``http://localhost:{port}/...`` and a
+        minimal HTTP server is started to serve the corresponding local files.
+
+        The call **blocks** until you press Enter or Ctrl+C.
+
+        Args:
+            mapping: ``{uri_prefix: target}`` pairs.  *target* is either a
+                :class:`~pathlib.Path` directory (files resolved relative to
+                it) or a :class:`DynamicResolve` whose callable receives the
+                URI remainder and returns ``bytes`` to serve.
+            domain: Encord application domain.
+            port: Local HTTP server port.
+        """
+        import json
+        import mimetypes
+        import threading
+        import urllib.parse
+        import webbrowser
+        from http.server import BaseHTTPRequestHandler, HTTPServer
+
+        scene = self.build()
+        indexed = list(mapping.items())
+        allowed_origin = f"https://{domain}"
+
+        def _replace_uris(obj: Any) -> Any:
+            if isinstance(obj, str):
+                for i, (prefix, _) in enumerate(indexed):
+                    if obj.startswith(prefix):
+                        return f"http://localhost:{port}/{i}/{obj[len(prefix):]}"
+                return obj
+            if isinstance(obj, dict):
+                return {k: _replace_uris(v) for k, v in obj.items()}
+            if isinstance(obj, list):
+                return [_replace_uris(v) for v in obj]
+            return obj
+
+        scene = _replace_uris(scene)
+
+        class _Handler(BaseHTTPRequestHandler):
+            def _cors_headers(self) -> None:
+                self.send_header("Access-Control-Allow-Origin", allowed_origin)
+
+            def do_GET(self) -> None:
+                path = urllib.parse.unquote(self.path.lstrip("/"))
+                for i, (_, target) in enumerate(indexed):
+                    route = f"{i}/"
+                    if path.startswith(route):
+                        remainder = path[len(route):]
+                        if isinstance(target, DynamicResolve):
+                            data = target._fn(remainder)
+                            content_type, _ = mimetypes.guess_type(remainder)
+                            self.send_response(200)
+                            self._cors_headers()
+                            self.send_header("Content-Type", content_type or "application/octet-stream")
+                            self.send_header("Content-Length", str(len(data)))
+                            self.end_headers()
+                            self.wfile.write(data)
+                            return
+                        else:
+                            file_path = target / remainder
+                            if file_path.is_file():
+                                content_type, _ = mimetypes.guess_type(str(file_path))
+                                self.send_response(200)
+                                self._cors_headers()
+                                self.send_header("Content-Type", content_type or "application/octet-stream")
+                                self.send_header("Content-Length", str(file_path.stat().st_size))
+                                self.end_headers()
+                                with open(file_path, "rb") as f:
+                                    while chunk := f.read(65536):
+                                        self.wfile.write(chunk)
+                                return
+                self.send_error(404)
+
+            def do_OPTIONS(self) -> None:
+                self.send_response(204)
+                self._cors_headers()
+                self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+                self.send_header("Access-Control-Allow-Headers", "*")
+                self.end_headers()
+
+            def log_message(self, format: str, *args: Any) -> None:  # noqa: A002
+                pass
+
+        server = HTTPServer(("localhost", port), _Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+
+        raw = json.dumps(scene)
+        url = f"https://{domain}/data/preview?scene={urllib.parse.quote(raw)}"
+        print(f"Serving local assets on http://localhost:{port}")
+        webbrowser.open(url)
+
+        try:
+            input("Press Enter to stop the server...\n")
+        except KeyboardInterrupt:
+            print()
+        finally:
+            server.shutdown()

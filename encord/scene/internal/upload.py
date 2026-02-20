@@ -26,12 +26,12 @@ from pydantic import (
 )
 from typing_extensions import TypeAlias
 
+from encord.scene.internal.common import DEFAULT_CONVENTION as DEFAULT_CONVENTION
+from encord.scene.internal.common import DIRECTION_TO_VECTOR as DIRECTION_TO_VECTOR
 from encord.scene.internal.common import CamelModel as CamelModel
 from encord.scene.internal.common import CamelModelApi as CamelModelApi
 from encord.scene.internal.common import Convention as Convention
-from encord.scene.internal.common import DEFAULT_CONVENTION as DEFAULT_CONVENTION
 from encord.scene.internal.common import Direction as Direction
-from encord.scene.internal.common import DIRECTION_TO_VECTOR as DIRECTION_TO_VECTOR
 from encord.scene.internal.common import DistortionModel as DistortionModel
 from encord.scene.internal.common import DivisionDistortionModel as DivisionDistortionModel
 from encord.scene.internal.common import FishEyeDistortionModel as FishEyeDistortionModel
@@ -432,7 +432,6 @@ class InputEntityType(str, Enum):
     POINT_CLOUD = "point_cloud"
     FRAME_OF_REFERENCE = "frame_of_reference"
     IMAGE = "image"
-    MODEL = "model"
     CAMERA_PARAMETERS = "camera_parameters"
 
     @classmethod
