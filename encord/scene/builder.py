@@ -1475,6 +1475,8 @@ class SceneBuilder:
             pose: Optional static pose for the sensor mount.
         """
         sb = PCDStreamBuilder(name, self, frame_of_reference=frame_of_reference, pose=pose)
+        if name in self._streams:
+            raise RuntimeError(f"stream {name} is already defined")
         self._streams[name] = sb
         return sb
 
@@ -1495,6 +1497,8 @@ class SceneBuilder:
             pose: Optional static pose for the sensor mount.
         """
         sb = CameraStreamBuilder(name, self, frame_of_reference=frame_of_reference, pose=pose)
+        if name in self._streams:
+            raise RuntimeError(f"stream {name} is already defined")
         self._streams[name] = sb
         return sb
 
@@ -1520,6 +1524,8 @@ class SceneBuilder:
         if name == ROOT_FOR:
             raise EncordException(f"'{ROOT_FOR}' is reserved and cannot be used as a for_id")
         sb = FoRStreamBuilder(name, self, parent_for_id=parent_for_id)
+        if name in self._streams:
+            raise RuntimeError(f"stream {name} is already defined")
         self._streams[name] = sb
         return sb
 
@@ -1543,6 +1549,8 @@ class SceneBuilder:
                 registered on this builder.  Validated at build time.
         """
         sb = ImageStreamBuilder(name, self, camera=camera)
+        if name in self._streams:
+            raise RuntimeError(f"stream {name} is already defined")
         self._streams[name] = sb
         return sb
 
