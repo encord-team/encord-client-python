@@ -1,0 +1,32 @@
+name: Sync to Public
+
+# Pushes the public/master branch to the public repo's master.
+#
+# HOW TO RELEASE:
+#   1. In the private repo, cherry-pick or PR your release-ready commits into the `public/master` branch.
+#   2. Push `public/master` — this workflow fires automatically and syncs to the public repo.
+#
+# Required secret: PUBLIC_REPO_TOKEN
+#   A fine-grained PAT with "Contents: Read and write" on encord-team/encord-client-python.
+
+on:
+  push:
+    branches:
+      - public/master
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Push public/master to public repo
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout public/master
+        uses: actions/checkout@v4
+        with:
+          ref: public/master
+          fetch-depth: 0
+
+      - name: Push to public repo
+        run: |
+          git remote add public https://x-access-token:${{ secrets.PUBLIC_REPO_TOKEN }}@github.com/encord-team/encord-client-python.git
+          git push public HEAD:master
