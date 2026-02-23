@@ -94,7 +94,15 @@ SCENE_WITH_LABELS = {
     "object_answers": {
         "hash0": {"classifications": [], "objectHash": "hash0"},
         "hash1": {
-            "classifications": [],
+            "classifications": [
+                {
+                    "name": "Test attribute",
+                    "value": "test_attribute",
+                    "answers": "Test attribute answer",
+                    "featureHash": "testFeatureHash",
+                    "manualAnnotation": True,
+                }
+            ],
             "objectHash": "hash1",
             "manualAnnotation": True,
             "featureHash": "segmentationFeatureNodeHash",

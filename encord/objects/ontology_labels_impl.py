@@ -66,6 +66,7 @@ from encord.objects.classification_instance import (
 from encord.objects.constants import (  # pylint: disable=unused-import # for backward compatibility
     DEFAULT_CONFIDENCE,
     DEFAULT_MANUAL_ANNOTATION,
+    ROOT_SPACE_ID,
 )
 from encord.objects.coordinates import (
     AudioCoordinates,
@@ -2587,8 +2588,21 @@ class LabelRowV2:
             return res
 
         for space_id, space_info in spaces_info.items():
-            if space_id == "root":
-                # TODO: Enable reading root space info
+            if space_id == ROOT_SPACE_ID:
+                if space_info["space_type"] == SpaceType.IMAGE:
+                    multilayer_image_space = ImageSpace(
+                        space_id=ROOT_SPACE_ID,
+                        label_row=self,
+                        space_info=space_info,
+                        width=space_info["width"],
+                        height=space_info["height"],
+                        has_multilayer_labels=True,
+                    )
+                    res[ROOT_SPACE_ID] = multilayer_image_space
+                else:
+                    # TODO: Enable reading root space info
+                    pass
+
                 continue
 
             # Store layout_key -> space_id mapping if child_info is present
@@ -2614,6 +2628,7 @@ class LabelRowV2:
                     space_info=space_info,
                     width=space_info["width"],
                     height=space_info["height"],
+                    has_multilayer_labels=False,
                 )
                 res[space_id] = image_space
             elif space_info["space_type"] == SpaceType.IMAGE_SEQUENCE:

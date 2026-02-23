@@ -190,22 +190,36 @@ class ProjectType(str, Enum):
 class ProjectStatus(str, Enum):
     """Lifecycle status of a Project.
 
-     **Values**:
+    **Values**:
 
-     - **NOT_STARTED:** The project has been created but no work has begun.
-     - **IN_PROGRESS:** The project is active and annotation/review work is ongoing.
-     - **PAUSED:** The project is temporarily paused.
-     - **COMPLETED:** All work on the project has been completed.
-     - **CANCELLED:** The project has been canceled before completion.
+    - **NOT_STARTED:** The project has been created but no work has begun.
+    - **IN_PROGRESS:** The project is active and annotation/review work is ongoing.
+    - **IN_REVIEW:** The project is under review before completion.
+    - **PAUSED:** The project is temporarily paused.
+    - **COMPLETED:** All work on the project has been completed.
+    - **CANCELLED:** The project has been canceled before completion.
     - **ARCHIVED:** The project is archived and no further work is expected.
+    - **UNKNOWN:** An unrecognized status from a newer API version. Please update your SDK.
     """
 
     NOT_STARTED = "notStarted"
     IN_PROGRESS = "inProgress"
+    IN_REVIEW = "inReview"
     PAUSED = "paused"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
     ARCHIVED = "archived"
+
+    UNKNOWN = "_unknown_"
+    """
+    This value will be returned if the Encord platform has a new project status that your SDK
+    version does not recognize yet. Please update your SDK to the latest version.
+    """
+
+    @classmethod
+    def _missing_(cls, value: Any) -> "ProjectStatus":
+        """Return UNKNOWN for any unrecognized project status values."""
+        return cls.UNKNOWN
 
 
 class ProjectCopyOptions(str, Enum):

@@ -367,6 +367,7 @@ class HTMLSpace(Space[_HtmlObjectAnnotation, _GlobalClassificationAnnotation, Ht
                         classification_instance=classification,
                         classifications=reversed_classification_attributes,
                         space_range={"range": [], "type": "html"},
+                        on_root=False,
                     )
                 else:
                     classification_answer = {

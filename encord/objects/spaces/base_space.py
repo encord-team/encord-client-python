@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from itertools import chain
 from typing import (
     TYPE_CHECKING,
     Dict,
@@ -29,6 +28,7 @@ from encord.objects.spaces.types import (
     ChildInfo,
     DataGroupMetadata,
     FileInSceneInfo,
+    RootSpaceMetadata,
     SceneMetadata,
     SpaceInfo,
     SpaceMetadata,
@@ -75,7 +75,7 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
 
     def __init__(self, space_id: str, label_row: LabelRowV2, space_info: SpaceInfo):
         self.space_id = space_id
-        self.metadata = self._extract_metadata_from_space_info(space_info)
+        self.metadata = self._extract_metadata_from_space_info(space_id, space_info)
         self._label_row = label_row
         self._objects_map: dict[str, ObjectInstance] = dict()
         self._classifications_map: dict[str, ClassificationInstance] = dict()
@@ -309,6 +309,7 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
         classification_instance: ClassificationInstance,
         classifications: List[AttributeDict],
         space_range: SpaceRange,
+        on_root: bool,
     ) -> ClassificationAnswer:
         annotation_data = self._global_classification_hash_to_annotation_data[
             classification_instance.classification_hash
@@ -319,7 +320,7 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
             "classifications": classifications,
             "classificationHash": classification_instance.classification_hash,
             "featureHash": classification_instance.feature_hash,
-            "spaces": {self.space_id: space_range},
+            "spaces": {} if on_root else {self.space_id: space_range},
             "createdBy": annotation_metadata.created_by,
             "createdAt": format_datetime_to_long_string(annotation_metadata.created_at),
             "lastEditedBy": annotation_metadata.last_edited_by,
@@ -328,6 +329,12 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
             "manualAnnotation": annotation_metadata.manual_annotation,
             "range": [],
         }
+
+        if on_root:
+            if space_range["type"] == "html":
+                pass
+            elif space_range["type"] == "frame":
+                classification_index_element["range"] = space_range["range"]
 
         return classification_index_element
 
@@ -356,7 +363,11 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
             )
 
     @staticmethod
-    def _extract_metadata_from_space_info(space_info: SpaceInfo) -> SpaceMetadata:
+    def _extract_metadata_from_space_info(space_id: str, space_info: SpaceInfo) -> SpaceMetadata:
+        if space_id == "root":
+            if space_info["space_type"] == "image" and space_info["root_info"] is not None:
+                return RootSpaceMetadata(file_name=space_info["root_info"]["file_name"])
+
         child_info: Optional[ChildInfo] = space_info.get("child_info")  # type: ignore[assignment]
         if child_info is not None:
             return DataGroupMetadata(

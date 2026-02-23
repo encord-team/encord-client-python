@@ -406,6 +406,9 @@ class EncordUserClient:
             if isinstance(ssh_private_key_path, str):
                 ssh_private_key_path = Path(ssh_private_key_path)
 
+            # Expand ~ to the user's home directory
+            ssh_private_key_path = ssh_private_key_path.expanduser()
+
             ssh_private_key = ssh_private_key_path.read_text(encoding="ascii")
 
         if not ssh_private_key:
