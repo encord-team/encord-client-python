@@ -161,17 +161,17 @@ class TaskActionParams(BaseDTO):
         project_uuid: UUID of the project to query.
         after: Start of the time window (inclusive).
         before: End of the time window (exclusive).
-        actor_email: Optional list of user email addresses to filter by.
-        action_type: Optional list of action types to filter by.
-        workflow_stage_uuid: Optional list of workflow stage UUIDs to filter by.
-        data_unit_uuid: Optional list of data unit UUIDs to filter by.
+        actor_emails: Optional list of user email addresses to filter by.
+        event_types: Optional list of action types to filter by.
+        workflow_stage_uuids: Optional list of workflow stage UUIDs to filter by.
+        data_unit_uuids: Optional list of data unit UUIDs to filter by.
     """
 
     project_uuid: UUID
     after: datetime
     before: datetime
-    actor_email: Optional[List[str]] = None
-    action_type: Optional[List[TaskActionType]] = None
-    workflow_stage_uuid: Optional[List[UUID]] = None
-    data_unit_uuid: Optional[List[UUID]] = None
+    actor_emails: Optional[List[str]] = None
+    event_types: Optional[List[TaskActionType]] = None
+    workflow_stage_uuids: Optional[List[UUID]] = None
+    data_unit_uuids: Optional[List[UUID]] = None
     page_token: Optional[str] = None

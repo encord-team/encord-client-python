@@ -941,10 +941,10 @@ class Project:
             project_uuid=UUID(self.project_hash),
             after=after,
             before=before,
-            actor_email=ensure_list(actor_email),
-            action_type=ensure_list(action_type),
-            workflow_stage_uuid=ensure_uuid_list(workflow_stage_uuid),
-            data_unit_uuid=ensure_uuid_list(data_unit_uuid),
+            actor_emails=ensure_list(actor_email),
+            event_types=ensure_list(action_type),
+            workflow_stage_uuids=ensure_uuid_list(workflow_stage_uuid),
+            data_unit_uuids=ensure_uuid_list(data_unit_uuid),
         )
 
         yield from self._client.get_task_actions(params)
