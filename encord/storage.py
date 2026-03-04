@@ -15,6 +15,7 @@ import mimetypes
 import os
 import time
 from datetime import datetime
+from io import BufferedReader
 from math import ceil
 from pathlib import Path
 from typing import Any, Collection, Dict, Iterable, List, Literal, Optional, Sequence, TextIO, Union
@@ -707,7 +708,8 @@ class StorageFolder:
 
     def upload_text(
         self,
-        file_path: Union[Path, str],
+        file_path: Optional[Union[Path, str]] = None,
+        text_contents: Optional[Union[str, bytes, BufferedReader]] = None,
         title: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
         text_metadata: Optional[orm_storage.CustomerProvidedTextMetadata] = None,
@@ -717,6 +719,7 @@ class StorageFolder:
 
         Args:
             file_path: File path of the text file. For example: '/home/user/data/report.txt'
+            text_contents: Text contents to be uploaded. Can pass str,bytes, or file-like object directly
             title: The item title. If unspecified, the file name is used as the title.
             client_metadata: Optional custom metadata to be associated with the text file. Should be a dictionary that is JSON-serializable.
             text_metadata: Optional media metadata for a text file. The Encord platform uses the specified values instead of scanning the files.
@@ -736,17 +739,23 @@ class StorageFolder:
         - file_size: int - Size of the text file in bytes.
         - mime_type: str - MIME type of the text file (for example: `application/json` or `text/plain`).
         """
+        if file_path and text_contents:
+            raise EncordException("We only support passing either the file_path or the text_contents. Can't pass both")
 
+        if not file_path and not text_contents:
+            raise EncordException("Either file_path or text_contents must be provided")
         upload_url_info = self._get_upload_signed_urls(
             item_type=StorageItemType.PLAIN_TEXT, count=1, frames_subfolder_name=None
         )
         if len(upload_url_info) != 1:
             raise EncordException("Can't access upload location")
 
-        title = self._guess_title(title, file_path)
+        title = self._guess_title(title, file_path, text_contents)
 
+        data = Path(file_path) if file_path else text_contents
+        assert data is not None  # Checked above
         self._upload_local_file(
-            file_path,
+            data,
             title,
             StorageItemType.PLAIN_TEXT,
             upload_url_info[0].signed_url,
@@ -1392,15 +1401,29 @@ class StorageFolder:
 
         return urls.results
 
-    def _guess_title(self, title: Optional[str], file_path: Union[Path, str]) -> str:
+    def _guess_title(
+        self,
+        title: Optional[str],
+        file_path: Optional[Union[Path, str]],
+        text_contents: Optional[Union[str, bytes, BufferedReader]] = None,
+    ) -> str:
         if title:
             return title
+        if not file_path and not text_contents:
+            raise ValueError("Require at least one of file_path, text_contents")
+        if file_path and text_contents:
+            raise ValueError("Require at most one of file_path, text_contents")
+        if file_path:
+            if isinstance(file_path, str):
+                file_path = Path(file_path)
+            return file_path.name
+        else:
+            assert text_contents
+            if isinstance(text_contents, BufferedReader):
+                return str(text_contents.peek(10))  # Ensure we **peek** as BufferedReader is stateful
+            return str(text_contents[:10])
 
-        if isinstance(file_path, str):
-            file_path = Path(file_path)
-        return file_path.name
-
-    def _get_content_type(self, file_path: Union[Path, str], item_type: StorageItemType) -> str:
+    def _get_content_type(self, file_path: Path, item_type: StorageItemType) -> str:
         if item_type == StorageItemType.IMAGE:
             return mimetypes.guess_type(str(file_path))[0] or "application/octet-stream"
         elif item_type == StorageItemType.VIDEO or item_type == StorageItemType.AUDIO:
@@ -1428,14 +1451,12 @@ class StorageFolder:
 
     def _upload_local_file(
         self,
-        file_path: Union[Path, str],
+        data: Union[Path, str, bytes, BufferedReader],
         title: str,
         item_type: StorageItemType,
         signed_url: str,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
     ) -> None:
-        content_type = self._get_content_type(file_path, item_type)
-
         max_retries = (
             cloud_upload_settings.max_retries
             if cloud_upload_settings.max_retries is not None
@@ -1446,15 +1467,28 @@ class StorageFolder:
             if cloud_upload_settings.backoff_factor is not None
             else DEFAULT_REQUESTS_SETTINGS.backoff_factor
         )
-
-        _upload_single_file(
-            str(file_path),
-            title,
-            signed_url,
-            content_type,
-            max_retries=max_retries,
-            backoff_factor=backoff_factor,
-        )
+        if isinstance(data, Path):
+            file_path = data
+            content_type = self._get_content_type(file_path, item_type)
+            with open(file_path, "rb") as file_obj:
+                _upload_single_file(
+                    file_obj,
+                    title,
+                    signed_url,
+                    content_type,
+                    max_retries=max_retries,
+                    backoff_factor=backoff_factor,
+                )
+        else:
+            content_type = "text/plain" if item_type == StorageItemType.PLAIN_TEXT else "application/octet-stream"
+            _upload_single_file(
+                data,
+                title,
+                signed_url,
+                content_type,
+                max_retries=max_retries,
+                backoff_factor=backoff_factor,
+            )
 
     def _add_data(
         self,
