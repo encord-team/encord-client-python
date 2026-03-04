@@ -118,3 +118,60 @@ class TimeSpent(BaseDTO):
     dataset_title: str
     workflow_task_uuid: Optional[UUID] = None
     workflow_stage: Optional[BaseWorkflowNode] = None
+
+
+class TaskActionType(CamelStrEnum):
+    """Task action event types from workflow_task_events_v2 table."""
+
+    ASSIGN = auto()
+    APPROVE = auto()
+    SUBMIT = auto()
+    MOVE = auto()
+    REJECT = auto()
+    RELEASE = auto()
+    SKIP = auto()
+
+
+class TaskAction(BaseDTO):
+    """Task action event returned by the task actions endpoint.
+
+    Args:
+        timestamp: Time when the action occurred.
+        action_type: Type of action (e.g., ASSIGN, SUBMIT, APPROVE).
+        project_uuid: UUID of the project.
+        workflow_stage_uuid: UUID of the workflow stage.
+        task_uuid: UUID of the task.
+        data_unit_uuid: UUID of the data unit.
+        actor_email: Email address of the user who performed the action.
+    """
+
+    timestamp: datetime
+    action_type: TaskActionType
+    project_uuid: UUID
+    workflow_stage_uuid: UUID
+    task_uuid: UUID
+    data_unit_uuid: UUID
+    actor_email: str
+
+
+class TaskActionParams(BaseDTO):
+    """Parameters for get_task_actions API call.
+
+    Args:
+        project_uuid: UUID of the project to query.
+        after: Start of the time window (inclusive).
+        before: End of the time window (exclusive).
+        actor_emails: Optional list of user email addresses to filter by.
+        event_types: Optional list of action types to filter by.
+        workflow_stage_uuids: Optional list of workflow stage UUIDs to filter by.
+        data_unit_uuids: Optional list of data unit UUIDs to filter by.
+    """
+
+    project_uuid: UUID
+    after: datetime
+    before: datetime
+    actor_emails: Optional[List[str]] = None
+    event_types: Optional[List[TaskActionType]] = None
+    workflow_stage_uuids: Optional[List[UUID]] = None
+    data_unit_uuids: Optional[List[UUID]] = None
+    page_token: Optional[str] = None
