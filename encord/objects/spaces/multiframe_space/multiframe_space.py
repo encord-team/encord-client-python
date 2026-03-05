@@ -115,8 +115,6 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         # Global classifications are NOT tracked here
         self._classifications_ontology_to_ranges: defaultdict[Classification, RangeManager] = defaultdict(RangeManager)
 
-        self._object_hash_to_dynamic_answer_manager: dict[str, DynamicAnswerManager] = dict()
-
         # Need to check if this is 1-indexed
         self._number_of_frames: int = number_of_frames
 
@@ -183,11 +181,6 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         frame_list = frames_class_to_frames_list(frames)
         self._are_frames_valid(frame_list)
         self._objects_map[object_instance.object_hash] = object_instance
-
-        if object_instance.object_hash not in self._object_hash_to_dynamic_answer_manager:
-            self._object_hash_to_dynamic_answer_manager[object_instance.object_hash] = DynamicAnswerManager(
-                object_instance
-            )
 
         object_instance._add_to_space(self)
 
@@ -289,7 +282,6 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
     def _remove_object_instance(self, object_instance: ObjectInstance) -> None:
         object_hash = object_instance.object_hash
         object_instance._remove_from_space(self.space_id)
-        self._object_hash_to_dynamic_answer_manager.pop(object_instance.object_hash)
         self._object_hash_to_range_manager.pop(object_hash)
 
         frames_to_remove: list[int] = []
@@ -331,7 +323,6 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         range_manager_for_object_hash.remove_ranges(temp_range_manager.get_ranges())
         if len(range_manager_for_object_hash.get_ranges()) == 0:
             self._objects_map.pop(object_instance.object_hash)
-            self._object_hash_to_dynamic_answer_manager.pop(object_instance.object_hash)
 
         return frames_removed
 
@@ -450,8 +441,7 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             LabelRowError: If the attribute is not dynamic or if the object doesn't exist on the space.
         """
         self._label_row._check_labelling_is_initalised()
-        dynamic_answer_manager = self._object_hash_to_dynamic_answer_manager.get(object_instance.object_hash)
-        if dynamic_answer_manager is None:
+        if object_instance.object_hash not in self._objects_map:
             raise LabelRowError("This object does not exist on this space.")
 
         if not attribute.dynamic:
@@ -832,19 +822,6 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             return None
         else:
             return classification_to_frame_annotation_data.get(classification_hash)
-
-    def _dynamic_answers_to_encord_dict(self, object_instance: ObjectInstance) -> List[DynamicAttributeObject]:
-        ret = []
-        dynamic_answer_manager = self._object_hash_to_dynamic_answer_manager[object_instance.object_hash]
-
-        if dynamic_answer_manager is None:
-            raise LabelRowError("No dynamic answers found for this object instance on this space.")
-
-        for answer, ranges in dynamic_answer_manager.get_all_answers():
-            d_opt = answer.to_encord_dict(ranges, space_id=self.space_id)
-            if d_opt is not None:
-                ret.append(cast(DynamicAttributeObject, d_opt))
-        return ret
 
     def _to_encord_object(
         self,
