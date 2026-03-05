@@ -10,8 +10,8 @@ from encord.objects import Classification, LabelRowV2
 from encord.objects.frames import Range
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.two_videos import (
-    DATA_GROUP_METADATA,
     DATA_GROUP_TWO_VIDEOS_NO_LABELS,
+    DATA_GROUP_WITH_TWO_VIDEOS_METADATA,
 )
 
 text_classification = all_types_structure.get_child_by_hash("jPOcEsbw", Classification)
@@ -20,7 +20,7 @@ checklist_classification = all_types_structure.get_child_by_hash("3DuQbFxo", Cla
 
 def test_put_classification_on_video_space(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
@@ -71,7 +71,7 @@ def test_put_classification_on_video_space(ontology):
 
 def test_put_classification_on_frame_where_classification_exists_video_space(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
@@ -98,7 +98,7 @@ def test_put_classification_on_frame_where_classification_exists_video_space(ont
 
 def test_put_classification_on_frames_with_overwrite_on_video_space(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
@@ -131,7 +131,7 @@ def test_put_classification_on_frames_with_overwrite_on_video_space(ontology):
 
 def test_put_classification_on_frames_with_overwrite_all_frames_on_video_space(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
@@ -164,7 +164,7 @@ def test_put_classification_on_frames_with_overwrite_all_frames_on_video_space(o
 
 def test_put_classification_on_invalid_frames(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
@@ -184,7 +184,7 @@ def test_put_classification_on_invalid_frames(ontology):
 
 def test_remove_classification_from_frames_on_video_space(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
@@ -215,7 +215,7 @@ def test_remove_classification_from_frames_on_video_space(ontology):
 
 def test_remove_classification_from_all_frames_on_video_space(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
@@ -245,7 +245,7 @@ def test_remove_classification_from_all_frames_on_video_space(ontology):
 
 def test_remove_classification_from_video_space(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
@@ -272,7 +272,7 @@ def test_remove_classification_from_video_space(ontology):
 
 def test_get_classification_annotations(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     new_classification_instance = text_classification.create_instance()
@@ -320,7 +320,7 @@ def test_get_classification_annotations(ontology):
 
 def test_get_classification_annotations_with_filter_classifications(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     classification_instance_1 = text_classification.create_instance()
@@ -379,7 +379,7 @@ def test_get_classification_annotations_with_filter_classifications(ontology):
 
 def test_get_classification_annotations_from_classification_instance(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     classification_instance_1 = text_classification.create_instance()
@@ -430,7 +430,7 @@ def test_get_classification_annotations_from_classification_instance(ontology):
 
 def test_update_annotation_from_object_annotation(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
     classification_instance_1 = text_classification.create_instance()
