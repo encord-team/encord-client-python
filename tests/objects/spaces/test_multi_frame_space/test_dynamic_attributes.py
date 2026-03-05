@@ -1,4 +1,3 @@
-import json
 from unittest.mock import Mock
 
 import pytest
@@ -10,8 +9,8 @@ from encord.objects.coordinates import PointCoordinate
 from encord.objects.frames import Range
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.two_videos import (
-    DATA_GROUP_METADATA,
     DATA_GROUP_TWO_VIDEOS_NO_LABELS,
+    DATA_GROUP_WITH_TWO_VIDEOS_METADATA,
 )
 
 keypoint_with_dynamic_attributes_ontology_item = all_types_structure.get_child_by_hash("MTY2MTQx", Object)
@@ -22,7 +21,7 @@ key_point_dynamic_text_attribute = keypoint_with_dynamic_attributes_ontology_ite
 
 def test_add_dynamic_attributes_to_frames_on_object_on_video_space(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
@@ -39,8 +38,6 @@ def test_add_dynamic_attributes_to_frames_on_object_on_video_space(ontology):
 
     new_object_instance.set_answer(frames=[0], attribute=key_point_dynamic_text_attribute, answer=answer_on_frame_0)
 
-    print(json.dumps(label_row.to_encord_dict(), indent=2))
-
     # # Act
     video_space_1.set_dynamic_answer(
         object_instance=new_object_instance,
@@ -56,26 +53,26 @@ def test_add_dynamic_attributes_to_frames_on_object_on_video_space(ontology):
     )
     #
     # # Assert
-    # actual_answers = video_space_1.get_dynamic_answer(
-    #     object_instance=new_object_instance,
-    #     frames=[0, 1, 2],
-    #     attribute=key_point_dynamic_text_attribute,
-    # )
-    #
-    # assert len(actual_answers) == 2
-    # first_answer = actual_answers[0]
-    # second_answer = actual_answers[1]
-    #
-    # assert first_answer.ranges == [Range(start=0, end=0)]
-    # assert first_answer.answer == answer_on_frame_0
-    #
-    # assert second_answer.ranges == [Range(start=1, end=2)]
-    # assert second_answer.answer == answer_on_frame_1_and_2
+    actual_answers = video_space_1.get_dynamic_answer(
+        object_instance=new_object_instance,
+        frames=[0, 1, 2],
+        attribute=key_point_dynamic_text_attribute,
+    )
+
+    assert len(actual_answers) == 2
+    first_answer = actual_answers[0]
+    second_answer = actual_answers[1]
+
+    assert first_answer.ranges == [Range(start=0, end=0)]
+    assert first_answer.answer == answer_on_frame_0
+
+    assert second_answer.ranges == [Range(start=1, end=2)]
+    assert second_answer.answer == answer_on_frame_1_and_2
 
 
 def test_remove_dynamic_attributes_from_frame_on_video_space(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
@@ -116,7 +113,7 @@ def test_remove_dynamic_attributes_from_frame_on_video_space(ontology):
 
 def test_remove_object_from_frame_removes_dynamic_attributes_from_those_frames(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
@@ -151,7 +148,7 @@ def test_remove_object_from_frame_removes_dynamic_attributes_from_those_frames(o
 
 def test_remove_object_removes_dynamic_attributes_for_that_object(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
@@ -182,7 +179,7 @@ def test_remove_object_removes_dynamic_attributes_for_that_object(ontology):
 
 def test_add_dynamic_attributes_to_frames_where_object_does_not_exist_on_video_space(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
@@ -217,7 +214,7 @@ def test_add_dynamic_attributes_to_frames_where_object_does_not_exist_on_video_s
 
 def test_add_dynamic_attributes_object_which_does_not_exist_on_video_space(ontology):
     # Arrange
-    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 

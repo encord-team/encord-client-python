@@ -342,101 +342,13 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             object_instance: The object instance to remove answers from.
             frames: List of frame numbers to remove answers from.
         """
-        dynamic_answer_manager = self._object_hash_to_dynamic_answer_manager.get(object_instance.object_hash)
-        if dynamic_answer_manager is None:
-            # No dynamic answers to remove
-            return
 
         # Get all dynamic attributes for this object
         dynamic_attributes = [attr for attr in object_instance._ontology_object.attributes if attr.dynamic]
 
         # Remove answers for each dynamic attribute on the specified frames
         for attribute in dynamic_attributes:
-            dynamic_answer_manager.delete_answer(attribute, frames=frames)
-
-    # This implementation is copied mostly from ObjectInstance.set_answer_from_list
-    def _set_answer_from_list(self, object_hash: str, answers_list: List[Dict[str, Any]]):
-        grouped_answers = defaultdict(list)
-        object_instance = self._objects_map[object_hash]
-        dynamic_answer_manager = self._object_hash_to_dynamic_answer_manager[object_instance.object_hash]
-
-        for answer_dict in answers_list:
-            attribute = _get_attribute_by_hash(answer_dict["featureHash"], object_instance._ontology_object.attributes)
-            if attribute is None:
-                raise LabelRowError(
-                    "One of the attributes does not exist in the ontology. Cannot create a valid LabelRow."
-                )
-            if not object_instance._is_attribute_valid_child_of_object_instance(attribute):
-                raise LabelRowError(
-                    "One of the attributes set for a classification is not a valid child of the classification. "
-                    "Cannot create a valid LabelRow."
-                )
-
-            grouped_answers[attribute.feature_node_hash].append(answer_dict)
-
-        for feature_hash, answers_list in grouped_answers.items():
-            attribute = _get_attribute_by_hash(feature_hash, object_instance._ontology_object.attributes)
-            assert attribute  # we already checked that attribute is not null above. So just silencing this for now
-            self._set_answer_from_grouped_list(dynamic_answer_manager, attribute, answers_list)
-
-    def _set_answer_from_grouped_list(
-        self, dynamic_answer_manager: DynamicAnswerManager, attribute: Attribute, answers_list: List[Dict[str, Any]]
-    ) -> None:
-        if isinstance(attribute, ChecklistAttribute):
-            if not attribute.dynamic:
-                raise LabelRowError("This method should not be called for non-dynamic attributes.")
-            else:
-                all_feature_hashes: Set[str] = set()
-                ranges = []
-                for answer_dict in answers_list:
-                    feature_hashes: Set[str] = {answer["featureHash"] for answer in answer_dict["answers"]}
-                    all_feature_hashes.update(feature_hashes)
-                    for frame_range in ranges_list_to_ranges(answer_dict["range"]):
-                        ranges.append((frame_range, feature_hashes))
-
-                options_cache = {
-                    feature_hash: attribute.get_child_by_hash(feature_hash, type_=Option)
-                    for feature_hash in all_feature_hashes
-                }
-
-                for frame_range, feature_hashes in ObjectInstance._merge_answers_to_non_overlapping_ranges(ranges):
-                    options = [options_cache[feature_hash] for feature_hash in feature_hashes]
-                    dynamic_answer_manager.set_answer(options, attribute, [frame_range])
-        else:
-            for answer in answers_list:
-                self._set_answer_from_dict(dynamic_answer_manager, answer, attribute)
-
-    def _set_answer_from_dict(
-        self, dynamic_answer_manager: DynamicAnswerManager, answer_dict: Dict[str, Any], attribute: Attribute
-    ) -> None:
-        if not attribute.dynamic:
-            raise LabelRowError("This method should not be called for non-dynamic attributes.")
-
-        ranges = ranges_list_to_ranges(answer_dict["range"])
-
-        if isinstance(attribute, TextAttribute):
-            dynamic_answer_manager.set_answer(answer_dict["answers"], attribute, ranges)
-        elif isinstance(attribute, RadioAttribute):
-            if len(answer_dict["answers"]) == 1:
-                feature_hash = answer_dict["answers"][0]["featureHash"]
-                option = attribute.get_child_by_hash(feature_hash, type_=Option)
-                dynamic_answer_manager.set_answer(option, attribute, ranges)
-        elif isinstance(attribute, ChecklistAttribute):
-            options = []
-            for answer in answer_dict["answers"]:
-                feature_hash = answer["featureHash"]
-                option = attribute.get_child_by_hash(feature_hash, type_=Option)
-                options.append(option)
-            dynamic_answer_manager.set_answer(options, attribute, ranges)
-        elif isinstance(attribute, NumericAttribute):
-            value: float = answer_dict["answers"]
-
-            if not isinstance(value, float) and not isinstance(value, int):
-                raise LabelRowError(f"The answer for a numeric attribute must be a float or an int. Found {value}.")
-
-            dynamic_answer_manager.set_answer(value, attribute, ranges)
-        else:
-            raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
+            object_instance._dynamic_answer_manager.delete_answer(attribute, frames=frames)
 
     def set_dynamic_answer(
         self,
@@ -464,21 +376,21 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
                 or if the object doesn't exist on the space yet.
         """
         self._label_row._check_labelling_is_initalised()
+
+        if object_instance.object_hash not in self._objects_map:
+            raise LabelRowError(
+                "Object does not yet exist on this space. Place the object on this space with `Space.place_object`."
+            )
+
         if attribute is None:
             attribute = _infer_attribute_from_answer(object_instance._ontology_object.attributes, answer)
-        if not object_instance._is_attribute_valid_child_of_object_instance(attribute):
-            raise LabelRowError("The attribute is not a valid child of the object.")
-        elif not attribute.dynamic and not object_instance._is_selectable_child_attribute(attribute):
-            raise LabelRowError(
-                "Setting a nested attribute is only possible if all parent attributes have been selected."
-            )
-        elif attribute.dynamic is False:
-            raise LabelRowError(
-                "This method should only be used for dynamic attributes. For static attributes, use `ObjectInstance.set_answer`."
-            )
+
+        if not attribute.dynamic:
+            raise LabelRowError("This method should not be called for non-dynamic attributes.")
 
         frames_list = frames_class_to_frames_list(frames)
 
+        # Check that frames do exist on this object on this space
         valid_frames = []
         for frame in frames_list:
             annotation_data = self._get_frame_object_annotation_data(
@@ -487,13 +399,7 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             if annotation_data is not None:
                 valid_frames.append(frame)
 
-        dynamic_answer_manager = self._object_hash_to_dynamic_answer_manager.get(object_instance.object_hash)
-        if dynamic_answer_manager is None:
-            raise LabelRowError(
-                "Object does not yet exist on this space. Place the object on this space with `Space.place_object`."
-            )
-
-        dynamic_answer_manager.set_answer(answer, attribute, frames=valid_frames)
+        object_instance.set_answer(answer, attribute, frames=valid_frames)
 
     def remove_dynamic_answer(
         self,
@@ -518,13 +424,7 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         if not attribute.dynamic:
             raise LabelRowError("This method should not be called for non-dynamic attributes.")
 
-        dynamic_answer_manager = self._object_hash_to_dynamic_answer_manager.get(object_instance.object_hash)
-        if dynamic_answer_manager is None:
-            raise LabelRowError(
-                "Object does not yet exist on this space. Place the object on this space with `Space.place_object`."
-            )
-
-        dynamic_answer_manager.delete_answer(attribute, frames=frame, filter_answer=filter_answer)
+        object_instance._dynamic_answer_manager.delete_answer(attribute, frames=frame, filter_answer=filter_answer)
 
     def get_dynamic_answer(
         self,
@@ -557,7 +457,7 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         if not attribute.dynamic:
             raise LabelRowError("This method should only be used for dynamic attributes.")
 
-        return dynamic_answer_manager.get_answer(attribute, filter_answer, filter_frames=frames)
+        return object_instance._dynamic_answer_manager.get_answer(attribute, filter_answer, filter_frames=frames)
 
     def put_classification_instance(
         self,
