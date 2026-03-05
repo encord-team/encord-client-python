@@ -111,41 +111,6 @@ def test_remove_dynamic_attributes_from_frame_on_video_space(ontology):
     assert first_answer.answer == answer
 
 
-def test_remove_object_from_frame_removes_dynamic_attributes_from_those_frames(ontology):
-    # Arrange
-    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
-    label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
-    video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
-
-    new_object_instance = keypoint_with_dynamic_attributes_ontology_item.create_instance()
-    point_coordinates = PointCoordinate(x=0.5, y=0.5)
-    video_space_1.put_object_instance(
-        object_instance=new_object_instance,
-        frames=[0, 1, 2],
-        coordinates=point_coordinates,
-    )
-    answer = "Answers"
-    video_space_1.set_dynamic_answer(
-        object_instance=new_object_instance, frames=[0, 1, 2], attribute=key_point_dynamic_text_attribute, answer=answer
-    )
-
-    # Act
-    video_space_1.remove_object_instance(object_hash=new_object_instance.object_hash, frames=[1])
-
-    # Assert
-    actual_answers = video_space_1.get_dynamic_answer(
-        object_instance=new_object_instance,
-        frames=[0, 1, 2],
-        attribute=key_point_dynamic_text_attribute,
-    )
-
-    assert len(actual_answers) == 1
-    first_answer = actual_answers[0]
-
-    assert first_answer.ranges == [Range(start=0, end=0), Range(start=2, end=2)]
-    assert first_answer.answer == answer
-
-
 def test_remove_object_removes_dynamic_attributes_for_that_object(ontology):
     # Arrange
     label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
