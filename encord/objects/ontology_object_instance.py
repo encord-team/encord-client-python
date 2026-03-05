@@ -298,10 +298,10 @@ class ObjectInstance:
             )
         elif frames is not None and attribute.dynamic is False:
             raise LabelRowError("Setting frames is only possible for dynamic attributes.")
-        elif attribute.dynamic:
-            self._operation_not_allowed_for_objects_on_space(
-                extended_message="For setting dynamic attributes for objects on a space, use VideoSpace.set_answer_on_frames."
-            )
+        # elif attribute.dynamic:
+        #     self._operation_not_allowed_for_objects_on_space(
+        #         extended_message="For setting dynamic attributes for objects on a space, use VideoSpace.set_answer_on_frames."
+        #     )
 
         if attribute.dynamic:
             self._dynamic_answer_manager.set_answer(answer, attribute, frames)

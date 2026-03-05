@@ -2201,12 +2201,13 @@ class LabelRowV2:
             for obj in space._objects_map.values():
                 # Currently, dynamic attributes only available for VideoSpace
                 if isinstance(space, VideoSpace):
-                    all_static_answers = space._dynamic_answers_to_encord_dict(obj)
+                    all_static_answers = self._dynamic_answers_to_encord_dict(obj)
                     if len(all_static_answers) == 0:
                         continue
 
                     if obj.object_hash in ret:
-                        ret[obj.object_hash]["actions"].extend(list(all_static_answers))
+                        # The same object might still exist across object hashes
+                        continue
                     else:
                         ret[obj.object_hash] = {
                             "actions": list(all_static_answers),
@@ -3056,19 +3057,17 @@ class LabelRowV2:
         for answer in label_row_dict["object_actions"].values():
             object_hash = answer["objectHash"]
             object_instance = self._objects_map.get(object_hash)
-
+            answer_list = answer["actions"]
             if object_instance is not None:
-                answer_list = answer["actions"]
                 object_instance.set_answer_from_list(answer_list)
             else:
+                # Not great that we're looping through spaces, but usually not that many spaces on a label row
                 answer_list = answer["actions"]
-                for answer_dict in answer_list:
-                    space_id = answer_dict.get("spaceId")
-                    if space_id is None:
-                        raise LabelRowError("Object action does not contain spaceId")
-
-                    space = self.get_space(id=space_id, type_="video")
-                    space._set_answer_from_list(object_hash, answers_list=[answer_dict])
+                for space in self._space_map.values():
+                    object_on_space = space._objects_map.get(object_hash)
+                    if object_on_space is not None:
+                        object_on_space.set_answer_from_list(answers_list=answer_list)
+                        break
 
     def _create_new_object_instance(self, frame_object_label: FrameObject, frame: int) -> ObjectInstance:
         ontology = self._ontology.structure
