@@ -323,6 +323,16 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
 
         return frames_removed
 
+    def _check_object_on_space(self, object_hash: str) -> None:
+        if object_hash not in self._objects_map:
+            raise LabelRowError(
+                "Object does not yet exist on this space. Place the object on this space with `Space.place_object`."
+            )
+
+    def _check_attribute_is_dynamic(self, attribute: Attribute) -> None:
+        if not attribute.dynamic:
+            raise LabelRowError("This method should not be called for non-dynamic attributes.")
+
     def set_dynamic_answer(
         self,
         object_instance: ObjectInstance,
@@ -350,16 +360,12 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         """
         self._label_row._check_labelling_is_initalised()
 
-        if object_instance.object_hash not in self._objects_map:
-            raise LabelRowError(
-                "Object does not yet exist on this space. Place the object on this space with `Space.place_object`."
-            )
+        self._check_object_on_space(object_instance.object_hash)
 
         if attribute is None:
             attribute = _infer_attribute_from_answer(object_instance._ontology_object.attributes, answer)
 
-        if not attribute.dynamic:
-            raise LabelRowError("This method should not be called for non-dynamic attributes.")
+        self._check_attribute_is_dynamic(attribute)
 
         frames_list = frames_class_to_frames_list(frames)
 
@@ -394,8 +400,7 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             LabelRowError: If the attribute is not dynamic or if the object doesn't exist on the space.
         """
         self._label_row._check_labelling_is_initalised()
-        if not attribute.dynamic:
-            raise LabelRowError("This method should not be called for non-dynamic attributes.")
+        self._check_attribute_is_dynamic(attribute)
 
         object_instance._dynamic_answer_manager.delete_answer(attribute, frames=frame, filter_answer=filter_answer)
 
@@ -423,8 +428,7 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             LabelRowError: If the attribute is not dynamic or if the object doesn't exist on the space.
         """
         self._label_row._check_labelling_is_initalised()
-        if object_instance.object_hash not in self._objects_map:
-            raise LabelRowError("This object does not exist on this space.")
+        self._check_object_on_space(object_instance.object_hash)
 
         if not attribute.dynamic:
             raise LabelRowError("This method should only be used for dynamic attributes.")
