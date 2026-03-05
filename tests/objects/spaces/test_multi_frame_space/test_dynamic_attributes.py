@@ -139,7 +139,7 @@ def test_remove_object_removes_dynamic_attributes_for_that_object(ontology):
             frames=[0, 1, 2],
             attribute=key_point_dynamic_text_attribute,
         )
-    assert e.value.message == "This object does not exist on this space."
+    assert e.value.message == "Object does not yet exist on this space. Place the object on this space with `Space.place_object`."
 
 
 def test_add_dynamic_attributes_to_frames_where_object_does_not_exist_on_video_space(ontology):
