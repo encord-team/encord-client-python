@@ -10,8 +10,8 @@ from encord.objects import Classification, LabelRowV2
 from encord.objects.frames import Range
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.two_videos import (
-    DATA_GROUP_WITH_TWO_VIDEOS_METADATA,
     DATA_GROUP_TWO_VIDEOS_NO_LABELS,
+    DATA_GROUP_WITH_TWO_VIDEOS_METADATA,
 )
 
 text_classification = all_types_structure.get_child_by_hash("jPOcEsbw", Classification)
