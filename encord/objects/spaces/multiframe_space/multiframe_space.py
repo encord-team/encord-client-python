@@ -305,9 +305,6 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
     ) -> List[int]:
         frame_list = frames_class_to_frames_list(frames)
 
-        # Remove all dynamic answers from these frames
-        self._remove_all_answers_from_frames(object_instance, frame_list)
-
         # Tracks frames that are actually removed. User might have passed in frames that object doesn't even exist on.
         frames_removed: list[int] = []
 
@@ -325,21 +322,6 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             self._objects_map.pop(object_instance.object_hash)
 
         return frames_removed
-
-    def _remove_all_answers_from_frames(self, object_instance: ObjectInstance, frames: List[int]) -> None:
-        """Remove all dynamic answers from the specified frames for an object instance.
-
-        Args:
-            object_instance: The object instance to remove answers from.
-            frames: List of frame numbers to remove answers from.
-        """
-
-        # Get all dynamic attributes for this object
-        dynamic_attributes = [attr for attr in object_instance._ontology_object.attributes if attr.dynamic]
-
-        # Remove answers for each dynamic attribute on the specified frames
-        for attribute in dynamic_attributes:
-            object_instance._dynamic_answer_manager.delete_answer(attribute, frames=frames)
 
     def set_dynamic_answer(
         self,
