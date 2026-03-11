@@ -32,7 +32,6 @@ class DataType(StringEnum):
         pdf
         group
         scene
-        _missing_data_type_
     """
 
     VIDEO = "video"
