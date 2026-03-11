@@ -498,7 +498,7 @@ class EncordUserClient:
             tags_anyof: optional tag names filter; matches projects having at least one of the tag names.
 
         Returns:
-            list of Projects matching filter conditions, as :class:`~encord.project.Project` instances.
+            list of Projects matching filter conditions, as :class:`encord.project.Project` instances.
         """
         properties_filter = ProjectFilterParams.from_dict(self.__validate_filter(locals()))
         properties_filter.include_org_access = include_org_access
@@ -532,7 +532,7 @@ class EncordUserClient:
             dataset_hashes: a list of the Dataset uids that the project will use
             project_description: the optional description of the project
             ontology_hash: the uid of an Ontology to be used. If omitted, a new empty Ontology will be created
-            workflow_settings: selects and configures the type of the quality control Workflow to use, See :class:`encord.orm.project.ProjectWorkflowSettings` for details. If omitted, :class:`~encord.orm.project.ManualReviewWorkflowSettings` is used.
+            workflow_settings: selects and configures the type of the quality control Workflow to use, See :class:`encord.orm.project.ProjectWorkflowSettings` for details. If omitted, :class:`encord.orm.project.ManualReviewWorkflowSettings` is used.
             workflow_template_hash: Project is created using a Workflow based on the template provided. If omitted, the project will be created using the default standard workflow.
 
         Returns:

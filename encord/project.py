@@ -238,8 +238,8 @@ class Project:
             label_hashes: List of label hashes to filter by.
             edited_before: Optionally filter to only rows last edited before the specified time.
             edited_after: Optionally filter to only rows last edited after the specified time.
-            label_statuses: Optionally filter to only those label rows that have one of the specified :class:`~encord.orm.label_row.AnnotationTaskStatus`es.
-            shadow_data_state: Optionally filter by data type in Benchmark QA projects. See :class:`~encord.orm.label_row.ShadowDataState`.
+            label_statuses: Optionally filter to only those label rows that have one of the specified :class:`encord.orm.label_row.AnnotationTaskStatus`es.
+            shadow_data_state: Optionally filter by data type in Benchmark QA projects. See :class:`encord.orm.label_row.ShadowDataState`.
             data_title_eq: Optionally filter by exact title match.
             data_title_like: Optionally filter by fuzzy title match; SQL syntax.
             workflow_graph_node_title_eq: Optionally filter by exact match with workflow node title.
@@ -252,7 +252,7 @@ class Project:
             branch_name: Optionally specify a branch name. A branch name cannot be specified if include_all_label_branches is set to True
 
         Returns:
-            A list of :class:`~encord.objects.LabelRowV2` instances for all the matching label rows.
+            A list of :class:`encord.objects.ontology_labels_impl.LabelRowV2` instances for all the matching label rows.
         """
         label_row_metadatas = self._client.list_label_rows(
             edited_before,

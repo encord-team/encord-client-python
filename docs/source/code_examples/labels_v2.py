@@ -1,7 +1,7 @@
 """Working with the LabelRowV2
 ===========================
 
-The :class:`encord.objects.LabelRowV2` class is a wrapper around the Encord label row data format. It
+The :class:`encord.objects.ontology_labels_impl.LabelRowV2` class is a wrapper around the Encord label row data format. It
 provides a convenient way to read, create, and manipulate labels.
 """
 
@@ -63,14 +63,14 @@ for label_row in label_rows:
     print(f"Annotation task status: {label_row.annotation_task_status}")
 
 # %%
-# Inspect the filters in :meth:`~encord.project.Project.list_label_rows_v2` to only get a subset of the label rows.
+# Inspect the filters in :meth:`encord.project.Project.list_label_rows_v2` to only get a subset of the label rows.
 #
 # You can find more examples around all the available read properties by inspecting the properties of the
-# :class:`~encord.objects.LabelRowV2` class.
+# :class:`encord.objects.ontology_labels_impl.LabelRowV2` class.
 #
 # Exporting labels
 # --------------------------------
-# To export or download labels, or perform any other function that includes reading or writing labels, call the :meth:`~encord.objects.LabelRowV2.initialise_labels`
+# To export or download labels, or perform any other function that includes reading or writing labels, call the :meth:`encord.objects.ontology_labels_impl.LabelRowV2.initialise_labels`
 # method, which will download the state of the label from the Encord server and create a label hash if none exists.
 #
 # Once this method has been called, you can create your first label.
@@ -83,7 +83,7 @@ first_label_row.initialise_labels()
 # %%
 # Saving labels
 # --------------------------------
-# Once :meth:`~encord.objects.LabelRowV2.initialise_labels` has been called, you can create your first label.
+# Once :meth:`encord.objects.ontology_labels_impl.LabelRowV2.initialise_labels` has been called, you can create your first label.
 
 first_label_row: LabelRowV2 = label_rows[0]
 
@@ -99,7 +99,7 @@ first_label_row.save()
 # %%
 # Creating/reading object instances
 # ---------------------------------
-# The :class:`encord.objects.LabelRowV2` class works with its corresponding ontology. If you add object instances
+# The :class:`encord.objects.ontology_labels_impl.LabelRowV2` class works with its corresponding ontology. If you add object instances
 # or classification instances, these will be created from the ontology. You can read more about object instances
 # here: https://docs.encord.com/docs/annotate-working-with-ontologies#objects
 #
@@ -109,7 +109,7 @@ first_label_row.save()
 # Finding the ontology object
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# The LabelRowV2 is designed to work with its corresponding ontology via the :class:`~encord.objects.ontology_labels_impl.OntologyStructure`.
+# The LabelRowV2 is designed to work with its corresponding ontology via the :class:`encord.objects.ontology_labels_impl.OntologyStructure`.
 # You will need to use the title or feature node hash to find the right objects, classifications, attributes, or
 # attribute options. See the example below to find the ontology object for the demonstrative "Box of a human" object.
 #

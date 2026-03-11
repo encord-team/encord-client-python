@@ -22,6 +22,16 @@ from encord.objects.options import (  # pylint: disable=unused-import
 
 
 class PropertyType(StringEnum):
+    """
+    Enumeration of supported classification and attribute types
+
+    Values:
+        radio
+        text
+        checklist
+        numeric
+    """
+
     RADIO = "radio"
     TEXT = "text"
     CHECKLIST = "checklist"
@@ -29,6 +39,24 @@ class PropertyType(StringEnum):
 
 
 class Shape(StringEnum):
+    """
+    Enumeration of supported geometric and data shapes for labeling.
+
+    Values:
+        bounding_box
+        polygon
+        point
+        skeleton
+        polyline
+        rotatable_bounding_box
+        bitmask
+        audio
+        text
+        cuboid
+        cuboid_2d
+        segmentation
+    """
+
     BOUNDING_BOX = "bounding_box"
     POLYGON = "polygon"
     POINT = "point"

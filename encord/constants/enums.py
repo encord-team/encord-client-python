@@ -17,6 +17,24 @@ from encord.common.enum import StringEnum
 
 
 class DataType(StringEnum):
+    """
+    Enumeration of supported data types for labeling and storage.
+
+    Values:
+        video
+        img_group
+        dicom
+        image
+        dicom_study
+        nifti
+        audio
+        plain_text
+        pdf
+        group
+        scene
+        _missing_data_type_
+    """
+
     VIDEO = "video"
     IMG_GROUP = "img_group"
     DICOM = "dicom"

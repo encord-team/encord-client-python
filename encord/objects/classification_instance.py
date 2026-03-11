@@ -403,9 +403,9 @@ class ClassificationInstance:
         Args:
             answer: The answer to set.
             attribute: The ontology attribute to set the answer for. If not set, this will be attempted to be
-                inferred.  For answers to :class:`encord.objects.common.RadioAttribute` or
-                :class:`encord.objects.common.ChecklistAttribute`, this can be inferred automatically. For
-                :class:`encord.objects.common.TextAttribute`, this will only be inferred if there is only one possible
+                inferred.  For answers to :class:`encord.objects.attributes.RadioAttribute` or
+                :class:`encord.objects.attributes.ChecklistAttribute`, this can be inferred automatically. For
+                :class:`encord.objects.attributes.TextAttribute`, this will only be inferred if there is only one possible
                 TextAttribute to set for the entire classification instance. Otherwise, a
                 :class:`encord.exceptions.LabelRowError` will be thrown.
             overwrite: If `True`, the answer will be overwritten if it already exists. If `False`, this will throw
