@@ -994,7 +994,7 @@ class EncordClientProject(EncordClient):
         return self._querier.basic_setter(LabelRow, uid, payload=label, retryable=True)
 
     def save_label_rows(self, uids: List[str], payload: List[LabelRow], validate_before_saving: bool = False):
-        """This function is meant for internal use, please consider using :class:`encord.objects.LabelRowV2` class instead
+        """This function is meant for internal use, please consider using :class:`encord.objects.ontology_labels_impl.LabelRowV2` class instead
 
         Saves multiple label rows. See :meth:`.save_label_row`
 
@@ -1020,7 +1020,7 @@ class EncordClientProject(EncordClient):
     def create_label_rows(
         self, uids: List[str], *, get_signed_url: bool = False, branch_name: Optional[str] = None
     ) -> List[LabelRow]:
-        """This function is meant for internal use, please consider using :class:`encord.objects.LabelRowV2` class instead
+        """This function is meant for internal use, please consider using :class:`encord.objects.ontology_labels_impl.LabelRowV2` class instead
 
         Create multiple label rows. See :meth:`.create_label_row`
 
@@ -1174,7 +1174,7 @@ class EncordClientProject(EncordClient):
         return self._querier.basic_setter(OrmProject, uid=None, payload=payload)
 
     def workflow_reopen(self, label_hashes: List[str]) -> None:
-        """This function is documented in :meth:`encord.objects.LabelRowV2.workflow_reopen`."""
+        """This function is documented in :meth:`encord.objects.ontology_labels_impl.LabelRowV2.workflow_reopen()`."""
         self._querier.basic_setter(
             LabelWorkflowGraphNode,
             label_hashes,
@@ -1182,7 +1182,7 @@ class EncordClientProject(EncordClient):
         )
 
     def workflow_complete(self, label_hashes: List[str]) -> None:
-        """This function is documented in :meth:`encord.objects.LabelRowV2.workflow_complete`."""
+        """This function is documented in :meth:`encord.objects.ontology_labels_impl.LabelRowV2.workflow_complete()`."""
         self._querier.basic_setter(
             LabelWorkflowGraphNode,
             label_hashes,

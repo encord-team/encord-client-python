@@ -96,7 +96,7 @@ def get_batches(iterable: List, n: int) -> List[List]:
         List[List]: A list of lists where each sublist represents a batch.
 
     Note:
-        This can be replaced with :func:`itertools.batched` in Python 3.12+.
+        This can be replaced with `itertools.batched <https://docs.python.org/3/library/itertools.html#itertools.batched>`_ in Python 3.12+.
     """
     return [iterable[ndx : min(ndx + n, len(iterable))] for ndx in range(0, len(iterable), n)]
 

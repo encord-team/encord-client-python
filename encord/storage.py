@@ -1166,8 +1166,8 @@ class StorageFolder:
             name (Optional[str]): New folder name.
             description (Optional[str]): New folder description.
             client_metadata (Optional[Dict[str, Any]]): New client metadata.
-            bundle (Optional[Bundle]): Optional :class:`encord.http.Bundle` to use for the operation. If provided, the operation
-                will be bundled into a single server call with other item updates using the same bundle.
+            bundle (Optional[Bundle]): Optional :class:`encord.http.bundle.Bundle` to use for the operation. If provided, the operation
+                is bundled into a single server call with other item updates using the same bundle.
 
         Returns:
             None
@@ -1916,7 +1916,8 @@ class StorageItem:
             name: New item name.
             description: New item description.
             client_metadata: New client metadata.
-            bundle: Optional bundle to use for bundling operations.
+            bundle (Optional[Bundle]): Optional :class:`encord.http.bundle.Bundle` to use for the operation. If provided, the operation
+            is bundled into a single server call with other item updates using the same bundle.
 
         Returns:
             None
