@@ -8,6 +8,10 @@ from tests.objects.data.data_group.multilayer_image import (
     DATA_GROUP_MULTILAYER_IMAGE_LABELS,
     DATA_GROUP_MULTILAYER_IMAGE_METADATA,
 )
+from tests.objects.data.data_group.two_videos import (
+    DATA_GROUP_WITH_TWO_VIDEOS_LABELS,
+    DATA_GROUP_WITH_TWO_VIDEOS_METADATA,
+)
 
 
 def test_read_and_export_all_space_labels(ontology):
@@ -150,6 +154,23 @@ def test_read_and_export_multilayer_image_labels(ontology):
         exclude_regex_paths=[
             r".*\['trackHash'\]",
             r".*\['root_info'\]",  # We don't read this info in the BE
+        ],
+        ignore_order_func=lambda x: x.path().endswith("['objects']"),
+    )
+
+
+def test_read_and_export_video_group_with_dynamic_attributes(ontology):
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_WITH_TWO_VIDEOS_LABELS)
+
+    output_dict = label_row.to_encord_dict()
+
+    assert not DeepDiff(
+        DATA_GROUP_WITH_TWO_VIDEOS_LABELS,
+        output_dict,
+        exclude_regex_paths=[
+            r".*\['trackHash'\]",
+            r".*\['child_info'\]",  # We don't read this info in the BE
         ],
         ignore_order_func=lambda x: x.path().endswith("['objects']"),
     )

@@ -265,7 +265,7 @@ wheels = [
 
 [[package]]
 name = "encord"
-version = "0.1.189"
+version = "0.1.190"
 source = { editable = "." }
 dependencies = [
     { name = "cryptography" },

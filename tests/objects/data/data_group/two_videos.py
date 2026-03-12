@@ -25,7 +25,7 @@ VIDEO_SPACE_2_INFO: VideoSpaceInfo = {
 }
 
 
-DATA_GROUP_METADATA = LabelRowMetadata(
+DATA_GROUP_WITH_TWO_VIDEOS_METADATA = LabelRowMetadata(
     label_hash="",
     branch_name="main",
     created_at=datetime.datetime.now(),
@@ -121,6 +121,12 @@ DATA_GROUP_WITH_TWO_VIDEOS_LABELS = {
         "classification1": {
             "classificationHash": "classification1",
             "featureHash": "jPOcEsbw",
+            "spaces": {
+                "video-1-uuid": {
+                    "range": [[0, 0]],
+                    "type": "frame",
+                },
+            },
             "classifications": [
                 {
                     "name": "Text classification",
@@ -145,7 +151,7 @@ DATA_GROUP_WITH_TWO_VIDEOS_LABELS = {
                     "featureHash": "OTkxMjU1",
                     "shouldPropagate": False,
                     "manualAnnotation": True,
-                    "spaceId": "video-1-uuid",
+                    "trackHash": "fbb97dda-1e66-48f9-b749-af2f83dab9fc",
                 },
                 {
                     "name": "First name",
@@ -156,7 +162,7 @@ DATA_GROUP_WITH_TWO_VIDEOS_LABELS = {
                     "featureHash": "OTkxMjU1",
                     "shouldPropagate": False,
                     "manualAnnotation": True,
-                    "spaceId": "video-2-uuid",
+                    "trackHash": "fbb97dda-1e66-48f9-b749-af2f83dab9fc",
                 },
             ],
         },

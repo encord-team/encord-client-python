@@ -839,3 +839,68 @@ def test_update_annotation_for_object_reflected_on_different_spaces(ontology):
         },
     }
     assert not DeepDiff(new_object_answers_dict, EXPECTED_NEW_OBJECT_ANSWERS_DICT)
+
+
+def test_get_object_ranges_on_text_space(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_TEXT_NO_LABELS)
+    text_space_1 = label_row.get_space(id="text-1-uuid", type_="text")
+    object_instance = text_obj_ontology_item.create_instance()
+
+    range_1 = Range(start=0, end=100)
+    range_2 = Range(start=200, end=300)
+
+    text_space_1.put_object_instance(object_instance=object_instance, ranges=range_1)
+    text_space_1.put_object_instance(object_instance=object_instance, ranges=range_2, on_overlap="merge")
+
+    # Act
+    ranges = text_space_1.get_object_ranges(object_instance)
+
+    # Assert
+    assert ranges == [range_1, range_2]
+
+
+def test_get_object_ranges_on_multiple_text_spaces(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_TEXT_NO_LABELS)
+    text_space_1 = label_row.get_space(id="text-1-uuid", type_="text")
+    text_space_2 = label_row.get_space(id="text-2-uuid", type_="text")
+    object_instance = text_obj_ontology_item.create_instance()
+
+    range_1 = Range(start=0, end=100)
+    range_2 = Range(start=200, end=300)
+
+    text_space_1.put_object_instance(object_instance=object_instance, ranges=range_1)
+    text_space_2.put_object_instance(object_instance=object_instance, ranges=range_2)
+
+    # Act & Assert
+    assert text_space_1.get_object_ranges(object_instance) == [range_1]
+    assert text_space_2.get_object_ranges(object_instance) == [range_2]
+
+
+def test_get_object_ranges_raises_if_object_not_on_text_space(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_TEXT_NO_LABELS)
+    text_space_1 = label_row.get_space(id="text-1-uuid", type_="text")
+    object_instance = text_obj_ontology_item.create_instance()
+
+    # Act & Assert
+    with pytest.raises(LabelRowError):
+        text_space_1.get_object_ranges(object_instance)
+
+
+def test_range_list_raises_for_space_based_text_object(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_TEXT_NO_LABELS)
+    text_space_1 = label_row.get_space(id="text-1-uuid", type_="text")
+    object_instance = text_obj_ontology_item.create_instance()
+
+    text_space_1.put_object_instance(object_instance=object_instance, ranges=Range(start=0, end=100))
+
+    # Act & Assert
+    with pytest.raises(LabelRowError):
+        _ = object_instance.range_list

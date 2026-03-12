@@ -166,6 +166,11 @@ class ObjectInstance:
     @property
     def range_list(self) -> Optional[Ranges]:
         if self._non_geometric:
+            self._operation_not_allowed_for_objects_on_space(
+                extended_message=" For getting ranges for objects on a space,"
+                " use space.get_object_ranges(object_instance)."
+            )
+
             non_geometric_annotation = self._get_non_geometric_annotation()
             if non_geometric_annotation is None:
                 return None
@@ -242,9 +247,6 @@ class ObjectInstance:
             )
 
         if attribute.dynamic:
-            self._operation_not_allowed_for_objects_on_space(
-                extended_message="For getting dynamic attributes for objects on a space, use VideoSpace.get_answer_on_frames."
-            )
             return self._dynamic_answer_manager.get_answer(attribute, filter_answer, filter_frame)
 
         static_answer = self._static_answer_map[attribute.feature_node_hash]
@@ -298,10 +300,6 @@ class ObjectInstance:
             )
         elif frames is not None and attribute.dynamic is False:
             raise LabelRowError("Setting frames is only possible for dynamic attributes.")
-        elif attribute.dynamic:
-            self._operation_not_allowed_for_objects_on_space(
-                extended_message="For setting dynamic attributes for objects on a space, use VideoSpace.set_answer_on_frames."
-            )
 
         if attribute.dynamic:
             self._dynamic_answer_manager.set_answer(answer, attribute, frames)

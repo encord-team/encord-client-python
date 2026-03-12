@@ -226,6 +226,24 @@ class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, 
             manual_annotation=manual_annotation,
         )
 
+    def get_object_ranges(self, object_instance: ObjectInstance) -> Ranges:
+        """Get the ranges for an object instance on this space.
+
+        Args:
+            object_instance: The object instance to get the ranges for.
+
+        Returns:
+            Ranges: The ranges for the object instance on this space.
+
+        Raises:
+            LabelRowError: If the object instance is not on this space.
+        """
+        self._label_row._check_labelling_is_initalised()
+        range_manager = self._object_hash_to_range_manager.get(object_instance.object_hash)
+        if range_manager is None:
+            raise LabelRowError(f"Object instance with hash '{object_instance.object_hash}' is not on this space.")
+        return range_manager.get_ranges()
+
     def _create_object_annotation(self, obj_hash: str) -> _RangeObjectAnnotation:
         return _RangeObjectAnnotation(space=self, object_instance=self._objects_map[obj_hash])
 

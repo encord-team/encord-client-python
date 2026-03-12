@@ -18,7 +18,7 @@ from encord.project_ontology.classification_type import ClassificationType
 
 @dataclass
 class ClassificationAttribute:
-    """DEPRECATED: prefer using :class:`encord.ontology.Ontology`
+    """This class is DEPRECATED. We recommend using :class:`encord.ontology.Ontology`
 
     A dataclass which holds classification attributes.
     """

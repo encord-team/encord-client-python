@@ -27,7 +27,7 @@ def generate_feature_node_hash() -> str:
 
 
 class Ontology:
-    """DEPRECATED: prefer using :class:`encord.ontology.Ontology`"""
+    """This class is DEPRECATED. We recommend using :class:`encord.ontology.Ontology`"""
 
     COLORS = (
         "#D33115",

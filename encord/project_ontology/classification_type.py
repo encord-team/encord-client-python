@@ -13,7 +13,7 @@ from enum import Enum
 
 
 class ClassificationType(Enum):
-    """DEPRECATED: prefer using :class:`encord.ontology.Ontology`
+    """This class is DEPRECATED. We recommend using :class:`encord.ontology.Ontology`
 
     Enum used to define classification type in ontologies.
     """

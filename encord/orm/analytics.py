@@ -121,7 +121,17 @@ class TimeSpent(BaseDTO):
 
 
 class TaskActionType(CamelStrEnum):
-    """Task action event types from workflow_task_events_v2 table."""
+    """Types of actions that can be performed on workflow tasks.
+
+    Attributes:
+        ASSIGN: A task was assigned to a user.
+        APPROVE: A task was approved.
+        SUBMIT: A task was submitted.
+        MOVE: A task was moved to a different workflow stage.
+        REJECT: A task was rejected.
+        RELEASE: A task was released from its current assignee.
+        SKIP: A task was skipped.
+    """
 
     ASSIGN = auto()
     APPROVE = auto()
