@@ -234,6 +234,7 @@ class LabelRowV2:
         )
 
         self._is_labelling_initialised = False
+        self._is_detached = False
 
         self._frame_to_hashes: defaultdict[int, Set[str]] = defaultdict(set)
         # ^ frames to object and classification hashes
@@ -257,6 +258,293 @@ class LabelRowV2:
         # at least at the final objects_index/classifications_index level.
 
         self._storage_item: Optional[StorageItem] = None
+
+    @classmethod
+    def from_media_metadata(
+        cls,
+        ontology: Ontology,
+        media_metadata: Union[
+            orm_storage.CustomerProvidedImageMetadata,
+            orm_storage.CustomerProvidedVideoMetadata,
+            orm_storage.CustomerProvidedAudioMetadata,
+            orm_storage.CustomerProvidedTextMetadata,
+            orm_storage.CustomerProvidedPdfMetadata,
+            List[orm_storage.CustomerProvidedImageMetadata],
+        ],
+        *,
+        data_hash: Optional[str] = None,
+        data_title: str = "",
+    ) -> "LabelRowV2":
+        """Create a detached label row from media metadata, without connecting to the Encord platform.
+
+        Detached label rows can be used to generate labels programmatically for media files
+        before they're uploaded. Labels can be serialized via ``to_encord_dict()`` for later
+        bulk ingestion.
+
+        Server-dependent operations (``save()``, ``initialise_labels()``, ``workflow_reopen()``,
+        ``workflow_complete()``, etc.) will raise :class:`~encord.exceptions.LabelRowError` on
+        a detached label row.
+
+        Args:
+            ontology: The ontology to use for label creation.
+            media_metadata: Metadata describing the media file. The data type is inferred
+                from the metadata class:
+
+                - :class:`~encord.orm.storage.CustomerProvidedImageMetadata` -> IMAGE
+                - :class:`~encord.orm.storage.CustomerProvidedVideoMetadata` -> VIDEO
+                - :class:`~encord.orm.storage.CustomerProvidedAudioMetadata` -> AUDIO
+                - :class:`~encord.orm.storage.CustomerProvidedTextMetadata` -> PLAIN_TEXT
+                - :class:`~encord.orm.storage.CustomerProvidedPdfMetadata` -> PDF
+                - ``List[CustomerProvidedImageMetadata]`` -> IMG_GROUP
+            data_hash: Optional UUID string for the data unit. If not provided, one is generated.
+            data_title: Optional title for the data unit.
+
+        Returns:
+            A detached :class:`LabelRowV2` instance with labels initialized.
+        """
+        from math import ceil
+        from uuid import uuid4
+
+        if data_hash is None:
+            data_hash = str(uuid4())
+        label_hash = str(uuid4())
+        now = datetime.now()
+
+        # Infer DataType and compute metadata fields
+        if isinstance(media_metadata, list):
+            data_type = DataType.IMG_GROUP
+            number_of_frames = len(media_metadata)
+            fps = None
+            duration = None
+            width = None
+            height = None
+            audio_codec = None
+            audio_sample_rate = None
+            audio_bit_depth = None
+            audio_num_channels = None
+            file_type = media_metadata[0].mime_type if media_metadata else None
+        elif isinstance(media_metadata, orm_storage.CustomerProvidedVideoMetadata):
+            data_type = DataType.VIDEO
+            number_of_frames = ceil(media_metadata.fps * media_metadata.duration)
+            fps = media_metadata.fps
+            duration = media_metadata.duration
+            width = media_metadata.width
+            height = media_metadata.height
+            audio_codec = None
+            audio_sample_rate = None
+            audio_bit_depth = None
+            audio_num_channels = None
+            file_type = media_metadata.mime_type
+        elif isinstance(media_metadata, orm_storage.CustomerProvidedImageMetadata):
+            data_type = DataType.IMAGE
+            number_of_frames = 1
+            fps = None
+            duration = None
+            width = media_metadata.width
+            height = media_metadata.height
+            audio_codec = None
+            audio_sample_rate = None
+            audio_bit_depth = None
+            audio_num_channels = None
+            file_type = media_metadata.mime_type
+        elif isinstance(media_metadata, orm_storage.CustomerProvidedAudioMetadata):
+            data_type = DataType.AUDIO
+            number_of_frames = ceil(media_metadata.duration * media_metadata.sample_rate)
+            fps = float(media_metadata.sample_rate)
+            duration = media_metadata.duration
+            width = None
+            height = None
+            audio_codec = media_metadata.codec
+            audio_sample_rate = media_metadata.sample_rate
+            audio_bit_depth = media_metadata.bit_depth
+            audio_num_channels = media_metadata.num_channels
+            file_type = media_metadata.mime_type
+        elif isinstance(media_metadata, orm_storage.CustomerProvidedTextMetadata):
+            data_type = DataType.PLAIN_TEXT
+            number_of_frames = 1
+            fps = None
+            duration = None
+            width = None
+            height = None
+            audio_codec = None
+            audio_sample_rate = None
+            audio_bit_depth = None
+            audio_num_channels = None
+            file_type = media_metadata.mime_type
+        elif isinstance(media_metadata, orm_storage.CustomerProvidedPdfMetadata):
+            data_type = DataType.PDF
+            number_of_frames = media_metadata.num_pages
+            fps = None
+            duration = None
+            width = None
+            height = None
+            audio_codec = None
+            audio_sample_rate = None
+            audio_bit_depth = None
+            audio_num_channels = None
+            file_type = "application/pdf"
+        else:
+            raise LabelRowError(f"Unsupported media metadata type: {type(media_metadata)}")
+
+        label_row_metadata = LabelRowMetadata(
+            label_hash=label_hash,
+            branch_name="main",
+            created_at=now,
+            last_edited_at=now,
+            file_type=file_type,
+            data_hash=data_hash,
+            dataset_hash="",
+            dataset_title="",
+            data_title=data_title,
+            data_type=data_type.to_upper_case_string(),
+            data_link=None,
+            label_status=LabelStatus.LABEL_IN_PROGRESS,
+            annotation_task_status=AnnotationTaskStatus.QUEUED,
+            workflow_graph_node=None,
+            is_shadow_data=False,
+            frames_per_second=fps,
+            number_of_frames=number_of_frames,
+            duration=duration,
+            height=height,
+            width=width,
+            audio_codec=audio_codec,
+            audio_sample_rate=audio_sample_rate,
+            audio_bit_depth=audio_bit_depth,
+            audio_num_channels=audio_num_channels,
+            spaces={},
+        )
+
+        # Build the empty labels dict for from_labels_dict()
+        labels_dict = cls._build_empty_labels_dict(
+            label_hash=label_hash,
+            data_hash=data_hash,
+            data_title=data_title,
+            data_type=data_type,
+            media_metadata=media_metadata,
+            now=now,
+        )
+
+        instance = cls(label_row_metadata, None, ontology)  # type: ignore[arg-type]
+        instance.from_labels_dict(labels_dict)
+        instance._is_detached = True
+        return instance
+
+    @staticmethod
+    def _build_empty_labels_dict(
+        *,
+        label_hash: str,
+        data_hash: str,
+        data_title: str,
+        data_type: DataType,
+        media_metadata: Union[
+            orm_storage.CustomerProvidedImageMetadata,
+            orm_storage.CustomerProvidedVideoMetadata,
+            orm_storage.CustomerProvidedAudioMetadata,
+            orm_storage.CustomerProvidedTextMetadata,
+            orm_storage.CustomerProvidedPdfMetadata,
+            List[orm_storage.CustomerProvidedImageMetadata],
+        ],
+        now: datetime,
+    ) -> dict:
+        """Construct the minimal valid labels dict for from_labels_dict()."""
+        now_str = format_datetime_to_long_string(now)
+
+        base: Dict[str, Any] = {
+            "label_hash": label_hash,
+            "branch_name": "main",
+            "created_at": now_str,
+            "last_edited_at": now_str,
+            "data_hash": data_hash,
+            "dataset_hash": "",
+            "dataset_title": "",
+            "data_title": data_title,
+            "data_type": data_type.value,
+            "annotation_task_status": "QUEUED",
+            "is_shadow_data": False,
+            "object_answers": {},
+            "classification_answers": {},
+            "object_actions": {},
+            "label_status": "LABEL_IN_PROGRESS",
+            "spaces": {},
+        }
+
+        data_units: Dict[str, Any] = {}
+
+        if isinstance(media_metadata, list):
+            # IMG_GROUP: one data unit per image
+            for idx, img_meta in enumerate(media_metadata):
+                from uuid import uuid4
+
+                frame_hash = str(uuid4())
+                data_units[frame_hash] = {
+                    "data_hash": frame_hash,
+                    "data_title": data_title or f"frame_{idx}",
+                    "data_link": "",
+                    "data_type": img_meta.mime_type,
+                    "data_sequence": str(idx),
+                    "width": img_meta.width,
+                    "height": img_meta.height,
+                    "labels": {},
+                }
+        elif isinstance(media_metadata, orm_storage.CustomerProvidedVideoMetadata):
+            data_units[data_hash] = {
+                "data_hash": data_hash,
+                "data_title": data_title,
+                "data_link": "",
+                "data_type": media_metadata.mime_type,
+                "data_sequence": 0,
+                "width": media_metadata.width,
+                "height": media_metadata.height,
+                "labels": {},
+                "data_duration": media_metadata.duration,
+                "data_fps": media_metadata.fps,
+            }
+        elif isinstance(media_metadata, orm_storage.CustomerProvidedImageMetadata):
+            data_units[data_hash] = {
+                "data_hash": data_hash,
+                "data_title": data_title,
+                "data_link": "",
+                "data_type": media_metadata.mime_type,
+                "data_sequence": 0,
+                "width": media_metadata.width,
+                "height": media_metadata.height,
+                "labels": {},
+            }
+        elif isinstance(media_metadata, orm_storage.CustomerProvidedAudioMetadata):
+            data_units[data_hash] = {
+                "data_hash": data_hash,
+                "data_title": data_title,
+                "data_link": "",
+                "data_type": media_metadata.mime_type,
+                "data_sequence": 0,
+                "labels": {},
+                "data_duration": media_metadata.duration,
+                "audio_codec": media_metadata.codec,
+                "audio_sample_rate": media_metadata.sample_rate,
+                "audio_bit_depth": media_metadata.bit_depth,
+                "audio_num_channels": media_metadata.num_channels,
+            }
+        elif isinstance(media_metadata, orm_storage.CustomerProvidedTextMetadata):
+            data_units[data_hash] = {
+                "data_hash": data_hash,
+                "data_title": data_title,
+                "data_link": "",
+                "data_type": media_metadata.mime_type,
+                "data_sequence": 0,
+                "labels": {},
+            }
+        elif isinstance(media_metadata, orm_storage.CustomerProvidedPdfMetadata):
+            data_units[data_hash] = {
+                "data_hash": data_hash,
+                "data_title": data_title,
+                "data_link": "",
+                "data_type": "application/pdf",
+                "data_sequence": 0,
+                "labels": {},
+            }
+
+        base["data_units"] = data_units
+        return base
 
     @property
     def label_hash(self) -> Optional[str]:
@@ -648,6 +936,7 @@ class LabelRowV2:
         """Returns the storage item associated with the label row.
         This function can be used to get storage item details like storage folder, signed url, created at, item type, client metadata, etc.
         """
+        self._check_not_detached("get_storage_item")
         if self._label_row_read_only_data.backing_item_uuid is None:
             raise LabelRowError("Storage item is not found for the label row")
 
@@ -671,6 +960,7 @@ class LabelRowV2:
             bundle: If not provided, initialization is performed independently. If provided,
                 initialization is delayed and performed along with other objects in the same bundle.
         """
+        self._check_not_detached("initialise_storage_item")
 
         if self._label_row_read_only_data.backing_item_uuid is None:
             raise LabelRowError("Storage item is not found for the label row")
@@ -732,6 +1022,7 @@ class LabelRowV2:
             include_signed_url: If `True`, the :attr:`.data_link` property will contain a signed URL.
                 See documentation for :attr:`.data_link` for more details.
         """
+        self._check_not_detached("initialise_labels")
         if self.is_labelling_initialised and not overwrite:
             raise LabelRowError(
                 "You are trying to re-initialise a label row that has already been initialized. This would overwrite "
@@ -1029,6 +1320,7 @@ class LabelRowV2:
                 as part of the bundle.
             validate_before_saving: Enable stricter server-side integrity checks. Default is `False`.
         """
+        self._check_not_detached("save")
         self._check_labelling_is_initalised()
         assert self.label_hash is not None  # Checked earlier, assert is just to silence mypy
 
@@ -1648,6 +1940,7 @@ class LabelRowV2:
         Args:
             bundle: Optional parameter. If passed, the method will be executed in a deferred way as part of the bundle.
         """
+        self._check_not_detached("workflow_reopen")
         if self.label_hash is None:
             # Label has not yet moved from the initial state, nothing to do
             return
@@ -1674,6 +1967,7 @@ class LabelRowV2:
         Raises:
             LabelRowError: If the label hash is None.
         """
+        self._check_not_detached("workflow_complete")
         if self.label_hash is None:
             raise LabelRowError(
                 "For this operation you need to initialize labelling first. Call the .initialise_labels() "
@@ -1696,6 +1990,7 @@ class LabelRowV2:
         Raises:
             WrongProjectTypeError: If the project is not a workflow-based project.
         """
+        self._check_not_detached("set_priority")
         if not self.__is_tms2_project:
             raise WrongProjectTypeError("Setting priority only possible for workflow-based projects")
 
@@ -1711,6 +2006,7 @@ class LabelRowV2:
         Returns:
             List[str] | None: A list of error messages if the label row is invalid, otherwise `None`.
         """
+        self._check_not_detached("get_validation_errors")
         if not self.label_hash or self.is_valid:
             return None
 
@@ -3314,6 +3610,14 @@ class LabelRowV2:
     def _check_labelling_is_initalised(self):
         if not self.is_labelling_initialised:
             raise LabelRowError(LABELLING_NOT_INITIALISED_ERROR_MESSAGE)
+
+    def _check_not_detached(self, operation: str) -> None:
+        if self._is_detached:
+            raise LabelRowError(
+                f"Cannot '{operation}' on a detached label row. "
+                "Detached label rows are not connected to the Encord platform. "
+                "Use to_encord_dict() to export labels."
+            )
 
     def _method_not_supported_for_audio(self, range_only: bool = False):
         if self.data_type == DataType.AUDIO and not range_only:
