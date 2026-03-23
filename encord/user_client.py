@@ -300,9 +300,9 @@ class EncordUserClient:
             dataset_title (str): Title of the dataset.
             dataset_type (StorageLocation): Type of storage location where the data will be stored.
             dataset_description (Optional[str]): Optional description of the dataset.
-            create_backing_folder (bool): Whether to create a mirrored backing Folder. If True,
-                the Folder and Dataset are synced. Recommended to set False for complex
-                or large-scale projects.
+            create_backing_folder (bool): Whether to create a mirrored backing Folder. Defaults to `False`.
+                If set to `True`, the Folder and Dataset are synced. This is not recommended
+                for complex or large-scale projects.
 
         Returns:
             CreateDatasetResponse:
