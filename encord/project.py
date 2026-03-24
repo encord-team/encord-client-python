@@ -109,6 +109,10 @@ class Project:
         return self._project_instance.created_at
 
     @property
+    def creator_email(self) -> str:
+        return self._project_instance.creator_email
+
+    @property
     def last_edited_at(self) -> datetime.datetime:
         """Get the time the project was last edited at."""
         return self._project_instance.last_edited_at

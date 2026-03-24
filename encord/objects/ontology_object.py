@@ -48,7 +48,7 @@ class Object(OntologyElement):
         return self.attributes
 
     def create_instance(self) -> ObjectInstance:
-        """Create a :class:`encord.objects.ObjectInstance` to be used with a label row.
+        """Create a :class:`encord.objects.ontology_object_instance.ObjectInstance` to be used with a label row.
 
         Returns:
             ObjectInstance: An instance of the object to be used in labeling.

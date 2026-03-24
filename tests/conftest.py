@@ -67,6 +67,7 @@ def project(
         title="Dummy project",
         description="",
         created_at=datetime.now(),
+        creator_email="dummy@example.com",
         last_edited_at=datetime.now(),
         ontology_hash="dummy-ontology-hash",
         editor_ontology=ONTOLOGY_BLURB,

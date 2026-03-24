@@ -433,6 +433,7 @@ class ProjectDTO(BaseDTO):
     title: str
     description: str
     created_at: datetime.datetime
+    creator_email: str
     last_edited_at: datetime.datetime
     ontology_hash: str
     editor_ontology: Dict[str, Any]
@@ -543,6 +544,7 @@ class ProjectFilterParams(BaseDTO):
     edited_after: Optional[Union[str, datetime.datetime]] = None
     include_org_access: bool = False
     tags_anyof: Optional[List[str]] = None
+    page_token: Optional[str] = None
 
 
 class SetProjectStatusPayload(BaseDTO):

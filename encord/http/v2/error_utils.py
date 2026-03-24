@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 from typing import Mapping
 
 from encord.exceptions import (
     AuthenticationError,
     AuthorisationError,
+    InactiveAccountError,
     InvalidArgumentsError,
     MethodNotAllowedError,
     PayloadTooLargeError,
@@ -10,6 +13,7 @@ from encord.exceptions import (
     ResourceNotFoundError,
     UnknownException,
 )
+from encord.http.common import RequestContext
 
 HTTP_BAD_REQUEST = 400
 HTTP_UNAUTHORIZED = 401
@@ -21,11 +25,25 @@ HTTP_TOO_MANY_REQUESTS = 429
 HTTP_GENERAL_ERROR = 500
 
 
-def handle_error_response(status_code: int, response_headers: Mapping[str, str], message=None, context=None):
+def handle_error_response(
+    status_code: int,
+    response_headers: Mapping[str, str],
+    message: str | None = None,
+    context: RequestContext | None = None,
+):
     """Checks server response.
     Called if HTTP response status code is an error response.
     """
     if status_code == HTTP_UNAUTHORIZED:
+        if message and "inactive customer status" in message.lower():
+            hint = (
+                "You might be seeing this because your subscription is no longer active "
+                "or you're connecting to the wrong region. "
+                "If you have an active subscription, try changing the `domain` parameter."
+            )
+            if context and context.domain:
+                hint = f"{hint} Currently connected to: {context.domain}"
+            raise InactiveAccountError(hint, context=context)
         raise AuthenticationError(
             message or "You are not authenticated to access the Encord platform.", context=context
         )

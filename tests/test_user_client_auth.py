@@ -56,6 +56,7 @@ project_dto = ProjectDTO(
     title="Dummy project",
     description="",
     created_at=datetime.now(),
+    creator_email="dummy@example.com",
     last_edited_at=datetime.now(),
     ontology_hash=str(ONTOLOGY_UUID),
     editor_ontology=ontology_orm.editor,

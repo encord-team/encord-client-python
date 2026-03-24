@@ -33,6 +33,7 @@ def stub_responses(*args, **kwargs) -> MagicMock:
             "title": "Test project",
             "description": "",
             "created_at": "2024-01-01 11:11:11",
+            "creator_email": "test@example.com",
             "last_edited_at": "2024-01-01 11:11:11",
             "editor_ontology": {},
             "datasets": [uuid4().hex],

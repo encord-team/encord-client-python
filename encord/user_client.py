@@ -503,9 +503,7 @@ class EncordUserClient:
         properties_filter = ProjectFilterParams.from_dict(self.__validate_filter(locals()))
         properties_filter.include_org_access = include_org_access
         properties_filter.tags_anyof = tags_anyof
-        page = self._api_client.get("projects", params=properties_filter, result_type=Page[ProjectDTO])
-
-        for row in page.results:
+        for row in self._api_client.get_paged_iterator("projects", params=properties_filter, result_type=ProjectDTO):
             querier = Querier(self._config.config, resource_type=TYPE_PROJECT, resource_id=str(row.project_hash))
             client = EncordClientProject(querier=querier, config=self._config.config, api_client=self._api_client)
 
@@ -1550,7 +1548,7 @@ class EncordUserClient:
             preset_uuid: The unique identifier of the preset to retrieve.
 
         Returns:
-            The preset. See :class:`encord.preset.Preset` for details.
+            The preset. See :class:`encord.filter_preset.FilterPreset` for details.
 
         Raises:
             ValueError: If `preset_uuid` is a badly formed UUID.
