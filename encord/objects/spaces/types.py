@@ -45,7 +45,7 @@ class BaseSpaceInfo(TypedDict):
 class ChildInfo(TypedDict):
     layout_key: str
     file_name: str
-    data_link: str | None
+    data_link: Optional[str]
 
 
 class RootInfo(TypedDict):
