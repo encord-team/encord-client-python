@@ -8,19 +8,31 @@ DATA_GROUP_DATA_HASH = "28f0e9d2-51e0-459d-8ffa-2e214da653a9"
 
 VIDEO_SPACE_1_INFO: VideoSpaceInfo = {
     "space_type": SpaceType.VIDEO,
-    "child_info": {"layout_key": "left-camera", "file_name": "Left Camera.mp4"},
+    "child_info": {
+        "layout_key": "left-camera",
+        "file_name": "Left Camera.mp4",
+        "data_link": "cord-videos-dev/test-org/left-camera.mp4",
+    },
     "number_of_frames": 10,
     "width": 100,
     "height": 100,
+    "data_duration": 0.4,
+    "data_fps": 25.0,
     "labels": {},
 }
 
 VIDEO_SPACE_2_INFO: VideoSpaceInfo = {
     "space_type": SpaceType.VIDEO,
-    "child_info": {"layout_key": "right-camera", "file_name": "Right Camera.mp4"},
+    "child_info": {
+        "layout_key": "right-camera",
+        "file_name": "Right Camera.mp4",
+        "data_link": "cord-videos-dev/test-org/right-camera.mp4",
+    },
     "number_of_frames": 10,
     "width": 100,
     "height": 100,
+    "data_duration": 0.4,
+    "data_fps": 25.0,
     "labels": {},
 }
 
@@ -171,7 +183,11 @@ DATA_GROUP_WITH_TWO_VIDEOS_LABELS = {
     "spaces": {
         "video-1-uuid": {
             "space_type": SpaceType.VIDEO,
-            "child_info": {"layout_key": "left-camera", "file_name": "Left Camera.mp4"},
+            "child_info": {
+                "layout_key": "left-camera",
+                "file_name": "Left Camera.mp4",
+                "data_link": "cord-videos-dev/test-org/left-camera.mp4",
+            },
             "number_of_frames": 10,
             "width": 100,
             "height": 100,
@@ -273,7 +289,11 @@ DATA_GROUP_WITH_TWO_VIDEOS_LABELS = {
         },
         "video-2-uuid": {
             "space_type": SpaceType.VIDEO,
-            "child_info": {"layout_key": "right-camera", "file_name": "Right Camera.mp4"},
+            "child_info": {
+                "layout_key": "right-camera",
+                "file_name": "Right Camera.mp4",
+                "data_link": "cord-videos-dev/test-org/right-camera.mp4",
+            },
             "number_of_frames": 10,
             "width": 100,
             "height": 100,

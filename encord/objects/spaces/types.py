@@ -45,6 +45,7 @@ class BaseSpaceInfo(TypedDict):
 class ChildInfo(TypedDict):
     layout_key: str
     file_name: str
+    data_link: str | None
 
 
 class RootInfo(TypedDict):
@@ -57,6 +58,8 @@ class VideoSpaceInfo(BaseSpaceInfo):
     number_of_frames: int
     width: int
     height: int
+    data_duration: float
+    data_fps: float
 
 
 class ImageSequenceSpaceInfo(BaseSpaceInfo):

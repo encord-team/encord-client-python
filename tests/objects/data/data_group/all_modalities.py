@@ -19,16 +19,26 @@ DATA_GROUP_DATA_HASH = "all-modalities-data-hash"
 
 VIDEO_SPACE_INFO: VideoSpaceInfo = {
     "space_type": SpaceType.VIDEO,
-    "child_info": {"layout_key": "main-video", "file_name": "video.mp4"},
+    "child_info": {
+        "layout_key": "main-video",
+        "file_name": "video.mp4",
+        "data_link": "cord-videos-dev/test-org/video.mp4",
+    },
     "number_of_frames": 10,
     "width": 100,
     "height": 100,
+    "data_duration": 0.4,
+    "data_fps": 25.0,
     "labels": {},
 }
 
 IMAGE_SPACE_INFO: ImageSpaceInfo = {
     "space_type": SpaceType.IMAGE,
-    "child_info": {"layout_key": "main-image", "file_name": "image.png"},
+    "child_info": {
+        "layout_key": "main-image",
+        "file_name": "image.png",
+        "data_link": "cord-images-dev/test-org/image.png",
+    },
     "width": 100,
     "height": 100,
     "labels": {},
@@ -36,7 +46,11 @@ IMAGE_SPACE_INFO: ImageSpaceInfo = {
 
 IMAGE_SEQUENCE_SPACE_INFO: ImageSequenceSpaceInfo = {
     "space_type": SpaceType.IMAGE_SEQUENCE,
-    "child_info": {"layout_key": "main-image-sequence", "file_name": "image_sequence.mp4"},
+    "child_info": {
+        "layout_key": "main-image-sequence",
+        "file_name": "image_sequence.mp4",
+        "data_link": "cord-videos-dev/test-org/image_sequence.mp4",
+    },
     "number_of_frames": 10,
     "width": 100,
     "height": 100,
@@ -46,26 +60,38 @@ IMAGE_SEQUENCE_SPACE_INFO: ImageSequenceSpaceInfo = {
 
 TEXT_SPACE_INFO: TextSpaceInfo = {
     "space_type": SpaceType.TEXT,
-    "child_info": {"layout_key": "main-text", "file_name": "text.txt"},
+    "child_info": {"layout_key": "main-text", "file_name": "text.txt", "data_link": "cord-text-dev/test-org/text.txt"},
     "labels": {},
 }
 
 AUDIO_SPACE_INFO: AudioSpaceInfo = {
     "space_type": SpaceType.AUDIO,
-    "child_info": {"layout_key": "main-audio", "file_name": "audio.mp3"},
+    "child_info": {
+        "layout_key": "main-audio",
+        "file_name": "audio.mp3",
+        "data_link": "cord-audio-dev/test-org/audio.mp3",
+    },
     "duration_ms": 10000,
     "labels": {},
 }
 
 HTML_SPACE_INFO: HtmlSpaceInfo = {
     "space_type": SpaceType.HTML,
-    "child_info": {"layout_key": "main-html", "file_name": "document.html"},
+    "child_info": {
+        "layout_key": "main-html",
+        "file_name": "document.html",
+        "data_link": "cord-html-dev/test-org/document.html",
+    },
     "labels": {},
 }
 
 MEDICAL_SPACE_INFO: MedicalFileSpaceInfo = {
     "space_type": SpaceType.MEDICAL_FILE,
-    "child_info": {"layout_key": "left-shoulder", "file_name": "left-shoulder.dcm"},
+    "child_info": {
+        "layout_key": "left-shoulder",
+        "file_name": "left-shoulder.dcm",
+        "data_link": "cord-dicoms-dev/test-org/left-shoulder.dcm",
+    },
     "number_of_frames": 100,
     "width": 100,
     "height": 200,
@@ -74,7 +100,11 @@ MEDICAL_SPACE_INFO: MedicalFileSpaceInfo = {
 
 MEDICAL_STACK_SPACE_INFO: MedicalStackSpaceInfo = {
     "space_type": SpaceType.MEDICAL_STACK,
-    "child_info": {"layout_key": "xray-stack", "file_name": "xray-stack.dcm"},
+    "child_info": {
+        "layout_key": "xray-stack",
+        "file_name": "xray-stack.dcm",
+        "data_link": "cord-dicoms-dev/test-org/xray-stack.dcm",
+    },
     "frames": [
         {
             "file_name": "frame-1.dcm",
@@ -104,7 +134,11 @@ POINT_CLOUD_SPACE_INFO: PointCloudFileSpaceInfo = {
 
 PDF_SPACE_INFO: PdfSpaceInfo = {
     "space_type": SpaceType.PDF,
-    "child_info": {"layout_key": "main-pdf", "file_name": "document.pdf"},
+    "child_info": {
+        "layout_key": "main-pdf",
+        "file_name": "document.pdf",
+        "data_link": "cord-pdfs-dev/test-org/document.pdf",
+    },
     "number_of_pages": 100,
     "labels": {},
 }
@@ -752,7 +786,11 @@ DATA_GROUP_WITH_LABELS = {
     "spaces": {
         "video-uuid": {
             "space_type": SpaceType.VIDEO,
-            "child_info": {"layout_key": "main-video", "file_name": "video.mp4"},
+            "child_info": {
+                "layout_key": "main-video",
+                "file_name": "video.mp4",
+                "data_link": "cord-videos-dev/test-org/video.mp4",
+            },
             "number_of_frames": 10,
             "width": 100,
             "height": 100,
@@ -793,7 +831,11 @@ DATA_GROUP_WITH_LABELS = {
         },
         "image-uuid": {
             "space_type": SpaceType.IMAGE,
-            "child_info": {"layout_key": "main-image", "file_name": "image.png"},
+            "child_info": {
+                "layout_key": "main-image",
+                "file_name": "image.png",
+                "data_link": "cord-images-dev/test-org/image.png",
+            },
             "width": 100,
             "height": 100,
             "labels": {
@@ -833,7 +875,11 @@ DATA_GROUP_WITH_LABELS = {
         },
         "image-sequence-uuid": {
             "space_type": SpaceType.IMAGE_SEQUENCE,
-            "child_info": {"layout_key": "main-image-sequence", "file_name": "image-sequence.mp4"},
+            "child_info": {
+                "layout_key": "main-image-sequence",
+                "file_name": "image-sequence.mp4",
+                "data_link": "cord-videos-dev/test-org/image-sequence.mp4",
+            },
             "number_of_frames": 10,
             "width": 100,
             "height": 100,
@@ -874,23 +920,39 @@ DATA_GROUP_WITH_LABELS = {
         },
         "text-uuid": {
             "space_type": SpaceType.TEXT,
-            "child_info": {"layout_key": "main-text", "file_name": "text.txt"},
+            "child_info": {
+                "layout_key": "main-text",
+                "file_name": "text.txt",
+                "data_link": "cord-text-dev/test-org/text.txt",
+            },
             "labels": {},
         },
         "audio-uuid": {
             "space_type": SpaceType.AUDIO,
-            "child_info": {"layout_key": "main-audio", "file_name": "audio.mp3"},
+            "child_info": {
+                "layout_key": "main-audio",
+                "file_name": "audio.mp3",
+                "data_link": "cord-audio-dev/test-org/audio.mp3",
+            },
             "duration_ms": 10000,
             "labels": {},
         },
         "html-uuid": {
             "space_type": SpaceType.HTML,
-            "child_info": {"layout_key": "main-html", "file_name": "document.html"},
+            "child_info": {
+                "layout_key": "main-html",
+                "file_name": "document.html",
+                "data_link": "cord-html-dev/test-org/document.html",
+            },
             "labels": {},
         },
         "dicom-uuid": {
             "space_type": SpaceType.MEDICAL_FILE,
-            "child_info": {"layout_key": "left-shoulder", "file_name": "left-shoulder.dcm"},
+            "child_info": {
+                "layout_key": "left-shoulder",
+                "file_name": "left-shoulder.dcm",
+                "data_link": "cord-dicoms-dev/test-org/left-shoulder.dcm",
+            },
             "number_of_frames": 100,
             "width": 100,
             "height": 200,
@@ -931,7 +993,11 @@ DATA_GROUP_WITH_LABELS = {
         },
         "dicom-stack-uuid": {
             "space_type": SpaceType.MEDICAL_STACK,
-            "child_info": {"layout_key": "xray-stack", "file_name": "xray-stack.dcm"},
+            "child_info": {
+                "layout_key": "xray-stack",
+                "file_name": "xray-stack.dcm",
+                "data_link": "cord-dicoms-dev/test-org/xray-stack.dcm",
+            },
             "frames": [
                 {
                     "file_name": "frame-1.dcm",
@@ -983,7 +1049,11 @@ DATA_GROUP_WITH_LABELS = {
         },
         "pdf-uuid": {
             "space_type": SpaceType.PDF,
-            "child_info": {"layout_key": "main-pdf", "file_name": "document.pdf"},
+            "child_info": {
+                "layout_key": "main-pdf",
+                "file_name": "document.pdf",
+                "data_link": "cord-pdf-dev/test-org/document.pdf",
+            },
             "number_of_pages": 100,
             "labels": {
                 "0": {
