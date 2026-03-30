@@ -191,6 +191,8 @@ DATA_GROUP_WITH_TWO_VIDEOS_LABELS = {
             "number_of_frames": 10,
             "width": 100,
             "height": 100,
+            "data_duration": 0.4,
+            "data_fps": 25.0,
             "labels": {
                 "0": {
                     "objects": [
@@ -297,6 +299,8 @@ DATA_GROUP_WITH_TWO_VIDEOS_LABELS = {
             "number_of_frames": 10,
             "width": 100,
             "height": 100,
+            "data_duration": 0.4,
+            "data_fps": 25.0,
             "labels": {
                 "1": {
                     "objects": [
