@@ -8,13 +8,13 @@ DATA_GROUP_DATA_HASH = "data-group-with-two-html-data-hash"
 
 HTML_SPACE_1_INFO: HtmlSpaceInfo = {
     "space_type": SpaceType.HTML,
-    "child_info": {"layout_key": "web page 1", "file_name": "web-1.html"},
+    "child_info": {"layout_key": "web page 1", "file_name": "web-1.html", "data_link": None, "file_type": "text/html"},
     "labels": {},
 }
 
 HTML_SPACE_2_INFO: HtmlSpaceInfo = {
     "space_type": SpaceType.HTML,
-    "child_info": {"layout_key": "web page 2", "file_name": "web-2.html"},
+    "child_info": {"layout_key": "web page 2", "file_name": "web-2.html", "data_link": None, "file_type": "text/html"},
     "labels": {},
 }
 

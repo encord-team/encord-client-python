@@ -8,7 +8,7 @@ DATA_GROUP_DATA_HASH = "data-group-with-two-images-data-hash"
 
 IMAGE_SPACE_1_INFO: ImageSpaceInfo = {
     "space_type": SpaceType.IMAGE,
-    "child_info": {"layout_key": "front", "file_name": "front.jpg", "data_link": "cord-images-dev/test-org/front.jpg"},
+    "child_info": {"layout_key": "front", "file_name": "front.jpg", "data_link": "cord-images-dev/test-org/front.jpg", "file_type": "image/jpeg"},
     "width": 100,
     "height": 100,
     "labels": {},
@@ -16,7 +16,7 @@ IMAGE_SPACE_1_INFO: ImageSpaceInfo = {
 
 IMAGE_SPACE_2_INFO: ImageSpaceInfo = {
     "space_type": SpaceType.IMAGE,
-    "child_info": {"layout_key": "back", "file_name": "back.jpg", "data_link": "cord-images-dev/test-org/back.jpg"},
+    "child_info": {"layout_key": "back", "file_name": "back.jpg", "data_link": "cord-images-dev/test-org/back.jpg", "file_type": "image/jpeg"},
     "width": 100,
     "height": 100,
     "labels": {},

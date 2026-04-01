@@ -12,6 +12,7 @@ TEXT_SPACE_1_INFO: TextSpaceInfo = {
         "layout_key": "main transcript",
         "file_name": "english.txt",
         "data_link": "cord-text-dev/test-org/english.txt",
+        "file_type": "text/plain",
     },
     "labels": {},
 }
@@ -22,6 +23,7 @@ TEXT_SPACE_2_INFO: TextSpaceInfo = {
         "layout_key": "chinese translation",
         "file_name": "chinese.txt",
         "data_link": "cord-text-dev/test-org/chinese.txt",
+        "file_type": "text/plain",
     },
     "labels": {},
 }

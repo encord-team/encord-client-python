@@ -23,6 +23,7 @@ VIDEO_SPACE_INFO: VideoSpaceInfo = {
         "layout_key": "main-video",
         "file_name": "video.mp4",
         "data_link": "cord-videos-dev/test-org/video.mp4",
+        "file_type": "video/mp4",
     },
     "number_of_frames": 10,
     "width": 100,
@@ -38,6 +39,7 @@ IMAGE_SPACE_INFO: ImageSpaceInfo = {
         "layout_key": "main-image",
         "file_name": "image.png",
         "data_link": "cord-images-dev/test-org/image.png",
+        "file_type": "image/png",
     },
     "width": 100,
     "height": 100,
@@ -50,17 +52,46 @@ IMAGE_SEQUENCE_SPACE_INFO: ImageSequenceSpaceInfo = {
         "layout_key": "main-image-sequence",
         "file_name": "image_sequence.mp4",
         "data_link": "cord-videos-dev/test-org/image_sequence.mp4",
+        "file_type": "video/mp4",
     },
-    "number_of_frames": 10,
+    "number_of_frames": 3,
     "width": 100,
     "height": 100,
+    "frames": [
+        {
+            "data_uuid": "frame-uuid-0",
+            "data_type": "image/jpeg",
+            "data_sequence": 0,
+            "data_link": "cord-images-dev/test-org/frame_000.jpg",
+            "data_title": "frame_000.jpg",
+        },
+        {
+            "data_uuid": "frame-uuid-1",
+            "data_type": "image/jpeg",
+            "data_sequence": 1,
+            "data_link": "cord-images-dev/test-org/frame_001.jpg",
+            "data_title": "frame_001.jpg",
+        },
+        {
+            "data_uuid": "frame-uuid-2",
+            "data_type": "image/jpeg",
+            "data_sequence": 2,
+            "data_link": "cord-images-dev/test-org/frame_002.jpg",
+            "data_title": "frame_002.jpg",
+        },
+    ],
     "labels": {},
 }
 
 
 TEXT_SPACE_INFO: TextSpaceInfo = {
     "space_type": SpaceType.TEXT,
-    "child_info": {"layout_key": "main-text", "file_name": "text.txt", "data_link": "cord-text-dev/test-org/text.txt"},
+    "child_info": {
+        "layout_key": "main-text",
+        "file_name": "text.txt",
+        "data_link": "cord-text-dev/test-org/text.txt",
+        "file_type": "text/plain",
+    },
     "labels": {},
 }
 
@@ -70,6 +101,7 @@ AUDIO_SPACE_INFO: AudioSpaceInfo = {
         "layout_key": "main-audio",
         "file_name": "audio.mp3",
         "data_link": "cord-audio-dev/test-org/audio.mp3",
+        "file_type": "audio/mpeg",
     },
     "duration_ms": 10000,
     "labels": {},
@@ -81,6 +113,7 @@ HTML_SPACE_INFO: HtmlSpaceInfo = {
         "layout_key": "main-html",
         "file_name": "document.html",
         "data_link": "cord-html-dev/test-org/document.html",
+        "file_type": "text/html",
     },
     "labels": {},
 }
@@ -91,6 +124,7 @@ MEDICAL_SPACE_INFO: MedicalFileSpaceInfo = {
         "layout_key": "left-shoulder",
         "file_name": "left-shoulder.dcm",
         "data_link": "cord-dicoms-dev/test-org/left-shoulder.dcm",
+        "file_type": "application/dicom",
     },
     "number_of_frames": 100,
     "width": 100,
@@ -104,6 +138,7 @@ MEDICAL_STACK_SPACE_INFO: MedicalStackSpaceInfo = {
         "layout_key": "xray-stack",
         "file_name": "xray-stack.dcm",
         "data_link": "cord-dicoms-dev/test-org/xray-stack.dcm",
+        "file_type": "application/dicom",
     },
     "frames": [
         {
@@ -138,6 +173,7 @@ PDF_SPACE_INFO: PdfSpaceInfo = {
         "layout_key": "main-pdf",
         "file_name": "document.pdf",
         "data_link": "cord-pdfs-dev/test-org/document.pdf",
+        "file_type": "application/pdf",
     },
     "number_of_pages": 100,
     "labels": {},
@@ -882,9 +918,32 @@ DATA_GROUP_WITH_LABELS = {
                 "file_name": "image-sequence.mp4",
                 "data_link": "cord-videos-dev/test-org/image-sequence.mp4",
             },
-            "number_of_frames": 10,
+            "number_of_frames": 3,
             "width": 100,
             "height": 100,
+            "frames": [
+                {
+                    "data_uuid": "frame-uuid-0",
+                    "data_type": "image/jpeg",
+                    "data_sequence": 0,
+                    "data_link": "cord-images-dev/test-org/frame_000.jpg",
+                    "data_title": "frame_000.jpg",
+                },
+                {
+                    "data_uuid": "frame-uuid-1",
+                    "data_type": "image/jpeg",
+                    "data_sequence": 1,
+                    "data_link": "cord-images-dev/test-org/frame_001.jpg",
+                    "data_title": "frame_001.jpg",
+                },
+                {
+                    "data_uuid": "frame-uuid-2",
+                    "data_type": "image/jpeg",
+                    "data_sequence": 2,
+                    "data_link": "cord-images-dev/test-org/frame_002.jpg",
+                    "data_title": "frame_002.jpg",
+                },
+            ],
             "labels": {
                 "0": {
                     "objects": [

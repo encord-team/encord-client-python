@@ -46,6 +46,7 @@ class ChildInfo(TypedDict):
     layout_key: str
     file_name: str
     data_link: Optional[str]
+    file_type: Optional[str]
 
 
 class RootInfo(TypedDict):
@@ -62,12 +63,21 @@ class VideoSpaceInfo(BaseSpaceInfo):
     data_fps: float
 
 
+class ImageSequenceFrameInfo(TypedDict):
+    data_uuid: str
+    data_type: str
+    data_sequence: int
+    data_link: str
+    data_title: str
+
+
 class ImageSequenceSpaceInfo(BaseSpaceInfo):
     space_type: Literal[SpaceType.IMAGE_SEQUENCE]
     child_info: NotRequired[ChildInfo]
     number_of_frames: int
     width: int
     height: int
+    frames: List[ImageSequenceFrameInfo]
 
 
 class ImageSpaceInfo(BaseSpaceInfo):

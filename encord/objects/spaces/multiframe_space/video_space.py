@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from encord.constants.enums import SpaceType
 from encord.objects.spaces.multiframe_space.multiframe_space import MultiFrameSpace
-from encord.objects.spaces.types import ImageSequenceSpaceInfo, SpaceInfo, VideoSpaceInfo
+from encord.objects.spaces.types import ImageSequenceFrameInfo, ImageSequenceSpaceInfo, SpaceInfo, VideoSpaceInfo
 
 if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2
@@ -34,6 +34,10 @@ class VideoSpace(MultiFrameSpace):
         else:
             self._data_duration = 0.0
             self._data_fps = 0.0
+        if space_info["space_type"] == SpaceType.IMAGE_SEQUENCE:
+            self._frames: List[ImageSequenceFrameInfo] = space_info["frames"]
+        else:
+            self._frames = []
 
     def _get_frame_dimensions(self, frame: int) -> tuple[int, int]:
         return self._width, self._height
@@ -49,6 +53,7 @@ class VideoSpace(MultiFrameSpace):
                 number_of_frames=self._number_of_frames,
                 width=self._width,
                 height=self._height,
+                frames=self._frames,
             )
         else:
             return VideoSpaceInfo(
