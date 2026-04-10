@@ -20,6 +20,8 @@ from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.filter_preset import ProjectFilterPreset
 from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
+from encord.http.v2.payloads import Page
+from encord.issues.issue_client import GetIssueTagsParams, IssueTag
 from encord.objects import LabelRowV2, OntologyStructure
 from encord.ontology import Ontology
 from encord.orm.active import ActiveProjectMode
@@ -47,11 +49,13 @@ from encord.orm.label_row import (
     ShadowDataState,
 )
 from encord.orm.project import (
+    AddProjectIssueTagsPayload,
     CopyDatasetOptions,
     CopyLabelsOptions,
     ProjectDataset,
     ProjectDTO,
     ProjectStatus,
+    ProjectTag,
     ProjectType,
 )
 from encord.orm.project import Project as OrmProject
@@ -78,6 +82,7 @@ class Project:
         self._project_instance = project_instance
         self._ontology_internal = ontology
         self._api_client = api_client
+        self._tags: Optional[List[ProjectTag]] = None
 
         if project_instance.workflow:
             self._workflow = Workflow(api_client, project_instance.project_hash, project_instance.workflow)
@@ -765,6 +770,52 @@ class Project:
             include_object_feature_hashes=include_object_feature_hashes,
             include_classification_feature_hashes=include_classification_feature_hashes,
             include_reviews=include_reviews,
+        )
+
+    def get_tags(self, use_cache: bool = True) -> List[ProjectTag]:
+        """Get the tags assigned to the project.
+
+        Args:
+            use_cache: If ``True`` (default), returns the cached result from a previous call.
+                Set to ``False`` to force a fresh fetch from the API.
+
+        Returns:
+            List[ProjectTag]: The tags assigned to this project.
+        """
+        if self._tags is None or not use_cache:
+            self._tags = self._api_client.get(
+                f"projects/{self.project_hash}/tags",
+                params=None,
+                result_type=Page[ProjectTag],
+            ).results
+        return self._tags
+
+    def get_issue_tags(self) -> Iterable[IssueTag]:
+        """Get the issue tags linked to a Project.
+
+        Returns:
+            List[IssueTag]: The issue tags linked to a Project.
+        """
+        yield from self._api_client.get_paged_iterator(
+            f"projects/{self.project_hash}/issue-tags",
+            params=GetIssueTagsParams(),
+            result_type=IssueTag,
+        )
+
+    def add_issue_tags(self, issue_tag_names: List[str]) -> None:
+        """Link existing workspace-level issue tags to a Project by name.
+
+        Args:
+            issue_tag_names: List of issue tag names to link to a Project.
+
+        Returns:
+            None
+        """
+        self._api_client.post(
+            f"projects/{self.project_hash}/issue-tags",
+            params=None,
+            payload=AddProjectIssueTagsPayload(issue_tag_names=issue_tag_names),
+            result_type=None,
         )
 
     @deprecated(version="0.1.123", alternative=".list_label_rows_v2")

@@ -434,9 +434,10 @@ class Dataset:
         """
         return self._client.add_private_data_to_dataset_get_result(upload_job_id, timeout_seconds)
 
+    @deprecated(version="0.1.192", alternative="encord.storage.StorageItem.update")
     def update_data_item(self, data_hash: str, new_title: str) -> bool:
-        """DEPRECATED: Use the individual setter properties of the respective :class:`encord.orm.dataset.DataRow`
-        instance instead. These can be retrieved via the :attr:`encord.dataset.Dataset.data_rows` property.
+        """DEPRECATED: Use :meth:`encord.storage.StorageItem.update` to update the
+        :attr:`encord.storage.StorageItem.name` of the underlying :class:`encord.orm.storage.StorageItem`.
 
         Update a data item.
 
@@ -445,7 +446,7 @@ class Dataset:
             new_title: New title of the data item being updated.
 
         Returns:
-        Boolean indicating whether the update was successful.
+            Boolean indicating whether the update was successful.
 
         """
         return self._client.update_data_item(data_hash, new_title)

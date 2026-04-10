@@ -53,12 +53,6 @@ class AuthenticationError(EncordException):
     pass
 
 
-class InactiveAccountError(AuthenticationError):
-    """Exception thrown when the account is inactive, possibly due to connecting to the wrong region."""
-
-    pass
-
-
 class AuthorisationError(EncordException):
     """Exception thrown when access is unauthorized.
     (E.g. access to a data asset or method).

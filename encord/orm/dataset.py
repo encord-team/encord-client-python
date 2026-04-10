@@ -475,8 +475,13 @@ class DataRow(dict, Formatter):
         else:
             raise EncordException("Could not fetch data. The DataRow is in an invalid state.")
 
+    @deprecated(version="0.1.192", alternative="encord.storage.StorageItem.update")
     def save(self) -> None:
-        """Sync local state to the server, if updates are made. This is a blocking function.
+        """DEPRECATED: Use :meth:`encord.storage.StorageItem.update` instead to update the underlying
+        :class:`encord.orm.storage.StorageItem`. You can access the UUID of the underlying
+        :class:`encord.storage.StorageItem` using :meth:`encord.orm.dataset.DataRow.backing_item_uuid`.
+
+        Sync local state to the server, if updates are made. This is a blocking function.
 
         The newest values from the Encord server will update the current :class:`encord.orm.dataset.DataRow` object.
         """

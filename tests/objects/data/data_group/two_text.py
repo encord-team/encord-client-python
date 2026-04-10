@@ -8,13 +8,21 @@ DATA_GROUP_DATA_HASH = "data-group-with-two-text-data-hash"
 
 TEXT_SPACE_1_INFO: TextSpaceInfo = {
     "space_type": SpaceType.TEXT,
-    "child_info": {"layout_key": "main transcript", "file_name": "english.txt"},
+    "child_info": {
+        "layout_key": "main transcript",
+        "file_name": "english.txt",
+        "data_link": "cord-text-dev/test-org/english.txt",
+    },
     "labels": {},
 }
 
 TEXT_SPACE_2_INFO: TextSpaceInfo = {
     "space_type": SpaceType.TEXT,
-    "child_info": {"layout_key": "chinese translation", "file_name": "chinese.txt"},
+    "child_info": {
+        "layout_key": "chinese translation",
+        "file_name": "chinese.txt",
+        "data_link": "cord-text-dev/test-org/chinese.txt",
+    },
     "labels": {},
 }
 
@@ -150,12 +158,20 @@ DATA_GROUP_WITH_TWO_TEXT_LABELS = {
     "spaces": {
         "text-1-uuid": {
             "space_type": SpaceType.TEXT,
-            "child_info": {"layout_key": "main transcript", "file_name": "english.txt"},
+            "child_info": {
+                "layout_key": "main transcript",
+                "file_name": "english.txt",
+                "data_link": "cord-text-dev/test-org/english.txt",
+            },
             "labels": {},
         },
         "text-2-uuid": {
             "space_type": SpaceType.TEXT,
-            "child_info": {"layout_key": "chinese translation", "file_name": "chinese.txt"},
+            "child_info": {
+                "layout_key": "chinese translation",
+                "file_name": "chinese.txt",
+                "data_link": "cord-text-dev/test-org/chinese.txt",
+            },
             "labels": {},
         },
     },

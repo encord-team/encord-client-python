@@ -1,11 +1,16 @@
 import os
+import uuid
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 import encord.exceptions
 from encord.configs import _ENCORD_SSH_KEY, _ENCORD_SSH_KEY_FILE
+from encord.http.v2.api_client import ApiClient
+from encord.http.v2.payloads import Page
+from encord.orm.project import ProjectTag
 from encord.user_client import EncordUserClient
 from tests.conftest import PRIVATE_KEY_PEM
 
@@ -73,3 +78,35 @@ def test_initialise_with_wrong_ssh_file_content_from_env():
     os.environ[_ENCORD_SSH_KEY] = "Some random content."
     with pytest.raises(expected_exception=ValueError):
         EncordUserClient.create_with_ssh_private_key()
+
+
+@pytest.mark.parametrize(
+    "tag_names",
+    [
+        pytest.param([], id="none"),
+        pytest.param(["my-tag"], id="one"),
+        pytest.param(["alpha", "beta", "gamma"], id="many"),
+    ],
+)
+@patch.object(ApiClient, "get")
+def test_list_project_tags(api_get: MagicMock, user_client: EncordUserClient, tag_names: list[str]) -> None:
+    tags = [ProjectTag(uuid=uuid.uuid4(), name=name) for name in tag_names]
+    api_get.return_value = Page(results=tags)
+
+    result = user_client.list_project_tags()
+
+    assert result == tags
+    api_get.assert_called_once()
+
+
+@patch.object(ApiClient, "get_paged_iterator")
+def test_list_projects_tags_anyof_accepts_project_tag_instances(
+    api_get_paged: MagicMock, user_client: EncordUserClient
+) -> None:
+    api_get_paged.return_value = iter([])
+    tags = [ProjectTag(uuid=uuid.uuid4(), name=name) for name in ["alpha", "beta"]]
+
+    list(user_client.list_projects(tags_anyof=tags))
+
+    _, call_kwargs = api_get_paged.call_args
+    assert call_kwargs["params"].tags_anyof == ["alpha", "beta"]

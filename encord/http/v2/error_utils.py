@@ -5,7 +5,6 @@ from typing import Mapping
 from encord.exceptions import (
     AuthenticationError,
     AuthorisationError,
-    InactiveAccountError,
     InvalidArgumentsError,
     MethodNotAllowedError,
     PayloadTooLargeError,
@@ -35,18 +34,14 @@ def handle_error_response(
     Called if HTTP response status code is an error response.
     """
     if status_code == HTTP_UNAUTHORIZED:
-        if message and "inactive customer status" in message.lower():
-            hint = (
-                "You might be seeing this because your subscription is no longer active "
-                "or you're connecting to the wrong region. "
-                "If you have an active subscription, try changing the `domain` parameter."
-            )
-            if context and context.domain:
-                hint = f"{hint} Currently connected to: {context.domain}"
-            raise InactiveAccountError(hint, context=context)
-        raise AuthenticationError(
-            message or "You are not authenticated to access the Encord platform.", context=context
+        hint = (
+            "You might also be seeing this because you're connecting to the wrong region. "
+            "Try changing the `domain` parameter (e.g. 'https://api.us.encord.com' vs 'https://api.encord.com')."
         )
+        if context and context.domain:
+            hint = f"{hint} Currently connected to: {context.domain}"
+        msg = f"{message or 'You are not authenticated to access the Encord platform.'} {hint}"
+        raise AuthenticationError(msg, context=context)
 
     if status_code == HTTP_FORBIDDEN:
         raise AuthorisationError(message or "You are not authorised to access this asset.", context=context)

@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
 from encord.exceptions import WrongProjectTypeError
+from encord.issues.issue_client import IssueTag
 from encord.orm import base_orm
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
@@ -404,6 +405,28 @@ class TaskPriorityParams(BaseDTO):
     """
 
     priorities: List[Tuple[str, float]]
+
+
+class ProjectTag(BaseDTO):
+    """A tag assigned to a project.
+
+    Args:
+        uuid: Unique identifier of the tag.
+        name: Human-readable name of the tag.
+    """
+
+    uuid: UUID
+    name: str
+
+
+class AddProjectIssueTagsPayload(BaseDTO):
+    """Payload for linking issue tags to a Project by name.
+
+    Args:
+        issue_tag_names: List of issue tag names to link to a Project.
+    """
+
+    issue_tag_names: List[str]
 
 
 class ProjectDTO(BaseDTO):

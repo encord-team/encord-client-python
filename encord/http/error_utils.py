@@ -58,7 +58,14 @@ def check_error_response(response, context: Optional[RequestContext] = None, pay
     Called if HTTP response status code is an error response.
     """
     if response == AUTHENTICATION_ERROR:
-        raise AuthenticationError("You are not authenticated to access the Encord platform.", context=context)
+        hint = (
+            "You might also be seeing this because you're connecting to the wrong region."
+            " Try changing the `domain` parameter (e.g. 'https://api.us.encord.com' vs 'https://api.encord.com')."
+        )
+        if context and context.domain:
+            hint = f"{hint} Currently connected to: {context.domain}"
+        msg = f"You are not authenticated to access the Encord platform. {hint}"
+        raise AuthenticationError(msg, context=context)
 
     if response == AUTHORISATION_ERROR:
         raise AuthorisationError("You are not authorised to access this asset.", context=context)
@@ -145,10 +152,15 @@ def check_error_response(response, context: Optional[RequestContext] = None, pay
         )
 
     if response == SSH_KEY_NOT_FOUND_ERROR:
-        raise SshKeyNotFound(
-            "The used SSH key does not exist on the Encord platform. Please add this SSH key to your user profile.",
-            context=context,
+        hint = (
+            "The used SSH key does not exist on the Encord platform."
+            " Please add this SSH key to your user profile."
+            " You might also be seeing this because you're connecting to the wrong region."
+            " Try changing the `domain` parameter (e.g. 'https://api.us.encord.com' vs 'https://api.encord.com')."
         )
+        if context and context.domain:
+            hint = f"{hint} Currently connected to: {context.domain}"
+        raise SshKeyNotFound(hint, context=context)
 
     if response == INVALID_ARGUMENTS_ERROR:
         default_message = "Some of the arguments to the SDK function were invalid."

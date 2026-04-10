@@ -62,8 +62,13 @@ class IssueComment(BaseDTO):
     created_at: datetime
 
 
+class GetIssueTagsParams(BaseDTO):
+    page_token: Optional[str] = None
+
+
 class IssueTag(BaseDTO):
     name: str
+    uuid: UUID
 
 
 class IssueResolution(BaseDTO):

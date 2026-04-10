@@ -92,6 +92,7 @@ from encord.orm.project import (
     ManualReviewWorkflowSettings,
     ProjectDTO,
     ProjectFilterParams,
+    ProjectTag,
     ProjectWorkflowSettings,
     ProjectWorkflowType,
     ReviewMode,
@@ -480,7 +481,7 @@ class EncordUserClient:
         edited_before: Optional[Union[str, datetime]] = None,
         edited_after: Optional[Union[str, datetime]] = None,
         include_org_access: bool = False,
-        tags_anyof: Optional[List[str]] = None,
+        tags_anyof: Optional[Union[List[str], List[ProjectTag]]] = None,
     ) -> Iterable[Project]:
         """List either all (if called with no arguments) or matching projects the user has access to.
 
@@ -495,14 +496,16 @@ class EncordUserClient:
             edited_after: optional last modification date filter, 'greater'
             include_org_access: if set to true and the calling user is the organization admin, the
               method will return all projects in the organization.
-            tags_anyof: optional tag names filter; matches projects having at least one of the tag names.
+            tags_anyof: optional tag names filter; matches projects having at least one of the tag
+                names. Accepts either tag name strings or :class:`encord.orm.project.ProjectTag` instances.
 
         Returns:
             list of Projects matching filter conditions, as :class:`encord.project.Project` instances.
         """
+        tag_names = [t.name if isinstance(t, ProjectTag) else t for t in tags_anyof] if tags_anyof is not None else None
         properties_filter = ProjectFilterParams.from_dict(self.__validate_filter(locals()))
         properties_filter.include_org_access = include_org_access
-        properties_filter.tags_anyof = tags_anyof
+        properties_filter.tags_anyof = tag_names
         for row in self._api_client.get_paged_iterator("projects", params=properties_filter, result_type=ProjectDTO):
             querier = Querier(self._config.config, resource_type=TYPE_PROJECT, resource_id=str(row.project_hash))
             client = EncordClientProject(querier=querier, config=self._config.config, api_client=self._api_client)
@@ -513,6 +516,18 @@ class EncordUserClient:
                 ontology=None,  # lazy-load
                 api_client=self._api_client,
             )
+
+    def list_project_tags(self) -> List[ProjectTag]:
+        """List all project tags defined in the organisation.
+
+        Returns:
+            List[ProjectTag]: All project tags available in the organisation.
+        """
+        return self._api_client.get(
+            "organisation/project-tags",
+            params=None,
+            result_type=Page[ProjectTag],
+        ).results
 
     def create_project(
         self,

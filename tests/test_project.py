@@ -1,12 +1,14 @@
 import uuid
 from unittest.mock import MagicMock, PropertyMock, patch
 
+import pytest
+
 from encord.client import EncordClientProject
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.orm.label_row import LabelRow
 from encord.orm.project import Project as OrmProject
-from encord.orm.project import ProjectDataset
+from encord.orm.project import ProjectDataset, ProjectTag
 from encord.project import Project
 
 UID = "d958ddbb-fcd0-477a-adf9-de14431dbbd2"
@@ -54,3 +56,42 @@ def test_project_datasets(api_get: MagicMock, project: Project) -> None:
         "title": "test dataset",
         "description": "my test dataset",
     }
+
+
+@pytest.mark.parametrize(
+    "tag_names",
+    [
+        pytest.param([], id="none"),
+        pytest.param(["my-tag"], id="one"),
+        pytest.param(["alpha", "beta", "gamma"], id="many"),
+    ],
+)
+@patch.object(ApiClient, "get")
+def test_get_tags(api_get: MagicMock, project: Project, tag_names: list[str]) -> None:
+    tags = [ProjectTag(uuid=uuid.uuid4(), name=name) for name in tag_names]
+    api_get.return_value = Page(results=tags)
+
+    result = project.get_tags()
+
+    assert result == tags
+    api_get.assert_called_once()
+
+
+@patch.object(ApiClient, "get")
+def test_get_tags_cached(api_get: MagicMock, project: Project) -> None:
+    api_get.return_value = Page(results=[ProjectTag(uuid=uuid.uuid4(), name="my-tag")])
+
+    project.get_tags()
+    project.get_tags()
+
+    api_get.assert_called_once()
+
+
+@patch.object(ApiClient, "get")
+def test_get_tags_use_cache_false(api_get: MagicMock, project: Project) -> None:
+    api_get.return_value = Page(results=[ProjectTag(uuid=uuid.uuid4(), name="my-tag")])
+
+    project.get_tags()
+    project.get_tags(use_cache=False)
+
+    assert api_get.call_count == 2

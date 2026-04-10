@@ -11,6 +11,8 @@ from encord.utilities.type_utilities import exhaustive_guard
 
 @dataclass(frozen=True)
 class RootSpaceMetadata:
+    """Metadata for root-level spaces."""
+
     file_name: str
     layout_key: None = None
 
@@ -35,39 +37,66 @@ class SceneMetadata:
     """The name of the file, including extension, extracted from the URI."""
 
 
+# Union of all metadata variants describing a space.
 SpaceMetadata = Union[DataGroupMetadata, SceneMetadata, RootSpaceMetadata]
 
 
 class BaseSpaceInfo(TypedDict):
+    """Base information shared by all space info payloads."""
+
     labels: Dict[str, LabelBlob]
 
 
 class ChildInfo(TypedDict):
+    """Information about a child item within a layout-backed space."""
+
     layout_key: str
     file_name: str
+    data_link: Optional[str]
 
 
 class RootInfo(TypedDict):
+    """Information about a root-level file associated with a space."""
+
     file_name: str
 
 
 class VideoSpaceInfo(BaseSpaceInfo):
+    """Information for a video space."""
+
     space_type: Literal[SpaceType.VIDEO]
     child_info: NotRequired[ChildInfo]
     number_of_frames: int
     width: int
     height: int
+    data_duration: float
+    data_fps: float
+
+
+class ImageSequenceFrameInfo(TypedDict):
+    """Information about a frame in an image sequence."""
+
+    data_uuid: str
+    data_type: str
+    data_sequence: int
+    data_link: str
+    data_title: str
 
 
 class ImageSequenceSpaceInfo(BaseSpaceInfo):
+    """Information for an image sequence space."""
+
     space_type: Literal[SpaceType.IMAGE_SEQUENCE]
     child_info: NotRequired[ChildInfo]
     number_of_frames: int
     width: int
     height: int
+    frames: List[ImageSequenceFrameInfo]
 
 
 class ImageSpaceInfo(BaseSpaceInfo):
+    """Information for an image space."""
+
     space_type: Literal[SpaceType.IMAGE]
     child_info: NotRequired[ChildInfo]
     root_info: NotRequired[RootInfo]
@@ -76,22 +105,30 @@ class ImageSpaceInfo(BaseSpaceInfo):
 
 
 class TextSpaceInfo(BaseSpaceInfo):
+    """Information for a text space."""
+
     space_type: Literal[SpaceType.TEXT]
     child_info: NotRequired[ChildInfo]
 
 
 class AudioSpaceInfo(BaseSpaceInfo):
+    """Information for an audio space."""
+
     space_type: Literal[SpaceType.AUDIO]
     child_info: NotRequired[ChildInfo]
     duration_ms: int
 
 
 class HtmlSpaceInfo(BaseSpaceInfo):
+    """Information for an HTML space."""
+
     space_type: Literal[SpaceType.HTML]
     child_info: NotRequired[ChildInfo]
 
 
 class MedicalFileSpaceInfo(BaseSpaceInfo):
+    """Information for a medical file space."""
+
     space_type: Literal[SpaceType.MEDICAL_FILE]
     child_info: NotRequired[ChildInfo]
     number_of_frames: int
@@ -100,6 +137,8 @@ class MedicalFileSpaceInfo(BaseSpaceInfo):
 
 
 class DicomFrameInfo(TypedDict):
+    """Information about a frame in a DICOM stack."""
+
     width: int
     height: int
     instance_uid: str
@@ -107,35 +146,46 @@ class DicomFrameInfo(TypedDict):
 
 
 class MedicalStackSpaceInfo(BaseSpaceInfo):
+    """Information for a medical stack space."""
+
     space_type: Literal[SpaceType.MEDICAL_STACK]
     child_info: NotRequired[ChildInfo]
     frames: List[DicomFrameInfo]
 
 
 class FileInSceneInfo(TypedDict):
+    """Information identifying a file within a scene."""
+
     stream_id: str
     event_index: int
     uri: str
 
 
 class PointCloudFileSpaceInfo(TypedDict):
+    """Information for a point cloud file that is part of a scene."""
+
     space_type: Literal[SpaceType.POINT_CLOUD]
     scene_info: FileInSceneInfo
     labels: LabelBlob
 
 
 class SceneImageSpaceInfo(TypedDict):
+    """Information for an image file that is part of a scene."""
+
     space_type: Literal[SpaceType.SCENE_IMAGE]
     scene_info: FileInSceneInfo
     labels: LabelBlob
 
 
 class PdfSpaceInfo(BaseSpaceInfo):
+    """Information for a PDF space."""
+
     space_type: Literal[SpaceType.PDF]
     child_info: NotRequired[ChildInfo]
     number_of_pages: int
 
 
+# Union of all possible space info payloads returned by the SDK.
 SpaceInfo = Union[
     VideoSpaceInfo,
     ImageSpaceInfo,
