@@ -1,5 +1,5 @@
 import uuid
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 from encord.http.v2.api_client import ApiClient
 from encord.orm.project import (
