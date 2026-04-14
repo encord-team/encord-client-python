@@ -50,8 +50,11 @@ from encord.orm.label_row import (
 )
 from encord.orm.project import (
     AddProjectIssueTagsPayload,
+    BulkClassificationsPayload,
+    BulkClassificationsResponse,
     CopyDatasetOptions,
     CopyLabelsOptions,
+    LabelClassificationsEntry,
     ProjectDataset,
     ProjectDTO,
     ProjectStatus,
@@ -286,6 +289,43 @@ class Project:
             LabelRowV2(label_row_metadata, self._client, self._ontology) for label_row_metadata in label_row_metadatas
         ]
         return label_rows
+
+    def get_label_classifications(
+        self,
+        label_uuids: List[Union[str, UUID]],
+        branch_name: str = "main",
+        batch_size: int = 500,
+    ) -> List[LabelClassificationsEntry]:
+        """Fast bulk fetch of classification answers only.
+
+        Calls the ``POST /projects/{uuid}/label-rows/classifications`` endpoint
+        which skips the full enrichment pipeline (no objects, no data-units, no
+        signed URLs). Returns classification answers in the same shape as the
+        legacy ``initialise_labels`` path so existing SDK types can consume them.
+
+        Args:
+            label_uuids: Label row UUIDs to fetch classifications for.
+                Obtain these from :meth:`list_label_rows_v2` (``row.label_hash``).
+            branch_name: Label branch to read from (default ``"main"``).
+            batch_size: Number of labels per server request (max 1000).
+
+        Returns:
+            A flat list of :class:`~encord.orm.project.LabelClassificationsEntry`,
+            one per label row. Each entry contains ``classification_answers``
+            keyed by classification hash.
+        """
+        uuid_strs = [str(u) for u in label_uuids]
+        results: List[LabelClassificationsEntry] = []
+        for i in range(0, len(uuid_strs), batch_size):
+            batch = uuid_strs[i : i + batch_size]
+            response = self._api_client.post(
+                f"projects/{self.project_hash}/label-rows/classifications",
+                params=None,
+                payload=BulkClassificationsPayload(label_uuids=batch, branch_name=branch_name),
+                result_type=BulkClassificationsResponse,
+            )
+            results.extend(response.labels)
+        return results
 
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
         """Add users to the project.
