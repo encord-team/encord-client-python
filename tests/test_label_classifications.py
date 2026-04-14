@@ -26,7 +26,7 @@ def test_single_batch(api_post: MagicMock, project: Project) -> None:
     api_post.return_value = _make_response(entry)
 
     label_uuids = [uuid.uuid4() for _ in range(3)]
-    result = project.get_label_classifications(label_uuids)
+    result = list(project.get_label_classifications(label_uuids))
 
     api_post.assert_called_once()
     _, kwargs = api_post.call_args
@@ -46,7 +46,7 @@ def test_multiple_batches(api_post: MagicMock, project: Project) -> None:
     api_post.side_effect = [_make_response(entry_a), _make_response(entry_b)]
 
     label_uuids = [uuid.uuid4() for _ in range(5)]
-    result = project.get_label_classifications(label_uuids, batch_size=3)
+    result = list(project.get_label_classifications(label_uuids, batch_size=3))
 
     assert api_post.call_count == 2
 
@@ -62,7 +62,7 @@ def test_multiple_batches(api_post: MagicMock, project: Project) -> None:
 def test_custom_branch_name(api_post: MagicMock, project: Project) -> None:
     api_post.return_value = _make_response(_make_entry())
 
-    project.get_label_classifications([uuid.uuid4()], branch_name="my-branch")
+    list(project.get_label_classifications([uuid.uuid4()], branch_name="my-branch"))
 
     payload = api_post.call_args[1]["payload"]
     assert payload.branch_name == "my-branch"
@@ -70,7 +70,7 @@ def test_custom_branch_name(api_post: MagicMock, project: Project) -> None:
 
 @patch.object(ApiClient, "post")
 def test_empty_input(api_post: MagicMock, project: Project) -> None:
-    result = project.get_label_classifications([])
+    result = list(project.get_label_classifications([]))
 
     api_post.assert_not_called()
     assert result == []

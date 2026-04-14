@@ -295,13 +295,8 @@ class Project:
         label_uuids: List[Union[str, UUID]],
         branch_name: str = "main",
         batch_size: int = 500,
-    ) -> List[LabelClassificationsEntry]:
+    ) -> Iterable[LabelClassificationsEntry]:
         """Fast bulk fetch of classification answers only.
-
-        Calls the ``POST /projects/{uuid}/label-rows/classifications`` endpoint
-        which skips the full enrichment pipeline (no objects, no data-units, no
-        signed URLs). Returns classification answers in the same shape as the
-        legacy ``initialise_labels`` path so existing SDK types can consume them.
 
         Args:
             label_uuids: Label row UUIDs to fetch classifications for.
@@ -310,12 +305,11 @@ class Project:
             batch_size: Number of labels per server request (max 1000).
 
         Returns:
-            A flat list of :class:`~encord.orm.project.LabelClassificationsEntry`,
+            An iterable of :class:`~encord.orm.project.LabelClassificationsEntry`,
             one per label row. Each entry contains ``classification_answers``
             keyed by classification hash.
         """
         uuid_strs = [str(u) for u in label_uuids]
-        results: List[LabelClassificationsEntry] = []
         for i in range(0, len(uuid_strs), batch_size):
             batch = uuid_strs[i : i + batch_size]
             response = self._api_client.post(
@@ -324,8 +318,7 @@ class Project:
                 payload=BulkClassificationsPayload(label_uuids=batch, branch_name=branch_name),
                 result_type=BulkClassificationsResponse,
             )
-            results.extend(response.labels)
-        return results
+            yield from response.labels
 
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
         """Add users to the project.
