@@ -33,6 +33,7 @@ from encord.orm.analytics import (
     TimeSpent,
     TimeSpentParams,
 )
+from encord.orm.base_dto import BaseDTO
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.collection import ProjectCollectionType
 from encord.orm.dataset import Image, Video
@@ -62,6 +63,18 @@ from encord.utilities.coco.datastructure import CategoryID, FrameIndex, ImageID
 from encord.utilities.hash_utilities import convert_to_uuid
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 from encord.workflow import Workflow
+
+
+class _CopyBranchRequest(BaseDTO):
+    source_branch_name: str
+    target_branch_name: str
+    overwrite: bool = False
+    data_uuids: Optional[List[str]] = None
+    label_uuids: Optional[List[str]] = None
+
+
+class _CopyBranchResult(BaseDTO):
+    copied_count: int
 
 
 class Project:
@@ -1184,6 +1197,53 @@ class Project:
             project_uuid=self._project_instance.project_hash,
             filter_preset_uuid=uuid,
         )
+
+    def copy_labels_to_branch(
+        self,
+        target_branch: str,
+        source_branch: str = "main",
+        overwrite: bool = False,
+        data_hashes: Optional[List[str]] = None,
+        label_hashes: Optional[List[str]] = None,
+    ) -> int:
+        """Copy label rows for a project from one branch into a new branch.
+
+        This is a server-side bulk operation. Use :meth:`list_label_rows_v2` with
+        ``branch_name=target_branch`` to verify the result.
+
+        Args:
+            target_branch: The name of the branch to copy labels into.
+            source_branch: The name of the branch to copy labels from. Defaults to ``"main"``.
+            overwrite: If ``True``, existing branches on the target with the same name are
+                overwritten with the source content. If ``False`` (default), those data units
+                are skipped.
+            data_hashes: Optionally restrict which data units are copied. If ``None``, all
+                data units on the source branch are copied.
+            label_hashes: Optionally restrict which label rows are copied by their label hash.
+                If ``None``, all matching label rows are copied.
+
+        Returns:
+            The number of label rows that were created or updated on the target branch.
+
+        Raises:
+            ValueError: If ``source_branch`` and ``target_branch`` are the same.
+        """
+        if source_branch == target_branch:
+            raise ValueError("source_branch and target_branch must be different.")
+
+        result = self._api_client.post(
+            f"projects/{self._project_instance.project_hash}/labels/copy-branch",
+            params=None,
+            payload=_CopyBranchRequest(
+                source_branch_name=source_branch,
+                target_branch_name=target_branch,
+                overwrite=overwrite,
+                data_uuids=data_hashes,
+                label_uuids=label_hashes,
+            ),
+            result_type=_CopyBranchResult,
+        )
+        return result.copied_count
 
     def set_status(self, status: ProjectStatus):
         """Set the status of the project.
