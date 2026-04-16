@@ -1203,8 +1203,8 @@ class Project:
         target_branch: str,
         source_branch: str = "main",
         overwrite: bool = False,
-        data_hashes: Optional[List[str]] = None,
-        label_hashes: Optional[List[str]] = None,
+        data_hashes: Optional[Union[List[str], List[UUID]]] = None,
+        label_hashes: Optional[Union[List[str], List[UUID]]] = None,
     ) -> int:
         """Copy label rows for a project from one branch into a new branch.
 
@@ -1214,9 +1214,9 @@ class Project:
         Args:
             target_branch: The name of the branch to copy labels into.
             source_branch: The name of the branch to copy labels from. Defaults to ``"main"``.
-            overwrite: If ``True``, existing branches on the target with the same name are
-                overwritten with the source content. If ``False`` (default), those data units
-                are skipped.
+            overwrite: If ``True``, existing label rows on the target branch are overwritten
+                with the source content. If ``False`` (default), data units that already have
+                a label row on the target branch are skipped.
             data_hashes: Optionally restrict which data units are copied. If ``None``, all
                 data units on the source branch are copied.
             label_hashes: Optionally restrict which label rows are copied by their label hash.
@@ -1238,8 +1238,8 @@ class Project:
                 source_branch_name=source_branch,
                 target_branch_name=target_branch,
                 overwrite=overwrite,
-                data_uuids=data_hashes,
-                label_uuids=label_hashes,
+                data_uuids=[str(h) for h in data_hashes] if data_hashes is not None else None,
+                label_uuids=[str(h) for h in label_hashes] if label_hashes is not None else None,
             ),
             result_type=_CopyBranchResult,
         )
