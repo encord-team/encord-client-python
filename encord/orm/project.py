@@ -600,3 +600,59 @@ class ProjectUserResponse(BaseDTO):
 
     user_email: str
     user_role: ProjectUserRole
+
+
+# --- Bulk classifications endpoint DTOs ---
+
+
+class BulkClassificationsPayload(BaseDTO):
+    """Request payload for ``POST /projects/{uuid}/label-rows/classifications``."""
+
+    label_uuids: List[str]
+    branch_name: str = "main"
+
+
+class ClassificationAnswerObject(BaseDTO):
+    """Nested answer within a :class:`ClassificationAnswerEntry`."""
+
+    name: str
+    value: str
+    answers: Any  # list[AnswersAnswer] | str | float
+    feature_hash: str
+    manual_annotation: bool
+
+
+class ClassificationAnswerEntry(BaseDTO):
+    """Single classification answer returned by the bulk classifications endpoint.
+
+    Matches the ``ClassificationAnswer`` shape produced by the legacy
+    ``initialise_labels`` SDK path.
+    """
+
+    classification_hash: str
+    feature_hash: Optional[str] = None
+    classifications: List[ClassificationAnswerObject]
+    range: Optional[List[Tuple[int, int]]] = None
+    created_at: Optional[str] = None
+    created_by: Optional[str] = None
+    last_edited_at: Optional[str] = None
+    last_edited_by: Optional[str] = None
+    manual_annotation: Optional[bool] = None
+
+
+class LabelClassificationsEntry(BaseDTO):
+    """One label row's classification data in the bulk response."""
+
+    label_uuid: UUID
+    data_uuid: UUID
+    data_title: Optional[str] = None
+    branch_name: str = "main"
+    classification_answers: Dict[str, ClassificationAnswerEntry] = {}
+    export_uuid: Optional[UUID] = None
+    exported_at: Optional[datetime.datetime] = None
+
+
+class BulkClassificationsResponse(BaseDTO):
+    """Response from ``POST /projects/{uuid}/label-rows/classifications``."""
+
+    labels: List[LabelClassificationsEntry]
