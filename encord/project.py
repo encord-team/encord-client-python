@@ -1207,7 +1207,7 @@ class Project:
         label_hashes: Optional[Union[List[str], List[UUID]]] = None,
         batch_size: int = 50,
     ) -> int:
-        """Copy label rows for a project from one branch into another branch.
+        """Copy label rows from one branch to another within a project.
 
         Matching label rows on the source branch are listed first (metadata only), then
         copied to the target branch in batches of ``batch_size`` to avoid excessive database
