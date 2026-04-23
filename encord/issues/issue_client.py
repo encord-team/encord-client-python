@@ -15,6 +15,7 @@ class IssueAnchorType(CamelStrEnum):
     DATA_UNIT = auto()
     FRAME = auto()
     FRAME_COORDINATE = auto()
+    SCENE_COORDINATE = auto()
     FRAME_RANGE = auto()
     ANNOTATION = auto()
 
@@ -38,7 +39,16 @@ class _CoordinateIssueAnchor(BaseDTO):
     y: float
 
 
-_IssueAnchor = Union[_FileIssueAnchor, _FrameIssueAnchor, _CoordinateIssueAnchor]
+class _SceneCoordinateIssueAnchor(BaseDTO):
+    type: Literal[IssueAnchorType.SCENE_COORDINATE] = IssueAnchorType.SCENE_COORDINATE
+    data_uuid: UUID
+    frame_index: int
+    x: float
+    y: float
+    z: float
+
+
+_IssueAnchor = Union[_FileIssueAnchor, _FrameIssueAnchor, _CoordinateIssueAnchor, _SceneCoordinateIssueAnchor]
 
 
 class _NewIssue(BaseDTO):
@@ -105,6 +115,20 @@ class CoordinateIssue(_BaseIssue):
     coordinate: IssueCoordinate
 
 
+class SceneIssueCoordinate(BaseDTO):
+    x: float
+    y: float
+    z: float
+
+
+class SceneCoordinateIssue(_BaseIssue):
+    """Issue anchored to a 3D coordinate within a scene on a specific frame."""
+
+    type: Literal[IssueAnchorType.SCENE_COORDINATE] = IssueAnchorType.SCENE_COORDINATE
+    frame_index: int
+    coordinate: SceneIssueCoordinate
+
+
 class IssueFrameRange(BaseDTO):
     """Represents a range of frames [start, end] inclusive"""
 
@@ -126,7 +150,7 @@ class AnnotationIssue(_BaseIssue):
     annotation_id: str
 
 
-Issue = Union[FileIssue, FrameIssue, CoordinateIssue, FrameRangeIssue, AnnotationIssue]
+Issue = Union[FileIssue, FrameIssue, CoordinateIssue, SceneCoordinateIssue, FrameRangeIssue, AnnotationIssue]
 
 
 class _IssueClient:
@@ -170,7 +194,8 @@ class TaskIssues:
         Returns an iterator of issues anchored to different parts of the data unit:
         - FileIssue: Issues anchored to the entire data unit
         - FrameIssue: Issues anchored to a specific frame
-        - CoordinateIssue: Issues anchored to specific coordinates on a frame
+        - CoordinateIssue: Issues anchored to specific 2D coordinates on a frame
+        - SceneCoordinateIssue: Issues anchored to 3D scene coordinates on a frame
         - FrameRangeIssue: Issues anchored to a range of frames
         - AnnotationIssue: Issues anchored to a specific annotation
 
@@ -236,6 +261,32 @@ class TaskIssues:
                 frame_index=frame_index,
                 x=x,
                 y=y,
+            ),
+            comment=comment,
+            issue_tags=issue_tags,
+        )
+
+    def add_scene_coordinate_issue(
+        self, frame_index: int, x: float, y: float, z: float, comment: str, issue_tags: List[str]
+    ) -> None:
+        """Adds an issue pinned to a 3D coordinate in a scene on a specific frame.
+
+        Args:
+            frame_index (int): The index of the frame to add the issue to.
+            x (float): The x coordinate (in scene space).
+            y (float): The y coordinate (in scene space).
+            z (float): The z coordinate (in scene space).
+            comment (str): The comment for the issue.
+            issue_tags (List[str]): The issue tags for the issue.
+        """
+        self._issue_client.add_issue(
+            project_uuid=self._project_uuid,
+            anchor=_SceneCoordinateIssueAnchor(
+                data_uuid=self._data_uuid,
+                frame_index=frame_index,
+                x=x,
+                y=y,
+                z=z,
             ),
             comment=comment,
             issue_tags=issue_tags,

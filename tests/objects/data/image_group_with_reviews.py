@@ -372,7 +372,6 @@ labels = {
                                     ],
                                     "manual_annotation": True,
                                     "classificationHash": "hLs1sDAr",
-                                    "hideDropdownButton": True,
                                 },
                                 "metadata": None,
                                 "createdAt": "Fri, 10 Feb 2023 11:09:04 UTC",
@@ -424,7 +423,6 @@ labels = {
                                     ],
                                     "manual_annotation": True,
                                     "classificationHash": "hLs1sDAr",
-                                    "hideDropdownButton": True,
                                 },
                                 "metadata": {
                                     "reviews": [
@@ -458,7 +456,6 @@ labels = {
                                                 ],
                                                 "manual_annotation": True,
                                                 "classificationHash": "hLs1sDAr",
-                                                "hideDropdownButton": True,
                                             },
                                             "metadata": None,
                                             "createdAt": "Fri, 10 Feb 2023 11:09:04 UTC",
@@ -523,7 +520,6 @@ labels = {
                                     ],
                                     "manual_annotation": True,
                                     "classificationHash": "hLs1sDAr",
-                                    "hideDropdownButton": True,
                                 },
                                 "metadata": {
                                     "reviews": [
@@ -557,7 +553,6 @@ labels = {
                                                 ],
                                                 "manual_annotation": True,
                                                 "classificationHash": "hLs1sDAr",
-                                                "hideDropdownButton": True,
                                             },
                                             "metadata": None,
                                             "createdAt": "Fri, 10 Feb 2023 11:09:04 UTC",
@@ -609,7 +604,6 @@ labels = {
                                                 ],
                                                 "manual_annotation": True,
                                                 "classificationHash": "hLs1sDAr",
-                                                "hideDropdownButton": True,
                                             },
                                             "metadata": {
                                                 "reviews": [
@@ -643,7 +637,6 @@ labels = {
                                                             ],
                                                             "manual_annotation": True,
                                                             "classificationHash": "hLs1sDAr",
-                                                            "hideDropdownButton": True,
                                                         },
                                                         "metadata": None,
                                                         "createdAt": "Fri, 10 Feb 2023 11:09:04 UTC",
