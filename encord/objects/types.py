@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Literal, Optional, TypedDict, Union
 
-from typing_extensions import TypeGuard
+from typing_extensions import NotRequired, TypeGuard
 
 from encord.objects.common import Shape
 from encord.objects.html_node import HtmlNode
@@ -19,6 +19,18 @@ class BoundingBoxDict(TypedDict):
 
 class BoundingBoxFrameCoordinatesDict(TypedDict):
     boundingBox: BoundingBoxDict
+
+
+class CircleDict(TypedDict):
+    x: float  # normalised center x [0, 1]
+    y: float  # normalised center y [0, 1]
+    r: float  # primary semi-axis radius, normalised to image width
+    stretch: NotRequired[float]  # ratio of secondary semi-axis to primary (1.0 = circle, !=1 = ellipse)
+    theta: NotRequired[float]  # rotation in degrees, clockwise in screen space (matches RBB convention)
+
+
+class CircleFrameCoordinatesDict(TypedDict):
+    circle: CircleDict
 
 
 class PointDict(TypedDict):
@@ -173,6 +185,10 @@ class Cuboid2DFrameObject(BaseFrameObject, Cuboid2DFrameCoordinatesDict):
     shape: Literal[Shape.CUBOID_2D]
 
 
+class CircleFrameObject(BaseFrameObject, CircleFrameCoordinatesDict):
+    shape: Literal[Shape.CIRCLE]
+
+
 FrameObject = Union[
     BoundingBoxFrameObject,
     RotatableBoundingBoxFrameObject,
@@ -181,6 +197,7 @@ FrameObject = Union[
     PolylineFrameObject,
     Cuboid2DFrameObject,
     SegmentationObject,
+    CircleFrameObject,
 ]
 """ Frame object in the label blob. Contains shape data, and is differentiated by the 'shape' field. """
 

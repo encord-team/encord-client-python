@@ -25,6 +25,8 @@ from encord.objects.types import (
     BaseFrameObject,
     BoundingBoxDict,
     BoundingBoxFrameCoordinatesDict,
+    CircleDict,
+    CircleFrameCoordinatesDict,
     Cuboid2DFrameCoordinatesDict,
     FrameObject,
     Point3DFrameCoordinatesDict,
@@ -141,6 +143,46 @@ class RotatableBoundingBoxCoordinates:
             "w": self.width,
             "x": self.top_left_x,
             "y": self.top_left_y,
+            "theta": self.theta,
+        }
+
+
+@dataclass(frozen=True)
+class CircleCoordinates:
+    """Represents circle coordinates, where values are normalised relative to image size.
+
+    Attributes:
+        center_x (float): Normalised x-coordinate of the circle center [0, 1].
+        center_y (float): Normalised y-coordinate of the circle center [0, 1].
+        radius (float): Primary semi-axis radius, normalised to image width.
+        stretch (float): Ratio of the secondary semi-axis to the primary (1.0 = true circle, !=1.0 = ellipse).
+        theta (float): Rotation angle in degrees, clockwise in screen space (matches RBB convention).
+            ``theta=0`` aligns the primary semi-axis (``radius``) with the +X axis.
+    """
+
+    center_x: float
+    center_y: float
+    radius: float
+    stretch: float = 1.0
+    theta: float = 0.0
+
+    @staticmethod
+    def from_dict(d: CircleFrameCoordinatesDict) -> CircleCoordinates:
+        circle_dict = d["circle"]
+        return CircleCoordinates(
+            center_x=circle_dict["x"],
+            center_y=circle_dict["y"],
+            radius=circle_dict["r"],
+            stretch=circle_dict.get("stretch", 1.0),
+            theta=circle_dict.get("theta", 0.0),
+        )
+
+    def to_dict(self) -> CircleDict:
+        return {
+            "x": self.center_x,
+            "y": self.center_y,
+            "r": self.radius,
+            "stretch": self.stretch,
             "theta": self.theta,
         }
 
@@ -685,6 +727,7 @@ Coordinates = Union[
     HtmlCoordinates,
     BoundingBoxCoordinates,
     RotatableBoundingBoxCoordinates,
+    CircleCoordinates,
     PointCoordinate,
     PointCoordinate3D,
     PolygonCoordinates,
@@ -699,6 +742,7 @@ Coordinates = Union[
 GeometricCoordinates = Union[
     BoundingBoxCoordinates,
     RotatableBoundingBoxCoordinates,
+    CircleCoordinates,
     PointCoordinate,
     PolygonCoordinates,
     PolylineCoordinates,
@@ -711,6 +755,7 @@ GeometricCoordinates = Union[
 ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] = {
     Shape.BOUNDING_BOX: [BoundingBoxCoordinates],
     Shape.ROTATABLE_BOUNDING_BOX: [RotatableBoundingBoxCoordinates],
+    Shape.CIRCLE: [CircleCoordinates],
     Shape.POINT: [PointCoordinate, PointCoordinate3D],
     Shape.POLYGON: [PolygonCoordinates],
     Shape.POLYLINE: [PolylineCoordinates],
@@ -762,6 +807,9 @@ def add_coordinates_to_frame_object_dict(
     elif isinstance(coordinates, (Cuboid2DPerspectiveCoordinates, Cuboid2DIsometricCoordinates)):
         result["cuboid_2d"] = coordinates.to_dict()
         result["shape"] = Shape.CUBOID_2D.value
+    elif isinstance(coordinates, CircleCoordinates):
+        result["circle"] = coordinates.to_dict()
+        result["shape"] = Shape.CIRCLE.value
     else:
         raise NotImplementedError(f"adding coordinates for this type not yet implemented {type(coordinates)}")
 
@@ -789,6 +837,8 @@ def get_coordinates_from_frame_object_dict(frame_object_dict: FrameObject) -> Co
             raise ValueError(f"Invalid point coordinates in {frame_object_dict}")
     elif frame_object_dict["shape"] == Shape.POLYLINE:
         return PolylineCoordinates.from_dict(frame_object_dict)
+    elif frame_object_dict["shape"] == Shape.CIRCLE:
+        return CircleCoordinates.from_dict(frame_object_dict)
     elif "skeleton" in frame_object_dict:
 
         def _with_visibility_enum(point: dict):

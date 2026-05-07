@@ -602,6 +602,19 @@ class ProjectUserResponse(BaseDTO):
     user_role: ProjectUserRole
 
 
+class ProjectBranchResult(BaseDTO):
+    """A single branch entry returned by the list branches endpoint."""
+
+    name: str
+
+
+class ListBranchesParams(BaseDTO):
+    """Query parameters for the list branches endpoint."""
+
+    limit: Optional[int] = None
+    page_token: Optional[str] = None
+
+
 # --- Bulk classifications endpoint DTOs ---
 
 

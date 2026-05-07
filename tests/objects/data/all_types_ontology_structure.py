@@ -443,6 +443,15 @@ all_types_structure = OntologyStructure(
             feature_node_hash="cuboidFeatureNodeHash",
             attributes=[],
         ),
+        Object(
+            uid=13,
+            name="Circle",
+            color="#00BFFF",
+            shape=Shape.CIRCLE,
+            feature_node_hash="circleFeatureNodeHash",
+            archived=False,
+            attributes=[],
+        ),
     ],
     classifications=[
         RADIO_CLASSIFICATION,

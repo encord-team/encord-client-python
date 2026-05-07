@@ -55,6 +55,7 @@ class Shape(StringEnum):
         cuboid
         cuboid_2d
         segmentation
+        circle
     """
 
     BOUNDING_BOX = "bounding_box"
@@ -68,6 +69,7 @@ class Shape(StringEnum):
     TEXT = "text"
     CUBOID = "cuboid"
     CUBOID_2D = "cuboid_2d"
+    CIRCLE = "circle"
     SEGMENTATION = "segmentation"
 
 

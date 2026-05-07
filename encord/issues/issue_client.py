@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import datetime
 from enum import auto
 from typing import Iterable, List, Literal, Optional, Union
@@ -66,6 +65,15 @@ class GetIssuesParam(BaseDTO):
     page_token: Optional[str] = None
 
 
+class _DeleteIssuesBody(BaseDTO):
+    issue_uuids: List[UUID]
+
+
+# Matches the back-end's per-request issue limit. Kept in sync manually; if the
+# back-end limit changes, this should change too.
+_MAX_DELETE_BATCH = 1000
+
+
 class IssueComment(BaseDTO):
     content: str
     author_email: str
@@ -89,6 +97,7 @@ class IssueResolution(BaseDTO):
 
 class _BaseIssue(BaseDTO):
     type: IssueAnchorType
+    uuid: UUID
     data_uuid: UUID
     comments: List[IssueComment]
     tags: List[IssueTag]
@@ -180,6 +189,19 @@ class _IssueClient:
             result_type=Issue,  # type: ignore[arg-type]
             # Issue is a Pydantic discriminated union; type checker doesn't recognize it as Type[T] but it works correctly at runtime
         )
+
+    def delete_issues(self, project_uuid: UUID, issue_uuids: List[UUID]) -> None:
+        if not issue_uuids:
+            return
+
+        for chunk_start in range(0, len(issue_uuids), _MAX_DELETE_BATCH):
+            chunk = issue_uuids[chunk_start : chunk_start + _MAX_DELETE_BATCH]
+            self._api_client.post(
+                path=f"/projects/{project_uuid}/issues/delete",
+                params=None,
+                payload=_DeleteIssuesBody(issue_uuids=chunk),
+                result_type=None,
+            )
 
 
 class TaskIssues:
@@ -291,3 +313,34 @@ class TaskIssues:
             comment=comment,
             issue_tags=issue_tags,
         )
+
+    def delete(self, issues: List[Union[Issue, UUID]]) -> None:
+        """Deletes one or more issues from this task in a single request.
+
+        Accepts either `Issue` objects (as returned by `list()`) or raw UUIDs,
+        mixed freely. Empty input is a no-op.
+
+        Permissions: project admins can delete any issue. Issue authors can
+        delete their own general issues, but annotation issues (label
+        rejections) can only be deleted by project admins.
+
+        The back-end validates the entire batch before deleting anything: if
+        any issue cannot be deleted (because the caller is not the author and
+        not a project admin, or the issue doesn't belong to this task's
+        project), the request raises and NO issues in the batch are deleted.
+
+        Args:
+            issues: A list of `Issue` objects or `UUID`s to delete.
+
+        Example:
+            >>> # Delete a single issue:
+            >>> task.issues.delete([issue])
+            >>>
+            >>> # Or delete several at once:
+            >>> obsolete = [i for i in task.issues.list() if i.comments[0].content.startswith("[obsolete]")]
+            >>> task.issues.delete(obsolete)
+        """
+        if not issues:
+            return
+        issue_uuids: List[UUID] = [item if isinstance(item, UUID) else item.uuid for item in issues]
+        self._issue_client.delete_issues(project_uuid=self._project_uuid, issue_uuids=issue_uuids)

@@ -56,6 +56,8 @@ from encord.orm.project import (
     CopyDatasetOptions,
     CopyLabelsOptions,
     LabelClassificationsEntry,
+    ListBranchesParams,
+    ProjectBranchResult,
     ProjectDataset,
     ProjectDTO,
     ProjectStatus,
@@ -302,6 +304,22 @@ class Project:
             LabelRowV2(label_row_metadata, self._client, self._ontology) for label_row_metadata in label_row_metadatas
         ]
         return label_rows
+
+    def list_branches(self) -> Iterator[str]:
+        """List all distinct branch names for the project.
+
+        The main branch is always named 'main'. Automatically paginates
+        through all results.
+
+        Returns:
+            An iterator of branch name strings.
+        """
+        for branch in self._api_client.get_paged_iterator(
+            f"projects/{self.project_hash}/branches",
+            params=ListBranchesParams(),
+            result_type=ProjectBranchResult,
+        ):
+            yield branch.name
 
     def get_label_classifications(
         self,
