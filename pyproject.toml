@@ -1,6 +1,6 @@
 [project]
 name = "encord"
-version = "0.1.195"
+version = "0.1.196"
 description = "Encord Python SDK Client"
 authors = [
     { name = "Cord Technologies Limited", email = "hello@encord.com" },
@@ -13,7 +13,7 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.9,<3.13"
 
 dependencies = [
     "python-dateutil>=2.8.2,<3.0.0",
@@ -22,6 +22,9 @@ dependencies = [
     "tqdm>=4.32.1,<5.0.0",
     "pydantic>=1.10.14",
     "orjson>=2",
+    "numpy>=1",
+    "scale-sensor-fusion-io>=0.4.8",
+    "typing_extensions>=4.0.0",
 ]
 
 [project.urls]
@@ -58,7 +61,13 @@ coco = [
     "numpy>=1.24,<2.0.0; python_version < \"3.12\"",
     "numpy>=1.26,<2.0.0; python_version >= \"3.12\"",
 ]
-
+mcap = [
+    "mcap>=0.4.0",
+    "mcap-protobuf-support>=0.5.0",
+    "mcap-ros2-support>=0.5.0",
+    "Pillow>=10.0.0",
+    "protobuf>=4.0.0",
+]
 
 [build-system]
 requires = ["uv_build>=0.9.6,<0.10.0"]

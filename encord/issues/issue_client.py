@@ -22,17 +22,20 @@ class IssueAnchorType(CamelStrEnum):
 class _FileIssueAnchor(BaseDTO):
     type: Literal[IssueAnchorType.DATA_UNIT] = IssueAnchorType.DATA_UNIT
     data_uuid: UUID
+    space_id: Optional[str] = None
 
 
 class _FrameIssueAnchor(BaseDTO):
     type: Literal[IssueAnchorType.FRAME] = IssueAnchorType.FRAME
     data_uuid: UUID
+    space_id: Optional[str] = None
     frame_index: int
 
 
 class _CoordinateIssueAnchor(BaseDTO):
     type: Literal[IssueAnchorType.FRAME_COORDINATE] = IssueAnchorType.FRAME_COORDINATE
     data_uuid: UUID
+    space_id: Optional[str] = None
     frame_index: int
     x: float
     y: float
@@ -106,10 +109,12 @@ class _BaseIssue(BaseDTO):
 
 class FileIssue(_BaseIssue):
     type: Literal[IssueAnchorType.DATA_UNIT] = IssueAnchorType.DATA_UNIT
+    space_id: Optional[str] = None
 
 
 class FrameIssue(_BaseIssue):
     type: Literal[IssueAnchorType.FRAME] = IssueAnchorType.FRAME
+    space_id: Optional[str] = None
     frame_index: int
 
 
@@ -120,6 +125,7 @@ class IssueCoordinate(BaseDTO):
 
 class CoordinateIssue(_BaseIssue):
     type: Literal[IssueAnchorType.FRAME_COORDINATE] = IssueAnchorType.FRAME_COORDINATE
+    space_id: Optional[str] = None
     frame_index: int
     coordinate: IssueCoordinate
 
@@ -149,6 +155,7 @@ class FrameRangeIssue(_BaseIssue):
     """Issue anchored to a range of frames"""
 
     type: Literal[IssueAnchorType.FRAME_RANGE] = IssueAnchorType.FRAME_RANGE
+    space_id: Optional[str] = None
     frame_ranges: List[IssueFrameRange]
 
 
@@ -235,38 +242,53 @@ class TaskIssues:
         """
         return self._issue_client.get_issues(project_uuid=self._project_uuid, data_uuid=self._data_uuid)
 
-    def add_file_issue(self, comment: str, issue_tags: List[str]) -> None:
+    def add_file_issue(self, comment: str, issue_tags: List[str], space_id: Optional[str] = None) -> None:
         """Adds a file issue.
 
         Args:
             comment (str): The comment for the issue.
             issue_tags (List[str]): The issue tags for the issue.
+            space_id (Optional[str]): For Data Groups, identifies which child of the data group
+                the issue is attached to. Leave as ``None`` for non-Data Group data units.
         """
         self._issue_client.add_issue(
             project_uuid=self._project_uuid,
             anchor=_FileIssueAnchor(
                 data_uuid=self._data_uuid,
+                space_id=space_id,
             ),
             comment=comment,
             issue_tags=issue_tags,
         )
 
-    def add_frame_issue(self, frame_index: int, comment: str, issue_tags: List[str]) -> None:
+    def add_frame_issue(
+        self, frame_index: int, comment: str, issue_tags: List[str], space_id: Optional[str] = None
+    ) -> None:
         """Adds a frame issue.
 
         Args:
             frame_index (int): The index of the frame to add the issue to.
             comment (str): The comment for the issue.
             issue_tags (List[str]): The issue tags for the issue.
+            space_id (Optional[str]): For Data Groups, identifies which child of the data group
+                the issue is attached to. Leave as ``None`` for non-Data Group data units.
         """
         self._issue_client.add_issue(
             project_uuid=self._project_uuid,
-            anchor=_FrameIssueAnchor(data_uuid=self._data_uuid, frame_index=frame_index),
+            anchor=_FrameIssueAnchor(data_uuid=self._data_uuid, frame_index=frame_index, space_id=space_id),
             comment=comment,
             issue_tags=issue_tags,
         )
 
-    def add_coordinate_issue(self, frame_index: int, x: float, y: float, comment: str, issue_tags: List[str]) -> None:
+    def add_coordinate_issue(
+        self,
+        frame_index: int,
+        x: float,
+        y: float,
+        comment: str,
+        issue_tags: List[str],
+        space_id: Optional[str] = None,
+    ) -> None:
         """Adds a issue pinned to a coordinate.
 
         Args:
@@ -275,6 +297,8 @@ class TaskIssues:
             y (float): The y coordinate of the issue.
             comment (str): The comment for the issue.
             issue_tags (List[str]): The issue tags for the issue.
+            space_id (Optional[str]): For Data Groups, identifies which child of the data group
+                the issue is attached to. Leave as ``None`` for non-Data Group data units.
         """
         self._issue_client.add_issue(
             project_uuid=self._project_uuid,
@@ -283,6 +307,7 @@ class TaskIssues:
                 frame_index=frame_index,
                 x=x,
                 y=y,
+                space_id=space_id,
             ),
             comment=comment,
             issue_tags=issue_tags,

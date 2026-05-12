@@ -24,6 +24,7 @@ import requests
 
 import encord
 import encord.orm.storage as orm_storage
+from encord.beta.scene.builder import SceneBuilder
 from encord.client import LONG_POLLING_RESPONSE_RETRY_N, LONG_POLLING_SLEEP_ON_FAILURE_SECONDS
 from encord.common.deprecated import deprecated
 from encord.exceptions import EncordException
@@ -843,6 +844,46 @@ class StorageFolder:
 
         if upload_result.status == LongPollingStatus.ERROR:
             raise EncordException(f"Could not register text file, errors occurred {upload_result.errors}")
+        else:
+            return upload_result.items_with_names[0].item_uuid
+
+    def upload_scene(
+        self,
+        scene: SceneBuilder,
+        title: str,
+        integration_id: str,
+        client_metadata: Optional[Dict[str, Any]] = None,
+    ) -> UUID:
+        """Upload a scene to a folder in Encord storage.
+
+        Args:
+            scene: Scene builder containing the streams and events to upload.
+            title: The scene item title.
+            integration_id: UUID of the cloud storage integration that can access the scene asset URIs.
+            client_metadata: Optional custom metadata to associate with the scene item.
+
+        Returns:
+            UUID of the newly created scene item.
+
+        Raises:
+            EncordException: If the scene could not be registered.
+        """
+        upload_result = self._add_data(
+            integration_id=integration_id,
+            private_files=DataUploadItems(
+                scenes=[
+                    orm_storage.DataUploadScene(
+                        title=title,
+                        scene=scene._build(),
+                        client_metadata=client_metadata or {},
+                    )
+                ],
+            ),
+            ignore_errors=False,
+        )
+
+        if upload_result.status == LongPollingStatus.ERROR:
+            raise EncordException(f"Could not register scene, errors occurred {upload_result.errors}")
         else:
             return upload_result.items_with_names[0].item_uuid
 

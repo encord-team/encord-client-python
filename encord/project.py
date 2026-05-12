@@ -10,6 +10,7 @@ category: "64e481b57b6027003f20aaa0"
 """
 
 import datetime
+import warnings
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Union
 from uuid import UUID
 
@@ -281,6 +282,14 @@ class Project:
         Returns:
             A list of :class:`encord.objects.ontology_labels_impl.LabelRowV2` instances for all the matching label rows.
         """
+        # TODO: ED-2500 Remove completely once users have moved away from using this
+        if include_children:
+            warnings.warn(
+                "The 'include_children' parameter of list_label_rows_v2 is deprecated since version 0.1.195, "
+                "use LabelRowV2.get_spaces instead to annotate children of a data group.",
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
         label_row_metadatas = self._client.list_label_rows(
             edited_before,
             edited_after,

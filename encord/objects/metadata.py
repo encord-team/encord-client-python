@@ -11,7 +11,8 @@ category: "64e481b57b6027003f20aaa0"
 
 from typing import List, Optional
 
-from encord.orm.base_dto import BaseDTO
+from encord.common.deprecated import deprecated
+from encord.orm.base_dto import BaseDTO, Field
 
 
 class DataGroupChildMetadata(BaseDTO):
@@ -22,7 +23,13 @@ class DataGroupChildMetadata(BaseDTO):
 
 
 class DataGroupMetadata(BaseDTO):
-    children: List[DataGroupChildMetadata]
+    children_: List[DataGroupChildMetadata] = Field(alias="children")
+
+    # TODO: ED-2500 Remove completely once users have moved away from using this
+    @property
+    @deprecated("0.1.195", alternative="LabelRowV2.get_spaces")
+    def children(self) -> List[DataGroupChildMetadata]:
+        return self.children_
 
 
 class DICOMSeriesMetadata(BaseDTO):

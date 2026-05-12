@@ -707,6 +707,22 @@ class DataUploadAudio(BaseDTO):
     placeholder_item_uuid: Optional[UUID] = None
 
 
+class DataUploadScene(BaseDTO):
+    """Data about a scene item to be registered with Encord service."""
+
+    title: str
+    """Title of the scene item."""
+    scene: Dict[str, Any]
+    """Serialized scene payload."""
+    client_metadata: Dict = Field(default_factory=dict)
+    """Custom metadata to be associated with the scene item."""
+    external_file_type: Literal["SCENE"] = "SCENE"
+    """Type of the external file."""
+
+    placeholder_item_uuid: Optional[UUID] = None
+    """For system use only."""
+
+
 class DataUploadItems(BaseDTO):
     """A collection of items to be registered with Encord service.
 
@@ -740,6 +756,9 @@ class DataUploadItems(BaseDTO):
 
     pdf: List[DataUploadPDF] = Field(default_factory=list)
     """List of PDF items to be registered. See :class:`DataUploadPDF` for more details."""
+
+    scenes: List[DataUploadScene] = Field(default_factory=list)
+    """List of scene items to be registered. See :class:`DataUploadScene` for more details."""
 
     skip_duplicate_urls: bool = False
     """If set to `True`, Encord service will skip items with URLs that already exist in the same folder.
