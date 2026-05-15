@@ -340,12 +340,12 @@ class Project:
 
         Args:
             label_uuids: Label row UUIDs to fetch classifications for.
-                Obtain these from :meth:`list_label_rows_v2` (``row.label_hash``).
+                Obtain these from :meth:`encord.project.Project.list_label_rows_v2` (``row.label_hash``).
             branch_name: Label branch to read from (default ``"main"``).
             batch_size: Number of labels per server request (max 1000).
 
         Returns:
-            An iterable of :class:`~encord.orm.project.LabelClassificationsEntry`,
+            An iterable of :class:`encord.orm.project.LabelClassificationsEntry`,
             one per label row. Each entry contains ``classification_answers``
             keyed by classification hash.
         """
@@ -738,7 +738,7 @@ class Project:
         label_hashes: Optional[List[str]] = None,
         data_hashes: Optional[List[str]] = None,
     ) -> List[LabelRowMetadata]:
-        """DEPRECATED - use `list_label_rows_v2` to manage label rows instead.
+        """DEPRECATED - use :meth:`encord.project.Project.list_label_rows_v2` to manage label rows instead.
 
         Args:
             edited_before: Optionally filter to only rows last edited before the specified time.
@@ -776,7 +776,7 @@ class Project:
         include_classification_feature_hashes: Optional[Set[str]] = None,
         include_reviews: bool = False,
     ) -> LabelRow:
-        """DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
+        """DEPRECATED: Use the :meth:`encord.project.Project.list_label_rows_v2` function to interact with label rows.
 
         Retrieve label row. If you need to retrieve multiple label rows, prefer using get_label_rows instead.
 
@@ -815,7 +815,7 @@ class Project:
         include_classification_feature_hashes: Optional[Set[str]] = None,
         include_reviews: bool = False,
     ) -> List[LabelRow]:
-        """DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
+        """DEPRECATED: Use the :meth:`encord.project.Project.list_label_rows_v2`function to interact with label rows.
 
         Retrieve a list of label rows. Duplicates will be dropped. The result will come back in a random order.
 
@@ -893,7 +893,7 @@ class Project:
 
     @deprecated(version="0.1.123", alternative=".list_label_rows_v2")
     def save_label_row(self, uid, label, validate_before_saving: bool = False):
-        """DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
+        """DEPRECATED: Use the :meth:`encord.project.Project.list_label_rows_v2` function to interact with label rows.
 
         Save an existing label row.
 
@@ -922,7 +922,7 @@ class Project:
 
     @deprecated(version="0.1.123", alternative=".list_label_rows_v2")
     def create_label_row(self, uid: str):
-        """DEPRECATED: Prefer using the list_label_rows_v2 function to interact with label rows.
+        """DEPRECATED: Use the :meth:`encord.project.Project.list_label_rows_v2` function to interact with label rows.
 
         Create a label row (for data in a project not previously labeled).
 
@@ -1031,13 +1031,13 @@ class Project:
         data_unit_uuid: Union[UUID, List[UUID], str, List[str], None] = None,
     ) -> Iterable[TaskAction]:
         """
-        Retrieve task action events for this project.
+        Retrieve task action events for this Project.
 
         Returns an iterator of task actions with automatic pagination handling.
         Before defaults to current time if not provided.
 
         Task actions represent lifecycle events such as assignment, approval, submission,
-        rejection, etc. for tasks in the project.
+        rejection, etc. for tasks in the Project.
 
         Args:
             after: Start time for the query (required). Only events on or after this time are returned.
@@ -1322,7 +1322,7 @@ class Project:
 
         Matching label rows on the source branch are listed first (metadata only), then
         copied to the target branch in batches of ``batch_size`` to avoid excessive database
-        load. Use :meth:`list_label_rows_v2` with ``branch_name=target_branch`` to verify
+        load. Use :meth:`encord.project.Project.list_label_rows_v2` with ``branch_name=target_branch`` to verify
         the result.
 
         Args:
@@ -1332,10 +1332,10 @@ class Project:
                 with the source content. If ``False`` (default), data units that already have
                 a label row on the target branch are skipped.
             data_hashes: Optionally restrict which data units are copied. Accepts any number
-                of strings or :class:`uuid.UUID` objects. If ``None``, all data units on the
+                of strings or uuid objects. If ``None``, all data units on the
                 source branch are copied.
             label_hashes: Optionally restrict which label rows are copied by their label hash.
-                Accepts any number of strings or :class:`uuid.UUID` objects. Applied after
+                Accepts any number of strings or uuid objects. Applied after
                 ``data_hashes`` filtering. If ``None``, all matching label rows are copied.
             batch_size: Number of label rows to copy per API request. Defaults to ``50``.
                 Increase for projects with small labels; decrease if you encounter timeouts.

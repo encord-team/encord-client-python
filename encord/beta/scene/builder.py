@@ -21,7 +21,7 @@ Every mutator returns ``self``, so stream-local calls can be chained fluently::
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, overload
+from typing import Any, overload
 
 from encord.beta.scene.internal.upload import (
     Convention as _Convention,
@@ -38,44 +38,8 @@ from encord.beta.scene.internal.upload import (
 from encord.beta.scene.internal.upload import (
     Streams as _Streams,
 )
-from encord.beta.scene.intrinsics import (
-    AdvancedIntrinsics,
-    Intrinsics,
-    SimpleIntrinsics,
-    intrinsics_advanced,
-    intrinsics_fisheye,
-    intrinsics_pinhole,
-    intrinsics_plumb_bob,
-    intrinsics_radial,
-    intrinsics_rational_polynomial,
-    intrinsics_simple,
-)
-from encord.beta.scene.pose import (
-    AffinePose,
-    CompositePose,
-    Pose,
-    Position,
-    affine_transform,
-    euler_pose,
-    identity_pose,
-    matrix_pose,
-    quaternion_pose,
-    rotation_only,
-    translation_only,
-)
-from encord.beta.scene.rotation import (
-    EulerRotation,
-    MatrixRotation,
-    QuaternionRotation,
-    Rotation,
-    identity_rotation,
-    rotation_x,
-    rotation_y,
-    rotation_z,
-)
-
-# Re-export public types from submodules so builder.py remains the
-# canonical import path for backwards compatibility.
+from encord.beta.scene.intrinsics import AdvancedIntrinsics, Intrinsics
+from encord.beta.scene.pose import Pose
 from encord.beta.scene.stream import (
     CameraStreamBuilder,
     FoRStreamBuilder,
@@ -84,44 +48,6 @@ from encord.beta.scene.stream import (
     _StreamBuilderBase,
 )
 from encord.exceptions import EncordException
-
-__all__ = [
-    "AdvancedIntrinsics",
-    "AffinePose",
-    "CameraStreamBuilder",
-    "CompositePose",
-    "Direction",
-    "EulerRotation",
-    "FoRStreamBuilder",
-    "ImageStreamBuilder",
-    "Intrinsics",
-    "MatrixRotation",
-    "PCDStreamBuilder",
-    "Pose",
-    "Position",
-    "QuaternionRotation",
-    "Rotation",
-    "SceneBuilder",
-    "SimpleIntrinsics",
-    "affine_transform",
-    "euler_pose",
-    "identity_pose",
-    "identity_rotation",
-    "intrinsics_advanced",
-    "intrinsics_fisheye",
-    "intrinsics_pinhole",
-    "intrinsics_plumb_bob",
-    "intrinsics_radial",
-    "intrinsics_rational_polynomial",
-    "intrinsics_simple",
-    "matrix_pose",
-    "quaternion_pose",
-    "rotation_only",
-    "rotation_x",
-    "rotation_y",
-    "rotation_z",
-    "translation_only",
-]
 
 ROOT_FOR: str = "root"
 
@@ -259,6 +185,7 @@ class SceneBuilder:
         width: int,
         height: int,
         intrinsics: Intrinsics,
+        timestamp: float,
         frame_of_reference: str | FoRStreamBuilder | None = ...,
         pose: Pose | None = ...,
     ) -> ImageStreamBuilder: ...
@@ -271,6 +198,7 @@ class SceneBuilder:
         width: int | None = None,
         height: int | None = None,
         intrinsics: Intrinsics | None = None,
+        timestamp: float | None = None,
         frame_of_reference: str | FoRStreamBuilder | None = None,
         pose: Pose | None = None,
     ) -> ImageStreamBuilder:
@@ -290,6 +218,7 @@ class SceneBuilder:
             width: Image width in pixels (inline camera mode).
             height: Image height in pixels (inline camera mode).
             intrinsics: Camera intrinsics (inline camera mode).
+            timestamp: Camera-parameters event timestamp (inline camera mode).
             frame_of_reference: Optional FoR linkage for the auto-created
                 camera stream (only used in inline camera mode).
             pose: Optional static pose for the auto-created camera stream
@@ -317,16 +246,16 @@ class SceneBuilder:
                 )
 
         if has_inline:
-            if width is None or height is None or intrinsics is None:
+            if width is None or height is None or intrinsics is None or timestamp is None:
                 raise EncordException(
-                    "All of width, height, and intrinsics must be provided when using inline camera parameters"
+                    "All of width, height, intrinsics, and timestamp must be provided when using inline camera parameters"
                 )
             camera_name = f"{name}/camera"
             self.add_camera_stream(
                 camera_name,
                 frame_of_reference=frame_of_reference,
                 pose=pose,
-            ).add_camera_params(width, height, intrinsics)
+            ).add_camera_params(width, height, intrinsics, timestamp=timestamp)
             camera = camera_name
 
         assert camera is not None

@@ -56,7 +56,7 @@ from encord.exceptions import EncordException
 @dataclass
 class _URIEvent:
     uri: str
-    timestamp: int
+    timestamp: float
 
 
 @dataclass
@@ -64,13 +64,13 @@ class _CameraEvent:
     width_px: int
     height_px: int
     intrinsics: Intrinsics
-    timestamp: int
+    timestamp: float
 
 
 @dataclass
 class _FoREvent:
     pose: Pose
-    timestamp: int
+    timestamp: float
 
 
 # ===================================================================
@@ -142,15 +142,16 @@ class PCDStreamBuilder(_StreamBuilderBase):
     def _event_count(self) -> int:
         return len(self._events)
 
-    def add_pcd(self, *, uri: str) -> PCDStreamBuilder:
+    def add_pcd(self, *, uri: str, timestamp: float) -> PCDStreamBuilder:
         """Append a single point-cloud event.
 
         Args:
             uri: Non-empty URI pointing to the point-cloud file.
+            timestamp: Scene timestamp for this event.
         """
         if not uri:
             raise EncordException(f"PCD stream '{self._name}' event has an empty URI")
-        self._events.append(_URIEvent(uri=uri, timestamp=len(self._events)))
+        self._events.append(_URIEvent(uri=uri, timestamp=timestamp))
         return self
 
     def set_frame_of_reference(self, for_id: str | FoRStreamBuilder) -> PCDStreamBuilder:
@@ -210,6 +211,8 @@ class CameraStreamBuilder(_StreamBuilderBase):
         width: int,
         height: int,
         intrinsics: Intrinsics,
+        *,
+        timestamp: float,
     ) -> CameraStreamBuilder:
         """Append a camera-parameters event.
 
@@ -218,6 +221,7 @@ class CameraStreamBuilder(_StreamBuilderBase):
             height: Image height in pixels (must be >= 0).
             intrinsics: Camera intrinsics (:class:`SimpleIntrinsics` or
                 :class:`AdvancedIntrinsics`).
+            timestamp: Scene timestamp for this event.
         """
         if isinstance(intrinsics, AdvancedIntrinsics):
             errors: list[str] = []
@@ -234,7 +238,7 @@ class CameraStreamBuilder(_StreamBuilderBase):
                 width_px=width,
                 height_px=height,
                 intrinsics=intrinsics,
-                timestamp=len(self._events),
+                timestamp=timestamp,
             )
         )
         return self
@@ -297,14 +301,15 @@ class FoRStreamBuilder(_StreamBuilderBase):
     def _event_count(self) -> int:
         return len(self._events)
 
-    def add_pose(self, pose: Pose) -> FoRStreamBuilder:
+    def add_pose(self, pose: Pose, *, timestamp: float) -> FoRStreamBuilder:
         """Append a frame-of-reference event.
 
         Args:
             pose: The pose for this event (any supported rotation
                 encoding).
+            timestamp: Scene timestamp for this event.
         """
-        self._events.append(_FoREvent(pose=pose, timestamp=len(self._events)))
+        self._events.append(_FoREvent(pose=pose, timestamp=timestamp))
         return self
 
     def _to_internal(self) -> _InputFoRStream:
@@ -348,15 +353,16 @@ class ImageStreamBuilder(_StreamBuilderBase):
     def _event_count(self) -> int:
         return len(self._events)
 
-    def add_image(self, *, uri: str) -> ImageStreamBuilder:
+    def add_image(self, *, uri: str, timestamp: float) -> ImageStreamBuilder:
         """Append an image event.
 
         Args:
             uri: Non-empty URI pointing to the image file.
+            timestamp: Scene timestamp for this event.
         """
         if not uri:
             raise EncordException(f"Image stream '{self._name}' event has an empty URI")
-        self._events.append(_URIEvent(uri=uri, timestamp=len(self._events)))
+        self._events.append(_URIEvent(uri=uri, timestamp=timestamp))
         return self
 
     def _to_internal(self) -> _InputImageStream:

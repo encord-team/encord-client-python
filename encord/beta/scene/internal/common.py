@@ -180,6 +180,11 @@ class UCMDistortionModel(BaseModel):
     k3: float
 
 
+class CylindricalDistortionModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    type: Literal["cylindrical"]
+
+
 DistortionModel = Annotated[
     Union[
         RadialDistortionModel,
@@ -189,6 +194,7 @@ DistortionModel = Annotated[
         PinholeDistortionModel,
         DivisionDistortionModel,
         UCMDistortionModel,
+        CylindricalDistortionModel,
     ],
     Field(discriminator="type"),
 ]

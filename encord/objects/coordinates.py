@@ -149,12 +149,12 @@ class RotatableBoundingBoxCoordinates:
 
 @dataclass(frozen=True)
 class CircleCoordinates:
-    """Represents circle coordinates, where values are normalised relative to image size.
+    """Represents circle coordinates, where values are normalized relative to image size.
 
     Attributes:
-        center_x (float): Normalised x-coordinate of the circle center [0, 1].
-        center_y (float): Normalised y-coordinate of the circle center [0, 1].
-        radius (float): Primary semi-axis radius, normalised to image width.
+        center_x (float): Normalized x-coordinate of the circle center [0, 1].
+        center_y (float): Normalized y-coordinate of the circle center [0, 1].
+        radius (float): Primary semi-axis radius, normalized to image width.
         stretch (float): Ratio of the secondary semi-axis to the primary (1.0 = true circle, !=1.0 = ellipse).
         theta (float): Rotation angle in degrees, clockwise in screen space (matches RBB convention).
             ``theta=0`` aligns the primary semi-axis (``radius``) with the +X axis.

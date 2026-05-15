@@ -1220,7 +1220,7 @@ class DatasetsWithUserRolesListParams(BaseDTO):
         edited_after: If set, only datasets last edited on or after this timestamp
             are returned.
         include_org_access: If ``True``, include datasets that are visible through
-            organisation-level access in addition to user-level sharing.
+            organization-level access in addition to user-level sharing.
     """
 
     title_eq: Optional[str]

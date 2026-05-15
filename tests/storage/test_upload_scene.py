@@ -9,7 +9,7 @@ from encord.storage import StorageFolder
 
 def test_upload_scene_registers_scene_data() -> None:
     scene = SceneBuilder()
-    scene.add_pcd_stream("lidar").add_pcd(uri="s3://bucket/frame0.pcd")
+    scene.add_pcd_stream("lidar").add_pcd(uri="s3://bucket/frame0.pcd", timestamp=0)
     scene_uuid = UUID("00000000-0000-0000-0000-000000000001")
     captured: dict = {}
 

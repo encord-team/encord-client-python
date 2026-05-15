@@ -22,9 +22,9 @@ class BoundingBoxFrameCoordinatesDict(TypedDict):
 
 
 class CircleDict(TypedDict):
-    x: float  # normalised center x [0, 1]
-    y: float  # normalised center y [0, 1]
-    r: float  # primary semi-axis radius, normalised to image width
+    x: float  # normalized center x [0, 1]
+    y: float  # normalized center y [0, 1]
+    r: float  # primary semi-axis radius, normalized to image width
     stretch: NotRequired[float]  # ratio of secondary semi-axis to primary (1.0 = circle, !=1 = ellipse)
     theta: NotRequired[float]  # rotation in degrees, clockwise in screen space (matches RBB convention)
 

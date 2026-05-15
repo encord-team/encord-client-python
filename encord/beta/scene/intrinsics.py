@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Sequence, Union
 
+from encord.beta.scene.internal.common import CylindricalDistortionModel as _CylindricalDistortionModel
 from encord.beta.scene.internal.upload import CameraIntrinsicsAdvanced as _CameraIntrinsicsAdvanced
 from encord.beta.scene.internal.upload import CameraIntrinsicsSimple as _CameraIntrinsicsSimple
 from encord.beta.scene.internal.upload import DivisionDistortionModel as _DivisionDistortionModel
@@ -25,6 +26,7 @@ _DISTORTION_MODEL_MAP: dict[str, Any] = {
     "pinhole": _PinholeDistortionModel,
     "division": _DivisionDistortionModel,
     "ucm": _UCMDistortionModel,
+    "cylindrical": _CylindricalDistortionModel,
 }
 
 
@@ -315,3 +317,15 @@ def intrinsics_rational_polynomial(
         model="rational_polynomial",
         extra={"k1": k1, "k2": k2, "k3": k3, "k4": k4, "k5": k5, "k6": k6, "t1": t1, "t2": t2},
     )
+
+
+def intrinsics_cylindrical(fx: float, fy: float, ox: float, oy: float) -> SimpleIntrinsics:
+    """Build intrinsics with a cylindrical distortion model (no coefficients).
+
+    Args:
+        fx: Focal length along the *x*-axis (pixels).
+        fy: Focal length along the *y*-axis (pixels).
+        ox: Principal-point *x* offset (pixels).
+        oy: Principal-point *y* offset (pixels).
+    """
+    return SimpleIntrinsics(fx=fx, fy=fy, ox=ox, oy=oy, model="cylindrical")

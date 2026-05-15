@@ -842,7 +842,7 @@ class ListItemsParams(BaseDTO):
         is_recursive: If ``True``, include items in nested subfolders.
         is_in_dataset: If set, filter items that are (or are not) linked to datasets.
         item_types: List of item types to include in the response.
-        include_org_access: If ``True``, include items accessible via organisation-level
+        include_org_access: If ``True``, include items accessible via organization-level
             access.
         order: Sort order for the results.
         desc: If ``True``, sort in descending order.
@@ -872,7 +872,7 @@ class ListFoldersParams(BaseDTO):
         is_recursive: If ``True``, include nested subfolders in the listing.
         dataset_synced: If set, filter folders that are (or are not) synced with a
             dataset.
-        include_org_access: If ``True``, include folders accessible via organisation-level
+        include_org_access: If ``True``, include folders accessible via organization-level
             access.
         order: Field to sort folders by.
         desc: If ``True``, sort in descending order.

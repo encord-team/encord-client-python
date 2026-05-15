@@ -14,6 +14,7 @@ import logging
 import mimetypes
 import os
 import time
+import warnings
 from datetime import datetime
 from math import ceil
 from pathlib import Path
@@ -1885,19 +1886,24 @@ class StorageItem:
     def get_signed_url(self, refetch: bool = False) -> Optional[str]:
         """Get a signed URL for downloading the item.
 
-        Returns `None` if the item is a synthetic entity (e.g., image group or DICOM series).
+        Returns `None` for composite items that have no single file URL:
+        - For scenes, use :class:`encord.beta.scene.SceneRead` to get signed URLs for all constituent files.
+        - For image groups and DICOM series, use :meth:`get_child_items` to get signed URLs for individual frames.
 
         Args:
             refetch: If `True`, forces fetching a new signed URL even if one is cached.
 
         Returns:
-            Optional[str]: Signed URL for downloading the item, or `None` if not supported.
-
-        Raises:
-            ValueError: If the item type is DICOM series or image group (unsupported for signed URLs).
+            Optional[str]: Signed URL for downloading the item, or `None` for composite items.
         """
-        if self.item_type == StorageItemType.DICOM_SERIES or self.item_type == StorageItemType.IMAGE_GROUP:
-            return None  # not supported for these types. Maybe raise ValueError instead?
+        if self.item_type in {StorageItemType.SCENE, StorageItemType.DICOM_SERIES, StorageItemType.IMAGE_GROUP}:
+            warnings.warn(
+                f"get_signed_url() is not supported for {self.item_type} items and will raise ValueError in a future "
+                f"version. Use SceneRead(item) for scenes, or get_child_items() for image groups and DICOM series.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            return None
 
         if refetch or self._orm_item.signed_url is None:
             self.refetch_data(get_signed_url=True)

@@ -311,8 +311,8 @@ PoseType: TypeAlias = Annotated[
 ]
 
 Timestamp: TypeAlias = Annotated[
-    Optional[int],
-    Field(ge=0, validation_alias=AliasChoices("timestamp", "time"), default=None),
+    float,
+    Field(ge=0, validation_alias=AliasChoices("timestamp", "time")),
 ]
 
 
@@ -337,17 +337,17 @@ class InputCameraParams(BaseModel):
 
 class InputFoREvent(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    timestamp: Timestamp = None
+    timestamp: Timestamp
     pose: Annotated[InputPose, Field(description="Pose of the frame of reference")]
 
 
 class InputCameraParamsEvent(InputCameraParams):
     model_config = ConfigDict(extra="forbid")
-    timestamp: Timestamp = None
+    timestamp: Timestamp
 
 
 class InputURIEvent(BaseModel):
-    timestamp: Timestamp = None
+    timestamp: Timestamp
     uri: str
 
 
@@ -565,11 +565,12 @@ def validate_streams(content: Streams) -> None:
                         f"Available camera IDs: {stream_ids.camera_ids}"
                     )
 
-        if hasattr(stream, "frame_of_reference") and isinstance(stream.frame_of_reference, str):
-            if stream.frame_of_reference not in stream_ids.for_ids and stream.frame_of_reference != "root":
+        frame_of_reference = getattr(stream, "frame_of_reference", None)
+        if isinstance(frame_of_reference, str):
+            if frame_of_reference not in stream_ids.for_ids and frame_of_reference != "root":
                 raise ValueError(
                     f"Stream '{stream_id}' references non-existent frame of reference ID: "
-                    f"'{stream.frame_of_reference}'. Available FoR IDs: {stream_ids.for_ids}"
+                    f"'{frame_of_reference}'. Available FoR IDs: {stream_ids.for_ids}"
                 )
 
         if isinstance(stream, InputFoRStream) and stream.parent_FoR_id is not None:
