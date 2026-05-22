@@ -833,6 +833,7 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             base_frame_object=base_frame_object,
             width=width,
             height=height,
+            shape=ontology_object.shape,
         )
 
         return frame_object

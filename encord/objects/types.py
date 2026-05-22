@@ -189,6 +189,10 @@ class CircleFrameObject(BaseFrameObject, CircleFrameCoordinatesDict):
     shape: Literal[Shape.CIRCLE]
 
 
+class EllipseFrameObject(BaseFrameObject, CircleFrameCoordinatesDict):
+    shape: Literal[Shape.ELLIPSE]
+
+
 FrameObject = Union[
     BoundingBoxFrameObject,
     RotatableBoundingBoxFrameObject,
@@ -198,6 +202,7 @@ FrameObject = Union[
     Cuboid2DFrameObject,
     SegmentationObject,
     CircleFrameObject,
+    EllipseFrameObject,
 ]
 """ Frame object in the label blob. Contains shape data, and is differentiated by the 'shape' field. """
 

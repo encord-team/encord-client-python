@@ -147,6 +147,14 @@ class RotatableBoundingBoxCoordinates:
         }
 
 
+# TODO: rename `CircleCoordinates` -> `EllipseCoordinates`. The class already
+# carries `stretch` and `theta`, so it represents an oriented ellipse — a true
+# circle is just the special case `stretch=1, theta=0`. With `Shape.ELLIPSE`
+# now also mapping to this same coords class, the "Circle" name is misleading.
+# Safe to rename in a follow-up: the wire format is the `circle: {...}` field
+# (untouched), so existing labels parse identically. Provide
+# `CircleCoordinates = EllipseCoordinates` as a backwards-compat alias so
+# downstream SDK consumers don't break on the rename.
 @dataclass(frozen=True)
 class CircleCoordinates:
     """Represents circle coordinates, where values are normalized relative to image size.
@@ -756,6 +764,7 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] 
     Shape.BOUNDING_BOX: [BoundingBoxCoordinates],
     Shape.ROTATABLE_BOUNDING_BOX: [RotatableBoundingBoxCoordinates],
     Shape.CIRCLE: [CircleCoordinates],
+    Shape.ELLIPSE: [CircleCoordinates],
     Shape.POINT: [PointCoordinate, PointCoordinate3D],
     Shape.POLYGON: [PolygonCoordinates],
     Shape.POLYLINE: [PolylineCoordinates],
@@ -774,42 +783,52 @@ def add_coordinates_to_frame_object_dict(
     base_frame_object: BaseFrameObject,
     width: int,
     height: int,
+    shape: Optional[Shape] = None,
 ) -> FrameObject:
+    """Attach geometry to a frame object.
+
+    ``shape`` must be passed for shapes whose coordinates class is shared with
+    another shape — currently only ``Shape.ELLIPSE`` (uses ``CircleCoordinates``).
+    If omitted, the shape is inferred from the coordinates type, which fails to
+    distinguish Circle from Ellipse.
+    """
     result: Dict[str, Any] = dict(base_frame_object)
 
     if isinstance(coordinates, BoundingBoxCoordinates):
         result["boundingBox"] = coordinates.to_dict()
-        result["shape"] = Shape.BOUNDING_BOX.value
+        result["shape"] = (shape or Shape.BOUNDING_BOX).value
     elif isinstance(coordinates, RotatableBoundingBoxCoordinates):
         result["rotatableBoundingBox"] = coordinates.to_dict()
-        result["shape"] = Shape.ROTATABLE_BOUNDING_BOX.value
+        result["shape"] = (shape or Shape.ROTATABLE_BOUNDING_BOX).value
     elif isinstance(coordinates, PolygonCoordinates):
         result["polygon"] = coordinates.to_dict()
         result["polygons"] = coordinates.to_dict(PolygonCoordsToDict.multiple_polygons)
-        result["shape"] = Shape.POLYGON.value
+        result["shape"] = (shape or Shape.POLYGON).value
     elif isinstance(coordinates, PolylineCoordinates):
         result["polyline"] = coordinates.to_dict()
-        result["shape"] = Shape.POLYLINE.value
+        result["shape"] = (shape or Shape.POLYLINE).value
     elif isinstance(coordinates, (PointCoordinate, PointCoordinate3D)):
         result["point"] = coordinates.to_dict()
-        result["shape"] = Shape.POINT.value
+        result["shape"] = (shape or Shape.POINT).value
     elif isinstance(coordinates, BitmaskCoordinates):
         if not (height == coordinates._encoded_bitmask.height and width == coordinates._encoded_bitmask.width):
             raise ValueError("Bitmask dimensions don't match the media dimensions")
         result["bitmask"] = coordinates.to_dict()
-        result["shape"] = Shape.BITMASK.value
+        result["shape"] = (shape or Shape.BITMASK).value
     elif isinstance(coordinates, SkeletonCoordinates):
         result["skeleton"] = coordinates.to_dict()
-        result["shape"] = Shape.SKELETON.value
+        result["shape"] = (shape or Shape.SKELETON).value
     elif isinstance(coordinates, CuboidCoordinates):
         result["cuboid"] = coordinates.to_dict()
-        result["shape"] = Shape.CUBOID.value
+        result["shape"] = (shape or Shape.CUBOID).value
     elif isinstance(coordinates, (Cuboid2DPerspectiveCoordinates, Cuboid2DIsometricCoordinates)):
         result["cuboid_2d"] = coordinates.to_dict()
-        result["shape"] = Shape.CUBOID_2D.value
+        result["shape"] = (shape or Shape.CUBOID_2D).value
     elif isinstance(coordinates, CircleCoordinates):
         result["circle"] = coordinates.to_dict()
-        result["shape"] = Shape.CIRCLE.value
+        # Circle and Ellipse share CircleCoordinates — caller must pass shape
+        # to disambiguate. Default to CIRCLE for legacy callers.
+        result["shape"] = (shape or Shape.CIRCLE).value
     else:
         raise NotImplementedError(f"adding coordinates for this type not yet implemented {type(coordinates)}")
 
@@ -837,7 +856,8 @@ def get_coordinates_from_frame_object_dict(frame_object_dict: FrameObject) -> Co
             raise ValueError(f"Invalid point coordinates in {frame_object_dict}")
     elif frame_object_dict["shape"] == Shape.POLYLINE:
         return PolylineCoordinates.from_dict(frame_object_dict)
-    elif frame_object_dict["shape"] == Shape.CIRCLE:
+    elif frame_object_dict["shape"] == Shape.CIRCLE or frame_object_dict["shape"] == Shape.ELLIPSE:
+        # Ellipse shares Circle's wire payload — same parser.
         return CircleCoordinates.from_dict(frame_object_dict)
     elif "skeleton" in frame_object_dict:
 

@@ -259,6 +259,7 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
             base_frame_object=frame_object_dict,
             width=self._width,
             height=self._height,
+            shape=ontology_object.shape,
         )
 
         return frame_object_dict
