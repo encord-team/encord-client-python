@@ -65,6 +65,7 @@ from encord.objects.options import Option
 from encord.objects.spaces.annotation.base_annotation import _AnnotationData, _AnnotationMetadata, _ObjectAnnotation
 from encord.objects.spaces.annotation.geometric_annotation import _GeometricAnnotationData
 from encord.objects.spaces.annotation.range_annotation import _RangeObjectAnnotationData
+from encord.objects.transcript import TranscriptSegment, is_transcript_attribute, is_transcript_raw_entry
 from encord.objects.types import (
     AnswerDict,
     AttributeDict,
@@ -90,6 +91,11 @@ class ObjectInstance:
         # feature_node_hash of attribute to the answer.
 
         self._dynamic_answer_manager = DynamicAnswerManager(self)
+
+        # Raw transcript action dicts as they were parsed from the label row.
+        # Kept opaque so we can round-trip them on save without losing fields like
+        # trackHash, manualAnnotation, etc. See encord.objects.transcript.
+        self._transcript_actions: List[Dict[str, Any]] = []
 
         # Only used for non-frame entities
         self._non_geometric = ontology_object.shape in (Shape.AUDIO, Shape.TEXT)
@@ -249,6 +255,17 @@ class ObjectInstance:
         if attribute.dynamic:
             return self._dynamic_answer_manager.get_answer(attribute, filter_answer, filter_frame)
 
+        if is_transcript_attribute(attribute):
+            # Transcripts are not stored in _static_answer_map; reconstruct the
+            # joined string from the per-segment actions on demand.
+            segments = [
+                s for s in self._iter_transcript_segments() if s.feature_hash == attribute.feature_node_hash
+            ]
+            if not segments:
+                return None
+            segments.sort(key=lambda s: s.range[0])
+            return "\n".join(s.text for s in segments)
+
         static_answer = self._static_answer_map[attribute.feature_node_hash]
 
         if not static_answer.is_answered():
@@ -324,6 +341,12 @@ class ObjectInstance:
         grouped_answers = defaultdict(list)
 
         for answer_dict in answers_list:
+            # Transcript entries (text + range) don't fit the static-answer model; they
+            # are managed via _transcript_actions and get_transcripts() / get_answer().
+            # Silently skip them here so any caller (parse path, space parser, customer
+            # code) can't accidentally clobber the static answer map.
+            if is_transcript_raw_entry(answer_dict):
+                continue
             feature_hash = answer_dict["featureHash"]
             attribute = _get_attribute_by_hash(feature_hash, self._ontology_object.attributes)
             if attribute is None:
@@ -352,6 +375,57 @@ class ObjectInstance:
             attribute = _get_attribute_by_hash(feature_hash, self._ontology_object.attributes)
             assert attribute  # we already checked that attribute is not null above. So just silencing this for now
             self._set_answer_from_grouped_list(attribute, answers_list)
+
+    def get_transcripts(
+        self,
+        attribute: Optional[TextAttribute] = None,
+    ) -> List[TranscriptSegment]:
+        """Return per-segment transcripts for this object, sorted by start frame.
+
+        Each entry is one frame-range within one transcript action. An action with
+        multiple sub-ranges produces multiple ``TranscriptSegment`` entries that share
+        the same text.
+
+        Args:
+            attribute: If provided, return only segments for this transcript attribute.
+                If ``None``, return all transcript segments across all transcript
+                attributes on this object.
+
+        Returns:
+            A list of ``TranscriptSegment`` ordered by ``range[0]``.
+        """
+        segments = list(self._iter_transcript_segments())
+        if attribute is not None:
+            segments = [s for s in segments if s.feature_hash == attribute.feature_node_hash]
+        segments.sort(key=lambda s: s.range[0])
+        return segments
+
+    def _iter_transcript_segments(self) -> Iterable[TranscriptSegment]:
+        for raw in self._transcript_actions:
+            text = raw.get("answers")
+            if not isinstance(text, str):
+                continue
+            feature_hash = raw.get("featureHash")
+            name = raw.get("name", "")
+            if not isinstance(feature_hash, str):
+                continue
+            for sub_range in raw.get("range", []) or []:
+                if not isinstance(sub_range, (list, tuple)) or len(sub_range) < 2:
+                    continue
+                yield TranscriptSegment(
+                    range=(int(sub_range[0]), int(sub_range[1])),
+                    text=text,
+                    feature_hash=feature_hash,
+                    attribute_name=name,
+                )
+
+    def _add_transcript_action(self, raw: Dict[str, Any]) -> None:
+        """Stash a raw transcript action dict for later read and serialisation.
+
+        This is an internal hook used by the label row parser; customers should not
+        call it directly.
+        """
+        self._transcript_actions.append(raw)
 
     @staticmethod
     def _merge_answers_to_non_overlapping_ranges(ranges: List[Tuple[Range, Set[str]]]) -> List[Tuple[Range, Set[str]]]:
@@ -678,6 +752,7 @@ class ObjectInstance:
         ret._frames_to_instance_data = deepcopy(self._frames_to_instance_data)
         ret._static_answer_map = deepcopy(self._static_answer_map)
         ret._dynamic_answer_manager = self._dynamic_answer_manager.copy()
+        ret._transcript_actions = deepcopy(self._transcript_actions)
         return ret
 
     def get_annotations(self) -> List[Annotation]:

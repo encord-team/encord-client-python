@@ -151,6 +151,57 @@ CUBOID_2D_OBJECT = Object(
     attributes=[],
 )
 
+AUDIO_TRANSCRIPT_OBJECT = Object(
+    uid=14,
+    name="audio transcript object",
+    color="#A4FF00",
+    shape=Shape.AUDIO,
+    feature_node_hash="audioTranscriptObjectHash",
+    archived=False,
+    attributes=[
+        TextAttribute(
+            uid=[14, 1],
+            feature_node_hash="captionTranscriptHash",
+            name="Caption #transcript",
+            required=False,
+            dynamic=False,
+            archived=False,
+        ),
+        TextAttribute(
+            uid=[14, 2],
+            feature_node_hash="speakerTranscriptHash",
+            name="Speaker #transcript",
+            required=False,
+            dynamic=False,
+            archived=False,
+        ),
+        ChecklistAttribute(
+            uid=[14, 3],
+            feature_node_hash="audioMoodChecklistHash",
+            name="Mood",
+            required=False,
+            dynamic=True,
+            archived=False,
+            options=[
+                FlatOption(
+                    uid=[14, 3, 1],
+                    feature_node_hash="audioMoodHappy",
+                    label="Happy",
+                    value="happy",
+                    archived=False,
+                ),
+                FlatOption(
+                    uid=[14, 3, 2],
+                    feature_node_hash="audioMoodSad",
+                    label="Sad",
+                    value="sad",
+                    archived=False,
+                ),
+            ],
+        ),
+    ],
+)
+
 all_types_structure = OntologyStructure(
     objects=[
         Object(
@@ -416,6 +467,7 @@ all_types_structure = OntologyStructure(
         AUDIO_OBJECT_1,
         AUDIO_OBJECT_2,
         AUDIO_OBJECT_3,
+        AUDIO_TRANSCRIPT_OBJECT,
         TEXT_OBJECT,
         CUBOID_2D_OBJECT,
         Object(
