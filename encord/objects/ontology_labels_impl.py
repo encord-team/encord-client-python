@@ -116,6 +116,7 @@ from encord.objects.spaces.range_space.audio_space import AudioSpace
 from encord.objects.spaces.range_space.point_cloud_space import PointCloudFileSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
 from encord.objects.spaces.types import ChildInfo, SpaceInfo
+from encord.objects.transcript import is_transcript_raw_entry
 from encord.objects.types import (
     AttributeDict,
     BaseFrameObject,
@@ -2190,11 +2191,12 @@ class LabelRowV2:
     def _to_object_actions(self) -> Dict[str, ObjectAction]:
         ret: Dict[str, Any] = {}
         for obj in self._objects_map.values():
-            all_static_answers = self._dynamic_answers_to_encord_dict(obj)
-            if len(all_static_answers) == 0:
+            actions: List[Any] = list(reversed(self._dynamic_answers_to_encord_dict(obj)))
+            actions.extend(obj._transcript_actions)
+            if not actions:
                 continue
             ret[obj.object_hash] = {
-                "actions": list(reversed(all_static_answers)),
+                "actions": actions,
                 "objectHash": obj.object_hash,
             }
 
@@ -2202,18 +2204,19 @@ class LabelRowV2:
             for obj in space._objects_map.values():
                 # Currently, dynamic attributes only available for VideoSpace
                 if isinstance(space, VideoSpace):
-                    all_static_answers = self._dynamic_answers_to_encord_dict(obj)
-                    if len(all_static_answers) == 0:
-                        continue
-
-                    if obj.object_hash in ret:
-                        # The same object might still exist across object hashes
-                        continue
-                    else:
-                        ret[obj.object_hash] = {
-                            "actions": list(all_static_answers),
-                            "objectHash": obj.object_hash,
-                        }
+                    actions = list(self._dynamic_answers_to_encord_dict(obj))
+                else:
+                    actions = []
+                actions.extend(obj._transcript_actions)
+                if not actions:
+                    continue
+                if obj.object_hash in ret:
+                    # The same object might still exist across object hashes
+                    continue
+                ret[obj.object_hash] = {
+                    "actions": actions,
+                    "objectHash": obj.object_hash,
+                }
         return ret
 
     def _to_classification_answers(self) -> Dict[str, ClassificationAnswer]:
@@ -3059,18 +3062,28 @@ class LabelRowV2:
     def _add_action_answers(self, label_row_dict: dict):
         for answer in label_row_dict["object_actions"].values():
             object_hash = answer["objectHash"]
-            object_instance = self._objects_map.get(object_hash)
             answer_list = answer["actions"]
-            if object_instance is not None:
-                object_instance.set_answer_from_list(answer_list)
-            else:
+
+            target_object = self._objects_map.get(object_hash)
+            if target_object is None:
                 # Not great that we're looping through spaces, but usually not that many spaces on a label row
-                answer_list = answer["actions"]
                 for space in self._space_map.values():
                     object_on_space = space._objects_map.get(object_hash)
                     if object_on_space is not None:
-                        object_on_space.set_answer_from_list(answers_list=answer_list)
+                        target_object = object_on_space
                         break
+
+            if target_object is None:
+                continue
+
+            non_transcript_actions: List[Any] = []
+            for raw_action in answer_list:
+                if is_transcript_raw_entry(raw_action):
+                    target_object._add_transcript_action(raw_action)
+                else:
+                    non_transcript_actions.append(raw_action)
+            if non_transcript_actions:
+                target_object.set_answer_from_list(non_transcript_actions)
 
     def _create_new_object_instance(self, frame_object_label: FrameObject, frame: int) -> ObjectInstance:
         ontology = self._ontology.structure
