@@ -258,9 +258,7 @@ class ObjectInstance:
         if is_transcript_attribute(attribute):
             # Transcripts are not stored in _static_answer_map; reconstruct the
             # joined string from the per-segment actions on demand.
-            segments = [
-                s for s in self._iter_transcript_segments() if s.feature_hash == attribute.feature_node_hash
-            ]
+            segments = [s for s in self._iter_transcript_segments() if s.feature_hash == attribute.feature_node_hash]
             if not segments:
                 return None
             segments.sort(key=lambda s: s.range[0])

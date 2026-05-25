@@ -100,7 +100,6 @@ from encord.objects.html_node import HtmlRange, HtmlRangeDict
 from encord.objects.metadata import DataGroupMetadata, DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
-from encord.objects.transcript import is_transcript_raw_entry
 from encord.objects.ontology_structure import OntologyStructure
 from encord.objects.spaces.annotation.base_annotation import (
     _AnnotationMetadata,
@@ -117,6 +116,7 @@ from encord.objects.spaces.range_space.audio_space import AudioSpace
 from encord.objects.spaces.range_space.point_cloud_space import PointCloudFileSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
 from encord.objects.spaces.types import ChildInfo, SpaceInfo
+from encord.objects.transcript import is_transcript_raw_entry
 from encord.objects.types import (
     AttributeDict,
     BaseFrameObject,
@@ -2191,7 +2191,7 @@ class LabelRowV2:
     def _to_object_actions(self) -> Dict[str, ObjectAction]:
         ret: Dict[str, Any] = {}
         for obj in self._objects_map.values():
-            actions = list(reversed(self._dynamic_answers_to_encord_dict(obj)))
+            actions: List[Any] = list(reversed(self._dynamic_answers_to_encord_dict(obj)))
             actions.extend(obj._transcript_actions)
             if not actions:
                 continue

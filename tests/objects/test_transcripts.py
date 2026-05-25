@@ -2,8 +2,6 @@ from copy import deepcopy
 from dataclasses import asdict
 from unittest.mock import Mock
 
-import pytest
-
 from encord.objects import (
     LabelRowV2,
     ObjectInstance,
