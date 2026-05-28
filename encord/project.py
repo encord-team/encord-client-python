@@ -578,7 +578,7 @@ class Project:
     ):
         """Run object interpolation algorithm on project labels (requires an editor ontology and feature uids).
 
-        Interpolation is supported for bounding box, polygon, and keypoint.
+        Interpolation is supported for bounding box, polygon, keypoint, circle and ellipse.
 
         Args:
             key_frames: Labels for frames to be interpolated. Key frames are consumed in the form::
