@@ -591,6 +591,10 @@ class GetProjectUsersPayload(BaseDTO):
     page_token: Optional[str] = None
 
 
+class RemoveProjectUsersPayload(BaseDTO):
+    user_emails: List[str]
+
+
 class ProjectUserResponse(BaseDTO):
     """
     This one should be merged with ProjectUser class

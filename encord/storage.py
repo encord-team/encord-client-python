@@ -37,6 +37,7 @@ from encord.http.v2.payloads import Page
 from encord.orm.dataset import LongPollingStatus
 from encord.orm.group import AddStorageFolderGroupsPayload, RemoveGroupsParams, StorageFolderGroup
 from encord.orm.storage import (
+    AddStorageFolderUsersPayload,
     CustomerProvidedAudioMetadata,
     CustomerProvidedVideoMetadata,
     DataGroupInput,
@@ -50,7 +51,9 @@ from encord.orm.storage import (
     PathElement,
     ReencodeVideoItemsRequest,
     ReencodeVideoItemsResponse,
+    RemoveStorageFolderUsersPayload,
     StorageFolderSummary,
+    StorageFolderUser,
     StorageItemSummary,
     StorageItemType,
     StorageLocationName,
@@ -1358,6 +1361,31 @@ class StorageFolder:
         )
 
         yield from page.results
+
+    def add_users(self, user_emails: List[str], user_role: StorageUserRole) -> None:
+        """Allow users to access this folder."""
+        self._api_client.post(
+            f"/storage/folders/{self.uuid}/users",
+            params=None,
+            payload=AddStorageFolderUsersPayload(user_emails=user_emails, user_role=user_role),
+            result_type=None,
+        )
+
+    def list_users(self) -> Iterable[StorageFolderUser]:
+        """List all users that have access to this folder."""
+        page = self._api_client.get(
+            f"/storage/folders/{self.uuid}/users", params=None, result_type=Page[StorageFolderUser]
+        )
+
+        yield from page.results
+
+    def remove_users(self, user_emails: List[str]) -> None:
+        """Revoke users' access to this folder."""
+        self._api_client.delete(
+            f"/storage/folders/{self.uuid}/users",
+            params=RemoveStorageFolderUsersPayload(user_emails=user_emails),
+            result_type=None,
+        )
 
     def add_group(self, group_hash: Union[List[UUID], UUID], user_role: StorageUserRole):
         """Allow access to this folder for members of a group.

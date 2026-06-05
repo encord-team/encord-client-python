@@ -71,6 +71,25 @@ class DatasetUser(BaseDTO):
     dataset_hash: str
 
 
+class DatasetUserResponse(BaseDTO):
+    dataset_uuid: UUID
+    user_email: str
+    user_role: DatasetUserRole
+
+
+class AddDatasetUsersPayload(BaseDTO):
+    user_emails: List[str]
+    user_role: DatasetUserRole
+
+
+class RemoveDatasetUsersPayload(BaseDTO):
+    user_emails: List[str]
+
+
+class GetDatasetUsersPayload(BaseDTO):
+    page_token: Optional[str] = None
+
+
 class DatasetUsers:
     pass
 

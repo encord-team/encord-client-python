@@ -95,3 +95,17 @@ def test_get_tags_use_cache_false(api_get: MagicMock, project: Project) -> None:
     project.get_tags(use_cache=False)
 
     assert api_get.call_count == 2
+
+
+@patch.object(ApiClient, "delete")
+def test_remove_users(api_delete: MagicMock, project: Project) -> None:
+    user_emails = ["annotator@example.com", "reviewer@example.com"]
+
+    project.remove_users(user_emails)
+
+    api_delete.assert_called_once()
+    path = api_delete.call_args.args[0]
+    params = api_delete.call_args.kwargs["params"]
+    assert path == f"projects/{project.project_hash}/users"
+    assert params.user_emails == user_emails
+    assert api_delete.call_args.kwargs["result_type"] is None

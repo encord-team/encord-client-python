@@ -388,6 +388,14 @@ class Project:
         """
         yield from self._client.list_users(UUID(self.project_hash))
 
+    def remove_users(self, user_emails: List[str]) -> None:
+        """Remove users from the project.
+
+        Args:
+            user_emails: List of user emails to remove.
+        """
+        self._client.remove_users(UUID(self.project_hash), user_emails)
+
     def list_groups(self) -> Iterable[ProjectGroup]:
         """List all groups that have access to a particular project.
 

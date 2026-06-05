@@ -60,6 +60,7 @@ from encord.orm.bearer_request import BearerTokenResponse
 from encord.orm.cloud_integration import CloudIntegration, GetCloudIntegrationsResponse
 from encord.orm.dataset import (
     DEFAULT_DATASET_ACCESS_SETTINGS,
+    AddDatasetUsersPayload,
     AddPrivateDataResponse,
     DataLinkDuplicatesBehavior,
     DataRow,
@@ -69,15 +70,18 @@ from encord.orm.dataset import (
     DatasetDataLongPolling,
     DatasetLinkItems,
     DatasetUser,
+    DatasetUserResponse,
     DatasetUserRole,
     DatasetUsers,
     DicomSeries,
+    GetDatasetUsersPayload,
     Image,
     ImageGroup,
     ImageGroupOCR,
     Images,
     LongPollingStatus,
     ReEncodeVideoTask,
+    RemoveDatasetUsersPayload,
     Video,
 )
 from encord.orm.dataset import Dataset as OrmDataset
@@ -113,6 +117,7 @@ from encord.orm.project import (
     ProjectStatus,
     ProjectUserResponse,
     ProjectUsers,
+    RemoveProjectUsersPayload,
     SetProjectStatusPayload,
     TaskPriorityParams,
 )
@@ -272,10 +277,30 @@ class EncordClientDataset(EncordClient):
 
     def add_users(self, user_emails: List[str], user_role: DatasetUserRole) -> List[DatasetUser]:
         """This function is documented in :meth:`encord.project.Dataset.add_users`."""
-        payload = {"user_emails": user_emails, "user_role": user_role}
-        users = self._querier.basic_setter(DatasetUsers, self._querier.resource_id, payload=payload)
+        page = self._api_client.post(
+            f"datasets/{self._querier.resource_id}/users",
+            params=None,
+            payload=AddDatasetUsersPayload(user_emails=user_emails, user_role=user_role),
+            result_type=Page[DatasetUserResponse],
+        )
 
-        return [DatasetUser.from_dict(user) for user in users]
+        return [
+            DatasetUser(user_email=user.user_email, user_role=user.user_role, dataset_hash=str(user.dataset_uuid))
+            for user in page.results
+        ]
+
+    def list_users(self, dataset_hash: uuid.UUID) -> Iterable[DatasetUser]:
+        for user in self._api_client.get_paged_iterator(
+            f"datasets/{dataset_hash}/users", params=GetDatasetUsersPayload(), result_type=DatasetUserResponse
+        ):
+            yield DatasetUser(user_email=user.user_email, user_role=user.user_role, dataset_hash=str(user.dataset_uuid))
+
+    def remove_users(self, dataset_hash: uuid.UUID, user_emails: List[str]) -> None:
+        self._api_client.delete(
+            f"datasets/{dataset_hash}/users",
+            params=RemoveDatasetUsersPayload(user_emails=user_emails),
+            result_type=None,
+        )
 
     def list_groups(self, dataset_hash: uuid.UUID) -> Page[DatasetGroup]:
         return self._api_client.get(f"datasets/{dataset_hash}/groups", params=None, result_type=Page[DatasetGroup])
@@ -888,6 +913,13 @@ class EncordClientProject(EncordClient):
             f"projects/{project_hash}/users", params=GetProjectUsersPayload(), result_type=ProjectUserResponse
         ):
             yield ProjectUser(user_email=user.user_email, user_role=user.user_role, project_hash=str(project_hash))
+
+    def remove_users(self, project_hash: uuid.UUID, user_emails: List[str]) -> None:
+        self._api_client.delete(
+            f"projects/{project_hash}/users",
+            params=RemoveProjectUsersPayload(user_emails=user_emails),
+            result_type=None,
+        )
 
     def list_groups(self, project_hash: uuid.UUID) -> Page[ProjectGroup]:
         return self._api_client.get(f"projects/{project_hash}/groups", params=None, result_type=Page[ProjectGroup])

@@ -182,6 +182,22 @@ class Dataset:
         """
         return self._client.add_users(user_emails, user_role)
 
+    def list_users(self) -> Iterable[DatasetUser]:
+        """List all users that have access to the dataset.
+
+        Returns:
+            Iterable[DatasetUser]: An iterable of DatasetUser instances.
+        """
+        yield from self._client.list_users(convert_to_uuid(self.dataset_hash))
+
+    def remove_users(self, user_emails: List[str]) -> None:
+        """Remove users from the dataset.
+
+        Args:
+            user_emails: List of user emails to remove.
+        """
+        self._client.remove_users(convert_to_uuid(self.dataset_hash), user_emails)
+
     def list_groups(self) -> Iterable[DatasetGroup]:
         """List all groups that have access to the dataset.
 

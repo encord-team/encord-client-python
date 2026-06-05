@@ -64,6 +64,24 @@ class StorageUserRole(CamelStrEnum):
     ADMIN = auto()
 
 
+class StorageFolderUser(BaseDTO):
+    item_uuid: UUID
+    user_email: str
+    user_role: StorageUserRole
+    indirect_via: Optional[UUID] = None
+    group_uuid: Optional[UUID] = None
+    group_name: Optional[str] = None
+
+
+class AddStorageFolderUsersPayload(BaseDTO):
+    user_emails: List[str]
+    user_role: StorageUserRole
+
+
+class RemoveStorageFolderUsersPayload(BaseDTO):
+    user_emails: List[str]
+
+
 class StorageLocationName(CamelStrEnum):
     """Storage backends supported by Encord.
 

@@ -20,7 +20,13 @@ from encord.orm.group import AddOntologyGroupsPayload, OntologyGroup, RemoveGrou
 from encord.orm.ontology import CreateOrUpdateOntologyPayload
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.utilities.hash_utilities import convert_to_uuid
-from encord.utilities.ontology_user import OntologyUserRole, OntologyWithUserRole
+from encord.utilities.ontology_user import (
+    AddOntologyUsersPayload,
+    OntologyUser,
+    OntologyUserRole,
+    OntologyWithUserRole,
+    RemoveOntologyUsersPayload,
+)
 
 
 class Ontology:
@@ -100,6 +106,31 @@ class Ontology:
                 params=None,
                 payload=payload,
             )
+
+    def add_users(self, user_emails: List[str], user_role: OntologyUserRole) -> None:
+        """Add users to the ontology."""
+        ontology_hash = convert_to_uuid(self.ontology_hash)
+        self.api_client.post(
+            f"ontologies/{ontology_hash}/users",
+            params=None,
+            payload=AddOntologyUsersPayload(user_emails=user_emails, user_role=user_role),
+            result_type=None,
+        )
+
+    def list_users(self) -> Iterable[OntologyUser]:
+        """List all users that have access to this ontology."""
+        ontology_hash = convert_to_uuid(self.ontology_hash)
+        page = self.api_client.get(f"ontologies/{ontology_hash}/users", params=None, result_type=Page[OntologyUser])
+        yield from page.results
+
+    def remove_users(self, user_emails: List[str]) -> None:
+        """Remove users from the ontology."""
+        ontology_hash = convert_to_uuid(self.ontology_hash)
+        self.api_client.delete(
+            f"ontologies/{ontology_hash}/users",
+            params=RemoveOntologyUsersPayload(user_emails=user_emails),
+            result_type=None,
+        )
 
     def list_groups(self) -> Iterable[OntologyGroup]:
         """List all groups that have access to a particular ontology."""

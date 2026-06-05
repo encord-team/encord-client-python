@@ -23,6 +23,21 @@ class OntologyUserRole(IntEnum):
     USER = 1
 
 
+class OntologyUser(BaseDTO):
+    ontology_uuid: UUID
+    user_email: str
+    user_role: OntologyUserRole
+
+
+class AddOntologyUsersPayload(BaseDTO):
+    user_emails: list[str]
+    user_role: OntologyUserRole
+
+
+class RemoveOntologyUsersPayload(BaseDTO):
+    user_emails: list[str]
+
+
 class OntologyWithUserRole(BaseDTO):
     """An on-the-wire representation from /v2/public/ontologies endpoints"""
 
