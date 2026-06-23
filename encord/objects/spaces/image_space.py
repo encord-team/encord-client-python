@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING, Dict, Optional, Sequence, cast
+from typing import TYPE_CHECKING, Dict, Optional, Union, cast
 
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
@@ -23,7 +23,7 @@ from encord.objects.spaces.annotation.geometric_annotation import (
 from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
 from encord.objects.spaces.base_space import Space
 from encord.objects.spaces.multiframe_space.multiframe_space import FrameOverlapStrategy
-from encord.objects.spaces.types import ImageSpaceInfo, SpaceInfo
+from encord.objects.spaces.types import ImageSpaceInfo, SceneImageSpaceInfo, SpaceInfo
 from encord.objects.types import (
     AttributeDict,
     ClassificationAnswer,
@@ -50,11 +50,12 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
         space_id: str,
         label_row: LabelRowV2,
         space_info: SpaceInfo,
-        width: int,
-        height: int,
+        width: Optional[int],
+        height: Optional[int],
         has_multilayer_labels: bool,
     ):
         super().__init__(space_id, label_row, space_info)
+        self._space_info = space_info
         self._object_hash_to_annotation_data: dict[str, _GeometricAnnotationData] = dict()
 
         self._width = width
@@ -320,11 +321,19 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
             classifications=classification_list,
         )
 
-    def _to_space_dict(self) -> ImageSpaceInfo:
+    def _to_space_dict(self) -> Union[ImageSpaceInfo, SceneImageSpaceInfo]:
         """Export image space to dictionary format."""
-        label_hashes: list[str] = list(self._objects_map.keys())
-        label_hashes.extend(list(self._classifications_map.keys()))
         frame_label = self._build_frame_label_dict()
+
+        if self._space_info["space_type"] == SpaceType.SCENE_IMAGE:
+            return SceneImageSpaceInfo(
+                space_type=SpaceType.SCENE_IMAGE,
+                scene_info=self._space_info["scene_info"],
+                labels=frame_label,
+            )
+
+        if self._width is None or self._height is None:
+            raise LabelRowError("Image spaces require width and height.")
 
         return ImageSpaceInfo(
             space_type=SpaceType.IMAGE,
@@ -341,8 +350,12 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
         object_answers: dict[str, ObjectAnswerForGeometric],
         classification_answers: dict[str, ClassificationAnswer],
     ) -> None:
-        space_labels = cast(Dict[str, LabelBlob], space_info.get("labels"))
-        frame_label = space_labels.get("0")
+        frame_label: Optional[LabelBlob]
+        if space_info["space_type"] == SpaceType.SCENE_IMAGE:
+            frame_label = cast(LabelBlob, space_info.get("labels") or {"objects": [], "classifications": []})
+        else:
+            space_labels = cast(Dict[str, LabelBlob], space_info.get("labels"))
+            frame_label = space_labels.get("0")
         if frame_label is not None:
             self._parse_frame_label_dict(frame_label=frame_label, classification_answers=classification_answers)
 

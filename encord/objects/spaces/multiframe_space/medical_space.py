@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from typing_extensions import TypeGuard
 
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects.spaces.multiframe_space.multiframe_space import MultiFrameSpace
-from encord.objects.spaces.types import DicomFrameInfo, MedicalFileSpaceInfo, MedicalStackSpaceInfo, SpaceInfo
+from encord.objects.spaces.types import MedicalFileSpaceInfo, MedicalStackSpaceInfo, SpaceInfo
 
 if TYPE_CHECKING:
     from encord.objects.ontology_labels_impl import LabelRowV2

@@ -39,6 +39,7 @@ from encord.beta.scene.reader import (
     Scene,
     SceneEvent,
     SceneRead,
+    SceneReader,
 )
 from encord.beta.scene.rotation import (
     EulerRotation,
@@ -74,6 +75,7 @@ __all__ = [
     "SceneBuilder",
     "SceneEvent",
     "SceneRead",
+    "SceneReader",
     "SimpleIntrinsics",
     "affine_transform",
     "euler_pose",

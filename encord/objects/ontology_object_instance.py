@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from copy import deepcopy
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from typing import (
     TYPE_CHECKING,
@@ -29,15 +29,13 @@ from typing import (
     cast,
 )
 
-from encord.common.deprecated import deprecated
 from encord.common.range_manager import RangeManager
-from encord.common.time_parser import parse_datetime
-from encord.constants.enums import DATA_TYPES_WITH_UNKNOWN_LAST_FRAME, DataType
+from encord.constants.enums import DATA_TYPES_WITH_UNKNOWN_LAST_FRAME
 from encord.exceptions import LabelRowError
 from encord.objects import ChecklistAttribute, RadioAttribute, Shape, TextAttribute
 from encord.objects.answers import Answer, NumericAnswerValue, _get_static_answer_map, get_default_answer_from_attribute
 from encord.objects.attributes import Attribute, NumericAttribute, _get_attribute_by_hash
-from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
+from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import (
     ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
     NON_GEOMETRIC_COORDINATES,
@@ -68,7 +66,6 @@ from encord.objects.spaces.annotation.range_annotation import _RangeObjectAnnota
 from encord.objects.types import (
     AnswerDict,
     AttributeDict,
-    BaseFrameObject,
     DynamicAttributeObject,
 )
 from encord.objects.utils import short_uuid_str

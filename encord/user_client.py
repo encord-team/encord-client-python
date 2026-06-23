@@ -32,7 +32,7 @@ from encord.collection import Collection
 from encord.common.deprecated import deprecated
 from encord.common.time_parser import parse_datetime, parse_datetime_optional
 from encord.configs import ENCORD_DOMAIN, BearerConfig, SshConfig, UserConfig, get_env_ssh_key
-from encord.constants.string_constants import TYPE_DATASET, TYPE_ONTOLOGY, TYPE_PROJECT
+from encord.constants.string_constants import TYPE_DATASET, TYPE_PROJECT
 from encord.dataset import Dataset
 from encord.filter_preset import FilterPreset
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
@@ -62,12 +62,9 @@ from encord.orm.dataset import (
     DatasetInfo,
     DatasetsWithUserRolesListParams,
     DatasetsWithUserRolesListResponse,
-    DicomDeidentifyTask,
-    Images,
     StorageLocation,
     dataset_user_role_str_enum_to_int_enum,
 )
-from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.deidentification import (
     DicomDeIdGetResultLongPollingStatus,
     DicomDeIdGetResultParams,
@@ -79,7 +76,6 @@ from encord.orm.deidentification import (
 )
 from encord.orm.group import Group as OrmGroup
 from encord.orm.ontology import CreateOrUpdateOntologyPayload
-from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import (
     BenchmarkQaWorkflowSettings,
     CvatExportType,
@@ -109,7 +105,7 @@ from encord.utilities.client_utilities import (
     Issues,
     LocalImport,
 )
-from encord.utilities.ontology_user import OntologiesFilterParams, OntologyUserRole, OntologyWithUserRole
+from encord.utilities.ontology_user import OntologiesFilterParams, OntologyWithUserRole
 from encord.utilities.project_user import ProjectUserRole
 
 CVAT_LONG_POLLING_RESPONSE_RETRY_N = 3
@@ -518,10 +514,10 @@ class EncordUserClient:
             )
 
     def list_project_tags(self) -> List[ProjectTag]:
-        """List all project tags defined in the organisation.
+        """List all project tags defined in the Organization.
 
         Returns:
-            List[ProjectTag]: All project tags available in the organisation.
+            List[ProjectTag]: All project tags available in the organization.
         """
         return self._api_client.get(
             "organisation/project-tags",
@@ -1274,7 +1270,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `folder_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the folder with the given UUID does not exist or
+            :class:`encord.exceptions.AuthorisationError` : If the folder with the given UUID does not exist or
                 the user does not have access to it.
         """
         if isinstance(folder_uuid, str):
@@ -1293,7 +1289,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `item_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
+            :class:`encord.exceptions.AuthorisationError` : If the item with the given UUID does not exist or
                 the user does not have access to it.
         """
         if isinstance(item_uuid, str):
@@ -1317,7 +1313,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If any of the item uuids is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If some of the items with the given UUIDs do not exist or
+            :class:`encord.exceptions.AuthorisationError` : If some of the items with the given UUIDs do not exist or
                 the user does not have access to them.
         """
         internal_item_uuids: List[UUID] = [UUID(item) if isinstance(item, str) else item for item in item_uuids]
@@ -1342,12 +1338,12 @@ class EncordUserClient:
             org_access: If `True`, and if the caller is `ADMIN` of their organization, the results contain the
                 folders belonging to the organization, instead of those accessible to the user. If enabled
                 but the user is not an organization admin, the `AuthorisationError` is raised. Default value is `False`.
-            order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
+            order: Sort order for the folders. See :class:`encord.orm.storage.FoldersSortBy` for available options.
             desc: If True, sort in descending order.
             page_size: Number of folders to return per page. Default if not specified is 100. Maximum value is 1000.
 
         Returns:
-            Iterable of :class:`encord.StorageFolder` objects.
+            Iterable of :class:`encord.storage.StorageFolder` objects.
         """
         return StorageFolder._list_folders(
             self._api_client,
@@ -1381,12 +1377,12 @@ class EncordUserClient:
             org_access: If `True`, and if the caller is `ADMIN` of their organization, the results contain the
                 folders belonging to the organization, instead of those accessible to the user. If enabled
                but the user is not an organization admin, the `AuthorisationError` is raised. Default value is `False`.
-            order: Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
+            order: Sort order for the folders. See :class:`encord.orm.storage.FoldersSortBy` for available options.
             desc: If True, sort in descending order.
             page_size: Number of folders to return per page. Default if not specified is 100. Maximum value is 1000.
 
         Returns:
-            Iterable of :class:`encord.StorageFolder` objects.
+            Iterable of :class:`encord.storage.StorageFolder` objects.
         """
         return StorageFolder._list_folders(
             self._api_client,
@@ -1473,7 +1469,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `collection_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
+            :class:`encord.exceptions.AuthorisationError` : If the item with the given UUID does not exist or
                 the user does not have access to it.
         """
         if isinstance(collection_uuid, str):
@@ -1501,7 +1497,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `top_level_folder_uuid` or any of the collection uuids is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to it.
         """
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
@@ -1528,7 +1524,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `collection_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to it.
         """
         if isinstance(collection_uuid, str):
             collection_uuid = UUID(collection_uuid)
@@ -1549,7 +1545,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `top_level_folder_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to the folder.
+            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to the folder.
         """
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
@@ -1567,7 +1563,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `preset_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the item with the given UUID does not exist or
+            :class:`encord.exceptions.AuthorisationError` : If the item with the given UUID does not exist or
                 the user does not have access to it.
         """
         if isinstance(preset_uuid, str):
@@ -1588,7 +1584,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If any of the preset uuids is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to it.
         """
         internal_preset_uuids: List[UUID] = [
             UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuids
@@ -1609,7 +1605,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `top_level_folder_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to it.
         """
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
@@ -1642,7 +1638,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `preset_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to it.
         """
         if isinstance(preset_uuid, str):
             preset_uuid = UUID(preset_uuid)

@@ -5,7 +5,8 @@ from typing import Dict, Optional
 
 # pylint: disable=unused-import
 from encord.objects.ontology_structure import OntologyStructure
-from encord.orm.base_dto import BaseDTO, dto_validator
+from encord.orm.base_dto import BaseDTO
+from encord.orm.base_dto import dto_validator as dto_validator
 from encord.orm.formatter import Formatter
 from encord.utilities.ontology_user import OntologyUserRole
 

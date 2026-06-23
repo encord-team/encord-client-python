@@ -13,9 +13,10 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import (
+    TYPE_CHECKING,
     Any,
     Dict,
     Iterable,
@@ -30,6 +31,12 @@ from typing import (
     cast,
     overload,
 )
+
+from typing_extensions import TypedDict
+
+if TYPE_CHECKING:
+    from encord.project import Project
+from math import ceil
 from uuid import UUID
 
 from encord.client import EncordClientProject
@@ -77,6 +84,7 @@ from encord.objects.coordinates import (
     Cuboid2DIsometricCoordinates,
     Cuboid2DPerspectiveCoordinates,
     CuboidCoordinates,
+    EllipseCoordinates,
     HtmlCoordinates,
     PointCoordinate,
     PointCoordinate3D,
@@ -96,7 +104,7 @@ from encord.objects.frames import (
     ranges_list_to_ranges,
     ranges_to_list,
 )
-from encord.objects.html_node import HtmlRange, HtmlRangeDict
+from encord.objects.html_node import HtmlRange
 from encord.objects.metadata import DataGroupMetadata, DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
@@ -106,7 +114,7 @@ from encord.objects.spaces.annotation.base_annotation import (
     _ClassificationAnnotation,
     _ObjectAnnotation,
 )
-from encord.objects.spaces.base_space import Space, SpaceT
+from encord.objects.spaces.base_space import Space
 from encord.objects.spaces.html_space import HTMLSpace
 from encord.objects.spaces.image_space import ImageSpace
 from encord.objects.spaces.multiframe_space.medical_space import MedicalSpace
@@ -115,7 +123,7 @@ from encord.objects.spaces.multiframe_space.video_space import VideoSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
 from encord.objects.spaces.range_space.point_cloud_space import PointCloudFileSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
-from encord.objects.spaces.types import ChildInfo, SpaceInfo
+from encord.objects.spaces.types import ChildInfo, SceneMetadata, SpaceInfo
 from encord.objects.types import (
     AttributeDict,
     BaseFrameObject,
@@ -147,9 +155,133 @@ log = logging.getLogger(__name__)
 OntologyTypes = Union[Type[Object], Type[Classification]]
 OntologyClasses = Union[Object, Classification]
 
-# Error message for uninitialised labelling
+# Placeholder UUID for detached (offline) label rows
+_ZERO_UUID = str(UUID(int=0))
+
+
+class _ParsedMediaMetadata(TypedDict):
+    data_type: DataType
+    number_of_frames: int
+    fps: Optional[float]
+    duration: Optional[float]
+    width: Optional[int]
+    height: Optional[int]
+    audio_codec: Optional[str]
+    audio_sample_rate: Optional[int]
+    audio_bit_depth: Optional[int]
+    audio_num_channels: Optional[int]
+    file_type: Optional[str]
+
+
+def _parse_custom_media_metadata(
+    media_metadata: Union[
+        orm_storage.CustomerProvidedImageMetadata,
+        orm_storage.CustomerProvidedVideoMetadata,
+        orm_storage.CustomerProvidedAudioMetadata,
+        orm_storage.CustomerProvidedTextMetadata,
+        orm_storage.CustomerProvidedPdfMetadata,
+        List[orm_storage.CustomerProvidedImageMetadata],
+    ],
+) -> _ParsedMediaMetadata:
+    """Infer DataType and compute metadata fields from customer-provided media metadata."""
+    if isinstance(media_metadata, list):
+        if not media_metadata:
+            raise LabelRowError("Cannot create an IMG_GROUP label row from an empty list of images.")
+        for item in media_metadata:
+            if not isinstance(item, orm_storage.CustomerProvidedImageMetadata):
+                raise LabelRowError(
+                    f"IMG_GROUP metadata list must contain CustomerProvidedImageMetadata, got {type(item).__name__}"
+                )
+        return _ParsedMediaMetadata(
+            data_type=DataType.IMG_GROUP,
+            number_of_frames=len(media_metadata),
+            fps=None,
+            duration=None,
+            width=None,
+            height=None,
+            audio_codec=None,
+            audio_sample_rate=None,
+            audio_bit_depth=None,
+            audio_num_channels=None,
+            file_type=media_metadata[0].mime_type,
+        )
+    elif isinstance(media_metadata, orm_storage.CustomerProvidedVideoMetadata):
+        return _ParsedMediaMetadata(
+            data_type=DataType.VIDEO,
+            number_of_frames=ceil(media_metadata.fps * media_metadata.duration),
+            fps=media_metadata.fps,
+            duration=media_metadata.duration,
+            width=media_metadata.width,
+            height=media_metadata.height,
+            audio_codec=None,
+            audio_sample_rate=None,
+            audio_bit_depth=None,
+            audio_num_channels=None,
+            file_type=media_metadata.mime_type,
+        )
+    elif isinstance(media_metadata, orm_storage.CustomerProvidedImageMetadata):
+        return _ParsedMediaMetadata(
+            data_type=DataType.IMAGE,
+            number_of_frames=1,
+            fps=None,
+            duration=None,
+            width=media_metadata.width,
+            height=media_metadata.height,
+            audio_codec=None,
+            audio_sample_rate=None,
+            audio_bit_depth=None,
+            audio_num_channels=None,
+            file_type=media_metadata.mime_type,
+        )
+    elif isinstance(media_metadata, orm_storage.CustomerProvidedAudioMetadata):
+        return _ParsedMediaMetadata(
+            data_type=DataType.AUDIO,
+            number_of_frames=ceil(media_metadata.duration * media_metadata.sample_rate),
+            fps=float(media_metadata.sample_rate),
+            duration=media_metadata.duration,
+            width=None,
+            height=None,
+            audio_codec=media_metadata.codec,
+            audio_sample_rate=media_metadata.sample_rate,
+            audio_bit_depth=media_metadata.bit_depth,
+            audio_num_channels=media_metadata.num_channels,
+            file_type=media_metadata.mime_type,
+        )
+    elif isinstance(media_metadata, orm_storage.CustomerProvidedTextMetadata):
+        return _ParsedMediaMetadata(
+            data_type=DataType.PLAIN_TEXT,
+            number_of_frames=1,
+            fps=None,
+            duration=None,
+            width=None,
+            height=None,
+            audio_codec=None,
+            audio_sample_rate=None,
+            audio_bit_depth=None,
+            audio_num_channels=None,
+            file_type=media_metadata.mime_type,
+        )
+    elif isinstance(media_metadata, orm_storage.CustomerProvidedPdfMetadata):
+        return _ParsedMediaMetadata(
+            data_type=DataType.PDF,
+            number_of_frames=media_metadata.num_pages,
+            fps=None,
+            duration=None,
+            width=None,
+            height=None,
+            audio_codec=None,
+            audio_sample_rate=None,
+            audio_bit_depth=None,
+            audio_num_channels=None,
+            file_type="application/pdf",
+        )
+    else:
+        raise LabelRowError(f"Unsupported media metadata type: {type(media_metadata)}")
+
+
+# Error message for uninitialized labelling
 LABELLING_NOT_INITIALISED_ERROR_MESSAGE = (
-    "For this operation you will need to initialise labelling first. Call the `.initialise_labels()` to do so first."
+    "For this operation you will need to initialize labelling first. Call the `.initialise_labels()` to do so first."
 )
 
 
@@ -185,7 +317,9 @@ def _get_space_literal_from_space_enum(space_enum: SpaceType) -> SpaceLiteral:
         return "medical"
     elif space_enum == SpaceType.PDF:
         return "pdf"
-    elif space_enum == SpaceType.POINT_CLOUD or space_enum == SpaceType.SCENE_IMAGE:
+    elif space_enum == SpaceType.SCENE_IMAGE:
+        return "image"
+    elif space_enum == SpaceType.POINT_CLOUD:
         raise LabelRowError(f"Space {space_enum} not yet implemented.")
     else:
         exhaustive_guard(space_enum, message=f"Missing space literal for space enum {space_enum}")
@@ -236,6 +370,7 @@ class LabelRowV2:
         )
 
         self._is_labelling_initialised = False
+        self._is_detached = False
 
         self._frame_to_hashes: defaultdict[int, Set[str]] = defaultdict(set)
         # ^ frames to object and classification hashes
@@ -259,6 +394,248 @@ class LabelRowV2:
         # at least at the final objects_index/classifications_index level.
 
         self._storage_item: Optional[StorageItem] = None
+
+        # Cache for the free-time scene probe (None = not yet checked).
+        self._free_time_scene: Optional[bool] = None
+
+    def _is_free_time_scene(self) -> bool:
+        """Internal. True if this label row backs a free-time scene (e.g. an MCAP recording).
+
+        A free-time scene carries time/range-based labels like audio, but ``DataType.SCENE`` is
+        bucketed with the geometric (frame-based) types, so the generic parse path treats its
+        classifications as frame labels and they fail validation. We disambiguate by reading the
+        scene definition: a self-contained MCAP scene is free-time; a composite (scene-image)
+        scene is not.
+        """
+        if self.data_type != DataType.SCENE:
+            return False
+        if self._free_time_scene is not None:
+            return self._free_time_scene
+
+        from encord.beta.scene.internal.common import SelfContainedFormat
+        from encord.beta.scene.internal.scene import SceneResponse, SelfContainedScene
+
+        result = False
+        backing_item_uuid = self._label_row_read_only_data.backing_item_uuid
+        if backing_item_uuid is not None:
+            scene = self._project_client._api_client.get(
+                f"scene/{backing_item_uuid}",
+                params=None,
+                result_type=SceneResponse,
+            ).root
+            result = isinstance(scene, SelfContainedScene) and scene.format == SelfContainedFormat.MCAP
+
+        self._free_time_scene = result
+        return result
+
+    @classmethod
+    def from_media_metadata(
+        cls,
+        ontology: Ontology,
+        media_metadata: Union[
+            orm_storage.CustomerProvidedImageMetadata,
+            orm_storage.CustomerProvidedVideoMetadata,
+            orm_storage.CustomerProvidedAudioMetadata,
+            orm_storage.CustomerProvidedTextMetadata,
+            orm_storage.CustomerProvidedPdfMetadata,
+            List[orm_storage.CustomerProvidedImageMetadata],
+        ],
+        *,
+        branch_name: str = "main",
+    ) -> "LabelRowV2":
+        """Create a detached label row from media metadata, without connecting to the Encord platform.
+
+        Detached label rows can be used to generate labels programmatically for media files
+        before they're uploaded. Labels can be serialized via ``to_encord_dict()`` for later
+        bulk ingestion.
+
+        Server-dependent operations (``save()``, ``initialise_labels()``, ``workflow_reopen()``,
+        ``workflow_complete()``, etc.) will raise :class:`~encord.exceptions.LabelRowError` on
+        a detached label row. Use :meth:`attach_to_project` to connect to a real project.
+
+        The serialized dict from ``to_encord_dict()`` contains placeholder (zero) UUIDs for
+        identity fields (``label_hash``, ``data_hash``, ``dataset_hash``). These are replaced
+        with real server-side values when attached to a project.
+
+        Args:
+            ontology: The ontology to use for label creation.
+            media_metadata: Metadata describing the media file. The data type is inferred
+                from the metadata class:
+
+                - :class:`~encord.orm.storage.CustomerProvidedImageMetadata` -> IMAGE
+                - :class:`~encord.orm.storage.CustomerProvidedVideoMetadata` -> VIDEO
+                - :class:`~encord.orm.storage.CustomerProvidedAudioMetadata` -> AUDIO
+                - :class:`~encord.orm.storage.CustomerProvidedTextMetadata` -> PLAIN_TEXT
+                - :class:`~encord.orm.storage.CustomerProvidedPdfMetadata` -> PDF
+                - ``List[CustomerProvidedImageMetadata]`` -> IMG_GROUP
+            branch_name: Branch name for the label row. Defaults to ``"main"``.
+
+        Returns:
+            A detached :class:`LabelRowV2` instance with labels initialized.
+        """
+        data_hash = _ZERO_UUID
+        label_hash = _ZERO_UUID
+        now = datetime.now()
+
+        parsed = _parse_custom_media_metadata(media_metadata)
+
+        label_row_metadata = LabelRowMetadata(
+            label_hash=label_hash,
+            branch_name=branch_name,
+            created_at=now,
+            last_edited_at=now,
+            file_type=parsed["file_type"],
+            data_hash=data_hash,
+            dataset_hash=_ZERO_UUID,
+            dataset_title="",
+            data_title="",
+            data_type=parsed["data_type"].to_upper_case_string(),
+            data_link=None,
+            label_status=LabelStatus.LABEL_IN_PROGRESS,
+            annotation_task_status=AnnotationTaskStatus.QUEUED,
+            workflow_graph_node=None,
+            is_shadow_data=False,
+            frames_per_second=parsed["fps"],
+            number_of_frames=parsed["number_of_frames"],
+            duration=parsed["duration"],
+            height=parsed["height"],
+            width=parsed["width"],
+            audio_codec=parsed["audio_codec"],
+            audio_sample_rate=parsed["audio_sample_rate"],
+            audio_bit_depth=parsed["audio_bit_depth"],
+            audio_num_channels=parsed["audio_num_channels"],
+            spaces={},
+        )
+
+        # Build the empty labels dict for from_labels_dict()
+        labels_dict = cls._build_empty_labels_dict(
+            label_hash=label_hash,
+            data_hash=data_hash,
+            branch_name=branch_name,
+            data_type=parsed["data_type"],
+            media_metadata=media_metadata,
+            now=now,
+        )
+
+        instance = cls(label_row_metadata, None, ontology)  # type: ignore[arg-type]
+        instance.from_labels_dict(labels_dict)
+        instance._is_detached = True
+        return instance
+
+    @staticmethod
+    def _build_empty_labels_dict(
+        *,
+        label_hash: str,
+        data_hash: str,
+        branch_name: str,
+        data_type: DataType,
+        media_metadata: Union[
+            orm_storage.CustomerProvidedImageMetadata,
+            orm_storage.CustomerProvidedVideoMetadata,
+            orm_storage.CustomerProvidedAudioMetadata,
+            orm_storage.CustomerProvidedTextMetadata,
+            orm_storage.CustomerProvidedPdfMetadata,
+            List[orm_storage.CustomerProvidedImageMetadata],
+        ],
+        now: datetime,
+    ) -> dict:
+        """Construct the minimal valid labels dict for from_labels_dict()."""
+        now_str = format_datetime_to_long_string(now)
+
+        base: Dict[str, Any] = {
+            "label_hash": label_hash,
+            "branch_name": branch_name,
+            "created_at": now_str,
+            "last_edited_at": now_str,
+            "data_hash": data_hash,
+            "dataset_hash": str(UUID(int=0)),
+            "dataset_title": "",
+            "data_title": "",
+            "data_type": data_type.value,
+            "annotation_task_status": "QUEUED",
+            "is_shadow_data": False,
+            "object_answers": {},
+            "classification_answers": {},
+            "object_actions": {},
+            "label_status": "LABEL_IN_PROGRESS",
+            "spaces": {},
+        }
+
+        data_units: Dict[str, Any] = {}
+
+        if isinstance(media_metadata, list):
+            # IMG_GROUP: one data unit per image
+            for idx, img_meta in enumerate(media_metadata):
+                frame_hash = str(UUID(int=idx))
+                data_units[frame_hash] = {
+                    "data_hash": frame_hash,
+                    "data_title": f"frame_{idx}",
+                    "data_link": "",
+                    "data_type": img_meta.mime_type,
+                    "data_sequence": str(idx),
+                    "width": img_meta.width,
+                    "height": img_meta.height,
+                    "labels": {},
+                }
+        elif isinstance(media_metadata, orm_storage.CustomerProvidedVideoMetadata):
+            data_units[data_hash] = {
+                "data_hash": data_hash,
+                "data_title": "",
+                "data_link": "",
+                "data_type": media_metadata.mime_type,
+                "data_sequence": 0,
+                "width": media_metadata.width,
+                "height": media_metadata.height,
+                "labels": {},
+                "data_duration": media_metadata.duration,
+                "data_fps": media_metadata.fps,
+            }
+        elif isinstance(media_metadata, orm_storage.CustomerProvidedImageMetadata):
+            data_units[data_hash] = {
+                "data_hash": data_hash,
+                "data_title": "",
+                "data_link": "",
+                "data_type": media_metadata.mime_type,
+                "data_sequence": 0,
+                "width": media_metadata.width,
+                "height": media_metadata.height,
+                "labels": {},
+            }
+        elif isinstance(media_metadata, orm_storage.CustomerProvidedAudioMetadata):
+            data_units[data_hash] = {
+                "data_hash": data_hash,
+                "data_title": "",
+                "data_link": "",
+                "data_type": media_metadata.mime_type,
+                "data_sequence": 0,
+                "labels": {},
+                "data_duration": media_metadata.duration,
+                "audio_codec": media_metadata.codec,
+                "audio_sample_rate": media_metadata.sample_rate,
+                "audio_bit_depth": media_metadata.bit_depth,
+                "audio_num_channels": media_metadata.num_channels,
+            }
+        elif isinstance(media_metadata, orm_storage.CustomerProvidedTextMetadata):
+            data_units[data_hash] = {
+                "data_hash": data_hash,
+                "data_title": "",
+                "data_link": "",
+                "data_type": media_metadata.mime_type,
+                "data_sequence": 0,
+                "labels": {},
+            }
+        elif isinstance(media_metadata, orm_storage.CustomerProvidedPdfMetadata):
+            data_units[data_hash] = {
+                "data_hash": data_hash,
+                "data_title": "",
+                "data_link": "",
+                "data_type": "application/pdf",
+                "data_sequence": 0,
+                "labels": {},
+            }
+
+        base["data_units"] = data_units
+        return base
 
     @property
     def label_hash(self) -> Optional[str]:
@@ -623,6 +1000,15 @@ class LabelRowV2:
         return self._is_labelling_initialised
 
     @property
+    def is_detached(self) -> bool:
+        """Check if this label row is detached (not connected to the Encord platform).
+
+        Detached label rows are created via :meth:`from_media_metadata` and cannot
+        perform server operations until attached via :meth:`attach_to_project`.
+        """
+        return self._is_detached
+
+    @property
     def __is_tms2_project(self) -> bool:
         return self.workflow_graph_node is not None
 
@@ -650,6 +1036,7 @@ class LabelRowV2:
         """Returns the storage item associated with the label row.
         This function can be used to get storage item details like storage folder, signed url, created at, item type, client metadata, etc.
         """
+        self._check_not_detached("get_storage_item")
         if self._label_row_read_only_data.backing_item_uuid is None:
             raise LabelRowError("Storage item is not found for the label row")
 
@@ -663,7 +1050,7 @@ class LabelRowV2:
         return self._storage_item
 
     def initialise_storage_item(self, get_signed_url: bool = False, bundle: Optional[Bundle] = None) -> None:
-        """Initialise the storage item associated with the label row.
+        """Initialize the storage item associated with the label row.
 
         This function will download the storage item details from the Encord server.
         if you want to get the signed url, you can set the get_signed_url to True.
@@ -673,6 +1060,7 @@ class LabelRowV2:
             bundle: If not provided, initialization is performed independently. If provided,
                 initialization is delayed and performed along with other objects in the same bundle.
         """
+        self._check_not_detached("initialise_storage_item")
 
         if self._label_row_read_only_data.backing_item_uuid is None:
             raise LabelRowError("Storage item is not found for the label row")
@@ -734,9 +1122,10 @@ class LabelRowV2:
             include_signed_url: If `True`, the :attr:`.data_link` property will contain a signed URL.
                 See documentation for :attr:`.data_link` for more details.
         """
+        self._check_not_detached("initialise_labels")
         if self.is_labelling_initialised and not overwrite:
             raise LabelRowError(
-                "You are trying to re-initialise a label row that has already been initialized. This would overwrite "
+                "You are trying to re-initialize a label row that has already been initialized. This would overwrite "
                 "current labels. If this is your intend, set the `overwrite` flag to `True`."
             )
 
@@ -773,7 +1162,7 @@ class LabelRowV2:
                 limit=LABEL_ROW_BUNDLE_GET_LIMIT,
             )
 
-    def from_labels_dict(self, label_row_dict: dict) -> None:
+    def from_labels_dict(self, label_row_dict: dict, *, preserve_identity: bool = False) -> None:
         """Initialize the LabelRow from a label row dictionary.
 
         This function also initializes the label row. It resets all the labels currently
@@ -781,7 +1170,13 @@ class LabelRowV2:
 
         Args:
             label_row_dict: The dictionary of all labels in the Encord format.
+            preserve_identity: If True, the current row's identity fields (label_hash,
+                data_hash, dataset_hash, branch_name, and IMG_GROUP frame hashes) are
+                preserved instead of being overwritten from the dict.
         """
+        if preserve_identity:
+            saved_identity = self._extract_identity()
+
         self._is_labelling_initialised = True
 
         self._label_row_read_only_data = self._parse_label_row_dict(label_row_dict)
@@ -801,12 +1196,17 @@ class LabelRowV2:
         # 3. Add dynamic attributes to objects on root & spaces
         self._parse_labels_from_dict(label_row_dict)
         spaces_dict = label_row_dict.get("spaces", {})
+        if label_row_dict.get("data_type") == DataType.SCENE.value:
+            spaces_dict = self._add_scene_image_labels_to_spaces(label_row_dict, spaces_dict)
         self._parse_space_labels(
             spaces_info=spaces_dict,
             object_answers=label_row_dict["object_answers"],
             classification_answers=label_row_dict["classification_answers"],
         )
         self._add_action_answers(label_row_dict)
+
+        if preserve_identity:
+            self._apply_identity(**saved_identity)
 
     def get_image_hash(self, frame_number: int) -> Optional[str]:
         """Get the corresponding image hash for the frame number.
@@ -826,6 +1226,34 @@ class LabelRowV2:
             raise LabelRowError("This function is only supported for label rows of image or image group data types.")
 
         return self._label_row_read_only_data.frame_to_image_hash.get(frame_number)
+
+    def _add_scene_image_labels_to_spaces(
+        self, label_row_dict: dict, spaces_dict: dict[str, SpaceInfo]
+    ) -> dict[str, SpaceInfo]:
+        ret = dict(spaces_dict)
+        scene_image_key_to_space_id: dict[tuple[str, str], str] = {}
+        for space_id, space_info in spaces_dict.items():
+            if space_info["space_type"] != SpaceType.SCENE_IMAGE:
+                continue
+            full_space_info = self._space_map[space_id]._space_info if "scene_info" not in space_info else space_info
+            scene_info = full_space_info["scene_info"]
+            start_frame = scene_info.get("start_frame")
+            if start_frame is not None:
+                scene_image_key_to_space_id[(scene_info["stream_id"], str(start_frame))] = space_id
+            scene_image_key_to_space_id.setdefault((scene_info["stream_id"], str(scene_info["event_index"])), space_id)
+
+        for data_unit in label_row_dict.get("data_units", {}).values():
+            for label_key, labels in data_unit.get("labels", {}).items():
+                space_id = label_key
+                label_space_info: Optional[SpaceInfo] = ret.get(space_id)
+                if label_space_info is None:
+                    scene_key = label_key.split("#", maxsplit=1)
+                    if len(scene_key) == 2:
+                        space_id = scene_image_key_to_space_id.get((scene_key[0], scene_key[1]), label_key)
+                        label_space_info = ret.get(space_id)
+                if label_space_info is not None and label_space_info["space_type"] == SpaceType.SCENE_IMAGE:
+                    ret[space_id] = {**label_space_info, "labels": labels}
+        return ret
 
     def get_frame_number(self, image_hash: str) -> Optional[int]:
         """Get the corresponding frame number for the image hash.
@@ -929,7 +1357,19 @@ class LabelRowV2:
         pass
 
     @overload
+    def get_space(self, *, file_name: str, type_: Literal["image"]) -> ImageSpace:
+        pass
+
+    @overload
     def get_space(self, *, stream_id: str, event_index: int = 0, type_: Literal["point_cloud"]) -> PointCloudFileSpace:
+        pass
+
+    @overload
+    def get_space(self, *, stream_id: str, event_index: int = 0, type_: Literal["image"]) -> ImageSpace:
+        pass
+
+    @overload
+    def get_space(self, *, stream_id: str, start_frame: int, type_: Literal["image"]) -> ImageSpace:
         pass
 
     def get_space(
@@ -940,6 +1380,7 @@ class LabelRowV2:
         type_: SpaceLiteral,
         stream_id: Optional[str] = None,
         event_index: int = 0,
+        start_frame: Optional[int] = None,
         file_name: Optional[str] = None,
     ) -> Space:
         """Retrieves a single space which matches the specified id and type.
@@ -951,7 +1392,8 @@ class LabelRowV2:
             layout_key: The layout key of the data unit within its data group layout.
             type_: Type to check the type of the space.
             stream_id: For scenes - the name of the stream to find.
-            event_index: For scenes - the index of `stream_id`. Defaults to 0.
+            event_index: For scenes - the event index within `stream_id`. Defaults to 0.
+            start_frame: For scene images - the frame where the image event starts.
             file_name: The name of the file associated to the space
         Returns:
             The child node with the specified title and type.
@@ -961,6 +1403,7 @@ class LabelRowV2:
         if id is not None and layout_key is not None:
             raise LabelRowError("Only one of id and layout_key can be specified.")
 
+        expected_class = _get_space_class_from_space_literal(type_)
         space = None
         if id is not None:
             for element in self._space_map.values():
@@ -976,20 +1419,34 @@ class LabelRowV2:
         if stream_id is not None:
             for element in self._space_map.values():
                 if (
-                    isinstance(element, PointCloudFileSpace)
+                    isinstance(element, expected_class)
+                    and isinstance(element, (ImageSpace, PointCloudFileSpace))
+                    and isinstance(element.metadata, SceneMetadata)
                     and element.metadata.stream_id == stream_id
-                    and element.metadata.event_index == event_index
+                    and (
+                        element.metadata.start_frame == start_frame
+                        if start_frame is not None
+                        else element.metadata.event_index == event_index
+                    )
                 ):
                     space = element
                     break
             if space is None:
+                if start_frame is not None:
+                    raise LabelRowError(
+                        f"Could not find space with given stream_id '{stream_id}' and start_frame '{start_frame}'."
+                    )
                 raise LabelRowError(
                     f"Could not find space with given stream_id '{stream_id}' and event_index '{event_index}'."
                 )
 
         if file_name is not None:
             for element in self._space_map.values():
-                if isinstance(element, PointCloudFileSpace) and element.metadata.file_name == file_name:
+                if (
+                    isinstance(element, expected_class)
+                    and isinstance(element, (ImageSpace, PointCloudFileSpace))
+                    and element.metadata.file_name == file_name
+                ):
                     space = element
                     break
             if space is None:
@@ -1011,7 +1468,6 @@ class LabelRowV2:
             raise LabelRowError(space_identifier_error_message)
 
         # Runtime type validation
-        expected_class = _get_space_class_from_space_literal(type_)
         if not isinstance(space, expected_class):
             space_identifier = id if id is not None else layout_key
             raise LabelRowError(
@@ -1031,6 +1487,7 @@ class LabelRowV2:
                 as part of the bundle.
             validate_before_saving: Enable stricter server-side integrity checks. Default is `False`.
         """
+        self._check_not_detached("save")
         self._check_labelling_is_initalised()
         assert self.label_hash is not None  # Checked earlier, assert is just to silence mypy
 
@@ -1638,8 +2095,30 @@ class LabelRowV2:
         ret["label_status"] = read_only_data.label_status.value
         ret["data_units"] = self._to_encord_data_units()
         ret["spaces"] = self._to_encord_spaces()
+        if read_only_data.data_type == DataType.SCENE:
+            self._move_scene_image_space_labels_to_data_units(ret)
 
         return ret
+
+    @staticmethod
+    def _scene_image_label_key(space_info: SpaceInfo) -> str:
+        scene_info = cast(Any, space_info)["scene_info"]
+        start_frame = scene_info.get("start_frame", scene_info["event_index"])
+        return f"{scene_info['stream_id']}#{start_frame}"
+
+    def _move_scene_image_space_labels_to_data_units(self, label_row_dict: dict[str, Any]) -> None:
+        data_unit = label_row_dict["data_units"].get(self.data_hash)
+        if data_unit is None:
+            return
+
+        data_unit_labels = data_unit.setdefault("labels", {})
+        for space_info in label_row_dict["spaces"].values():
+            if space_info["space_type"] != SpaceType.SCENE_IMAGE:
+                continue
+            labels = space_info.get("labels") or {"objects": [], "classifications": []}
+            if labels.get("objects") or labels.get("classifications"):
+                data_unit_labels[self._scene_image_label_key(space_info)] = labels
+            space_info["labels"] = {"objects": [], "classifications": []}
 
     def workflow_reopen(self, bundle: Optional[Bundle] = None) -> None:
         """Return a label row to the first annotation stage for re-labeling.
@@ -1650,6 +2129,7 @@ class LabelRowV2:
         Args:
             bundle: Optional parameter. If passed, the method will be executed in a deferred way as part of the bundle.
         """
+        self._check_not_detached("workflow_reopen")
         if self.label_hash is None:
             # Label has not yet moved from the initial state, nothing to do
             return
@@ -1676,6 +2156,7 @@ class LabelRowV2:
         Raises:
             LabelRowError: If the label hash is None.
         """
+        self._check_not_detached("workflow_complete")
         if self.label_hash is None:
             raise LabelRowError(
                 "For this operation you need to initialize labelling first. Call the .initialise_labels() "
@@ -1698,6 +2179,7 @@ class LabelRowV2:
         Raises:
             WrongProjectTypeError: If the project is not a workflow-based project.
         """
+        self._check_not_detached("set_priority")
         if not self.__is_tms2_project:
             raise WrongProjectTypeError("Setting priority only possible for workflow-based projects")
 
@@ -1713,6 +2195,7 @@ class LabelRowV2:
         Returns:
             List[str] | None: A list of error messages if the label row is invalid, otherwise `None`.
         """
+        self._check_not_detached("get_validation_errors")
         if not self.label_hash or self.is_valid:
             return None
 
@@ -2489,6 +2972,8 @@ class LabelRowV2:
             encord_object["cuboid"] = coordinates.to_dict()
         elif isinstance(coordinates, (Cuboid2DPerspectiveCoordinates, Cuboid2DIsometricCoordinates)):
             encord_object["cuboid_2d"] = coordinates.to_dict()
+        elif isinstance(coordinates, EllipseCoordinates):
+            encord_object["ellipse"] = coordinates.to_dict()
         elif isinstance(coordinates, CircleCoordinates):
             encord_object["circle"] = coordinates.to_dict()
         else:
@@ -2688,8 +3173,17 @@ class LabelRowV2:
                 )
                 res[space_id] = pdf_space
             elif space_info["space_type"] == SpaceType.SCENE_IMAGE:
-                # TODO: Implement Scene Images
-                pass
+                if "scene_info" not in space_info:
+                    raise LabelRowError("Missing 'scene_info' in Scene Image space info.")
+                scene_image_space = ImageSpace(
+                    space_id=space_id,
+                    label_row=self,
+                    space_info=space_info,
+                    width=space_info.get("width"),
+                    height=space_info.get("height"),
+                    has_multilayer_labels=False,
+                )
+                res[space_id] = scene_image_space
             elif space_info["space_type"] == SpaceType.POINT_CLOUD:
                 if "scene_info" not in space_info:
                     raise LabelRowError("Missing 'scene_info' in Point Cloud space info.")
@@ -2757,8 +3251,10 @@ class LabelRowV2:
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.SCENE_IMAGE:
-                # TODO: Enable this when we implement Scene images
-                pass
+                scene_image_space = self.get_space(id=space_id, type_="image")
+                scene_image_space._parse_space_dict(
+                    space_info, object_answers=object_answers, classification_answers=classification_answers
+                )
             elif space_info["space_type"] == SpaceType.POINT_CLOUD:
                 point_cloud_space = self._space_map[space_id]
                 if isinstance(point_cloud_space, PointCloudFileSpace):
@@ -2968,6 +3464,8 @@ class LabelRowV2:
                 or data_type == DataType.SCENE
             ):
                 for frame, frame_data in labels.items():
+                    if data_type == DataType.SCENE and not str(frame).isdigit():
+                        continue
                     frame_num = int(frame)
                     self._add_object_instances_from_objects(frame_data["objects"], frame_num)
                     self._add_classification_instances_from_classifications_frame(
@@ -3287,7 +3785,8 @@ class LabelRowV2:
         label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Classification)
 
         range_view = _AnnotationMetadata.from_dict(classification_answer)
-        is_data_type_range_only = not is_geometric(self.data_type)
+        # Free-time scenes (e.g. MCAP) are geometric by data type but range-based like audio.
+        is_data_type_range_only = not is_geometric(self.data_type) or self._is_free_time_scene()
 
         classification_instance = ClassificationInstance(
             label_class,
@@ -3331,6 +3830,120 @@ class LabelRowV2:
     def _check_labelling_is_initalised(self):
         if not self.is_labelling_initialised:
             raise LabelRowError(LABELLING_NOT_INITIALISED_ERROR_MESSAGE)
+
+    def attach_to_project(self, project: "Project", data_hash: str) -> None:
+        """Attach a detached label row to a real project data unit.
+
+        Fetches the real identity (label_hash, data_hash, dataset_hash, etc.) from the
+        project and rewrites this row's identity fields. If the server-side label row has
+        not been initialized yet, it is initialized automatically. After this call, the
+        label row can be saved to the server via :meth:`save`.
+
+        .. note::
+            The ontology used to create this detached label row must match the project's
+            ontology (same feature hashes). Mismatched feature hashes will cause the server
+            to reject the save.
+
+            Frame counts should be compatible with the server-side data unit. Annotations
+            on frame numbers beyond the server's frame count may be rejected.
+
+        Args:
+            project: The Encord project to attach to.
+            data_hash: The data hash of the target data unit in the project.
+
+        Raises:
+            LabelRowError: If no matching label row is found in the project.
+        """
+        matching_rows = project.list_label_rows_v2(
+            data_hashes=[data_hash],
+            include_images_data=True,
+        )
+        if not matching_rows:
+            raise LabelRowError(f"No label row found in project for data_hash={data_hash}")
+        real_row = matching_rows[0]
+
+        if real_row.label_hash is None:
+            real_row.initialise_labels()
+
+        self._apply_identity(**real_row._extract_identity())
+        self._project_client = project._client  # type: ignore[assignment]
+        self._is_detached = False
+
+    def _extract_identity(self) -> Dict[str, Any]:
+        """Capture the current identity fields for later restoration."""
+        rod = self._label_row_read_only_data
+        identity: Dict[str, Any] = {
+            "label_hash": rod.label_hash,
+            "data_hash": rod.data_hash,
+            "dataset_hash": rod.dataset_hash,
+            "branch_name": rod.branch_name,
+        }
+        if rod.data_type == DataType.IMG_GROUP:
+            if rod.frame_to_image_hash:
+                identity["frame_hashes"] = [rod.frame_to_image_hash[i] for i in sorted(rod.frame_to_image_hash)]
+            else:
+                frames = self.get_frames_metadata()
+                identity["frame_hashes"] = [f.image_hash for f in sorted(frames, key=lambda f: f.frame_number)]
+        return identity
+
+    def _apply_identity(
+        self,
+        *,
+        label_hash: Optional[str],
+        data_hash: str,
+        dataset_hash: str,
+        branch_name: str,
+        frame_hashes: Optional[List[str]] = None,
+    ) -> None:
+        """Rewrite identity fields on this instance while preserving annotation content."""
+        self._label_row_read_only_data = replace(
+            self._label_row_read_only_data,
+            label_hash=label_hash,
+            data_hash=data_hash,
+            dataset_hash=dataset_hash,
+            branch_name=branch_name,
+        )
+
+        # Remap frame_level_data image hashes so serialized data_units stay consistent.
+        old_fld = self._label_row_read_only_data.frame_level_data
+        if old_fld:
+            if frame_hashes:
+                # IMG_GROUP: explicit per-frame hash list, matched by sequence index.
+                if len(frame_hashes) != len(old_fld):
+                    raise LabelRowError(
+                        f"frame_hashes length ({len(frame_hashes)}) does not match number of frames ({len(old_fld)})."
+                    )
+                new_fld: Dict[int, LabelRowV2.FrameLevelImageGroupData] = {}
+                new_i2f: Dict[str, int] = {}
+                new_f2i: Dict[int, str] = {}
+                for idx, (frame_num, old_entry) in enumerate(sorted(old_fld.items())):
+                    new_hash = frame_hashes[idx]
+                    new_fld[frame_num] = replace(old_entry, image_hash=new_hash)
+                    new_i2f[new_hash] = frame_num
+                    new_f2i[frame_num] = new_hash
+            else:
+                # Non-IMG_GROUP: single data unit whose hash must match the new data_hash.
+                new_fld = {}
+                new_i2f = {}
+                new_f2i = {}
+                for frame_num, old_entry in old_fld.items():
+                    new_fld[frame_num] = replace(old_entry, image_hash=data_hash)
+                    new_i2f[data_hash] = frame_num
+                    new_f2i[frame_num] = data_hash
+            self._label_row_read_only_data = replace(
+                self._label_row_read_only_data,
+                frame_level_data=new_fld,
+                image_hash_to_frame=new_i2f,
+                frame_to_image_hash=new_f2i,
+            )
+
+    def _check_not_detached(self, operation: str) -> None:
+        if self._is_detached:
+            raise LabelRowError(
+                f"Cannot '{operation}' on a detached label row. "
+                "Detached label rows are not connected to the Encord platform. "
+                "Use to_encord_dict() to export labels."
+            )
 
     def _method_not_supported_for_audio(self, range_only: bool = False):
         if self.data_type == DataType.AUDIO and not range_only:

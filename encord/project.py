@@ -167,7 +167,7 @@ class Project:
         """Get the current user's role in the project.
 
         This may return `None` if the user is an organizational admin and has accessed the project e.g. using
-        `include_org_access=True` of :meth:`encord.user_client.UserClient.list_projects`.
+        `include_org_access=True` of :meth:`encord.user_client.EncordUserClient.list_projects`.
         """
         return self._project_instance.user_role
 
@@ -1181,7 +1181,7 @@ class Project:
 
         Raises:
             ValueError: If any of the collection uuids is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to it.
         """
         collections = (
             [UUID(collection) if isinstance(collection, str) else collection for collection in collection_uuids]
@@ -1206,7 +1206,7 @@ class Project:
             None
         Raises:
             ValueError: If `collection_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to it.
         """
         if isinstance(collection_uuid, str):
             collection_uuid = UUID(collection_uuid)
@@ -1228,7 +1228,7 @@ class Project:
             ProjectCollection: Newly created collection.
 
         Raises:
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to the folder.
+            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to the folder.
         """
         new_uuid = ProjectCollection._create_collection(
             self._client._api_client, self._project_instance.project_hash, name, description, collection_type
@@ -1265,7 +1265,7 @@ class Project:
 
         Raises:
             ValueError: If any of the filter preset uuids is a badly formed UUID.
-            :class:`encord.exceptions.AuthorizationError` : If the user does not have access to it.
+            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to it.
         """
         filter_presets = (
             [
@@ -1358,7 +1358,7 @@ class Project:
 
         total_copied = 0
 
-        # Exclude uninitialised label rows (label_hash is None until first save).
+        # Exclude uninitialized label rows (label_hash is None until first save).
         initialised_rows = [row for row in source_rows if row.label_hash is not None]
 
         for i in range(0, len(initialised_rows), batch_size):

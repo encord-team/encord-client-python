@@ -4,7 +4,6 @@ from typing import Dict, List, Literal, Optional, Type, TypedDict, Union
 from typing_extensions import NotRequired
 
 from encord.constants.enums import SpaceType
-from encord.exceptions import LabelRowError
 from encord.objects.types import LabelBlob
 from encord.utilities.type_utilities import exhaustive_guard
 
@@ -31,6 +30,7 @@ class SceneMetadata:
 
     stream_id: str
     event_index: int
+    start_frame: Optional[int]
     uri: str
     layout_key: None
     file_name: str
@@ -158,6 +158,7 @@ class FileInSceneInfo(TypedDict):
 
     stream_id: str
     event_index: int
+    start_frame: NotRequired[int]
     uri: str
 
 
@@ -175,6 +176,8 @@ class SceneImageSpaceInfo(TypedDict):
     space_type: Literal[SpaceType.SCENE_IMAGE]
     scene_info: FileInSceneInfo
     labels: LabelBlob
+    width: NotRequired[int]
+    height: NotRequired[int]
 
 
 class PdfSpaceInfo(BaseSpaceInfo):
@@ -224,6 +227,6 @@ def _get_space_info_from_space_enum(space_enum: SpaceType) -> Type[SpaceInfo]:
     elif space_enum == SpaceType.POINT_CLOUD:
         return PointCloudFileSpaceInfo
     elif space_enum == SpaceType.SCENE_IMAGE:
-        raise LabelRowError(f"Space for {space_enum} not yet implemented.")
+        return SceneImageSpaceInfo
     else:
         exhaustive_guard(space_enum)

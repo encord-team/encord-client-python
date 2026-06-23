@@ -33,6 +33,20 @@ class CircleFrameCoordinatesDict(TypedDict):
     circle: CircleDict
 
 
+class EllipseDict(TypedDict):
+    # Aspect-decoupled like RotatableBoundingBox: rx normalised to image width,
+    # ry to image height, theta is a rotation applied in screen-pixel space.
+    x: float  # normalized center x [0, 1]
+    y: float  # normalized center y [0, 1]
+    rx: float  # horizontal semi-axis, normalized to image width
+    ry: float  # vertical semi-axis, normalized to image height
+    theta: float  # rotation in degrees, clockwise in screen space
+
+
+class EllipseFrameCoordinatesDict(TypedDict):
+    ellipse: EllipseDict
+
+
 class PointDict(TypedDict):
     x: float
     y: float
@@ -189,6 +203,10 @@ class CircleFrameObject(BaseFrameObject, CircleFrameCoordinatesDict):
     shape: Literal[Shape.CIRCLE]
 
 
+class EllipseFrameObject(BaseFrameObject, EllipseFrameCoordinatesDict):
+    shape: Literal[Shape.ELLIPSE]
+
+
 FrameObject = Union[
     BoundingBoxFrameObject,
     RotatableBoundingBoxFrameObject,
@@ -198,6 +216,7 @@ FrameObject = Union[
     Cuboid2DFrameObject,
     SegmentationObject,
     CircleFrameObject,
+    EllipseFrameObject,
 ]
 """ Frame object in the label blob. Contains shape data, and is differentiated by the 'shape' field. """
 

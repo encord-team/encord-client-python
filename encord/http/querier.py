@@ -37,54 +37,72 @@ class Querier:
         self.resource_id = resource_id
 
     def basic_getter(
-        self, db_object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=True
+        self, response_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=True
     ) -> T:
         """Single DB object getter."""
-        request = self._request(QueryMethods.GET, db_object_type, uid, self._config.read_timeout, payload=payload)
+        request = self._request(
+            QueryMethods.GET, self._route(response_type), uid, self._config.read_timeout, payload=payload
+        )
         res, context = self._execute(request, retryable=retryable)
         if res:
-            return self._parse_response(db_object_type, res)
+            return self._parse_response(response_type, res)
         else:
             raise ResourceNotFoundError("Resource not found.", context=context)
 
     def get_multiple(
-        self, object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=True
+        self,
+        response_type: Type[T],
+        uid: UIDType = None,
+        payload: PayloadType = None,
+        retryable=True,
+        query_type: Optional[Type[Any]] = None,
     ) -> List[T]:
-        return self._request_multiple(QueryMethods.GET, object_type, uid, payload, retryable=retryable)
+        return self._request_multiple(
+            QueryMethods.GET, response_type, uid, payload, retryable=retryable, query_type=query_type
+        )
 
     def post_multiple(
-        self, object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False
+        self, response_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False
     ) -> List[T]:
-        return self._request_multiple(QueryMethods.POST, object_type, uid, payload)
+        return self._request_multiple(QueryMethods.POST, response_type, uid, payload)
 
     def put_multiple(
-        self, object_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False
+        self, response_type: Type[T], uid: UIDType = None, payload: PayloadType = None, retryable=False
     ) -> List[T]:
-        return self._request_multiple(QueryMethods.PUT, object_type, uid, payload)
+        return self._request_multiple(QueryMethods.PUT, response_type, uid, payload)
 
     def _request_multiple(
-        self, method: QueryMethods, object_type: Type[T], uid: UIDType, payload: PayloadType = None, retryable=False
+        self,
+        method: QueryMethods,
+        response_type: Type[T],
+        uid: UIDType,
+        payload: PayloadType = None,
+        retryable=False,
+        query_type: Optional[Type[Any]] = None,
     ) -> List[T]:
-        request = self._request(method, object_type, uid, self._config.read_timeout, payload=payload)
+        request = self._request(
+            method, self._route(response_type, query_type), uid, self._config.read_timeout, payload=payload
+        )
         result, context = self._execute(request, retryable=retryable)
 
         if result is not None:
-            return [self._parse_response(object_type, item) for item in result]
+            return [self._parse_response(response_type, item) for item in result]
         else:
             raise ResourceNotFoundError(
-                f"[{object_type}] not found for query with uid=[{uid}] and payload=[{payload}]", context=context
+                f"[{response_type}] not found for query with uid=[{uid}] and payload=[{payload}]",
+                context=context,
             )
 
     @staticmethod
-    def _parse_response(object_type: Type[T], item: Dict[str, Any]) -> T:
-        if issubclass(object_type, BaseDTO):
-            return object_type.from_dict(item)  # type: ignore
-        if issubclass(object_type, Formatter):
-            return object_type.from_dict(item)  # type: ignore
-        elif dataclasses.is_dataclass(object_type):
-            return object_type(**item)  # type: ignore
+    def _parse_response(response_type: Type[T], item: Dict[str, Any]) -> T:
+        if issubclass(response_type, BaseDTO):
+            return response_type.from_dict(item)  # type: ignore
+        if issubclass(response_type, Formatter):
+            return response_type.from_dict(item)  # type: ignore
+        elif dataclasses.is_dataclass(response_type):
+            return response_type(**item)  # type: ignore
         else:
-            return object_type(item)  # type: ignore
+            return response_type(item)  # type: ignore
 
     @staticmethod
     def _serialise_payload(payload: PayloadType) -> Union[None, Dict[str, Any], List[Dict[str, Any]]]:
@@ -95,11 +113,11 @@ class Querier:
         else:
             return payload  # type: ignore
 
-    def basic_delete(self, db_object_type: Type[T], uid: UIDType = None, retryable=False):
+    def basic_delete(self, query_type: Type[T], uid: UIDType = None, retryable=False):
         """Single DB object getter."""
         request = self._request(
             QueryMethods.DELETE,
-            db_object_type,
+            self._route(query_type),
             uid,
             self._config.read_timeout,
         )
@@ -107,11 +125,11 @@ class Querier:
         res, _ = self._execute(request, retryable=retryable)
         return res
 
-    def basic_setter(self, db_object_type: Type[T], uid: UIDType, payload: PayloadType, retryable=False):
+    def basic_setter(self, query_type: Type[T], uid: UIDType, payload: PayloadType, retryable=False):
         """Single DB object setter."""
         request = self._request(
             QueryMethods.POST,
-            db_object_type,
+            self._route(query_type),
             uid,
             self._config.write_timeout,
             payload=payload,
@@ -122,13 +140,13 @@ class Querier:
         if res is not None:
             return res
         else:
-            raise RequestException(f"Setting {db_object_type} with uid {uid} failed.", context=context)
+            raise RequestException(f"Setting {query_type} with uid {uid} failed.", context=context)
 
-    def basic_put(self, db_object_type, uid, payload: PayloadType, retryable: bool = True, enable_logging: bool = True):
+    def basic_put(self, query_type, uid, payload: PayloadType, retryable: bool = True, enable_logging: bool = True):
         """Single DB object put request."""
         request = self._request(
             QueryMethods.PUT,
-            db_object_type,
+            self._route(query_type),
             uid,
             self._config.write_timeout,
             payload=payload,
@@ -139,7 +157,7 @@ class Querier:
         if res:
             return res
         else:
-            raise RequestException(f"Setting {db_object_type} with uid {uid} failed.", context=context)
+            raise RequestException(f"Setting {query_type} with uid {uid} failed.", context=context)
 
     def _exception_context(self, request: requests.PreparedRequest) -> RequestContext:
         try:
@@ -157,11 +175,32 @@ class Querier:
         except Exception:
             return RequestContext(domain=domain)
 
+    @staticmethod
+    def _route(default_type: Type[T], query_type: Optional[Type[Any]] = None) -> str:
+        """Resolve the backend routing key from a class name.
+
+        By default, the request routes to the handler named after `default_type` (the response
+        parse target for read requests, or the object type for writes). Pass `query_type` to
+        route elsewhere — e.g. parse a response into a subclass while routing to the base
+        class's handler.
+        """
+        return (query_type or default_type).__name__.lower()
+
     def _request(
-        self, method: QueryMethods, db_object_type: Type[T], uid: UIDType, timeout: int, payload: PayloadType = None
+        self,
+        method: QueryMethods,
+        query_type: str,
+        uid: UIDType,
+        timeout: int,
+        payload: PayloadType = None,
     ):
         request = Request(
-            method, db_object_type, uid, timeout, self._config.connect_timeout, self._serialise_payload(payload)
+            method,
+            query_type,
+            uid,
+            timeout,
+            self._config.connect_timeout,
+            self._serialise_payload(payload),
         )
 
         request.headers = self._config.define_headers(

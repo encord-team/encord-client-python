@@ -1,18 +1,20 @@
 from datetime import datetime
-from functools import wraps
 from typing import Any, Callable, Dict, Literal, Type, TypeVar, get_origin
 
 # TODO: invent some dependency version dependent type checking to get rid of this ignore
 from pydantic import (  # type: ignore[attr-defined]
     BaseModel,
     ConfigDict,  # type: ignore[attr-defined]
-    Extra,
-    Field,
-    PrivateAttr,
     RootModel,  # type: ignore[attr-defined]
     ValidationError,
     field_validator,
     model_validator,
+)
+from pydantic import (
+    Field as Field,
+)
+from pydantic import (
+    PrivateAttr as PrivateAttr,
 )
 
 from encord.common.time_parser import parse_datetime

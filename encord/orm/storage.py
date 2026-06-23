@@ -354,11 +354,16 @@ class UploadSignedUrl(BaseDTO):
         item_uuid: UUID of the placeholder storage item to be filled.
         object_key: Object key or path in the underlying storage backend.
         signed_url: Signed URL that can be used to upload the content.
+        upload_headers: HTTP headers that must be sent with the PUT to
+            ``signed_url``. Empty for S3/GCP; Azure block-blob uploads require
+            ``{"x-ms-blob-type": "BlockBlob"}``. The SDK applies these verbatim
+            so the upload contract stays cloud-agnostic.
     """
 
     item_uuid: UUID
     object_key: str
     signed_url: str
+    upload_headers: Dict[str, str] = Field(default_factory=dict)
 
 
 class StorageItemWithName(BaseDTO):
@@ -595,8 +600,6 @@ class DataUploadImageGroup(BaseDTO):
 
     external_file_type: Literal["IMG_GROUP"] = "IMG_GROUP"
     """Type of the external file."""
-    cluster_by_resolution: bool = False
-    """For system use only."""
 
 
 class DataUploadImageGroupFromItems(BaseDTO):
@@ -615,8 +618,6 @@ class DataUploadImageGroupFromItems(BaseDTO):
 
     external_file_type: Literal["IMG_GROUP_FROM_ITEMS"] = "IMG_GROUP_FROM_ITEMS"
     """Type of the external file."""
-    cluster_by_resolution: bool = False
-    """For system use only."""
 
 
 class DataUploadDicomSeriesDicomFile(BaseDTO):

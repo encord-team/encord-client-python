@@ -452,6 +452,15 @@ all_types_structure = OntologyStructure(
             archived=False,
             attributes=[],
         ),
+        Object(
+            uid=14,
+            name="Ellipse",
+            color="#FFA500",
+            shape=Shape.ELLIPSE,
+            feature_node_hash="ellipseFeatureNodeHash",
+            archived=False,
+            attributes=[],
+        ),
     ],
     classifications=[
         RADIO_CLASSIFICATION,

@@ -1,2 +1,2 @@
 # Import for backward compatibility
-from encord.orm.project import ProjectDataset
+from encord.orm.project import ProjectDataset as ProjectDataset

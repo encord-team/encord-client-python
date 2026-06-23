@@ -33,12 +33,17 @@ SCENE_METADATA = LabelRowMetadata(
         "path/to/file1.pcd": {
             "space_type": SpaceType.POINT_CLOUD,
             "labels": {"objects": [], "classifications": []},
-            "scene_info": {"event_index": 0, "stream_id": "lidar1", "uri": "path/to/file1.pcd"},
+            "scene_info": {"event_index": 0, "start_frame": 0, "stream_id": "lidar1", "uri": "path/to/file1.pcd"},
         },
         "path/to/file2.pcd": {
             "space_type": SpaceType.POINT_CLOUD,
             "labels": {"objects": [], "classifications": []},
-            "scene_info": {"event_index": 0, "stream_id": "lidar1", "uri": "path/to/file2.pcd"},
+            "scene_info": {"event_index": 0, "start_frame": 10, "stream_id": "lidar1", "uri": "path/to/file2.pcd"},
+        },
+        "path/to/image1.jpg": {
+            "space_type": SpaceType.SCENE_IMAGE,
+            "labels": {"objects": [], "classifications": []},
+            "scene_info": {"event_index": 0, "start_frame": 10, "stream_id": "camera1", "uri": "path/to/image1.jpg"},
         },
     },
 )
@@ -65,6 +70,9 @@ SCENE_NO_LABELS = {
         },
         "path/to/file2.pcd": {
             "space_type": SpaceType.POINT_CLOUD,
+        },
+        "path/to/image1.jpg": {
+            "space_type": SpaceType.SCENE_IMAGE,
         },
     },
     "data_units": {
@@ -123,7 +131,7 @@ SCENE_WITH_LABELS = {
     "spaces": {
         "path/to/file1.pcd": {
             "space_type": SpaceType.POINT_CLOUD,
-            "scene_info": {"event_index": 0, "stream_id": "lidar1", "uri": "path/to/file1.pcd"},
+            "scene_info": {"event_index": 0, "start_frame": 0, "stream_id": "lidar1", "uri": "path/to/file1.pcd"},
             "labels": {
                 "objects": [
                     {
@@ -145,7 +153,7 @@ SCENE_WITH_LABELS = {
         },
         "path/to/file2.pcd": {
             "space_type": SpaceType.POINT_CLOUD,
-            "scene_info": {"event_index": 0, "stream_id": "lidar1", "uri": "path/to/file2.pcd"},
+            "scene_info": {"event_index": 0, "start_frame": 10, "stream_id": "lidar1", "uri": "path/to/file2.pcd"},
             "labels": {
                 "objects": [
                     {
@@ -164,6 +172,11 @@ SCENE_WITH_LABELS = {
                 ],
                 "classifications": [],
             },
+        },
+        "path/to/image1.jpg": {
+            "space_type": SpaceType.SCENE_IMAGE,
+            "scene_info": {"event_index": 0, "start_frame": 10, "stream_id": "camera1", "uri": "path/to/image1.jpg"},
+            "labels": {"objects": [], "classifications": []},
         },
     },
     "data_units": {

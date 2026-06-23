@@ -18,7 +18,7 @@ import warnings
 from datetime import datetime
 from math import ceil
 from pathlib import Path
-from typing import Any, Collection, Dict, Iterable, List, Literal, Optional, Sequence, TextIO, Union
+from typing import Any, Collection, Dict, Iterable, List, Optional, Sequence, TextIO, Union
 from uuid import UUID
 
 import requests
@@ -225,7 +225,12 @@ class StorageFolder:
         title = self._guess_title(title, file_path)
 
         self._upload_local_file(
-            file_path, title, StorageItemType.IMAGE, upload_url_info[0].signed_url, cloud_upload_settings
+            file_path,
+            title,
+            StorageItemType.IMAGE,
+            upload_url_info[0].signed_url,
+            cloud_upload_settings,
+            upload_headers=upload_url_info[0].upload_headers,
         )
 
         upload_result = self._add_data(
@@ -294,6 +299,7 @@ class StorageFolder:
             StorageItemType.VIDEO,
             upload_url_info[0].signed_url,
             cloud_upload_settings,
+            upload_headers=upload_url_info[0].upload_headers,
         )
 
         upload_result = self._add_data(
@@ -398,6 +404,7 @@ class StorageFolder:
                 StorageItemType.DICOM_FILE,
                 url_info.signed_url,
                 cloud_upload_settings,
+                upload_headers=url_info.upload_headers,
             )
             dicom_files.append(
                 orm_storage.DataUploadDicomSeriesDicomFile(
@@ -524,6 +531,7 @@ class StorageFolder:
                 StorageItemType.DICOM_FILE,
                 url_info.signed_url,
                 cloud_upload_settings,
+                upload_headers=url_info.upload_headers,
             )
             image_group_frames.append(
                 orm_storage.DataUploadImageGroupImage(
@@ -598,6 +606,7 @@ class StorageFolder:
             StorageItemType.NIFTI,
             upload_url_info[0].signed_url,
             cloud_upload_settings,
+            upload_headers=upload_url_info[0].upload_headers,
         )
 
         upload_result = self._add_data(
@@ -682,6 +691,7 @@ class StorageFolder:
             StorageItemType.AUDIO,
             upload_url_info[0].signed_url,
             cloud_upload_settings,
+            upload_headers=upload_url_info[0].upload_headers,
         )
 
         upload_result = self._add_data(
@@ -753,6 +763,7 @@ class StorageFolder:
             StorageItemType.PLAIN_TEXT,
             upload_url_info[0].signed_url,
             cloud_upload_settings,
+            upload_headers=upload_url_info[0].upload_headers,
         )
 
         upload_result = self._add_data(
@@ -823,6 +834,7 @@ class StorageFolder:
             StorageItemType.PDF,
             upload_url_info[0].signed_url,
             cloud_upload_settings,
+            upload_headers=upload_url_info[0].upload_headers,
         )
 
         upload_result = self._add_data(
@@ -1056,12 +1068,12 @@ class StorageFolder:
             search (Optional[str]): Search string to filter folders by name.
             dataset_synced (Optional[bool]): Include or exclude folders that are mirrored by a dataset. If `None`,
                 no filtering is applied.
-            order (FoldersSortBy): Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
+            order (FoldersSortBy): Sort order for the folders. See :class:`encord.orm.storage.FoldersSortBy` for available options.
             desc (bool): If True, sort in descending order.
             page_size (int): Number of folders to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
-            Iterable[StorageFolder]: An iterable of :class:`encord.StorageFolder` objects.
+            Iterable[StorageFolder]: An iterable of :class:`encord.storage.StorageFolder` objects.
         """
         return StorageFolder._list_folders(
             self._api_client,
@@ -1089,12 +1101,12 @@ class StorageFolder:
             search (Optional[str]): Search string to filter folders by name.
             dataset_synced (Optional[bool]): Include or exclude folders that are mirrored by a dataset. If `None`,
                 no filtering is applied.
-            order (FoldersSortBy): Sort order for the folders. See :class:`encord.storage.FoldersSortBy` for available options.
+            order (FoldersSortBy): Sort order for the folders. See :class:`encord.orm.storage.FoldersSortBy` for available options.
             desc (bool): If True, sort in descending order.
             page_size (int): Number of folders to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
-            Iterable[StorageFolder]: An iterable of :class:`encord.StorageFolder` objects.
+            Iterable[StorageFolder]: An iterable of :class:`encord.storage.StorageFolder` objects.
         """
         return StorageFolder._list_folders(
             self._api_client,
@@ -1187,7 +1199,7 @@ class StorageFolder:
             StorageFolderSummary: A summary of the folder.
 
         See Also:
-            :class:`encord.StorageFolderSummary` for the exact set of information provided.
+            :class:`encord.orm.storage.StorageFolderSummary` for the exact set of information provided.
         """
         return self._api_client.get(
             f"storage/folders/{self.uuid}/summary",
@@ -1474,6 +1486,7 @@ class StorageFolder:
         item_type: StorageItemType,
         signed_url: str,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+        upload_headers: Optional[Dict[str, str]] = None,
     ) -> None:
         content_type = self._get_content_type(file_path, item_type)
 
@@ -1495,6 +1508,7 @@ class StorageFolder:
             content_type,
             max_retries=max_retries,
             backoff_factor=backoff_factor,
+            upload_headers=upload_headers,
         )
 
     def _add_data(
@@ -1887,7 +1901,7 @@ class StorageItem:
         """Get a signed URL for downloading the item.
 
         Returns `None` for composite items that have no single file URL:
-        - For scenes, use :class:`encord.beta.scene.SceneRead` to get signed URLs for all constituent files.
+        - For scenes, use :class:`encord.beta.scene.SceneReader` to get signed URLs for all constituent files.
         - For image groups and DICOM series, use :meth:`get_child_items` to get signed URLs for individual frames.
 
         Args:
@@ -1899,7 +1913,7 @@ class StorageItem:
         if self.item_type in {StorageItemType.SCENE, StorageItemType.DICOM_SERIES, StorageItemType.IMAGE_GROUP}:
             warnings.warn(
                 f"get_signed_url() is not supported for {self.item_type} items and will raise ValueError in a future "
-                f"version. Use SceneRead(item) for scenes, or get_child_items() for image groups and DICOM series.",
+                f"version. Use SceneReader(item) for scenes, or get_child_items() for image groups and DICOM series.",
                 DeprecationWarning,
                 stacklevel=2,
             )

@@ -12,7 +12,6 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any, Dict, List, Optional, Sequence, Type
 
 from encord.common.enum import StringEnum

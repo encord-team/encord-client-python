@@ -7,7 +7,6 @@ from datetime import datetime
 from itertools import chain
 from typing import (
     TYPE_CHECKING,
-    Any,
     Dict,
     Iterable,
     Iterator,
@@ -15,23 +14,16 @@ from typing import (
     Literal,
     Optional,
     Sequence,
-    Set,
     Tuple,
     Union,
     cast,
 )
 
 from encord.common.range_manager import RangeManager
-from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects.answers import NumericAnswerValue
 from encord.objects.attributes import (
     Attribute,
-    ChecklistAttribute,
-    NumericAttribute,
-    RadioAttribute,
-    TextAttribute,
-    _get_attribute_by_hash,
 )
 from encord.objects.coordinates import (
     GeometricCoordinates,
@@ -40,15 +32,13 @@ from encord.objects.coordinates import (
 )
 from encord.objects.frames import (
     Frames,
-    Range,
     Ranges,
     frames_class_to_frames_list,
-    ranges_list_to_ranges,
     ranges_to_list,
 )
 from encord.objects.internal_helpers import _infer_attribute_from_answer
 from encord.objects.label_utils import create_frame_classification_dict, create_frame_object_dict
-from encord.objects.ontology_object_instance import AnswersForFrames, DynamicAnswerManager, check_coordinate_type
+from encord.objects.ontology_object_instance import AnswersForFrames, check_coordinate_type
 from encord.objects.spaces.annotation.base_annotation import _AnnotationData, _AnnotationMetadata
 from encord.objects.spaces.annotation.geometric_annotation import (
     _FrameClassificationAnnotation,
@@ -61,7 +51,6 @@ from encord.objects.spaces.types import SpaceInfo
 from encord.objects.types import (
     AttributeDict,
     ClassificationAnswer,
-    DynamicAttributeObject,
     FrameClassification,
     FrameObject,
     LabelBlob,
@@ -70,7 +59,6 @@ from encord.objects.types import (
     SpaceFrameData,
     _is_global_classification_on_space,
 )
-from encord.utilities.type_utilities import exhaustive_guard
 
 logger = logging.getLogger(__name__)
 

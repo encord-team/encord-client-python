@@ -1,7 +1,7 @@
 """Read-side composite scene models returned by GET /v2/public/scene/{scene_uuid}.
 
 These mirror the backend's external API models from ml-utils and are used to
-deserialise the response for :class:`encord.beta.scene.SceneRead`.
+deserialize the response for :class:`encord.beta.scene.SceneReader`.
 """
 
 from __future__ import annotations
@@ -106,6 +106,7 @@ class PCDStream(CamelModelApi):
 
 class ImageStream(CamelModelApi):
     entity_type: Literal["image"] = "image"
+    camera_id: Optional[str] = None
     events: List[URIEvent]
 
 
@@ -171,6 +172,6 @@ Scene = Annotated[Union[SelfContainedScene, CompositeScene], Field(discriminator
 
 
 class SceneResponse(RootModelDTO[Scene]):
-    """Wrapper so the API client can deserialise the discriminated Scene union."""
+    """Wrapper so the API client can deserialize the discriminated Scene union."""
 
     pass

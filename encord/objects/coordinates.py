@@ -28,6 +28,8 @@ from encord.objects.types import (
     CircleDict,
     CircleFrameCoordinatesDict,
     Cuboid2DFrameCoordinatesDict,
+    EllipseDict,
+    EllipseFrameCoordinatesDict,
     FrameObject,
     Point3DFrameCoordinatesDict,
     PointDict,
@@ -183,6 +185,48 @@ class CircleCoordinates:
             "y": self.center_y,
             "r": self.radius,
             "stretch": self.stretch,
+            "theta": self.theta,
+        }
+
+
+@dataclass(frozen=True)
+class EllipseCoordinates:
+    """Represents ellipse coordinates. Mirrors RotatableBoundingBox's
+    aspect-decoupled normalization: ``rx`` is normalized to image width,
+    ``ry`` to image height, ``theta`` is a rotation in degrees applied in
+    screen-pixel space.
+
+    Attributes:
+        center_x (float): Normalized x-coordinate of the ellipse center [0, 1].
+        center_y (float): Normalized y-coordinate of the ellipse center [0, 1].
+        rx (float): Horizontal semi-axis, normalized to image width.
+        ry (float): Vertical semi-axis, normalized to image height.
+        theta (float): Rotation in degrees, clockwise in screen space.
+    """
+
+    center_x: float
+    center_y: float
+    rx: float
+    ry: float
+    theta: float = 0.0
+
+    @staticmethod
+    def from_dict(d: EllipseFrameCoordinatesDict) -> EllipseCoordinates:
+        ellipse_dict = d["ellipse"]
+        return EllipseCoordinates(
+            center_x=ellipse_dict["x"],
+            center_y=ellipse_dict["y"],
+            rx=ellipse_dict["rx"],
+            ry=ellipse_dict["ry"],
+            theta=ellipse_dict.get("theta", 0.0),
+        )
+
+    def to_dict(self) -> EllipseDict:
+        return {
+            "x": self.center_x,
+            "y": self.center_y,
+            "rx": self.rx,
+            "ry": self.ry,
             "theta": self.theta,
         }
 
@@ -728,6 +772,7 @@ Coordinates = Union[
     BoundingBoxCoordinates,
     RotatableBoundingBoxCoordinates,
     CircleCoordinates,
+    EllipseCoordinates,
     PointCoordinate,
     PointCoordinate3D,
     PolygonCoordinates,
@@ -743,6 +788,7 @@ GeometricCoordinates = Union[
     BoundingBoxCoordinates,
     RotatableBoundingBoxCoordinates,
     CircleCoordinates,
+    EllipseCoordinates,
     PointCoordinate,
     PolygonCoordinates,
     PolylineCoordinates,
@@ -756,6 +802,7 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] 
     Shape.BOUNDING_BOX: [BoundingBoxCoordinates],
     Shape.ROTATABLE_BOUNDING_BOX: [RotatableBoundingBoxCoordinates],
     Shape.CIRCLE: [CircleCoordinates],
+    Shape.ELLIPSE: [EllipseCoordinates],
     Shape.POINT: [PointCoordinate, PointCoordinate3D],
     Shape.POLYGON: [PolygonCoordinates],
     Shape.POLYLINE: [PolylineCoordinates],
@@ -772,9 +819,11 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] 
 def add_coordinates_to_frame_object_dict(
     coordinates: Coordinates,
     base_frame_object: BaseFrameObject,
-    width: int,
-    height: int,
+    width: Optional[int],
+    height: Optional[int],
 ) -> FrameObject:
+    """Attach geometry to a frame object. The wire field and `shape`
+    discriminator are inferred from the coordinates class."""
     result: Dict[str, Any] = dict(base_frame_object)
 
     if isinstance(coordinates, BoundingBoxCoordinates):
@@ -794,6 +843,8 @@ def add_coordinates_to_frame_object_dict(
         result["point"] = coordinates.to_dict()
         result["shape"] = Shape.POINT.value
     elif isinstance(coordinates, BitmaskCoordinates):
+        if width is None or height is None:
+            raise LabelRowError("Bitmask annotations require image width and height.")
         if not (height == coordinates._encoded_bitmask.height and width == coordinates._encoded_bitmask.width):
             raise ValueError("Bitmask dimensions don't match the media dimensions")
         result["bitmask"] = coordinates.to_dict()
@@ -807,6 +858,9 @@ def add_coordinates_to_frame_object_dict(
     elif isinstance(coordinates, (Cuboid2DPerspectiveCoordinates, Cuboid2DIsometricCoordinates)):
         result["cuboid_2d"] = coordinates.to_dict()
         result["shape"] = Shape.CUBOID_2D.value
+    elif isinstance(coordinates, EllipseCoordinates):
+        result["ellipse"] = coordinates.to_dict()
+        result["shape"] = Shape.ELLIPSE.value
     elif isinstance(coordinates, CircleCoordinates):
         result["circle"] = coordinates.to_dict()
         result["shape"] = Shape.CIRCLE.value
@@ -839,6 +893,8 @@ def get_coordinates_from_frame_object_dict(frame_object_dict: FrameObject) -> Co
         return PolylineCoordinates.from_dict(frame_object_dict)
     elif frame_object_dict["shape"] == Shape.CIRCLE:
         return CircleCoordinates.from_dict(frame_object_dict)
+    elif frame_object_dict["shape"] == Shape.ELLIPSE:
+        return EllipseCoordinates.from_dict(frame_object_dict)
     elif "skeleton" in frame_object_dict:
 
         def _with_visibility_enum(point: dict):

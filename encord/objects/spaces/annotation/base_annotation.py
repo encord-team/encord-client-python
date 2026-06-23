@@ -4,7 +4,7 @@ import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, cast
 
 from encord.common.time_parser import parse_datetime
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
@@ -15,9 +15,6 @@ from encord.objects.utils import check_email
 if TYPE_CHECKING:
     from encord.objects import ClassificationInstance, ObjectInstance
     from encord.objects.spaces.base_space import Space
-    from encord.objects.spaces.image_space import ImageSpace
-    from encord.objects.spaces.range_space.range_space import RangeSpace
-    from encord.objects.spaces.video_space import VideoSpace
 
 logger = logging.getLogger(__name__)
 

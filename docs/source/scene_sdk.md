@@ -108,14 +108,14 @@ scene for the Encord API.
 
 ## Reading a scene
 
-Use `SceneRead` from the beta scene module to fetch a composite scene storage item with signed URLs
+Use `SceneReader` from the beta scene module to fetch a composite scene storage item with signed URLs
 for its constituent files.
 
 ```python
-from encord.beta.scene import CompositeScene, SceneRead
+from encord.beta.scene import CompositeScene, SceneReader
 
 # `item` is an `encord.storage.StorageItem` with item_type `StorageItemType.SCENE`.
-scene = SceneRead(item).read()
+scene = SceneReader(item).read()
 
 front = scene.get_stream("img_front", kind="image")
 signed_url = front.get_event(timestamp=0).signed_url

@@ -6,7 +6,7 @@ from encord.beta.scene import (
     CompositeScene,
     Direction,
     SceneBuilder,
-    SceneRead,
+    SceneReader,
     identity_pose,
     intrinsics_advanced,
     intrinsics_pinhole,
@@ -269,14 +269,14 @@ def test_scene_from_internal_ignores_image_camera_id() -> None:
 
 
 def test_scene_read_fetches_scene_from_storage_item() -> None:
-    scene = SceneRead(cast(StorageItem, _FakeStorageItem())).read()
+    scene = SceneReader(cast(StorageItem, _FakeStorageItem())).read()
 
     assert isinstance(scene, CompositeScene)
     assert scene.get_stream("front", kind="image").get_event(0).signed_url == "https://signed.example/front-0.jpg"
     assert scene.get_images_at_timestamp(0)[0][1].timestamp == 0
 
 
-def test_scene_from_internal_requires_timestamps() -> None:
+def test_scene_from_internal_defaults_missing_timestamps_from_zero() -> None:
     response = SceneResponse.model_validate(
         {
             "type": "composite",
@@ -290,7 +290,11 @@ def test_scene_from_internal_requires_timestamps() -> None:
                             {
                                 "url": "gs://bucket/front-0.jpg",
                                 "signedUrl": "https://signed.example/front-0.jpg",
-                            }
+                            },
+                            {
+                                "url": "gs://bucket/front-1.jpg",
+                                "signedUrl": "https://signed.example/front-1.jpg",
+                            },
                         ],
                     },
                 }
@@ -298,8 +302,43 @@ def test_scene_from_internal_requires_timestamps() -> None:
         }
     )
 
-    with pytest.raises(ValueError, match="Scene stream 'front' contains an event without a timestamp"):
-        scene_from_internal(cast(InternalScene, response.root))
+    scene = scene_from_internal(cast(InternalScene, response.root))
+
+    assert scene.get_stream("front", kind="image").events[0].timestamp == 0
+    assert scene.get_stream("front", kind="image").events[1].timestamp == 1
+
+
+def test_scene_from_internal_defaults_missing_timestamps_from_min_timestamp() -> None:
+    response = SceneResponse.model_validate(
+        {
+            "type": "composite",
+            "streams": {
+                "lidar": {
+                    "type": "event",
+                    "id": "lidar",
+                    "stream": {
+                        "entityType": "point_cloud",
+                        "events": [
+                            {
+                                "timestamp": 100,
+                                "url": "gs://bucket/lidar-100.pcd",
+                                "signedUrl": "https://signed.example/lidar-100.pcd",
+                            },
+                            {
+                                "url": "gs://bucket/lidar-missing.pcd",
+                                "signedUrl": "https://signed.example/lidar-missing.pcd",
+                            },
+                        ],
+                    },
+                }
+            },
+        }
+    )
+
+    scene = scene_from_internal(cast(InternalScene, response.root))
+
+    assert scene.get_stream("lidar", kind="point_cloud").events[0].timestamp == 100
+    assert scene.get_stream("lidar", kind="point_cloud").events[1].timestamp == 101
 
 
 def test_scene_from_internal_rejects_self_contained_scenes_with_clear_error() -> None:

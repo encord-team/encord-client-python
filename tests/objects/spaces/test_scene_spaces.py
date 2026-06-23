@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import cast
 from unittest.mock import Mock
 
@@ -9,8 +10,10 @@ from encord.exceptions import LabelRowError
 from encord.objects import Classification, LabelRowV2, Object
 from encord.objects.attributes import Attribute, TextAttribute
 from encord.objects.common import Shape
+from encord.objects.coordinates import BoundingBoxCoordinates
 from encord.objects.frames import Range
 from encord.objects.ontology_object_instance import ObjectInstance
+from encord.objects.spaces.image_space import ImageSpace
 from encord.objects.spaces.range_space.point_cloud_space import PointCloudFileSpace
 from encord.objects.spaces.types import PointCloudFileSpaceInfo
 from encord.objects.types import SegmentationObject
@@ -59,6 +62,147 @@ def test_get_scene_space(ontology):
     # get by file name
     space3 = label_row.get_space(file_name="file1.pcd", type_="point_cloud")
     assert space3 is space
+
+    # Scene image spaces reuse ImageSpace and can be fetched as image spaces.
+    image_space = label_row.get_space(id="path/to/image1.jpg", type_="image")
+    assert isinstance(image_space, ImageSpace)
+    assert image_space.metadata.uri == "path/to/image1.jpg"
+
+    image_space2 = label_row.get_space(stream_id="camera1", event_index=0, type_="image")
+    assert image_space2 is image_space
+
+    image_space_by_start_frame = label_row.get_space(stream_id="camera1", start_frame=10, type_="image")
+    assert image_space_by_start_frame is image_space
+
+    image_space3 = label_row.get_space(file_name="image1.jpg", type_="image")
+    assert image_space3 is image_space
+
+
+def test_add_2d_object_to_scene_image_space_without_dimensions(ontology):
+    label_row = LabelRowV2(SCENE_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(SCENE_NO_LABELS)
+
+    box_instance = box_with_attributes_ontology_item.create_instance()
+    coordinates = BoundingBoxCoordinates(height=0.4, width=0.5, top_left_x=0.1, top_left_y=0.2)
+    image_space = label_row.get_space(id="path/to/image1.jpg", type_="image")
+
+    image_space.put_object_instance(box_instance, coordinates=coordinates)
+
+    result = label_row.to_encord_dict()
+
+    expected_space = {
+        "space_type": SpaceType.SCENE_IMAGE,
+        "scene_info": {"event_index": 0, "start_frame": 10, "stream_id": "camera1", "uri": "path/to/image1.jpg"},
+        "labels": {"objects": [], "classifications": []},
+    }
+    expected_label = {
+        "objects": [
+            {
+                "name": "Nested Box",
+                "color": "#FCDC00",
+                "shape": Shape.BOUNDING_BOX.value,
+                "value": "nested_box",
+                "objectHash": box_instance.object_hash,
+                "featureHash": "MTA2MjAx",
+                "confidence": 1.0,
+                "manualAnnotation": True,
+                "boundingBox": {"h": 0.4, "w": 0.5, "x": 0.1, "y": 0.2},
+            }
+        ],
+        "classifications": [],
+    }
+    assert not DeepDiff(
+        result["spaces"]["path/to/image1.jpg"],
+        expected_space,
+        exclude_regex_paths=[rf".*\['{field}'\]" for field in IGNORED_METADATA_FIELDS],
+    )
+    assert not DeepDiff(
+        result["data_units"][SCENE_METADATA.data_hash]["labels"]["camera1#10"],
+        expected_label,
+        exclude_regex_paths=[rf".*\['{field}'\]" for field in IGNORED_METADATA_FIELDS],
+    )
+    assert result["object_answers"][box_instance.object_hash] == {
+        "classifications": [],
+        "objectHash": box_instance.object_hash,
+    }
+
+    label_row_2 = LabelRowV2(SCENE_METADATA, Mock(), ontology)
+    label_row_2.from_labels_dict(result)
+    image_space_2 = label_row_2.get_space(id="path/to/image1.jpg", type_="image")
+
+    assert len(image_space_2.get_object_instances()) == 1
+    annotation = next(image_space_2.get_annotations("object"))
+    assert annotation.coordinates == coordinates
+
+
+def test_parse_scene_image_labels_from_data_unit_stream_start_frame_key(ontology):
+    label_row_dict = deepcopy(SCENE_NO_LABELS)
+    label_row_dict["object_answers"] = {
+        "imageHash0": {"classifications": [], "objectHash": "imageHash0"},
+    }
+    label_row_dict["data_units"][SCENE_METADATA.data_hash]["labels"] = {
+        "camera1#10": {
+            "objects": [
+                {
+                    "objectHash": "imageHash0",
+                    "featureHash": "MTA2MjAx",
+                    "name": "Nested Box",
+                    "color": "#FCDC00",
+                    "value": "nested_box",
+                    "createdAt": "Thu, 09 Feb 2023 14:12:03 UTC",
+                    "lastEditedAt": "Thu, 09 Feb 2023 14:12:03 UTC",
+                    "confidence": 1.0,
+                    "manualAnnotation": True,
+                    "boundingBox": {"h": 0.4, "w": 0.5, "x": 0.1, "y": 0.2},
+                    "shape": Shape.BOUNDING_BOX.value,
+                }
+            ],
+            "classifications": [],
+        }
+    }
+
+    label_row = LabelRowV2(SCENE_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(label_row_dict)
+    image_space = label_row.get_space(id="path/to/image1.jpg", type_="image")
+
+    assert len(image_space.get_object_instances()) == 1
+    annotation = next(image_space.get_annotations("object"))
+    assert annotation.coordinates == BoundingBoxCoordinates(height=0.4, width=0.5, top_left_x=0.1, top_left_y=0.2)
+
+
+def test_parse_scene_image_labels_from_data_unit_uri_key(ontology):
+    label_row_dict = deepcopy(SCENE_NO_LABELS)
+    label_row_dict["object_answers"] = {
+        "imageHash0": {"classifications": [], "objectHash": "imageHash0"},
+    }
+    label_row_dict["data_units"][SCENE_METADATA.data_hash]["labels"] = {
+        "path/to/image1.jpg": {
+            "objects": [
+                {
+                    "objectHash": "imageHash0",
+                    "featureHash": "MTA2MjAx",
+                    "name": "Nested Box",
+                    "color": "#FCDC00",
+                    "value": "nested_box",
+                    "createdAt": "Thu, 09 Feb 2023 14:12:03 UTC",
+                    "lastEditedAt": "Thu, 09 Feb 2023 14:12:03 UTC",
+                    "confidence": 1.0,
+                    "manualAnnotation": True,
+                    "boundingBox": {"h": 0.4, "w": 0.5, "x": 0.1, "y": 0.2},
+                    "shape": Shape.BOUNDING_BOX.value,
+                }
+            ],
+            "classifications": [],
+        }
+    }
+
+    label_row = LabelRowV2(SCENE_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(label_row_dict)
+    image_space = label_row.get_space(id="path/to/image1.jpg", type_="image")
+
+    assert len(image_space.get_object_instances()) == 1
+    annotation = next(image_space.get_annotations("object"))
+    assert annotation.coordinates == BoundingBoxCoordinates(height=0.4, width=0.5, top_left_x=0.1, top_left_y=0.2)
 
 
 def test_parse_existing_labels(ontology):
@@ -158,7 +302,7 @@ def test_add_segmentation_instance_on_two_spaces(ontology):
         "spaces": {
             "path/to/file1.pcd": {
                 "space_type": SpaceType.POINT_CLOUD,
-                "scene_info": {"event_index": 0, "stream_id": "lidar1", "uri": "path/to/file1.pcd"},
+                "scene_info": {"event_index": 0, "start_frame": 0, "stream_id": "lidar1", "uri": "path/to/file1.pcd"},
                 "labels": {
                     "objects": [
                         {
@@ -179,7 +323,7 @@ def test_add_segmentation_instance_on_two_spaces(ontology):
             },
             "path/to/file2.pcd": {
                 "space_type": SpaceType.POINT_CLOUD,
-                "scene_info": {"event_index": 0, "stream_id": "lidar1", "uri": "path/to/file2.pcd"},
+                "scene_info": {"event_index": 0, "start_frame": 10, "stream_id": "lidar1", "uri": "path/to/file2.pcd"},
                 "labels": {
                     "objects": [
                         {
@@ -197,6 +341,16 @@ def test_add_segmentation_instance_on_two_spaces(ontology):
                     ],
                     "classifications": [],
                 },
+            },
+            "path/to/image1.jpg": {
+                "space_type": SpaceType.SCENE_IMAGE,
+                "scene_info": {
+                    "event_index": 0,
+                    "start_frame": 10,
+                    "stream_id": "camera1",
+                    "uri": "path/to/image1.jpg",
+                },
+                "labels": {"objects": [], "classifications": []},
             },
         },
     }
@@ -235,7 +389,7 @@ def test_point_cloud_segmentation_serde(ontology):
     # Use labels structure for PointCloudFileSpaceInfo
     space_info = PointCloudFileSpaceInfo(
         space_type=SpaceType.POINT_CLOUD,
-        scene_info={"stream_id": "", "event_index": 0, "uri": "path/to/file1.pcd"},
+        scene_info={"stream_id": "", "event_index": 0, "start_frame": 0, "uri": "path/to/file1.pcd"},
         labels=space_dict["labels"],
     )
     # Convert objects list to dict with objectHash as key

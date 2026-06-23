@@ -42,7 +42,7 @@ CordException = EncordException
 
 
 class InitialisationError(EncordException):
-    """Exception thrown when API key fails to initialise."""
+    """Exception thrown when API key fails to initialize."""
 
     pass
 

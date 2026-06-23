@@ -15,23 +15,16 @@ import os.path
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import Dict, Iterable, List, Optional, Union
 
 from tqdm import tqdm
 
 from encord.configs import BaseConfig
 from encord.exceptions import CloudUploadError, EncordException
-from encord.http.querier import Querier, create_new_session
+from encord.http.querier import create_new_session
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.orm.base_dto import BaseDTO
-from encord.orm.dataset import (
-    Audio,
-    DicomSeries,
-    Images,
-    SignedImagesURL,
-    Video,
-)
 from encord.orm.storage import StorageItemType, UploadSignedUrl
 
 PROGRESS_BAR_FILE_FACTOR = 100
@@ -126,6 +119,7 @@ def upload_to_signed_url_list_for_single_file(
     upload_item_type: StorageItemType,
     max_retries: int,
     backoff_factor: float,
+    upload_headers: Optional[Dict[str, str]] = None,
 ) -> None:
     """Attempt to upload a single file to a signed URL, appending failures if any occur.
 
@@ -137,6 +131,8 @@ def upload_to_signed_url_list_for_single_file(
         upload_item_type (StorageItemType): The type of the file being uploaded.
         max_retries (int): Maximum number of retries in case of failure.
         backoff_factor (float): Backoff factor for retry delays.
+        upload_headers (Optional[Dict[str, str]]): Backend-specified headers
+            (e.g. Azure's ``x-ms-blob-type``) to forward on the PUT.
     """
     try:
         _upload_single_file(
@@ -146,6 +142,7 @@ def upload_to_signed_url_list_for_single_file(
             _get_content_type(upload_item_type, file_path),
             max_retries=max_retries,
             backoff_factor=backoff_factor,
+            upload_headers=upload_headers,
         )
     except CloudUploadError as e:
         failures.append(
@@ -208,6 +205,7 @@ def upload_to_signed_url_list(
                 "data_hash": str(x.item_uuid),
                 "file_link": x.object_key,
                 "signed_url": x.signed_url,
+                "upload_headers": x.upload_headers,
             }
             for x in api_client.get(
                 "presigned-urls",
@@ -239,6 +237,7 @@ def upload_to_signed_url_list(
                         upload_item_type,
                         max_retries=cloud_upload_settings.max_retries or config.requests_settings.max_retries,
                         backoff_factor=cloud_upload_settings.backoff_factor or config.requests_settings.backoff_factor,
+                        upload_headers=args[1].get("upload_headers"),
                     ),
                     zip(file_paths, signed_urls),
                 ),
@@ -274,23 +273,32 @@ def _upload_single_file(
     max_retries: int,
     backoff_factor: float,
     cache_max_age: int = CACHE_DURATION_IN_SECONDS,
+    upload_headers: Optional[Dict[str, str]] = None,
 ) -> None:
+    # Backend-specified headers (e.g. Azure's required `x-ms-blob-type:
+    # BlockBlob`) are returned alongside the signed URL and applied verbatim
+    # here so the upload contract stays cloud-agnostic. `content_type` may be
+    # None, which `requests` treats as "omit the header" — hence the value type.
+    headers: Dict[str, Optional[str]] = {"Content-Type": content_type, "Cache-Control": f"max-age={cache_max_age}"}
+    if upload_headers:
+        headers.update(upload_headers)
+
     with create_new_session(
         max_retries=max_retries, backoff_factor=backoff_factor, connect_retries=max_retries
     ) as session:
         with open(file_path, "rb") as f:
-            res_upload = session.put(
-                signed_url, data=f, headers={"Content-Type": content_type, "Cache-Control": f"max-age={cache_max_age}"}
-            )
+            res_upload = session.put(signed_url, data=f, headers=headers)
 
-            if res_upload.status_code != 200:
+            # S3/GCS signed PUTs return 200; Azure block-blob PUT returns 201.
+            # Accept any 2xx so the helper works across backends.
+            if not 200 <= res_upload.status_code < 300:
                 status_code = res_upload.status_code
-                headers = res_upload.headers
+                response_headers = res_upload.headers
                 res_text = res_upload.text
                 error_string = str(
                     f"Error uploading file '{title}' to signed url: "
                     f"'{signed_url}'.\n"
-                    f"Response data:\n\tstatus code: '{status_code}'\n\theaders: '{headers}'\n\tcontent: '{res_text}'",
+                    f"Response data:\n\tstatus code: '{status_code}'\n\theaders: '{response_headers}'\n\tcontent: '{res_text}'",
                 )
 
                 logger.error(error_string)

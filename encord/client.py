@@ -71,11 +71,9 @@ from encord.orm.dataset import (
     DatasetUser,
     DatasetUserRole,
     DatasetUsers,
-    DicomSeries,
     Image,
     ImageGroup,
     ImageGroupOCR,
-    Images,
     LongPollingStatus,
     ReEncodeVideoTask,
     Video,
@@ -97,7 +95,6 @@ from encord.orm.label_row import (
     ShadowDataState,
 )
 from encord.orm.labeling_algorithm import (
-    BoundingBoxFittingParams,
     LabelingAlgorithm,
     ObjectInterpolationParams,
 )
@@ -271,7 +268,7 @@ class EncordClientDataset(EncordClient):
         self._dataset_access_settings = dataset_access_settings
 
     def add_users(self, user_emails: List[str], user_role: DatasetUserRole) -> List[DatasetUser]:
-        """This function is documented in :meth:`encord.project.Dataset.add_users`."""
+        """This function is documented in :meth:`encord.project.Project.add_users`."""
         payload = {"user_emails": user_emails, "user_role": user_role}
         users = self._querier.basic_setter(DatasetUsers, self._querier.resource_id, payload=payload)
 
@@ -430,7 +427,6 @@ class EncordClientDataset(EncordClient):
                             ],
                             title=title,
                             create_video=create_video,
-                            cluster_by_resolution=create_video,  # cluster_by_resolution only if videos are created
                         )
                     ],
                 ),

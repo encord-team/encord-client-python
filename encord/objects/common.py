@@ -6,18 +6,28 @@ from typing import Any, Dict, List, Union
 
 from encord.common.enum import StringEnum
 from encord.objects.attributes import (  # pylint: disable=unused-import
-    Attribute,
-    ChecklistAttribute,
-    RadioAttribute,
-    TextAttribute,
+    Attribute as Attribute,
+)
+from encord.objects.attributes import (
+    ChecklistAttribute as ChecklistAttribute,
+)
+from encord.objects.attributes import (
+    RadioAttribute as RadioAttribute,
+)
+from encord.objects.attributes import (
+    TextAttribute as TextAttribute,
 )
 
 # Following imports need to be here for backwards compatibility
-from encord.objects.ontology_element import NestedID  # pylint: disable=unused-import
+from encord.objects.ontology_element import NestedID as NestedID  # pylint: disable=unused-import
 from encord.objects.options import (  # pylint: disable=unused-import
-    FlatOption,
-    NestableOption,
-    Option,
+    FlatOption as FlatOption,
+)
+from encord.objects.options import (
+    NestableOption as NestableOption,
+)
+from encord.objects.options import (
+    Option as Option,
 )
 
 
@@ -56,6 +66,7 @@ class Shape(StringEnum):
         cuboid_2d
         segmentation
         circle
+        ellipse
     """
 
     BOUNDING_BOX = "bounding_box"
@@ -70,6 +81,7 @@ class Shape(StringEnum):
     CUBOID = "cuboid"
     CUBOID_2D = "cuboid_2d"
     CIRCLE = "circle"
+    ELLIPSE = "ellipse"
     SEGMENTATION = "segmentation"
 
 

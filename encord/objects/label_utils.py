@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING
 
-from encord.common.time_parser import format_datetime_to_long_string, format_datetime_to_long_string_optional
+from encord.common.time_parser import format_datetime_to_long_string
 from encord.objects.attributes import Attribute
 from encord.objects.spaces.annotation.base_annotation import _AnnotationMetadata
-from encord.objects.types import BaseFrameObject, FrameClassification, FrameObject
+from encord.objects.types import BaseFrameObject, FrameClassification
 from encord.objects.utils import _lower_snake_case
 
 if TYPE_CHECKING:

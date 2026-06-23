@@ -233,7 +233,7 @@ class Dataset:
             file_path: Path to the video, e.g., '/home/user/data/video.mp4'.
             cloud_upload_settings: Settings for uploading data into the cloud. Change this object to overwrite the default values.
             title: The video title. If unspecified, this will be the file name. This title should include an extension. For example: "encord_video.mp4".
-            folder: When uploading to a non-mirror dataset, you have to specify the folder to store the file in. This can be either a :class:`encord.storage.Folder` instance or the UUID of the folder.
+            folder: When uploading to a non-mirror dataset, you have to specify the folder to store the file in. This can be either a :class:`encord.storage.StorageFolder` instance or the UUID of the folder.
 
         Returns:
             Video: An object describing the created video, see :class:`encord.orm.dataset.Video`.
@@ -267,7 +267,7 @@ class Dataset:
             cloud_upload_settings: Settings for uploading data into the cloud. Change this object to overwrite the default values.
             title: The title of the image group. If unspecified, this will be randomly generated for you. This title should NOT include an extension. For example, "encord_image_group".
             create_video: A flag specifying how image groups are stored. If `True`, a compressed video will be created from the image groups. `True` was the previous default support. If `False`, the images are saved as a sequence of images.
-            folder: When uploading to a non-mirror dataset, you have to specify the folder to store the file in. This can be either a :class:`encord.storage.Folder` instance or the UUID of the folder.
+            folder: When uploading to a non-mirror dataset, you have to specify the folder to store the file in. This can be either a :class:`encord.storage.StorageFolder` instance or the UUID of the folder.
 
         Returns:
             List[ImageGroup]: A list containing the object(s) describing the created data unit(s). See :class:`encord.orm.dataset.ImageGroup`.

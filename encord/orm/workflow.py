@@ -2,8 +2,6 @@ from enum import Enum
 from typing import Any, List, Union
 from uuid import UUID
 
-from typing_extensions import Annotated
-
 from encord.orm.base_dto import BaseDTO, dto_validator
 
 

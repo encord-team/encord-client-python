@@ -28,7 +28,7 @@ class VideoSpace(MultiFrameSpace):
         height: int,
         is_image_sequence: bool,
     ):
-        """Initialise a video or image-sequence space.
+        """Initialize a video or image-sequence space.
 
         Args:
             space_id: The unique identifier of the space.

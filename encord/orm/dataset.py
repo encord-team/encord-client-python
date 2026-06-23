@@ -107,8 +107,8 @@ class DataClientMetadata:
 
 class ImageData:
     """Information about individual images within a single :class:`encord.orm.dataset.DataRow` of type
-    :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`. Get this information
-    using the :meth:`DataRow.images <encord.orm.dataset.DataRow.images>` property.
+    :meth:`DataType.IMG_GROUP encord.constants.enums.DataType.IMG_GROUP`. Get this information
+    using the :meth:`DataRow.images encord.orm.dataset.DataRow.images_data` property.
     """
 
     def __init__(
@@ -351,7 +351,7 @@ class DataRow(dict, Formatter):
         :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>` where
         :meth:`is_image_sequence <encord.orm.dataset.DataRow.is_image_sequence>` is `False`, because
         each image in this group can have a different dimension. Inspect the
-        :meth:`images <encord.orm.dataset.DataRow.images>` to get the height of individual images.
+        :meth:`images <encord.orm.dataset.DataRow.height>` to get the height of individual images.
         """
         return self["width"]
 
@@ -361,7 +361,7 @@ class DataRow(dict, Formatter):
         :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>` where
         :meth:`is_image_sequence <encord.orm.dataset.DataRow.is_image_sequence>` is `False`, because
         each image in this group can have a different dimension. Inspect the
-        :meth:`images <encord.orm.dataset.DataRow.images>` to get the height of individual images.
+        :meth:`images <encord.orm.dataset.DataRow.width>` to get the width of individual images.
         """
         return self["height"]
 

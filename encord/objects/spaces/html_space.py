@@ -20,7 +20,6 @@ from encord.objects.spaces.types import HtmlSpaceInfo, SpaceInfo
 from encord.objects.types import (
     AttributeDict,
     ClassificationAnswer,
-    LabelBlob,
     ObjectAnswer,
     ObjectAnswerForGeometric,
     ObjectAnswerForNonGeometric,

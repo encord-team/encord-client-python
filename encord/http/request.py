@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Union
 
 from encord.http.query_methods import QueryMethods
 
@@ -12,7 +12,7 @@ class Request:
     def __init__(
         self,
         query_method: QueryMethods,
-        db_object_type: Type,
+        query_type: str,
         uid: UIDType,
         timeout: int,
         connect_timeout: int,
@@ -21,7 +21,7 @@ class Request:
         self.http_method = QueryMethods.POST
         self.data: str = json.dumps(
             {
-                "query_type": db_object_type.__name__.lower(),
+                "query_type": query_type,
                 "query_method": str(query_method),
                 "values": {
                     "uid": uid,

@@ -381,6 +381,7 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
             return SceneMetadata(
                 stream_id=scene_info["stream_id"],
                 event_index=scene_info["event_index"],
+                start_frame=scene_info.get("start_frame"),
                 uri=scene_info["uri"],
                 layout_key=None,
                 file_name=file_name,

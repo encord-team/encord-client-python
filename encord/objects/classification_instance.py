@@ -12,7 +12,6 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from copy import deepcopy
-from dataclasses import dataclass, field
 from datetime import datetime
 from typing import (
     TYPE_CHECKING,
@@ -22,16 +21,12 @@ from typing import (
     List,
     NoReturn,
     Optional,
-    Protocol,
     Sequence,
-    Set,
     Tuple,
     Union,
-    cast,
 )
 
 from encord.common.range_manager import RangeManager
-from encord.common.time_parser import parse_datetime
 from encord.constants.enums import DATA_TYPES_WITH_UNKNOWN_LAST_FRAME, DataType, is_geometric
 from encord.exceptions import LabelRowError
 from encord.objects.answers import Answer, NumericAnswerValue, ValueType, _get_static_answer_map
@@ -43,9 +38,9 @@ from encord.objects.attributes import (
     TextAttribute,
     _get_attribute_by_hash,
 )
-from encord.objects.classification import Classification, OntologyClassificationLevel
+from encord.objects.classification import Classification
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
-from encord.objects.frames import Frames, Ranges, frames_class_to_frames_list, frames_to_ranges
+from encord.objects.frames import Frames, Ranges, frames_class_to_frames_list
 from encord.objects.internal_helpers import (
     _infer_attribute_from_answer,
     _search_child_attributes,
@@ -56,7 +51,7 @@ from encord.objects.spaces.annotation.base_annotation import (
     _AnnotationMetadata,
     _ClassificationAnnotation,
 )
-from encord.objects.types import AttributeDict, ClassificationAnswer, FrameClassification
+from encord.objects.types import AttributeDict
 from encord.objects.utils import check_email, short_uuid_str
 
 if TYPE_CHECKING:

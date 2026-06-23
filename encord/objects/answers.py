@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, Iterable, List, NoReturn, Optional, Set, TypeVar, Union, cast
+from typing import Any, Dict, Generic, Iterable, List, NoReturn, Optional, Set, TypeVar, Union
 
 from encord.common.deprecated import deprecated
 from encord.objects.attributes import (

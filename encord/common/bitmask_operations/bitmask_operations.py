@@ -31,7 +31,7 @@ def _string_to_rle(mask_string: str) -> List[int]:
 
 
 def _rle_to_string(rle: Sequence[int]) -> str:
-    """COCO-compatible RLE-encoded mask to string serialisation"""
+    """COCO-compatible RLE-encoded mask to string serialization"""
     rle_string = ""
     for i, x in enumerate(rle):
         if i > 2:

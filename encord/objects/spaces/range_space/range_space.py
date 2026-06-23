@@ -21,7 +21,6 @@ from encord.objects.types import (
     AttributeDict,
     ClassificationAnswer,
     FrameClassification,
-    LabelBlob,
     ObjectAnswer,
     ObjectAnswerForNonGeometric,
     SpaceRange,
