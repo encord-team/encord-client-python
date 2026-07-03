@@ -43,6 +43,7 @@ from encord.constants.string_constants import (
 from encord.http.querier import Querier
 from encord.http.utils import (
     CloudUploadSettings,
+    download_signed_urls_as_json,
     upload_to_signed_url_list,
 )
 from encord.http.v2.api_client import ApiClient
@@ -91,6 +92,7 @@ from encord.orm.label_row import (
     AnnotationTaskStatus,
     LabelRow,
     LabelRowMetadata,
+    LabelRowMetadataWithClientMetadataSignedUrl,
     LabelValidationState,
     ShadowDataState,
 )
@@ -840,6 +842,7 @@ class EncordClientProject(EncordClient):
         workflow_graph_node_title_like: Optional[str] = None,
         include_all_label_branches: bool = False,
         branch_name: Optional[str] = None,
+        client_metadata_as_signed_url: bool = False,
     ) -> List[LabelRowMetadata]:
         """This function is documented in :meth:`encord.project.Project.list_label_rows`."""
         data_hashes = [str(data_hash) for data_hash in data_hashes] if data_hashes is not None else None
@@ -869,8 +872,34 @@ class EncordClientProject(EncordClient):
             "include_workflow_graph_node": include_workflow_graph_node,
             "include_all_label_branches": include_all_label_branches,
             "branch_name": branch_name,
+            "client_metadata_as_signed_url": client_metadata_as_signed_url,
         }
+
+        if client_metadata_as_signed_url:
+            rows = self._querier.get_multiple(
+                LabelRowMetadataWithClientMetadataSignedUrl,
+                payload=payload,
+                query_type=LabelRowMetadata,
+                retryable=True,
+            )
+            return self._resolve_client_metadata_signed_urls(rows)
+
         return self._querier.get_multiple(LabelRowMetadata, payload=payload, retryable=True)
+
+    def _resolve_client_metadata_signed_urls(
+        self, rows: List[LabelRowMetadataWithClientMetadataSignedUrl]
+    ) -> List[LabelRowMetadata]:
+        """Fetch each row's ``client_metadata_signed_url`` and inline the result into
+        ``client_metadata``. Rows without a (resolvable) URL are returned unchanged.
+        """
+        urls = [row.client_metadata_signed_url for row in rows if row.client_metadata_signed_url]
+        contents_by_url = download_signed_urls_as_json(urls, requests_settings=self._config.requests_settings)
+        return [
+            dataclasses.replace(row, client_metadata=contents_by_url[url])
+            if (url := row.client_metadata_signed_url) and url in contents_by_url
+            else row
+            for row in rows
+        ]
 
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
         """This function is documented in :meth:`encord.project.Project.add_users`."""

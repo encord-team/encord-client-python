@@ -258,6 +258,7 @@ class Project:
         include_children: bool = False,
         include_all_label_branches: bool = False,
         branch_name: Optional[str] = None,
+        resolve_client_metadata_locally: bool = False,
     ) -> List[LabelRowV2]:
         """List label rows with various filtering options.
 
@@ -278,6 +279,9 @@ class Project:
             include_children: Optionally include data group children rows into the result of this query.
             include_all_label_branches: Optionally include all label branches. They will be included as separate label row objects.
             branch_name: Optionally specify a branch name. A branch name cannot be specified if include_all_label_branches is set to True
+            resolve_client_metadata_locally: Has no effect unless ``include_client_metadata`` is set.
+                When true, the SDK downloads the metadata client-side instead of the server embedding it directly
+                in the response. Use this to prevent server timeouts for projects with large client metadata.
 
         Returns:
             A list of :class:`encord.objects.ontology_labels_impl.LabelRowV2` instances for all the matching label rows.
@@ -308,6 +312,7 @@ class Project:
             include_images_data=include_images_data,
             include_all_label_branches=include_all_label_branches,
             branch_name=branch_name,
+            client_metadata_as_signed_url=resolve_client_metadata_locally,
         )
         label_rows = [
             LabelRowV2(label_row_metadata, self._client, self._ontology) for label_row_metadata in label_row_metadatas

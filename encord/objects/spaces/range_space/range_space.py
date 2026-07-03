@@ -11,6 +11,7 @@ from encord.exceptions import LabelRowError
 from encord.objects import ClassificationInstance, Shape
 from encord.objects.frames import Range, Ranges
 from encord.objects.ontology_object_instance import ObjectInstance
+from encord.objects.spaces.annotation.base_annotation import _AnnotationMetadata
 from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
 from encord.objects.spaces.annotation.range_annotation import (
     _RangeObjectAnnotation,
@@ -19,10 +20,13 @@ from encord.objects.spaces.base_space import Space
 from encord.objects.spaces.types import SpaceInfo
 from encord.objects.types import (
     AttributeDict,
+    BaseFrameObject,
     ClassificationAnswer,
     FrameClassification,
     ObjectAnswer,
+    ObjectAnswerForGeometric,
     ObjectAnswerForNonGeometric,
+    SpaceFrameData,
     SpaceRange,
 )
 from encord.objects.utils import _lower_snake_case
@@ -40,7 +44,8 @@ RangeClassificationOverlapStrategy = Union[
 
 
 class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, RangeClassificationOverlapStrategy]):
-    """Abstract base class for spaces that manage one dimensional range-based annotations. (Audio, Text, HTML, Point cloud segmentation).
+    """Abstract base class for spaces that manage one dimensional range-based annotations.
+
     This class extracts common logic for managing object and classification instances
     across ranges.
     """
@@ -311,6 +316,75 @@ class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, 
         label_class = ontology.get_child_by_hash(feature_hash, type_=Object)
         return ObjectInstance(ontology_object=label_class, object_hash=object_hash)
 
+    def _parse_space_dict(
+        self,
+        space_info: SpaceInfo,
+        object_answers: dict[str, Union[ObjectAnswerForGeometric, ObjectAnswerForNonGeometric]],
+        classification_answers: dict,
+    ) -> None:
+        for object_answer in object_answers.values():
+            if "spaces" not in object_answer:
+                continue
+
+            non_geometric_object_answer = cast(ObjectAnswerForNonGeometric, object_answer)
+            object_info_on_this_space = non_geometric_object_answer["spaces"].get(self.space_id)
+            if object_info_on_this_space is None:
+                continue
+            if object_info_on_this_space.get("type") not in (None, "frame"):
+                continue
+
+            object_frame_info_on_this_space = cast(SpaceFrameData, object_info_on_this_space)
+            ranges = [Range(range_[0], range_[1]) for range_ in object_frame_info_on_this_space["range"]]
+
+            object_instance = self._create_new_object(
+                object_hash=non_geometric_object_answer["objectHash"],
+                feature_hash=non_geometric_object_answer["featureHash"],
+            )
+
+            frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
+            frame_info_dict.setdefault("confidence", 1.0)  # confidence sometimes not present.
+            frame_object_dict = cast(BaseFrameObject, frame_info_dict)
+            object_frame_instance_info = _AnnotationMetadata.from_dict(frame_object_dict)
+
+            self.put_object_instance(
+                object_instance=object_instance,
+                ranges=ranges,
+                created_at=object_frame_instance_info.created_at,
+                created_by=object_frame_instance_info.created_by,
+                last_edited_at=object_frame_instance_info.last_edited_at,
+                last_edited_by=object_frame_instance_info.last_edited_by,
+                manual_annotation=object_frame_instance_info.manual_annotation,
+                confidence=object_frame_instance_info.confidence,
+            )
+
+            answer_list = object_answer["classifications"]
+            object_instance.set_answer_from_list(answer_list)
+
+        for classification_answer in classification_answers.values():
+            spaces = classification_answer["spaces"]
+            if spaces is None or self.space_id not in spaces:
+                continue
+
+            classification_instance = self._label_row._create_new_classification_instance_from_answer(
+                classification_answer
+            )
+
+            if classification_instance is None:
+                continue
+
+            annotation_metadata = _AnnotationMetadata.from_dict(classification_answer)
+
+            self._put_global_classification_instance(
+                classification_instance=classification_instance,
+                on_overlap="replace",
+                created_at=annotation_metadata.created_at,
+                created_by=annotation_metadata.created_by,
+                confidence=annotation_metadata.confidence,
+                manual_annotation=annotation_metadata.manual_annotation,
+                last_edited_at=annotation_metadata.last_edited_at,
+                last_edited_by=annotation_metadata.last_edited_by,
+            )
+
     def _to_object_answers(self, existing_object_answers: Dict[str, ObjectAnswer]) -> dict[str, ObjectAnswer]:
         ret: Dict[str, ObjectAnswerForNonGeometric] = {}
 
@@ -325,7 +399,10 @@ class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, 
                 space_range_to_add: SpaceRange = {"range": ranges, "type": "frame"}
                 existing_object_answer["spaces"][self.space_id] = space_range_to_add
             else:
-                shape = cast(Union[Literal[Shape.TEXT], Literal[Shape.AUDIO]], obj.ontology_item.shape.value)
+                shape = cast(
+                    Union[Literal[Shape.TEXT], Literal[Shape.AUDIO], Literal[Shape.TIME_RANGE]],
+                    obj.ontology_item.shape.value,
+                )
                 all_static_answers = self._label_row._get_all_static_answers(obj)
 
                 object_answer: ObjectAnswerForNonGeometric = {

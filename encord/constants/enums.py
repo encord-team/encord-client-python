@@ -28,6 +28,7 @@ class DataType(StringEnum):
         dicom_study
         nifti
         audio
+        time_series
         plain_text
         pdf
         group
@@ -41,6 +42,7 @@ class DataType(StringEnum):
     DICOM_STUDY = "dicom_study"
     NIFTI = "nifti"
     AUDIO = "audio"
+    TIME_SERIES = "time_series"
     PLAIN_TEXT = "plain_text"
     PDF = "pdf"
     GROUP = "group"
@@ -88,6 +90,7 @@ class SpaceType(StringEnum):
     IMAGE = "image"
     IMAGE_SEQUENCE = "image_sequence"
     AUDIO = "audio"
+    TIME_SERIES = "time_series"
     TEXT = "text"
     HTML = "html"
     MEDICAL_FILE = "medical_file"

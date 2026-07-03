@@ -48,7 +48,9 @@ class PdfSpace(MultiFrameSpace):
 
     # ==================== Page-based API Methods ====================
 
-    def put_object_instance(
+    # PDF pages do not expose dimensions yet, so keep this wrapper typed as geometric-only even though
+    # MultiFrameSpace also accepts RLE strings for bitmask-capable modalities.
+    def put_object_instance(  # type: ignore[override]
         self,
         object_instance: ObjectInstance,
         pages: Frames,

@@ -1,20 +1,23 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, Union, cast
+from datetime import datetime
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union, cast, overload
 
 from encord.common.bitmask_operations.bitmask_operations import (
     _rle_to_string,
     ranges_to_rle_counts,
     rle_string_to_points,
+    rle_string_to_ranges,
 )
 from encord.common.range_manager import RangeManager
 from encord.common.time_parser import format_datetime_to_long_string
 from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects.common import Shape
-from encord.objects.frames import Ranges, frames_to_ranges
+from encord.objects.frames import Range, Ranges, frames_to_ranges
+from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.spaces.annotation.base_annotation import _AnnotationMetadata
-from encord.objects.spaces.range_space.range_space import RangeSpace
+from encord.objects.spaces.range_space.range_space import RangeOverlapStrategy, RangeSpace
 from encord.objects.spaces.types import PointCloudFileSpaceInfo, SceneMetadata, SpaceInfo
 from encord.objects.types import (
     FrameObject,
@@ -44,6 +47,93 @@ class PointCloudFileSpace(RangeSpace):
 
         if start_of_range < 0:
             raise LabelRowError(f"Range starting with {start_of_range} is invalid. Negative ranges are not supported.")
+
+    @overload
+    def put_object_instance(
+        self,
+        object_instance: ObjectInstance,
+        ranges: Ranges | Range,
+        *,
+        on_overlap: RangeOverlapStrategy = ...,
+        created_at: Optional[datetime] = ...,
+        created_by: Optional[str] = ...,
+        last_edited_at: Optional[datetime] = ...,
+        last_edited_by: Optional[str] = ...,
+        confidence: Optional[float] = ...,
+        manual_annotation: Optional[bool] = ...,
+    ) -> None: ...
+
+    @overload
+    def put_object_instance(
+        self,
+        object_instance: ObjectInstance,
+        ranges: str,
+        *,
+        on_overlap: RangeOverlapStrategy = ...,
+        created_at: Optional[datetime] = ...,
+        created_by: Optional[str] = ...,
+        last_edited_at: Optional[datetime] = ...,
+        last_edited_by: Optional[str] = ...,
+        confidence: Optional[float] = ...,
+        manual_annotation: Optional[bool] = ...,
+    ) -> None: ...
+
+    def put_object_instance(  # type: ignore[override]
+        self,
+        object_instance: ObjectInstance,
+        ranges: Ranges | Range | str,
+        *,
+        on_overlap: RangeOverlapStrategy = "error",
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        confidence: Optional[float] = None,
+        manual_annotation: Optional[bool] = None,
+    ) -> None:
+        """Add an object instance to this point cloud space.
+
+        Accepts either explicit ``Range`` objects or an Encord-compatible RLE string.
+        When ``ranges`` is a string it is interpreted as an RLE-encoded set of
+        point indices and is only valid for segmentation object types.
+        Use ``encord.common.bitmask_operations.coco_rle_to_encord_rle`` before passing
+        pycocotools/COCO RLE counts here.
+
+        Args:
+            object_instance: The object instance to add to the space.
+            ranges: Point ranges where the object should appear. Can be:
+                - A single ``Range`` object.
+                - A list of ``Range`` objects.
+                - An Encord-compatible RLE string (segmentation shapes only).
+            on_overlap: Strategy for handling existing annotations on overlapping ranges.
+                - "error" (default): Raises an error if annotation already exists.
+                - "merge": Adds to new ranges while keeping existing annotations.
+                - "replace": Removes existing ranges before adding new ones.
+            created_at: Optional timestamp when the annotation was created.
+            created_by: Optional identifier of who created the annotation.
+            last_edited_at: Optional timestamp when the annotation was last edited.
+            last_edited_by: Optional identifier of who last edited the annotation.
+            confidence: Optional confidence score for the annotation (0.0 to 1.0).
+            manual_annotation: Optional flag indicating if this was manually annotated.
+
+        Raises:
+            LabelRowError: If an RLE string is given for a non-segmentation
+                shape, if the RLE string produces no valid ranges, or if ranges overlap
+                with existing ones when ``on_overlap="error"``.
+        """
+        if isinstance(ranges, str):
+            ranges = rle_string_to_ranges(object_instance, ranges, range_name="point ranges")
+        super().put_object_instance(
+            object_instance=object_instance,
+            ranges=ranges,
+            on_overlap=on_overlap,
+            created_at=created_at,
+            created_by=created_by,
+            last_edited_at=last_edited_at,
+            last_edited_by=last_edited_by,
+            confidence=confidence,
+            manual_annotation=manual_annotation,
+        )
 
     def _parse_space_dict(
         self,

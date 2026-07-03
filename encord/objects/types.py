@@ -318,7 +318,7 @@ SpaceRange = Union[SpaceHtmlData, SpaceFrameData]
 class ObjectAnswerForNonGeometric(BaseFrameObject):
     """For non-geometric modalities, metadata is contained in object answers, instead of frame"""
 
-    shape: Union[Literal[Shape.TEXT], Literal[Shape.AUDIO], Literal[Shape.SEGMENTATION]]
+    shape: Union[Literal[Shape.TEXT], Literal[Shape.AUDIO], Literal[Shape.TIME_RANGE], Literal[Shape.SEGMENTATION]]
     classifications: List[AttributeDict]
     range: Union[List[List[int]], None]
     spaces: Dict[str, SpaceRange]  # Important for non-geometric shapes, where space info must live on ObjectAnswer

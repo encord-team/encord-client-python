@@ -94,6 +94,7 @@ from encord.objects.coordinates import (
     RotatableBoundingBoxCoordinates,
     SkeletonCoordinates,
     TextCoordinates,
+    TimeRangeCoordinates,
     get_coordinates_from_frame_object_dict,
 )
 from encord.objects.frames import (
@@ -123,6 +124,7 @@ from encord.objects.spaces.multiframe_space.video_space import VideoSpace
 from encord.objects.spaces.range_space.audio_space import AudioSpace
 from encord.objects.spaces.range_space.point_cloud_space import PointCloudFileSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
+from encord.objects.spaces.range_space.time_series_space import TimeSeriesSpace
 from encord.objects.spaces.types import ChildInfo, SceneMetadata, SpaceInfo
 from encord.objects.types import (
     AttributeDict,
@@ -286,11 +288,23 @@ LABELLING_NOT_INITIALISED_ERROR_MESSAGE = (
 
 
 # Type mapping for runtime validation in get_space
-SpaceLiteral = Literal["video", "image", "image_sequence", "audio", "text", "html", "medical", "pdf", "point_cloud"]
+SpaceLiteral = Literal[
+    "video",
+    "image",
+    "image_sequence",
+    "audio",
+    "time_series",
+    "text",
+    "html",
+    "medical",
+    "pdf",
+    "point_cloud",
+]
 SpaceClass = Union[
     VideoSpace,
     ImageSpace,
     AudioSpace,
+    TimeSeriesSpace,
     TextSpace,
     HTMLSpace,
     MedicalSpace,
@@ -309,6 +323,8 @@ def _get_space_literal_from_space_enum(space_enum: SpaceType) -> SpaceLiteral:
         return "image_sequence"
     elif space_enum == SpaceType.AUDIO:
         return "audio"
+    elif space_enum == SpaceType.TIME_SERIES:
+        return "time_series"
     elif space_enum == SpaceType.TEXT:
         return "text"
     elif space_enum == SpaceType.HTML:
@@ -334,6 +350,8 @@ def _get_space_class_from_space_literal(space_literal: SpaceLiteral) -> Type[Spa
         return VideoSpace
     elif space_literal == "audio":
         return AudioSpace
+    elif space_literal == "time_series":
+        return TimeSeriesSpace
     elif space_literal == "text":
         return TextSpace
     elif space_literal == "html":
@@ -1301,6 +1319,10 @@ class LabelRowV2:
         pass
 
     @overload
+    def get_space(self, *, id: str, type_: Literal["time_series"]) -> TimeSeriesSpace:
+        pass
+
+    @overload
     def get_space(self, *, id: str, type_: Literal["text"]) -> TextSpace:
         pass
 
@@ -1334,6 +1356,10 @@ class LabelRowV2:
 
     @overload
     def get_space(self, *, layout_key: str, type_: Literal["audio"]) -> AudioSpace:
+        pass
+
+    @overload
+    def get_space(self, *, layout_key: str, type_: Literal["time_series"]) -> TimeSeriesSpace:
         pass
 
     @overload
@@ -1523,7 +1549,7 @@ class LabelRowV2:
         Returns:
             FrameView: A view of the specified frame.
         """
-        self._method_not_supported_for_audio()
+        self._method_not_supported_for_range_data_type()
 
         self._check_labelling_is_initalised()
         if isinstance(frame, str):
@@ -1565,7 +1591,7 @@ class LabelRowV2:
         Raises:
             LabelRowError: If the specified frame or image hash is not found in the label row.
         """
-        self._method_not_supported_for_audio()
+        self._method_not_supported_for_range_data_type()
 
         images_data = self._get_frame_metadata_list()
         if isinstance(frame, str):
@@ -1707,8 +1733,12 @@ class LabelRowV2:
                             if object_.object_hash in space._objects_map:
                                 append = True
                                 break
-                        elif isinstance(space, AudioSpace) or isinstance(space, TextSpace):
-                            # For backwards compatibility, we treat text as being on frame=0
+                        elif (
+                            isinstance(space, AudioSpace)
+                            or isinstance(space, TimeSeriesSpace)
+                            or isinstance(space, TextSpace)
+                        ):
+                            # For backwards compatibility, range spaces are treated as being on frame=0
                             if frame != 0:
                                 continue
 
@@ -1732,7 +1762,7 @@ class LabelRowV2:
         Raises:
             LabelRowError: If the object instance is already part of another LabelRowV2.
         """
-        self._method_not_supported_for_audio(range_only=object_instance.is_range_only())
+        self._method_not_supported_for_range_data_type(range_only=object_instance.is_range_only())
 
         self._check_labelling_is_initalised()
 
@@ -2020,8 +2050,8 @@ class LabelRowV2:
                             if classification.classification_hash in space._classifications_map:
                                 append = True
                                 break
-                        elif isinstance(space, AudioSpace):
-                            # For backwards compatibility, all audio classifications are treated as being on frame 0
+                        elif isinstance(space, AudioSpace) or isinstance(space, TimeSeriesSpace):
+                            # For backwards compatibility, range classifications are treated as being on frame 0
                             if frame != 0:
                                 continue
 
@@ -2634,7 +2664,7 @@ class LabelRowV2:
 
             # At some point, we also want to add these to the other modalities
             if not is_geometric(self.data_type):
-                shape = cast(Literal[Shape.TEXT, Shape.AUDIO], obj.ontology_item.shape.value)
+                shape = cast(Literal[Shape.TEXT, Shape.AUDIO, Shape.TIME_RANGE], obj.ontology_item.shape.value)
                 # For non-frame entities, all annotations exist only on one frame
                 annotation = obj.get_annotation(0)
                 non_geometric_object_answer_dict = cast(ObjectAnswerForNonGeometric, object_answer_dict)
@@ -2779,7 +2809,7 @@ class LabelRowV2:
         ):
             data_sequence = frame_level_data.frame_number
 
-        elif data_type == DataType.AUDIO or data_type == DataType.PLAIN_TEXT:
+        elif data_type == DataType.AUDIO or data_type == DataType.TIME_SERIES or data_type == DataType.PLAIN_TEXT:
             data_sequence = 0
 
         elif data_type == DataType.DICOM_STUDY:
@@ -2807,7 +2837,7 @@ class LabelRowV2:
             ret["audio_sample_rate"] = self._label_row_read_only_data.audio_sample_rate
             ret["audio_bit_depth"] = self._label_row_read_only_data.audio_bit_depth
             ret["audio_num_channels"] = self._label_row_read_only_data.audio_num_channels
-        elif self.data_type == DataType.PLAIN_TEXT:
+        elif self.data_type == DataType.TIME_SERIES or self.data_type == DataType.PLAIN_TEXT:
             pass
         elif self.data_type == DataType.GROUP:
             pass
@@ -2877,7 +2907,7 @@ class LabelRowV2:
             for frame in self._frame_to_hashes.keys():
                 ret[str(frame)] = self._to_encord_label(frame)
 
-        elif data_type == DataType.AUDIO or data_type == DataType.PLAIN_TEXT:
+        elif data_type == DataType.AUDIO or data_type == DataType.TIME_SERIES or data_type == DataType.PLAIN_TEXT:
             return {}
 
         elif data_type == DataType.DICOM_STUDY:
@@ -3088,6 +3118,13 @@ class LabelRowV2:
                         has_multilayer_labels=True,
                     )
                     res[ROOT_SPACE_ID] = multilayer_image_space
+                elif space_info["space_type"] == SpaceType.TIME_SERIES:
+                    time_series_space = TimeSeriesSpace(
+                        space_id=ROOT_SPACE_ID,
+                        label_row=self,
+                        space_info=space_info,
+                    )
+                    res[ROOT_SPACE_ID] = time_series_space
                 else:
                     # TODO: Enable reading root space info
                     pass
@@ -3140,6 +3177,13 @@ class LabelRowV2:
                     duration_ms=space_info["duration_ms"],
                 )
                 res[space_id] = audio_space
+            elif space_info["space_type"] == SpaceType.TIME_SERIES:
+                time_series_space = TimeSeriesSpace(
+                    space_id=space_id,
+                    label_row=self,
+                    space_info=space_info,
+                )
+                res[space_id] = time_series_space
             elif space_info["space_type"] == SpaceType.TEXT:
                 text_space = TextSpace(
                     space_id=space_id,
@@ -3223,6 +3267,11 @@ class LabelRowV2:
             elif space_info["space_type"] == SpaceType.AUDIO:
                 audio_space = self.get_space(id=space_id, type_="audio")
                 audio_space._parse_space_dict(
+                    space_info, object_answers=object_answers, classification_answers=classification_answers
+                )
+            elif space_info["space_type"] == SpaceType.TIME_SERIES:
+                time_series_space = self.get_space(id=space_id, type_="time_series")
+                time_series_space._parse_space_dict(
                     space_info, object_answers=object_answers, classification_answers=classification_answers
                 )
             elif space_info["space_type"] == SpaceType.TEXT:
@@ -3355,6 +3404,13 @@ class LabelRowV2:
             audio_num_channels = data_dict["audio_num_channels"]
             audio_bit_depth = data_dict["audio_bit_depth"]
 
+        elif data_type == DataType.TIME_SERIES:
+            data_dict = list(label_row_dict["data_units"].values())[0]
+            data_link = data_dict["data_link"]
+            file_type = data_dict.get("data_type")
+            height = None
+            width = None
+
         elif data_type == DataType.PLAIN_TEXT:
             data_dict = list(label_row_dict["data_units"].values())[0]
             data_link = data_dict["data_link"]
@@ -3484,7 +3540,7 @@ class LabelRowV2:
             elif data_type == DataType.MISSING_DATA_TYPE:
                 raise NotImplementedError(f"Got an unexpected data type `{data_type}`")
 
-            elif data_type == DataType.AUDIO or data_type == DataType.PLAIN_TEXT:
+            elif data_type == DataType.AUDIO or data_type == DataType.TIME_SERIES or data_type == DataType.PLAIN_TEXT:
                 is_html = data_unit["data_type"] == "text/html"
                 self._add_objects_instances_from_objects_without_frames(object_answers, html=is_html)
             else:
@@ -3524,6 +3580,9 @@ class LabelRowV2:
 
         else:
             for object_answer in object_answers.values():
+                if object_answer.get("spaces"):
+                    continue
+
                 ranges: Ranges = []
                 for range_elem in object_answer["range"]:
                     ranges.append(Range(range_elem[0], range_elem[1]))
@@ -3613,10 +3672,13 @@ class LabelRowV2:
         object_frame_instance_info = _AnnotationMetadata.from_dict(frame_object_dict)
 
         expected_shape: Shape
-        coordinates: Union[AudioCoordinates, TextCoordinates]
+        coordinates: Union[AudioCoordinates, TimeRangeCoordinates, TextCoordinates]
         if self._label_row_read_only_data.data_type == DataType.AUDIO:
             expected_shape = Shape.AUDIO
             coordinates = AudioCoordinates(range=ranges)
+        elif self._label_row_read_only_data.data_type == DataType.TIME_SERIES:
+            expected_shape = Shape.TIME_RANGE
+            coordinates = TimeRangeCoordinates(range=ranges)
         elif self._label_row_read_only_data.data_type == DataType.PLAIN_TEXT:
             expected_shape = Shape.TEXT
             coordinates = TextCoordinates(range=ranges)
@@ -3945,9 +4007,9 @@ class LabelRowV2:
                 "Use to_encord_dict() to export labels."
             )
 
-    def _method_not_supported_for_audio(self, range_only: bool = False):
-        if self.data_type == DataType.AUDIO and not range_only:
-            raise LabelRowError("This method is not supported for audio.")
+    def _method_not_supported_for_range_data_type(self, range_only: bool = False):
+        if self.data_type in (DataType.AUDIO, DataType.TIME_SERIES) and not range_only:
+            raise LabelRowError(f"This method is not supported for {self.data_type.value}.")
 
     def __repr__(self) -> str:
         return f"LabelRowV2(label_hash={self.label_hash}, data_hash={self.data_hash}, data_title={self.data_title})"

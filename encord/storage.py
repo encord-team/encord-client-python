@@ -31,7 +31,7 @@ from encord.common.deprecated import deprecated
 from encord.exceptions import EncordException
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS
-from encord.http.utils import CloudUploadSettings, _upload_single_file
+from encord.http.utils import CloudUploadSettings, _upload_single_file, download_signed_urls_as_json
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.orm.dataset import LongPollingStatus
@@ -149,6 +149,8 @@ class StorageFolder:
         item_types: Optional[List[StorageItemType]] = None,
         order: FoldersSortBy = FoldersSortBy.NAME,
         get_signed_urls: bool = False,
+        include_client_metadata: bool = True,
+        resolve_client_metadata_locally: bool = False,
         desc: bool = False,
         page_size: int = 100,
     ) -> Iterable["StorageItem"]:
@@ -162,6 +164,11 @@ class StorageFolder:
             item_types (Optional[List[StorageItemType]]): Filter items by type.
             order (FoldersSortBy): Sort order. Defaults to FoldersSortBy.NAME.
             get_signed_urls (bool): Whether to get signed URLs for the items. Defaults to False.
+            include_client_metadata (bool): Optionally include client metadata into the result of this query.
+                Defaults to True.
+            resolve_client_metadata_locally (bool): Has no effect unless ``include_client_metadata`` is set.
+                When true, the SDK downloads the metadata client-side instead of the server embedding it directly
+                in the response. Use this to prevent server timeouts for projects with large client metadata.
             desc (bool): Sort in descending order. Defaults to False.
             page_size (int): Number of items to return per page.  Default if not specified is 100. Maximum value is 1000.
 
@@ -177,16 +184,55 @@ class StorageFolder:
             page_token=None,
             page_size=page_size,
             sign_urls=get_signed_urls,
+            include_client_metadata=include_client_metadata,
+            client_metadata_as_signed_url=resolve_client_metadata_locally,
         )
 
-        paged_items = self._api_client.get_paged_iterator(
-            f"storage/folders/{self.uuid}/items",
-            params=params,
-            result_type=orm_storage.StorageItem,
-        )
+        # Both branches yield a stream of orm StorageItems; the resolve branch additionally in-lines
+        # client metadata that the backend returned as signed URLs. A single loop below wraps whatever
+        # source we picked, so the two paths never both run.
+        if include_client_metadata and resolve_client_metadata_locally:
+            orm_items = self._iter_items_resolving_metadata_urls(params)
+        else:
+            orm_items = self._api_client.get_paged_iterator(
+                f"storage/folders/{self.uuid}/items",
+                params=params,
+                result_type=orm_storage.StorageItem,
+            )
 
-        for item in paged_items:
+        for item in orm_items:
             yield StorageItem(self._api_client, item)
+
+    def _iter_items_resolving_metadata_urls(self, params: ListItemsParams) -> Iterable[orm_storage.StorageItem]:
+        """Page through items whose ``client_metadata`` the backend returned as a signed URL, and
+        in-line the resolved contents.
+
+        When ``client_metadata_as_signed_url`` is set the backend returns each item's client metadata
+        as a signed URL (leaving ``client_metadata`` empty) rather than embedding it, which avoids
+        server timeouts for large metadata. We fetch those URLs — batched per page for concurrency —
+        and write the decoded JSON back into ``client_metadata`` so callers only ever see resolved
+        metadata.
+        """
+        while True:
+            page = self._api_client.get(
+                f"storage/folders/{self.uuid}/items",
+                params=params,
+                result_type=Page[orm_storage.StorageItemWithClientMetadataSignedUrl],
+            )
+
+            urls = [item.client_metadata_signed_url for item in page.results if item.client_metadata_signed_url]
+            contents_by_url = download_signed_urls_as_json(urls, requests_settings=self._api_client.requests_settings)
+
+            for item in page.results:
+                url = item.client_metadata_signed_url
+                if url and url in contents_by_url:
+                    item.client_metadata = json.dumps(contents_by_url[url])
+                yield item
+
+            if page.next_page_token is not None:
+                params.page_token = page.next_page_token
+            else:
+                break
 
     def delete(self) -> None:
         """Deletes the folder."""

@@ -86,7 +86,10 @@ def _get_expected_metadata_for_space_literal(space_literal: SpaceLiteral) -> Spa
         exhaustive_guard(space_literal, message=f"Missing implementation for space {space_literal}")
 
 
-ALL_GROUP_SPACES = set(get_args(SpaceLiteral)) - {"point_cloud"}  # no point cloud space in DATA_GROUP_METADATA
+ALL_GROUP_SPACES = set(get_args(SpaceLiteral)) - {
+    "point_cloud",
+    "time_series",
+}  # no point cloud or time series space in DATA_GROUP_METADATA
 
 
 def test_space_metadata_is_populated_for_data_group(ontology):

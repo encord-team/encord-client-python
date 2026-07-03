@@ -35,6 +35,7 @@ from encord.configs import ENCORD_DOMAIN, BearerConfig, SshConfig, UserConfig, g
 from encord.constants.string_constants import TYPE_DATASET, TYPE_PROJECT
 from encord.dataset import Dataset
 from encord.filter_preset import FilterPreset
+from encord.group import Group
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS, RequestsSettings
 from encord.http.querier import Querier
 from encord.http.utils import (
@@ -74,7 +75,6 @@ from encord.orm.deidentification import (
     DicomDeIdSaveConditionType,
     DicomDeIdStartPayload,
 )
-from encord.orm.group import Group as OrmGroup
 from encord.orm.ontology import CreateOrUpdateOntologyPayload
 from encord.orm.project import (
     BenchmarkQaWorkflowSettings,
@@ -1037,10 +1037,62 @@ class EncordUserClient:
 
         return ret
 
-    def list_groups(self) -> Iterable[OrmGroup]:
-        """List all groups belonging to the user's current organization."""
-        page = self._api_client.get("user/current-organisation/groups", params=None, result_type=Page[OrmGroup])
-        yield from page.results
+    def list_groups(self) -> Iterator[Group]:
+        """List all groups belonging to the user's current organization.
+
+        Returns:
+            Iterator[Group]: The groups in the organization. See
+            :class:`encord.group.Group` for details.
+        """
+        return Group._list_groups(self._api_client)
+
+    def create_group(self, name: str, description: str = "") -> Group:
+        """Create a new group in the user's current organization.
+
+        The calling user is automatically added as a manager of the new group.
+
+        Args:
+            name: The name of the group.
+            description: An optional description of the group.
+
+        Returns:
+            Group: The newly created group. See :class:`encord.group.Group` for details.
+        """
+        return Group._create_group(self._api_client, name, description)
+
+    def get_group(self, group_hash: Union[str, UUID]) -> Group:
+        """Get a group by its unique identifier (UUID).
+
+        Args:
+            group_hash: The unique identifier of the group to retrieve.
+
+        Returns:
+            Group: The group. See :class:`encord.group.Group` for details.
+
+        Raises:
+            ValueError: If ``group_hash`` is a badly formed UUID.
+            :class:`encord.exceptions.ResourceNotFoundError`: If no group with the given
+                UUID exists in the organization.
+        """
+        if isinstance(group_hash, str):
+            group_hash = UUID(group_hash)
+        return Group._get_group(self._api_client, group_hash)
+
+    def delete_group(self, group_hash: Union[str, UUID]) -> None:
+        """Delete a group and revoke any access it granted to projects and other resources.
+
+        Args:
+            group_hash: The unique identifier of the group to delete.
+
+        Returns:
+            None
+
+        Raises:
+            ValueError: If ``group_hash`` is a badly formed UUID.
+        """
+        if isinstance(group_hash, str):
+            group_hash = UUID(group_hash)
+        Group._delete_group(self._api_client, group_hash)
 
     def deidentify_dicom_files_start(
         self,

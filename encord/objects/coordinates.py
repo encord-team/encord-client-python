@@ -743,6 +743,14 @@ class AudioCoordinates(BaseDTO):
             raise ValueError("Range list must contain at least one range.")
 
 
+class TimeRangeCoordinates(BaseDTO):
+    range: Ranges
+
+    def __post_init__(self):
+        if len(self.range) == 0:
+            raise ValueError("Range list must contain at least one range.")
+
+
 class TextCoordinates(BaseDTO):
     """Represents coordinates for a text file
 
@@ -763,10 +771,11 @@ class HtmlCoordinates(BaseDTO):
     range: List[HtmlRange]
 
 
-NON_GEOMETRIC_COORDINATES = {AudioCoordinates, TextCoordinates, HtmlCoordinates}
+NON_GEOMETRIC_COORDINATES = {AudioCoordinates, TimeRangeCoordinates, TextCoordinates, HtmlCoordinates}
 
 Coordinates = Union[
     AudioCoordinates,
+    TimeRangeCoordinates,
     TextCoordinates,
     HtmlCoordinates,
     BoundingBoxCoordinates,
@@ -811,6 +820,7 @@ ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] 
     Shape.CUBOID: [CuboidCoordinates],
     Shape.CUBOID_2D: [Cuboid2DPerspectiveCoordinates, Cuboid2DIsometricCoordinates],
     Shape.AUDIO: [AudioCoordinates],
+    Shape.TIME_RANGE: [TimeRangeCoordinates],
     Shape.TEXT: [TextCoordinates, HtmlCoordinates],
     Shape.SEGMENTATION: [],  # Segmentation uses RLE-encoded strings in space data, not traditional coordinates
 }

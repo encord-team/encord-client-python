@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from encord.orm.base_dto import BaseDTO
@@ -14,6 +14,28 @@ class Group(BaseDTO):
     name: str
     description: str
     created_at: datetime
+
+
+class GroupUser(BaseDTO):
+    user_email: str
+
+
+class CreateGroupPayload(BaseDTO):
+    name: str
+    description: Optional[str] = None
+
+
+class EditGroupPayload(BaseDTO):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
+class AddGroupUsersPayload(BaseDTO):
+    user_emails: List[str]
+
+
+class RemoveGroupUsersPayload(BaseDTO):
+    user_emails: List[str]
 
 
 class EntityGroup(Group):

@@ -119,6 +119,14 @@ class AudioSpaceInfo(BaseSpaceInfo):
     duration_ms: int
 
 
+class TimeSeriesSpaceInfo(BaseSpaceInfo):
+    """Information for a time series space."""
+
+    space_type: Literal[SpaceType.TIME_SERIES]
+    child_info: NotRequired[ChildInfo]
+    root_info: NotRequired[RootInfo]
+
+
 class HtmlSpaceInfo(BaseSpaceInfo):
     """Information for an HTML space."""
 
@@ -194,6 +202,7 @@ SpaceInfo = Union[
     ImageSpaceInfo,
     ImageSequenceSpaceInfo,
     AudioSpaceInfo,
+    TimeSeriesSpaceInfo,
     TextSpaceInfo,
     HtmlSpaceInfo,
     MedicalFileSpaceInfo,
@@ -214,6 +223,8 @@ def _get_space_info_from_space_enum(space_enum: SpaceType) -> Type[SpaceInfo]:
         return ImageSequenceSpaceInfo
     elif space_enum == SpaceType.AUDIO:
         return AudioSpaceInfo
+    elif space_enum == SpaceType.TIME_SERIES:
+        return TimeSeriesSpaceInfo
     elif space_enum == SpaceType.TEXT:
         return TextSpaceInfo
     elif space_enum == SpaceType.HTML:

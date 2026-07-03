@@ -17,8 +17,10 @@ from typing import (
     Tuple,
     Union,
     cast,
+    overload,
 )
 
+from encord.common.bitmask_operations.bitmask_operations import rle_string_to_bitmask_coordinates
 from encord.common.range_manager import RangeManager
 from encord.exceptions import LabelRowError
 from encord.objects.answers import NumericAnswerValue
@@ -152,6 +154,21 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
                 f"Frame {max_frame} is invalid. The max frame on this file is {max_allowed_frame_index}."
             )
 
+    def _get_rle_bitmask_dimensions(self, frames: Frames) -> tuple[int, int]:
+        frame_list = frames_class_to_frames_list(frames)
+        if not frame_list:
+            raise LabelRowError("Please specify at least one frame for the RLE string bitmask annotation.")
+
+        self._are_frames_valid(frame_list)
+
+        width, height = self._get_frame_dimensions(frame_list[0])
+        for frame in frame_list[1:]:
+            frame_width, frame_height = self._get_frame_dimensions(frame)
+            if (frame_width, frame_height) != (width, height):
+                raise LabelRowError("RLE string bitmask annotations require all target frames to share dimensions.")
+
+        return width, height
+
     def _put_object_instance(
         self,
         object_instance: ObjectInstance,
@@ -213,11 +230,43 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             )
             existing_frame_annotation_data.coordinates = coordinates
 
+    @overload
     def put_object_instance(
         self,
         object_instance: ObjectInstance,
         frames: Frames,
         coordinates: GeometricCoordinates,
+        *,
+        on_overlap: FrameOverlapStrategy = ...,
+        created_at: Optional[datetime] = ...,
+        created_by: Optional[str] = ...,
+        last_edited_at: Optional[datetime] = ...,
+        last_edited_by: Optional[str] = ...,
+        confidence: Optional[float] = ...,
+        manual_annotation: Optional[bool] = ...,
+    ) -> None: ...
+
+    @overload
+    def put_object_instance(
+        self,
+        object_instance: ObjectInstance,
+        frames: Frames,
+        coordinates: str,
+        *,
+        on_overlap: FrameOverlapStrategy = ...,
+        created_at: Optional[datetime] = ...,
+        created_by: Optional[str] = ...,
+        last_edited_at: Optional[datetime] = ...,
+        last_edited_by: Optional[str] = ...,
+        confidence: Optional[float] = ...,
+        manual_annotation: Optional[bool] = ...,
+    ) -> None: ...
+
+    def put_object_instance(
+        self,
+        object_instance: ObjectInstance,
+        frames: Frames,
+        coordinates: Union[GeometricCoordinates, str],
         *,
         on_overlap: FrameOverlapStrategy = "error",
         created_at: Optional[datetime] = None,
@@ -236,7 +285,10 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
                 - A list of frame numbers (List[int])
                 - A Range object, specifying the start and end of the range (Range)
                 - A list of Range objects for multiple ranges (List[Range])
-            coordinates: Geometric coordinates for the object (e.g., bounding box, polygon, polyline).
+            coordinates: Geometric coordinates for the object (e.g., bounding box, polygon, polyline),
+                or an Encord-compatible RLE string for bitmask objects.
+                Use ``encord.common.bitmask_operations.coco_rle_to_encord_rle`` before passing
+                pycocotools/COCO RLE counts here.
             on_overlap: Strategy for handling existing annotations on the same frames.
                 - "error" (default): Raises an error if annotation already exists.
                 - "replace": Overwrites existing annotations on overlapping frames.
@@ -253,6 +305,15 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         self._label_row._check_labelling_is_initalised()
         self._method_not_supported_for_object_instance_with_frames(object_instance=object_instance)
         self._method_not_supported_for_object_instance_with_dynamic_attributes(object_instance=object_instance)
+
+        if isinstance(coordinates, str):
+            width, height = self._get_rle_bitmask_dimensions(frames)
+            coordinates = rle_string_to_bitmask_coordinates(
+                object_instance,
+                coordinates,
+                width=width,
+                height=height,
+            )
 
         self._put_object_instance(
             object_instance=object_instance,

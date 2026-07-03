@@ -15,6 +15,7 @@ from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
     RequestContext,
 )
+from encord.http.constants import RequestsSettings
 from encord.http.utils import create_new_session
 from encord.http.v2.error_utils import handle_error_response
 from encord.http.v2.payloads import Page
@@ -29,6 +30,10 @@ class ApiClient:
         self._domain = self._config.domain
         self._base_path = "v2/public/"
         self._bound_callbacks: Dict[Callable, Callable] = {}
+
+    @property
+    def requests_settings(self) -> RequestsSettings:
+        return self._config.requests_settings
 
     def _exception_context(self, request: requests.PreparedRequest) -> RequestContext:
         try:

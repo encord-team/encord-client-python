@@ -15,12 +15,14 @@ import os.path
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
+import requests
 from tqdm import tqdm
 
 from encord.configs import BaseConfig
 from encord.exceptions import CloudUploadError, EncordException
+from encord.http.constants import RequestsSettings
 from encord.http.querier import create_new_session
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
@@ -303,3 +305,53 @@ def _upload_single_file(
 
                 logger.error(error_string)
                 raise CloudUploadError(error_string)
+
+
+DOWNLOAD_SIGNED_URLS_MAX_WORKERS = 10
+
+
+def download_signed_urls_as_json(
+    urls: Iterable[str],
+    *,
+    requests_settings: RequestsSettings,
+) -> Dict[str, Any]:
+    """Concurrently GET each URL and JSON-decode the body.
+
+    Returns a mapping of ``url -> decoded JSON`` for the URLs that resolved successfully. Transient
+    failures (5xx, 429, connection resets, timeouts) are retried with exponential back off and
+    jitter via the underlying session. Any URL that still fails — a non-200 status (e.g. an expired
+    or missing object), an exhausted retry, or a body that won't JSON-parse — is omitted from the
+    result rather than raised, so a single bad URL never fails the whole batch and callers can
+    treat absence as "no content for this URL". Duplicate and falsy URLs are ignored.
+    """
+    unique_urls = list({url for url in urls if url})
+    results: Dict[str, Any] = {}
+    if not unique_urls:
+        return results
+
+    def _fetch_one(url: str) -> Tuple[str, Optional[Any]]:
+        try:
+            with create_new_session(
+                max_retries=requests_settings.max_retries,
+                backoff_factor=requests_settings.backoff_factor,
+                connect_retries=requests_settings.connection_retries,
+                backoff_jitter=requests_settings.backoff_factor,
+            ) as session:
+                response = session.get(url, timeout=(requests_settings.connect_timeout, requests_settings.read_timeout))
+                if response.status_code == 200:
+                    return url, response.json()
+                logger.warning("Failed to fetch signed URL (status %s); skipping.", response.status_code)
+                return url, None
+        except (requests.RequestException, ValueError) as e:
+            # RequestException: transient failure that outlived its retries (connection reset,
+            # timeout, ...). ValueError: body did not JSON-parse. Neither is recoverable here, so
+            # omit the item rather than fail the whole batch.
+            logger.warning("Failed to fetch/parse signed URL; skipping. Error: %s", e)
+            return url, None
+
+    with ThreadPoolExecutor(max_workers=DOWNLOAD_SIGNED_URLS_MAX_WORKERS) as executor:
+        for url, content in executor.map(_fetch_one, unique_urls):
+            if content is not None:
+                results[url] = content
+
+    return results

@@ -251,7 +251,7 @@ class Querier:
 
 @contextmanager
 def create_new_session(
-    max_retries: Optional[int], backoff_factor: float, connect_retries: int
+    max_retries: Optional[int], backoff_factor: float, connect_retries: int, backoff_jitter: float = 0.0
 ) -> Generator[Session, None, None]:
     retry_policy = Retry(
         connect=connect_retries,
@@ -261,6 +261,7 @@ def create_new_session(
         allowed_methods=["POST", "PUT", "GET"],  # type: ignore  # post is there since we use it for idempotent ops too.
         status_forcelist=[413, 429, 500, 502, 503],
         backoff_factor=backoff_factor,
+        backoff_jitter=backoff_jitter,
         raise_on_status=False,
     )
 

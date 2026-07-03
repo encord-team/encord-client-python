@@ -45,6 +45,7 @@ KNOWN_WORDS = {
     "encord",
     "coord",
     "coco",
+    "pycocotools",
     "bbox",
     "bboxes",
     "ontology",

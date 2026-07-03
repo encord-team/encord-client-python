@@ -61,6 +61,7 @@ class Shape(StringEnum):
         rotatable_bounding_box
         bitmask
         audio
+        time_range
         text
         cuboid
         cuboid_2d
@@ -77,6 +78,7 @@ class Shape(StringEnum):
     ROTATABLE_BOUNDING_BOX = "rotatable_bounding_box"
     BITMASK = "bitmask"
     AUDIO = "audio"
+    TIME_RANGE = "time_range"
     TEXT = "text"
     CUBOID = "cuboid"
     CUBOID_2D = "cuboid_2d"

@@ -44,6 +44,7 @@ from encord.objects.coordinates import (
     GeometricCoordinates,
     HtmlCoordinates,
     TextCoordinates,
+    TimeRangeCoordinates,
 )
 from encord.objects.frames import (
     Frames,
@@ -89,7 +90,7 @@ class ObjectInstance:
         self._dynamic_answer_manager = DynamicAnswerManager(self)
 
         # Only used for non-frame entities
-        self._non_geometric = ontology_object.shape in (Shape.AUDIO, Shape.TEXT)
+        self._non_geometric = ontology_object.shape in (Shape.AUDIO, Shape.TIME_RANGE, Shape.TEXT)
 
         # Only for Range based modalities, where the ranged objects share the same metadata across all spaces
         self._instance_metadata: _AnnotationMetadata = _AnnotationMetadata()
@@ -174,7 +175,7 @@ class ObjectInstance:
 
             coordinates = non_geometric_annotation.coordinates
 
-            if isinstance(coordinates, (AudioCoordinates, TextCoordinates)):
+            if isinstance(coordinates, (AudioCoordinates, TimeRangeCoordinates, TextCoordinates)):
                 return coordinates.range
             else:
                 return None
@@ -575,14 +576,14 @@ class ObjectInstance:
 
             check_coordinate_type(coordinates, self._ontology_object, self._parent)
 
-            if isinstance(coordinates, (TextCoordinates, AudioCoordinates)):
+            if isinstance(coordinates, (TextCoordinates, AudioCoordinates, TimeRangeCoordinates)):
                 for non_geometric_range in coordinates.range:
                     self.check_within_range(non_geometric_range.end)
             else:
                 self.check_within_range(frame)
 
             if existing_frame_data is None:
-                if isinstance(coordinates, (TextCoordinates, AudioCoordinates)):
+                if isinstance(coordinates, (TextCoordinates, AudioCoordinates, TimeRangeCoordinates)):
                     existing_frame_data = _RangeObjectAnnotationData(
                         annotation_metadata=_AnnotationMetadata(), range_manager=RangeManager()
                     )
@@ -610,7 +611,9 @@ class ObjectInstance:
                 geometric_coordinates = cast(GeometricCoordinates, coordinates)
                 existing_frame_data.coordinates = geometric_coordinates
             elif isinstance(existing_frame_data, _RangeObjectAnnotationData):
-                non_geometric_coordinates = cast(Union[TextCoordinates, AudioCoordinates], coordinates)
+                non_geometric_coordinates = cast(
+                    Union[TextCoordinates, AudioCoordinates, TimeRangeCoordinates], coordinates
+                )
 
                 # This is for backwards compatibility.
                 # When set_for_frames is called for non_geometric objects, we replace the entire range, instead of simply adding to the range.
@@ -787,6 +790,8 @@ class ObjectInstance:
                     return TextCoordinates(range=ranges)
                 elif self._object_instance._ontology_object.shape == Shape.AUDIO:
                     return AudioCoordinates(range=ranges)
+                elif self._object_instance._ontology_object.shape == Shape.TIME_RANGE:
+                    return TimeRangeCoordinates(range=ranges)
                 else:
                     raise LabelRowError("No coordinates for this annotation.")
             else:

@@ -5,6 +5,7 @@ from unittest.mock import Mock
 import pytest
 from deepdiff import DeepDiff
 
+from encord.common.bitmask_operations.bitmask_operations import _rle_to_string, ranges_to_rle_counts
 from encord.constants.enums import DataType, SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects import Classification, LabelRowV2, Object
@@ -473,3 +474,78 @@ def test_point_cloud_segmentation_parses_static_attributes(ontology):
     # The static attribute should be populated from object_answers
     answer = obj.get_answer(segmentation_text_attribute)
     assert answer == "Test attribute answer"
+
+
+def test_put_object_instance_rle_string(ontology):
+    label_row = LabelRowV2(SCENE_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(SCENE_NO_LABELS)
+
+    segmentation_cls = label_row.ontology_structure.get_child_by_hash("segmentationFeatureNodeHash", type_=Object)
+    space = label_row.get_space(id="path/to/file1.pcd", type_="point_cloud")
+
+    original_ranges = [Range(0, 5), Range(10, 15), Range(20, 22)]
+    rle_string = _rle_to_string(ranges_to_rle_counts([(r.start, r.end) for r in original_ranges]))
+
+    obj = ObjectInstance(segmentation_cls)
+    space.put_object_instance(obj, rle_string)
+
+    actual_ranges = space.get_object_ranges(obj)
+    assert [(r.start, r.end) for r in actual_ranges] == [(r.start, r.end) for r in original_ranges]
+
+
+def test_put_object_instance_rle_empty_string_raises(ontology):
+    label_row = LabelRowV2(SCENE_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(SCENE_NO_LABELS)
+
+    segmentation_cls = label_row.ontology_structure.get_child_by_hash("segmentationFeatureNodeHash", type_=Object)
+    space = label_row.get_space(id="path/to/file1.pcd", type_="point_cloud")
+
+    obj = ObjectInstance(segmentation_cls)
+    with pytest.raises(LabelRowError):
+        space.put_object_instance(obj, "")
+
+
+def test_put_object_instance_rle_wrong_shape_raises(ontology):
+    label_row = LabelRowV2(SCENE_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(SCENE_NO_LABELS)
+
+    # box_with_attributes_ontology_item is a bounding box, not segmentation
+    box_cls = label_row.ontology_structure.get_child_by_hash("MTA2MjAx", type_=Object)
+    space = label_row.get_space(id="path/to/file1.pcd", type_="point_cloud")
+
+    rle_string = _rle_to_string(ranges_to_rle_counts([(0, 5)]))
+    obj = ObjectInstance(box_cls)
+    with pytest.raises(LabelRowError, match="segmentation"):
+        space.put_object_instance(obj, rle_string)
+
+
+def test_put_object_instance_rle_roundtrips_through_serde(ontology):
+    label_row = LabelRowV2(SCENE_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(SCENE_NO_LABELS)
+
+    segmentation_cls = label_row.ontology_structure.get_child_by_hash("segmentationFeatureNodeHash", type_=Object)
+    space = label_row.get_space(id="path/to/file1.pcd", type_="point_cloud")
+
+    original_ranges = [Range(3, 7), Range(12, 18)]
+    rle_string = _rle_to_string(ranges_to_rle_counts([(r.start, r.end) for r in original_ranges]))
+
+    obj = ObjectInstance(segmentation_cls)
+    space.put_object_instance(obj, rle_string)
+
+    # Serialise and deserialise
+    space_dict = space._to_space_dict()
+    label_row2 = LabelRowV2(SCENE_METADATA, Mock(), ontology)
+    label_row2.from_labels_dict(SCENE_NO_LABELS)
+    space2 = label_row2.get_space(id="path/to/file1.pcd", type_="point_cloud")
+    space_info = PointCloudFileSpaceInfo(
+        space_type=SpaceType.POINT_CLOUD,
+        scene_info={"stream_id": "", "event_index": 0, "start_frame": 0, "uri": "path/to/file1.pcd"},
+        labels=space_dict["labels"],
+    )
+    objects_list = space_dict["labels"]["objects"]
+    space2._parse_space_dict(space_info, {o["objectHash"]: o for o in objects_list}, {})
+
+    decoded_objects = space2.get_object_instances()
+    assert len(decoded_objects) == 1
+    decoded_ranges = space2._object_hash_to_range_manager[decoded_objects[0].object_hash].get_ranges()
+    assert [(r.start, r.end) for r in decoded_ranges] == [(r.start, r.end) for r in original_ranges]

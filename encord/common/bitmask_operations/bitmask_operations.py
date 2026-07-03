@@ -1,9 +1,17 @@
 from itertools import groupby
-from typing import List, Sequence, Set, Tuple
+from typing import TYPE_CHECKING, List, Optional, Sequence, Set, Tuple
+
+from encord.exceptions import LabelRowError
+from encord.objects.common import Shape
+from encord.objects.frames import Ranges, frames_to_ranges
+
+if TYPE_CHECKING:
+    from encord.objects.bitmask import BitmaskCoordinates
+    from encord.objects.ontology_object_instance import ObjectInstance
 
 
 def _string_to_rle(mask_string: str) -> List[int]:
-    """COCO-compatible string to RLE-encoded mask de-serialisation"""
+    """Encord-compatible string to RLE-encoded mask de-serialisation"""
     cnts: List[int] = []
     p = 0
 
@@ -31,7 +39,7 @@ def _string_to_rle(mask_string: str) -> List[int]:
 
 
 def _rle_to_string(rle: Sequence[int]) -> str:
-    """COCO-compatible RLE-encoded mask to string serialization"""
+    """Encord-compatible RLE-encoded mask to string serialization"""
     rle_string = ""
     for i, x in enumerate(rle):
         if i > 2:
@@ -57,7 +65,7 @@ def _rle_to_string(rle: Sequence[int]) -> str:
 
 
 def _mask_to_rle(mask: bytes) -> List[int]:
-    """COCO-compatible raw bitmask to COCO-compatible RLE"""
+    """Encord-compatible raw bitmask to Encord-compatible RLE"""
     if len(mask) == 0:
         return []
     raw_rle = [len(list(group)) for _, group in groupby(mask)]
@@ -68,7 +76,7 @@ def _mask_to_rle(mask: bytes) -> List[int]:
 
 
 def _rle_to_mask(rle: List[int], size: int) -> bytes:
-    """COCO-compatible RLE to bitmask"""
+    """Encord-compatible RLE to bitmask"""
     res = bytearray(size)
     offset = 0
 
@@ -90,6 +98,28 @@ def serialise_bitmask(bitmask: bytes) -> str:
 def deserialise_bitmask(serialised_bitmask: str, length: int) -> bytes:
     rle = _string_to_rle(serialised_bitmask)
     return _rle_to_mask(rle, length)
+
+
+def encord_rle_to_coco_rle(encord_rle_string: str, *, height: int, width: int) -> str:
+    """Convert an Encord-compatible RLE string to a COCO-compatible RLE counts string.
+
+    Encord bitmasks are encoded from row-major mask data. COCO RLE counts are encoded
+    from column-major mask data, as produced by pycocotools.
+    """
+    row_major_mask = deserialise_bitmask(encord_rle_string, height * width)
+    column_major_mask = transpose_bytearray(row_major_mask, shape=(height, width))
+    return serialise_bitmask(column_major_mask)
+
+
+def coco_rle_to_encord_rle(coco_rle_string: str, *, height: int, width: int) -> str:
+    """Convert a COCO-compatible RLE counts string to an Encord-compatible RLE string.
+
+    COCO RLE counts are encoded from column-major mask data, as produced by
+    pycocotools. Encord bitmasks are encoded from row-major mask data.
+    """
+    column_major_mask = deserialise_bitmask(coco_rle_string, height * width)
+    row_major_mask = transpose_bytearray(column_major_mask, shape=(width, height))
+    return serialise_bitmask(row_major_mask)
 
 
 def transpose_bytearray(byte_data: bytes, shape: Tuple[int, int]) -> bytes:
@@ -146,3 +176,48 @@ def rle_string_to_points(rle_string: str) -> Set[int]:
         current_index += count
 
     return points
+
+
+def _ensure_rle_supported_shape(object_instance: "ObjectInstance", supported_shape: Shape) -> None:
+    if object_instance.ontology_item.shape == supported_shape:
+        return
+
+    raise LabelRowError(
+        f"RLE strings are only supported for {supported_shape.value} objects, "
+        f"but got shape '{object_instance.ontology_item.shape}'."
+    )
+
+
+def rle_string_to_ranges(object_instance: "ObjectInstance", rle_string: str, *, range_name: str) -> Ranges:
+    _ensure_rle_supported_shape(object_instance, Shape.SEGMENTATION)
+
+    ranges = frames_to_ranges(rle_string_to_points(rle_string))
+    if not ranges:
+        raise LabelRowError(f"The RLE string produced no valid {range_name}.")
+
+    return ranges
+
+
+def rle_string_to_bitmask_coordinates(
+    object_instance: "ObjectInstance",
+    rle_string: str,
+    *,
+    width: Optional[int],
+    height: Optional[int],
+) -> "BitmaskCoordinates":
+    from encord.objects.bitmask import BitmaskCoordinates
+
+    _ensure_rle_supported_shape(object_instance, Shape.BITMASK)
+
+    if width is None or height is None or width <= 0 or height <= 0:
+        raise LabelRowError("RLE string bitmask annotations require image width and height.")
+
+    return BitmaskCoordinates(
+        BitmaskCoordinates.EncodedBitmask(
+            top=0,
+            left=0,
+            height=height,
+            width=width,
+            rle_string=rle_string,
+        )
+    )

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from collections import OrderedDict
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, fields
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from uuid import UUID
@@ -400,6 +400,28 @@ class LabelRowMetadata(Formatter):
             return value
 
         return {k: transform(v) for k, v in asdict(self).items()}
+
+
+@dataclass(frozen=True)
+class LabelRowMetadataWithClientMetadataSignedUrl(LabelRowMetadata):
+    """``LabelRowMetadata`` plus the signed URL the backend returns when ``client_metadata_as_signed_url`` is requested.
+
+    When that flag is set, the server delivers ``client_metadata`` as a signed URL pointing at the
+    bucket-stored blob (and leaves ``client_metadata`` itself empty) instead of in-lining it. This
+    subclass is an internal carrier for that one extra field: the SDK fetches the URL and in-lines
+    the result, so callers only ever see resolved ``client_metadata``. It is never exposed on a
+    public return type.
+    """
+
+    client_metadata_signed_url: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, json_dict: Dict) -> LabelRowMetadataWithClientMetadataSignedUrl:
+        base = LabelRowMetadata.from_dict(json_dict)
+        return cls(
+            **{f.name: getattr(base, f.name) for f in fields(LabelRowMetadata)},
+            client_metadata_signed_url=json_dict.get("client_metadata_signed_url"),
+        )
 
 
 class LabelValidationState(BaseDTO):

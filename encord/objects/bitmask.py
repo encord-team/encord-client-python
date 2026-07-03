@@ -50,6 +50,9 @@ class BitmaskCoordinates:
         :ref:`NumPy array interface <https://numpy.org/doc/stable/reference/arrays.interface.html>`,
         such as Pillow images.
 
+        ``EncodedBitmask.rle_string`` expects an Encord-compatible RLE string. Convert pycocotools/COCO RLE
+        counts with :func:`encord.common.bitmask_operations.coco_rle_to_encord_rle`.
+
         For detailed information please refer to :ref:`bitmask tutorial <tutorials/bitmasks:Bitmasks>`
         """
         if isinstance(source, BitmaskCoordinates.EncodedBitmask):

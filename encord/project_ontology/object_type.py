@@ -8,3 +8,4 @@ class ObjectShape(Enum):
     KEY_POINT = "point"
     SKELETON = "skeleton"
     ROTATABLE_BOUNDING_BOX = "rotatable_bounding_box"
+    TIME_RANGE = "time_range"

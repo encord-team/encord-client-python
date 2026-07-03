@@ -6,6 +6,8 @@ from encord.common.bitmask_operations.bitmask_operations import (
     _rle_to_mask,
     _rle_to_string,
     _string_to_rle,
+    coco_rle_to_encord_rle,
+    encord_rle_to_coco_rle,
     ranges_to_rle_counts,
     rle_string_to_points,
     serialise_bitmask,
@@ -155,3 +157,51 @@ def test_ranges_rle_roundtrip():
     encoded = _rle_to_string(rle_counts)
     decoded = rle_string_to_points(encoded)
     assert decoded == expected_points
+
+
+def test_encord_rle_to_coco_rle_matches_pycocotools():
+    cocomask = pytest.importorskip("pycocotools.mask")
+    mask = np.array(
+        [
+            [True, False, False, True],
+            [False, True, False, False],
+            [True, True, False, False],
+        ],
+        dtype=bool,
+    )
+
+    encord_rle = serialise_bitmask(mask.tobytes())
+    actual_coco_rle = encord_rle_to_coco_rle(encord_rle, height=mask.shape[0], width=mask.shape[1])
+    expected_coco_rle = cocomask.encode(np.asfortranarray(mask.astype(np.uint8)))["counts"].decode("ascii")
+
+    assert actual_coco_rle == expected_coco_rle
+
+
+def test_coco_rle_to_encord_rle_matches_pycocotools():
+    cocomask = pytest.importorskip("pycocotools.mask")
+    mask = np.array(
+        [
+            [True, False, False, True],
+            [False, True, False, False],
+            [True, True, False, False],
+        ],
+        dtype=bool,
+    )
+    coco_rle = cocomask.encode(np.asfortranarray(mask.astype(np.uint8)))["counts"].decode("ascii")
+
+    encord_rle = coco_rle_to_encord_rle(coco_rle, height=mask.shape[0], width=mask.shape[1])
+
+    assert (
+        BitmaskCoordinates(
+            BitmaskCoordinates.EncodedBitmask(
+                top=0,
+                left=0,
+                height=mask.shape[0],
+                width=mask.shape[1],
+                rle_string=encord_rle,
+            )
+        )
+        .to_numpy_array()
+        .tolist()
+        == mask.tolist()
+    )

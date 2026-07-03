@@ -31,6 +31,7 @@ class StorageItemType(CamelStrEnum):
     - **DICOM_FILE:** A single DICOM file.
     - **DICOM_SERIES:** A DICOM series composed of multiple DICOM files.
     - **AUDIO:** An audio file.
+    - **TIME_SERIES:** A time series file.
     - NIFTI:** A NIFTI volume.
     - **PLAIN_TEXT:** A text file (for example TXT, HTML, JSON).
     - **PDF:** A PDF document.
@@ -45,6 +46,7 @@ class StorageItemType(CamelStrEnum):
     DICOM_FILE = auto()
     DICOM_SERIES = auto()
     AUDIO = auto()
+    TIME_SERIES = auto()
     NIFTI = auto()
     PLAIN_TEXT = auto()
     PDF = auto()
@@ -201,6 +203,19 @@ class StorageItem(BaseDTO):
     audio_bit_depth: Optional[int]
     audio_codec: Optional[str]
     audio_num_channels: Optional[int]
+
+
+class StorageItemWithClientMetadataSignedUrl(StorageItem):
+    """``StorageItem`` plus the signed URL the backend returns when ``client_metadata_as_signed_url`` is requested.
+
+    When that flag is set, the server delivers ``client_metadata`` as a signed URL pointing at the
+    bucket-stored blob (and leaves ``client_metadata`` itself empty) instead of in-lining it. This
+    subclass is an internal carrier for that one extra field: the SDK fetches the URL and in-lines
+    the result, so callers only ever see resolved ``client_metadata``. It is never exposed on a
+    public return type.
+    """
+
+    client_metadata_signed_url: Optional[str] = None
 
 
 class StorageItemInaccessible(BaseDTO):
@@ -863,6 +878,8 @@ class ListItemsParams(BaseDTO):
     page_token: Optional[str]
     page_size: int
     sign_urls: bool
+    include_client_metadata: Optional[bool] = None
+    client_metadata_as_signed_url: Optional[bool] = None
 
 
 class ListFoldersParams(BaseDTO):

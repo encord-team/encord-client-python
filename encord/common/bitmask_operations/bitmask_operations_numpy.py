@@ -3,11 +3,15 @@ from typing import List, Tuple
 import numpy as np
 
 # Importing python implementations of functions that not have numpy implementation
-from .bitmask_operations import _rle_to_mask, _rle_to_string, _string_to_rle
+from .bitmask_operations import (
+    _rle_to_mask,
+    _rle_to_string,
+    _string_to_rle,
+)
 
 
 def _mask_to_rle(mask: bytes) -> List[int]:
-    """COCO-compatible raw bitmask to COCO-compatible RLE"""
+    """Encord-compatible raw bitmask to Encord-compatible RLE"""
     if len(mask) == 0:
         return []
     mask_buffer = np.frombuffer(mask, dtype=np.bool_)
