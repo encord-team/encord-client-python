@@ -401,7 +401,6 @@ class ObjectInstance:
     def _set_answer_from_grouped_list(
         self, attribute: Attribute, answers_list: List[AttributeDict | DynamicAttributeObject]
     ) -> None:
-        track_hash: str | None = None
         if isinstance(attribute, ChecklistAttribute):
             if not attribute.dynamic:
                 options = []
@@ -412,14 +411,13 @@ class ObjectInstance:
                         option = attribute.get_child_by_hash(feature_hash, type_=Option)
                         options.append(option)
 
-                self._set_answer_unsafe(options, attribute, None, track_hash=track_hash)
+                self._set_answer_unsafe(options, attribute, None)
             else:
                 dynamic_answers_list = cast(List[DynamicAttributeObject], answers_list)
                 all_feature_hashes: Set[str] = set()
                 ranges = []
                 for answer_dict in dynamic_answers_list:
                     answers = answer_dict["answers"]
-                    track_hash = answer_dict.get("trackHash")
                     if isinstance(answers, list):
                         feature_hashes: Set[str] = {answer["featureHash"] for answer in answers}
                         all_feature_hashes.update(feature_hashes)
@@ -433,7 +431,7 @@ class ObjectInstance:
 
                 for frame_range, feature_hashes in self._merge_answers_to_non_overlapping_ranges(ranges):
                     options = [options_cache[feature_hash] for feature_hash in feature_hashes]
-                    self._set_answer_unsafe(options, attribute, [frame_range], track_hash=track_hash)
+                    self._set_answer_unsafe(options, attribute, [frame_range])
         else:
             for answer in answers_list:
                 self._set_answer_from_dict(answer, attribute)
@@ -851,21 +849,18 @@ class ObjectInstance:
         answer: Union[str, NumericAnswerValue, Option, Iterable[Option]],
         attribute: Attribute,
         ranges: Optional[Ranges],
-        track_hash: Optional[str] = None,
     ) -> None:
         if attribute.dynamic:
             frames = sorted(self._frames_to_instance_data.keys()) if ranges is None else ranges
 
-            self._dynamic_answer_manager._set_answer(answer, attribute, frames=frames, track_hash=track_hash)
+            self._dynamic_answer_manager._set_answer(answer, attribute, frames=frames)
         else:
             static_answer = self._static_answer_map[attribute.feature_node_hash]
             static_answer.set(answer)
 
     def _set_answer_from_dict(self, answer_dict: AttributeDict | DynamicAttributeObject, attribute: Attribute) -> None:
-        track_hash: str | None = None
         if attribute.dynamic:
             dynamic_answer_dict = cast(DynamicAttributeObject, answer_dict)
-            track_hash = dynamic_answer_dict["trackHash"]
             ranges = ranges_list_to_ranges(dynamic_answer_dict["range"])
         else:
             ranges = None
@@ -873,13 +868,13 @@ class ObjectInstance:
         answers = answer_dict["answers"]
         if isinstance(attribute, TextAttribute):
             text_answer = cast(str, answers)
-            self._set_answer_unsafe(text_answer, attribute, ranges, track_hash=track_hash)
+            self._set_answer_unsafe(text_answer, attribute, ranges)
         elif isinstance(attribute, RadioAttribute):
             radio_option_answers = cast(List[AnswerDict], answers)
             if len(radio_option_answers) == 1:
                 feature_hash = radio_option_answers[0]["featureHash"]
                 option = attribute.get_child_by_hash(feature_hash, type_=Option)
-                self._set_answer_unsafe(option, attribute, ranges, track_hash=track_hash)
+                self._set_answer_unsafe(option, attribute, ranges)
         elif isinstance(attribute, ChecklistAttribute):
             checklist_answers = cast(List[AnswerDict], answers)
             options = []
@@ -888,7 +883,7 @@ class ObjectInstance:
                 option = attribute.get_child_by_hash(feature_hash, type_=Option)
                 options.append(option)
 
-            self._set_answer_unsafe(options, attribute, ranges, track_hash=track_hash)
+            self._set_answer_unsafe(options, attribute, ranges)
 
         elif isinstance(attribute, NumericAttribute):
             value = cast(float, answer_dict["answers"])
@@ -896,7 +891,7 @@ class ObjectInstance:
             if not isinstance(value, float) and not isinstance(value, int):
                 raise LabelRowError(f"The answer for a numeric attribute must be a float or an int. Found {value}.")
 
-            self._set_answer_unsafe(value, attribute, ranges, track_hash=track_hash)
+            self._set_answer_unsafe(value, attribute, ranges)
         else:
             raise NotImplementedError(f"The attribute type {type(attribute)} is not supported.")
 
@@ -1056,7 +1051,6 @@ class DynamicAnswerManager:
         answer: Union[str, NumericAnswerValue, Option, Iterable[Option]],
         attribute: Attribute,
         frames: Frames,
-        track_hash: str | None = None,
     ) -> None:
         frame_list = frames_class_to_frames_list(frames)
         for frame in frame_list:
@@ -1066,9 +1060,6 @@ class DynamicAnswerManager:
 
         default_answer = get_default_answer_from_attribute(attribute)
         default_answer.set(answer)
-
-        if track_hash:
-            default_answer._track_hash = track_hash
 
         frame_list = frames_class_to_frames_list(frames)
         for frame in frame_list:

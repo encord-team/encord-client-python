@@ -267,13 +267,13 @@ class DynamicAttributeObjectRequired(AttributeDict):
     range: list[list[int]]
     dynamic: bool
     shouldPropagate: bool
-    trackHash: Optional[str]  # See if we can remove this
 
 
 class DynamicAttributeObject(DynamicAttributeObjectRequired, total=False):
     """All fields for dynamic attribute object in object_actions."""
 
     spaceId: str
+    trackHash: NotRequired[Optional[str]]
 
 
 class ClassificationAnswerRequired(TypedDict):

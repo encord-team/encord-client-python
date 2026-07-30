@@ -72,6 +72,7 @@ def test_data_upload_scene_serializes_for_api() -> None:
         "images": [],
         "imageGroupsFromItems": [],
         "audio": [],
+        "timeSeries": [],
         "nifti": [],
         "text": [],
         "pdf": [],
@@ -86,3 +87,31 @@ def test_data_upload_scene_serializes_for_api() -> None:
         "skipDuplicateUrls": False,
         "upsertMetadata": False,
     }
+
+
+def test_time_series_upload_serializes_with_dev_wire_type() -> None:
+    time_series = orm_storage.DataUploadItems(
+        time_series=[
+            orm_storage.DataUploadTimeSeries(
+                object_url="gs://bucket/pump.csv",
+                title="pump.csv",
+                client_metadata={"asset_id": "PUMP-042"},
+            )
+        ]
+    )
+
+    assert time_series.to_dict()["timeSeries"] == [
+        {
+            "objectUrl": "gs://bucket/pump.csv",
+            "title": "pump.csv",
+            "clientMetadata": {"asset_id": "PUMP-042"},
+        }
+    ]
+    assert (
+        orm_storage.UploadSignedUrlsPayload(
+            item_type=orm_storage.StorageItemType.TIMESERIES,
+            count=1,
+            frames_subfolder_name=None,
+        ).to_dict()["itemType"]
+        == "timeseries"
+    )

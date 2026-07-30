@@ -14,6 +14,7 @@ from __future__ import annotations
 import base64
 import logging
 import time
+import urllib.parse
 import uuid
 import xml.etree.ElementTree as ET
 from datetime import datetime
@@ -76,6 +77,12 @@ from encord.orm.deidentification import (
     DicomDeIdStartPayload,
 )
 from encord.orm.ontology import CreateOrUpdateOntologyPayload
+from encord.orm.organisation_user import (
+    AddOrganisationUserPayload,
+    OrganisationMemberType,
+    OrganisationUser,
+    OrganisationUserRoleName,
+)
 from encord.orm.project import (
     BenchmarkQaWorkflowSettings,
     CvatExportType,
@@ -180,6 +187,7 @@ class EncordUserClient:
         self,
         dataset_hash: Union[str, UUID],
         dataset_access_settings: DatasetAccessSettings = DEFAULT_DATASET_ACCESS_SETTINGS,
+        include_data_rows: bool = True,
     ) -> Dataset:
         """Get the Dataset class to access dataset fields and manipulate a dataset.
 
@@ -192,9 +200,13 @@ class EncordUserClient:
         Args:
             dataset_hash: The Dataset ID
             dataset_access_settings: Set the dataset_access_settings if you would like to change the defaults.
+            include_data_rows: Whether to eagerly fetch the dataset's data rows. Defaults to
+                ``True``. Set to ``False`` to fetch dataset
+                metadata only and avoid pulling every data row.
 
         Returns:
-            Returns all Dataset information (title, dataset_hash, dataset_type, and more) and all data rows (including all data row information for each data unit).
+            Returns all Dataset information (title, dataset_hash, dataset_type, and more). Data rows
+            are included only when ``include_data_rows`` is ``True`` (the default).
         """
         if isinstance(dataset_hash, UUID):
             dataset_hash = str(dataset_hash)
@@ -206,8 +218,8 @@ class EncordUserClient:
             dataset_access_settings=dataset_access_settings,
             api_client=self._api_client,
         )
-        orm_dataset = client.get_dataset()
-        return Dataset(client, orm_dataset)
+        orm_dataset = client.get_dataset(fetch_rows=include_data_rows)
+        return Dataset(client, orm_dataset, data_rows_fetched=include_data_rows)
 
     def get_project(self, project_hash: Union[str, UUID]) -> Project:
         """Get the Project class to access project fields and manipulate a project.
@@ -1093,6 +1105,84 @@ class EncordUserClient:
         if isinstance(group_hash, str):
             group_hash = UUID(group_hash)
         Group._delete_group(self._api_client, group_hash)
+
+    def list_organisation_users(self) -> List[OrganisationUser]:
+        """List the users of the current organization.
+
+        Results are scoped by your permissions and the organization's settings,
+        so you may see a subset of the organization's members.
+
+        Returns:
+            List[OrganisationUser]: The organization's users, including their
+            organization role and member type.
+        """
+        page = self._api_client.get(
+            "organisation/users",
+            params=None,
+            result_type=Page[OrganisationUser],
+        )
+        return page.results
+
+    def add_organisation_user(
+        self,
+        email: str,
+        *,
+        role_mnemonic_name: OrganisationUserRoleName,
+        member_type: OrganisationMemberType,
+    ) -> None:
+        """Add a user to the current organization.
+
+        The user is added to the organization immediately; there is no
+        invitation acceptance step. If the email does not belong to an existing
+        Encord account, the backend creates the account and sends the user an
+        onboarding email to set their password. If the account already exists,
+        no email is sent.
+
+        Args:
+            email: The email address of the user to add.
+            role_mnemonic_name: Mnemonic name of the organization role to assign,
+                one of ``"ADMIN"``, ``"MEMBER"``, ``"TASKER"`` or ``"WORKFORCE_MANAGER"``.
+            member_type: Whether the user is an ``"internal"`` member of your
+                organization or an ``"external"`` collaborator (e.g. from another
+                company). Only internal members can hold the ``"ADMIN"`` role.
+
+        Returns:
+            None
+
+        Raises:
+            ResourceExistsError: If the user is already a member of the organization.
+                Callers that only need to ensure the membership exists can treat this
+                as a success.
+        """
+        payload = AddOrganisationUserPayload(
+            email=email,
+            role_mnemonic_name=role_mnemonic_name,
+            member_type=member_type,
+        )
+        self._api_client.post(
+            "organisation/users",
+            params=None,
+            payload=payload,
+            result_type=None,
+        )
+
+    def remove_organisation_user(self, email: str) -> None:
+        """Remove a user from the current organization.
+
+        The user's organization membership is deleted immediately, and
+        unassignment of the organization's resources from the user is scheduled.
+
+        Args:
+            email: The email address of the user to remove.
+
+        Raises:
+            ResourceNotFoundError: If no Encord account exists for the email.
+        """
+        self._api_client.delete(
+            f"organisation/users/{urllib.parse.quote(email, safe='')}",
+            params=None,
+            result_type=None,
+        )
 
     def deidentify_dicom_files_start(
         self,

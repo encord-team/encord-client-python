@@ -379,6 +379,77 @@ def build_expected_ontology():
     assert ontology.to_dict() == EXPECTED_ONTOLOGY.to_dict()
 
 
+def _make_skeleton_template(name: str = "Line") -> SkeletonTemplate:
+    coordinates = [
+        SkeletonTemplateCoordinate(x=0, y=0, name="point_0"),
+        SkeletonTemplateCoordinate(x=1, y=1, name="point_1"),
+    ]
+    return SkeletonTemplate(
+        name=name,
+        width=100,
+        height=100,
+        skeleton={str(i): x for (i, x) in enumerate(coordinates)},
+        skeleton_edges={"0": {"1": {"color": "#00000"}}},
+    )
+
+
+def test_add_skeleton_object_shares_hash_with_template():
+    ontology = encord.objects.OntologyStructure()
+    template = _make_skeleton_template()
+
+    obj, returned_template = ontology.add_skeleton_object(name="Pose", skeleton_template=template)
+
+    assert obj.shape == Shape.SKELETON
+    assert obj.feature_node_hash
+    assert obj in ontology.objects
+    # The passed-in template is returned so callers who built it inline still have a handle on it.
+    assert returned_template is template
+    # The object hash is authoritative: the template must reuse it so the editor can
+    # key its template option (skeleton_<objectHash>) off the template's feature_node_hash.
+    assert obj.feature_node_hash == ontology.skeleton_templates[template.name].feature_node_hash
+
+
+def test_add_skeleton_object_respects_provided_hash():
+    ontology = encord.objects.OntologyStructure()
+    template = _make_skeleton_template()
+    feature_node_hash = short_uuid_str()
+
+    obj, _ = ontology.add_skeleton_object(
+        name="Pose",
+        skeleton_template=template,
+        feature_node_hash=feature_node_hash,
+    )
+
+    assert obj.feature_node_hash == feature_node_hash
+    assert ontology.skeleton_templates[template.name].feature_node_hash == feature_node_hash
+
+
+def test_add_skeleton_object_serializes_to_expected_shape():
+    ontology = encord.objects.OntologyStructure()
+    template = _make_skeleton_template()
+    obj, _ = ontology.add_skeleton_object(name="Pose", skeleton_template=template)
+
+    serialized = ontology.to_dict()
+
+    # The backend fix expects skeleton_templates=[{"template": <template>}] with the template's
+    # feature_node_hash equal to the object's, so the editor can render the skeleton object.
+    assert serialized["objects"][0]["shape"] == Shape.SKELETON.value
+    assert list(serialized["skeleton_templates"][0].keys()) == ["template"]
+    assert serialized["skeleton_templates"][0]["template"]["feature_node_hash"] == obj.feature_node_hash
+
+
+def test_add_skeleton_object_duplicate_template_name_leaves_structure_unchanged():
+    ontology = encord.objects.OntologyStructure()
+    ontology.add_skeleton_object(name="Pose", skeleton_template=_make_skeleton_template(name="duplicate_name"))
+
+    with pytest.raises(ValueError):
+        ontology.add_skeleton_object(name="Pose 2", skeleton_template=_make_skeleton_template(name="duplicate_name"))
+
+    # The clashing template must not leave a dangling object behind.
+    assert len(ontology.objects) == 1
+    assert len(ontology.skeleton_templates) == 1
+
+
 def test_ontology_getters():
     # Object
     assert EXPECTED_ONTOLOGY.get_child_by_hash(OBJECT_1.feature_node_hash) == OBJECT_1

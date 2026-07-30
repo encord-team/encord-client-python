@@ -14,6 +14,7 @@ from cryptography.hazmat.primitives.serialization import (
 from requests import PreparedRequest, Session
 
 from encord.configs import SshConfig
+from encord.exceptions import DatasetError
 from encord.http.v2.payloads import Page
 from encord.orm.analytics import CollaboratorTimer
 from encord.orm.project import Project as OrmProject
@@ -153,6 +154,50 @@ def test_v1_public_resource_when_initialised_with_ssh_key(mock_send, bearer_toke
         assert request.headers["ResourceType"] == "dataset"
         assert request.headers["ResourceID"] == DATASET_HASH
         assert request.headers["Authorization"] == get_encord_auth_header(request)
+
+
+@patch.object(Session, "send")
+def test_get_dataset_includes_data_rows_by_default(mock_send):
+    mock_send.side_effect = make_side_effects()
+
+    user_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key=PRIVATE_KEY_PEM)
+
+    # By default get_dataset() eagerly fetches data rows (backwards-compatible behaviour).
+    dataset = user_client.get_dataset(DATASET_HASH)
+    assert mock_send.call_count == 1
+
+    request_body = json.loads(mock_send.call_args_list[0].args[0].body)
+    assert request_body["query_type"] == "dataset"
+    assert request_body["values"]["payload"]["dataset_access_settings"]["fetch_rows"] is True
+
+    # Rows were fetched, so accessing them is allowed.
+    assert dataset.data_rows == []
+
+
+@patch.object(Session, "send")
+def test_get_dataset_can_skip_data_rows(mock_send):
+    mock_send.side_effect = make_side_effects()
+
+    user_client = EncordUserClient.create_with_ssh_private_key(ssh_private_key=PRIVATE_KEY_PEM)
+
+    # Opting out of eagerly fetching data rows (metadata-only, cheap for large datasets).
+    dataset = user_client.get_dataset(DATASET_HASH, include_data_rows=False)
+    assert mock_send.call_count == 1
+
+    request_body = json.loads(mock_send.call_args_list[0].args[0].body)
+    assert request_body["query_type"] == "dataset"
+    assert request_body["values"]["payload"]["dataset_access_settings"]["fetch_rows"] is False
+
+    # Metadata is still available without an extra request.
+    assert dataset.title == "Test dataset"
+
+    # Accessing data_rows must raise instead of misleadingly returning an empty list.
+    with pytest.raises(DatasetError):
+        _ = dataset.data_rows
+
+    # After an explicit refetch (which always loads rows) access is allowed again.
+    dataset.refetch_data()
+    assert dataset.data_rows == []
 
 
 @patch.object(Session, "send")

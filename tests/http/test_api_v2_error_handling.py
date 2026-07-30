@@ -8,6 +8,7 @@ from encord.exceptions import (
     AuthenticationError,
     AuthorisationError,
     EncordException,
+    ResourceExistsError,
     ResourceNotFoundError,
     UnknownException,
 )
@@ -59,6 +60,28 @@ def test_response_mapping_status_codes_to_exception_type_404(send: MagicMock, ap
 
     with pytest.raises(ResourceNotFoundError):
         api_client.get("/", params=None, result_type=CollaboratorTimer)
+
+
+@patch.object(Session, "send")
+def test_response_mapping_status_codes_to_exception_type_409(send: MagicMock, api_client: ApiClient):
+    res = Response()
+    res.status_code = 409
+    send.return_value = res
+
+    with pytest.raises(ResourceExistsError):
+        api_client.get("/", params=None, result_type=CollaboratorTimer)
+
+
+@patch.object(Session, "send")
+def test_response_mapping_status_code_409_surfaces_server_message(send: MagicMock, api_client: ApiClient):
+    res = Response()
+    res.status_code = 409
+    res._content = b'{"message": "These users are already members of this organisation: user@example.com"}'
+    send.return_value = res
+
+    with pytest.raises(ResourceExistsError) as e_info:
+        api_client.get("/", params=None, result_type=CollaboratorTimer)
+    assert "already members of this organisation: user@example.com" in str(e_info.value)
 
 
 @patch.object(Session, "send")

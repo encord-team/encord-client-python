@@ -71,8 +71,26 @@ class DatasetUser(BaseDTO):
     dataset_hash: str
 
 
+class _PublicDatasetUser(BaseDTO):
+    """Wire format of the public API's dataset user listing."""
+
+    dataset_uuid: UUID
+    user_email: str
+    user_role: DatasetUserRole
+
+
 class DatasetUsers:
     pass
+
+
+class RemoveDatasetUsersPayload(BaseDTO):
+    """Payload for removing users from a dataset by email.
+
+    Args:
+        user_emails: Email addresses of the users to remove.
+    """
+
+    user_emails: List[str]
 
 
 class DataLinkDuplicatesBehavior(Enum):
@@ -1022,6 +1040,9 @@ class DatasetAccessSettings:
 
     fetch_client_metadata: bool
     """Whether client metadata should be retrieved for each `data_row`."""
+
+    fetch_rows: bool = True
+    """Whether the dataset's data rows should be fetched."""
 
 
 DEFAULT_DATASET_ACCESS_SETTINGS = DatasetAccessSettings(

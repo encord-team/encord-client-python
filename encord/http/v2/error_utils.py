@@ -9,6 +9,7 @@ from encord.exceptions import (
     MethodNotAllowedError,
     PayloadTooLargeError,
     RateLimitExceededError,
+    ResourceExistsError,
     ResourceNotFoundError,
     UnknownException,
 )
@@ -19,6 +20,7 @@ HTTP_UNAUTHORIZED = 401
 HTTP_FORBIDDEN = 403
 HTTP_NOT_FOUND = 404
 HTTP_METHOD_NOT_ALLOWED = 405
+HTTP_CONFLICT = 409
 HTTP_PAYLOAD_TOO_LARGE = 413
 HTTP_TOO_MANY_REQUESTS = 429
 HTTP_GENERAL_ERROR = 500
@@ -51,6 +53,9 @@ def handle_error_response(
 
     if status_code == HTTP_METHOD_NOT_ALLOWED:
         raise MethodNotAllowedError("HTTP method is not allowed.", context=context)
+
+    if status_code == HTTP_CONFLICT:
+        raise ResourceExistsError(message or "The resource you are trying to create already exists.", context=context)
 
     if status_code == HTTP_BAD_REQUEST:
         raise InvalidArgumentsError(message or "Provided payload is invalid and can't be processed.", context=context)

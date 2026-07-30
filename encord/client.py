@@ -77,7 +77,9 @@ from encord.orm.dataset import (
     ImageGroupOCR,
     LongPollingStatus,
     ReEncodeVideoTask,
+    RemoveDatasetUsersPayload,
     Video,
+    _PublicDatasetUser,
 )
 from encord.orm.dataset import Dataset as OrmDataset
 from encord.orm.group import (
@@ -112,6 +114,7 @@ from encord.orm.project import (
     ProjectStatus,
     ProjectUserResponse,
     ProjectUsers,
+    RemoveProjectUsersPayload,
     SetProjectStatusPayload,
     TaskPriorityParams,
 )
@@ -145,6 +148,11 @@ LONG_POLLING_MAX_REQUEST_TIME_SECONDS = 60
 LONG_POLLING_MAX_REQUEST_SINGLE_ITEM_TIME_SECONDS = 10
 
 logger = logging.getLogger(__name__)
+
+
+def _validate_project_user_role_for_write(user_role: ProjectUserRole) -> None:
+    if user_role == ProjectUserRole.UNKNOWN:
+        raise ValueError("ProjectUserRole.UNKNOWN cannot be used when adding users or groups to a project.")
 
 
 class EncordClient:
@@ -191,8 +199,13 @@ class EncordClientDataset(EncordClient):
         super().__init__(querier, config, api_client)
         self._dataset_access_settings = dataset_access_settings
 
-    def get_dataset(self) -> OrmDataset:
+    def get_dataset(self, *, fetch_rows: bool = True) -> OrmDataset:
         """Retrieve dataset info (pointers to data, labels).
+
+        Args:
+            fetch_rows: Whether to fetch the dataset's data rows. Defaults to ``True``. Pass
+                ``False`` to retrieve dataset metadata only (no data rows), which is much
+                cheaper for large datasets.
 
         Returns:
             OrmDataset: A dataset record instance.
@@ -202,14 +215,18 @@ class EncordClientDataset(EncordClient):
             ResourceNotFoundError: If no dataset exists by the specified dataset EntityId.
             UnknownError: If an error occurs while retrieving the dataset.
         """
+        access_settings = self._dataset_access_settings
+        if fetch_rows != access_settings.fetch_rows:
+            access_settings = dataclasses.replace(access_settings, fetch_rows=fetch_rows)
+
         res = self._querier.basic_getter(
             OrmDataset,
             payload={
-                "dataset_access_settings": dataclasses.asdict(self._dataset_access_settings),
+                "dataset_access_settings": dataclasses.asdict(access_settings),
             },
         )
 
-        for row in res.data_rows:
+        for row in res.data_rows or []:
             row["_querier"] = self._querier
         return res
 
@@ -275,6 +292,17 @@ class EncordClientDataset(EncordClient):
         users = self._querier.basic_setter(DatasetUsers, self._querier.resource_id, payload=payload)
 
         return [DatasetUser.from_dict(user) for user in users]
+
+    def list_users(self, dataset_hash: uuid.UUID) -> Iterable[DatasetUser]:
+        page = self._api_client.get(f"datasets/{dataset_hash}/users", params=None, result_type=Page[_PublicDatasetUser])
+        for user in page.results:
+            yield DatasetUser(user_email=user.user_email, user_role=user.user_role, dataset_hash=str(user.dataset_uuid))
+
+    def remove_users(self, dataset_hash: uuid.UUID, user_emails: List[str]) -> None:
+        payload = RemoveDatasetUsersPayload(user_emails=user_emails)
+        self._api_client.post(
+            f"datasets/{dataset_hash}/users/bulk-delete", params=None, payload=payload, result_type=None
+        )
 
     def list_groups(self, dataset_hash: uuid.UUID) -> Page[DatasetGroup]:
         return self._api_client.get(f"datasets/{dataset_hash}/groups", params=None, result_type=Page[DatasetGroup])
@@ -903,6 +931,7 @@ class EncordClientProject(EncordClient):
 
     def add_users(self, user_emails: List[str], user_role: ProjectUserRole) -> List[ProjectUser]:
         """This function is documented in :meth:`encord.project.Project.add_users`."""
+        _validate_project_user_role_for_write(user_role)
         payload = {"user_emails": user_emails, "user_role": user_role}
         users = self._querier.basic_setter(ProjectUsers, self._querier.resource_id, payload=payload)
 
@@ -914,10 +943,17 @@ class EncordClientProject(EncordClient):
         ):
             yield ProjectUser(user_email=user.user_email, user_role=user.user_role, project_hash=str(project_hash))
 
+    def remove_users(self, project_hash: uuid.UUID, user_emails: List[str]) -> None:
+        payload = RemoveProjectUsersPayload(user_emails=user_emails)
+        self._api_client.post(
+            f"projects/{project_hash}/users/bulk-delete", params=None, payload=payload, result_type=None
+        )
+
     def list_groups(self, project_hash: uuid.UUID) -> Page[ProjectGroup]:
         return self._api_client.get(f"projects/{project_hash}/groups", params=None, result_type=Page[ProjectGroup])
 
     def add_groups(self, project_hash: uuid.UUID, group_hash: List[uuid.UUID], user_role: ProjectUserRole) -> None:
+        _validate_project_user_role_for_write(user_role)
         payload = AddProjectGroupsPayload(group_hash_list=group_hash, user_role=user_role)
         self._api_client.post(f"projects/{project_hash}/groups", params=None, payload=payload, result_type=None)
 

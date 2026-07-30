@@ -261,6 +261,12 @@ class LabelRowError(EncordException):
     pass
 
 
+class DatasetError(EncordException):
+    """An error thrown when a Dataset is used in an invalid state."""
+
+    pass
+
+
 class OntologyError(EncordException):
     """An error thrown when using the ontology class with an error."""
 

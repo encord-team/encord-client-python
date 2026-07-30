@@ -808,6 +808,11 @@ def test_object_instance_answer_dynamic_attributes():
     object_instance.set_answer("Poseidon", attribute=dynamic_text, frames=1)
     assert object_instance.get_answer(dynamic_text) == [AnswerForFrames(answer="Poseidon", ranges=[Range(1, 1)])]
 
+    answer, ranges = object_instance._get_all_dynamic_answers()[0]
+    encord_dict = answer.to_encord_dict(ranges)
+    assert encord_dict is not None
+    assert "trackHash" not in encord_dict
+
 
 def test_object_instance_answer_dynamic_classification():
     object_instance = keypoint_dynamic.create_instance()

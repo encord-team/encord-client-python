@@ -7,12 +7,12 @@
 
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-# The data engine for computer vision
+# Encord is the multimodal data layer for physical AI. Manage, curate, annotate, and align petabytes of data - from sensor streams to video to text.
 
 ## 💻 Features
 
 - Minimal low-level Python client that allows you to interact with Encord's API
-- Supports Python: `3.9`, `3.10`, `3.11`, `3.12` and `3.13`
+- Supports Python: `3.9`, `3.10`, `3.11`, `3.12`, `3.13` and `3.14`
 
 ## ✨ Relevant Links
 
@@ -30,10 +30,20 @@ First, install Encord Python API Client using the [pip](https://pip.pypa.io/en/s
 python3 -m pip install encord
 ```
 
-Then, create a service account, generate a public-private key pair, and upload the public key to the [Encord website](https://www.encord.com/).
+Some functionality is available through optional extras. Install them if you need COCO import/export or MCAP support:
+
+```bash
+# COCO import/export helpers (pycocotools, shapely, opencv, numpy)
+python3 -m pip install "encord[coco]"
+
+# MCAP support (mcap, protobuf, Pillow)
+python3 -m pip install "encord[mcap]"
+```
+
+Then, create a service account, generate a key pair, and register the public key in the Encord platform.
 Detailed guide can be found in the [dedicated manual](https://docs.encord.com/platform-documentation/GettingStarted/getting-started-service-accounts).
 
-Passing the private key to the factory, you can initialise the Encord client directly.
+Pass the path to your private key when initializing the Encord client:
 
 ```python
 # Import dependencies
@@ -42,7 +52,7 @@ from encord import EncordUserClient
 # Authenticate with Encord using the path to your private key.  Replace <private_key_path> with the path to your private key.
 user_client = EncordUserClient.create_with_ssh_private_key(
   ssh_private_key_path="<private_key_path>"
-  )
+)
 ```
 
 For detailed example code and SDK reference material refer to [Encord SDK documentation](https://docs.encord.com/sdk-documentation/getting-started-sdk/sdk-intro)

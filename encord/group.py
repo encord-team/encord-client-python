@@ -153,7 +153,10 @@ class Group:
     def add_users(self, user_emails: List[str]) -> List[GroupUser]:
         """Add users to the group by email address.
 
-        Emails that do not yet belong to the organization are invited to it.
+        All emails must belong to existing members of the organization; the
+        request fails with an authorization error if any do not. To add
+        someone to the organization first, see
+        :meth:`encord.user_client.EncordUserClient.add_organisation_user`.
 
         Args:
             user_emails: The email addresses of the users to add.

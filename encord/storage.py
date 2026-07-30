@@ -41,6 +41,7 @@ from encord.orm.storage import (
     CustomerProvidedVideoMetadata,
     DataGroupInput,
     DataUploadItems,
+    DataUploadTimeSeries,
     FoldersSortBy,
     GetItemParams,
     GetItemsBulkPayload,
@@ -762,6 +763,57 @@ class StorageFolder:
             raise EncordException(f"Could not register audio, errors occurred {upload_result.errors}")
         else:
             return upload_result.items_with_names[0].item_uuid
+
+    def upload_time_series(
+        self,
+        file_path: Union[Path, str],
+        title: Optional[str] = None,
+        client_metadata: Optional[Dict[str, Any]] = None,
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+    ) -> UUID:
+        """Upload a time-series file to an Encord storage folder.
+
+        Args:
+            file_path: Local time-series file to upload, commonly CSV.
+            title: Optional item title. Defaults to the local file name.
+            client_metadata: Optional JSON-serializable metadata.
+            cloud_upload_settings: Retry settings for the file upload.
+
+        Returns:
+            UUID of the newly uploaded time-series item.
+        """
+        upload_url_info = self._get_upload_signed_urls(
+            item_type=StorageItemType.TIMESERIES, count=1, frames_subfolder_name=None
+        )
+        if len(upload_url_info) != 1:
+            raise EncordException("Can't access upload location")
+
+        title = self._guess_title(title, file_path)
+        self._upload_local_file(
+            file_path,
+            title,
+            StorageItemType.TIMESERIES,
+            upload_url_info[0].signed_url,
+            cloud_upload_settings,
+            upload_headers=upload_url_info[0].upload_headers,
+        )
+
+        upload_result = self._add_data(
+            integration_id=None,
+            private_files=DataUploadItems(
+                time_series=[
+                    DataUploadTimeSeries(
+                        object_url=upload_url_info[0].object_key,
+                        title=title,
+                        client_metadata=client_metadata or {},
+                    )
+                ]
+            ),
+            ignore_errors=False,
+        )
+        if upload_result.status == LongPollingStatus.ERROR:
+            raise EncordException(f"Could not register time-series file, errors occurred {upload_result.errors}")
+        return upload_result.items_with_names[0].item_uuid
 
     def upload_text(
         self,
@@ -1522,6 +1574,8 @@ class StorageFolder:
                 )
         elif item_type == StorageItemType.PDF:
             return "application/pdf"
+        elif item_type == StorageItemType.TIMESERIES:
+            return mimetypes.guess_type(str(file_path))[0] or "application/octet-stream"
         else:
             raise ValueError(f"Unsupported upload item type `{item_type}`")
 

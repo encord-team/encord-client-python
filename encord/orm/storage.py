@@ -31,7 +31,7 @@ class StorageItemType(CamelStrEnum):
     - **DICOM_FILE:** A single DICOM file.
     - **DICOM_SERIES:** A DICOM series composed of multiple DICOM files.
     - **AUDIO:** An audio file.
-    - **TIME_SERIES:** A time series file.
+    - **TIMESERIES:** A time series file.
     - NIFTI:** A NIFTI volume.
     - **PLAIN_TEXT:** A text file (for example TXT, HTML, JSON).
     - **PDF:** A PDF document.
@@ -46,7 +46,7 @@ class StorageItemType(CamelStrEnum):
     DICOM_FILE = auto()
     DICOM_SERIES = auto()
     AUDIO = auto()
-    TIME_SERIES = auto()
+    TIMESERIES = auto()
     NIFTI = auto()
     PLAIN_TEXT = auto()
     PDF = auto()
@@ -325,7 +325,8 @@ class DataGroupCustom(BaseDTO):
     Args:
         name: Optional name of the data group.
         layout_contents: Mapping from arbitrary keys to item UUIDs.
-        layout: Arbitrary layout configuration structure.
+        layout: Optional arbitrary layout configuration structure. May be omitted for timeline-only groups.
+        timeline: Layout content keys to display in the timeline.
         settings: Optional extra settings for the layout.
         client_metadata: Optional custom metadata to associate with the data group.
     """
@@ -333,7 +334,8 @@ class DataGroupCustom(BaseDTO):
     layout_type: Literal["custom"] = "custom"
     name: Optional[str] = None
     layout_contents: Dict[str, UUID]
-    layout: Union[Dict, DataGroupLayout]
+    layout: Optional[Union[Dict, DataGroupLayout]] = None
+    timeline: List[str] = Field(default_factory=list)
     settings: Optional[Union[Dict, LayoutSettings]] = None
     client_metadata: Optional[Dict[str, Any]] = None
 
@@ -723,6 +725,14 @@ class DataUploadAudio(BaseDTO):
     placeholder_item_uuid: Optional[UUID] = None
 
 
+class DataUploadTimeSeries(BaseDTO):
+    """Data about a time-series item to register with Encord storage."""
+
+    object_url: str
+    title: Optional[str] = None
+    client_metadata: Dict = Field(default_factory=dict)
+
+
 class DataUploadScene(BaseDTO):
     """Data about a scene item to be registered with Encord service."""
 
@@ -763,6 +773,9 @@ class DataUploadItems(BaseDTO):
 
     audio: List[DataUploadAudio] = Field(default_factory=list)
     """List of audio items to be registered. See :class:`DataUploadAudio` for more details."""
+
+    time_series: List[DataUploadTimeSeries] = Field(default_factory=list)
+    """List of time-series items to be registered."""
 
     nifti: List[DataUploadNifti] = Field(default_factory=list)
     """List of NIFTI items to be registered. See :class:`DataUploadNifti` for more details."""

@@ -17,6 +17,7 @@ from uuid import UUID
 from encord.client import EncordClientDataset
 from encord.common.deprecated import deprecated
 from encord.constants.enums import DataType
+from encord.exceptions import DatasetError
 from encord.http.utils import CloudUploadSettings
 from encord.orm.cloud_integration import CloudIntegration
 from encord.orm.dataset import (
@@ -42,9 +43,10 @@ from encord.utilities.hash_utilities import convert_to_uuid
 class Dataset:
     """Access dataset-related data and manipulate the dataset."""
 
-    def __init__(self, client: EncordClientDataset, orm_dataset: OrmDataset):
+    def __init__(self, client: EncordClientDataset, orm_dataset: OrmDataset, *, data_rows_fetched: bool = True):
         self._client = client
         self._dataset_instance = orm_dataset
+        self._data_rows_fetched = data_rows_fetched
 
     @property
     def dataset_hash(self) -> str:
@@ -105,7 +107,19 @@ class Dataset:
 
         Returns:
             List[DataRow]: A list of DataRow objects.
+
+        Raises:
+            DatasetError: If the dataset was fetched with ``include_data_rows=False``. In that case
+                the data rows were never loaded, so returning an empty list here would be
+                misleading. Use :meth:`encord.dataset.Dataset.list_data_rows` to page through rows,
+                or refetch the dataset with ``include_data_rows=True``.
         """
+        if not self._data_rows_fetched:
+            raise DatasetError(
+                "Data rows were not fetched for this dataset because it was retrieved with "
+                "`include_data_rows=False`. Use `Dataset.list_data_rows()` to page through the rows, "
+                "or call `EncordUserClient.get_dataset(..., include_data_rows=True)` to load them eagerly."
+            )
         return self._dataset_instance.data_rows
 
     def list_data_rows(
@@ -144,6 +158,7 @@ class Dataset:
         properties to be outdated.
         """
         self._dataset_instance = self._client.get_dataset()
+        self._data_rows_fetched = True
 
     def get_dataset(self) -> OrmDataset:
         """Get the dataset instance.
@@ -181,6 +196,26 @@ class Dataset:
             List[DatasetUser]: A list of DatasetUser instances reflecting the added users.
         """
         return self._client.add_users(user_emails, user_role)
+
+    def list_users(self) -> Iterable[DatasetUser]:
+        """List all users that have access to the dataset.
+
+        Returns:
+            Iterable[DatasetUser]: An iterable of DatasetUser instances.
+        """
+        dataset_hash = convert_to_uuid(self.dataset_hash)
+        yield from self._client.list_users(dataset_hash)
+
+    def remove_users(self, user_emails: List[str]) -> None:
+        """Remove users from the dataset by email address.
+
+        Emails that do not have access to the dataset are ignored.
+
+        Args:
+            user_emails: The email addresses of the users to remove.
+        """
+        dataset_hash = convert_to_uuid(self.dataset_hash)
+        self._client.remove_users(dataset_hash, user_emails)
 
     def list_groups(self) -> Iterable[DatasetGroup]:
         """List all groups that have access to the dataset.

@@ -12,7 +12,7 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Type, cast
+from typing import Any, Dict, List, Optional, Tuple, Type, cast
 from uuid import uuid4
 
 from encord.exceptions import OntologyError
@@ -263,6 +263,42 @@ class OntologyStructure:
         cls = Classification(uid=uid, feature_node_hash=feature_node_hash, attributes=list(), _level=level)
         self.classifications.append(cls)
         return cls
+
+    def add_skeleton_object(
+        self,
+        name: str,
+        skeleton_template: SkeletonTemplate,
+        color: Optional[str] = None,
+        feature_node_hash: Optional[str] = None,
+    ) -> Tuple[Object, SkeletonTemplate]:
+        """Adds a skeleton object and its template as a linked pair.
+
+        The object is minted first and the template reuses the object's ``feature_node_hash``.
+        The two hashes must be equal for the skeleton to render in the label editor, which keys
+        the object's template option (``skeleton_<objectHash>``) off the template's
+        ``feature_node_hash``. Prefer this over calling ``add_object`` and ``add_skeleton_template``
+        separately: it removes the need to manage feature hashes by hand.
+
+        Args:
+            name: The user-visible name of the skeleton object.
+            skeleton_template: The SkeletonTemplate to link to the object.
+            color: The color of the object in the label editor. Normally auto-assigned, should be in '#1A2B3F' syntax.
+            feature_node_hash: Global identifier shared by the object and its template. Normally auto-generated; omit this unless the aim is to create an exact clone of existing structure.
+
+        Returns:
+            Tuple[Object, SkeletonTemplate]: The created skeleton object and its linked template,
+                sharing one feature_node_hash. The template is the same instance that was passed in.
+
+        Raises:
+            ValueError: If a duplicate feature_node_hash is provided, or a skeleton template
+                with the same name already exists. The structure is left unchanged when this is raised.
+        """
+        if skeleton_template.name in self.skeleton_templates:
+            raise ValueError("Already a template with this name associated to this ontology")
+
+        obj = self.add_object(name=name, shape=Shape.SKELETON, color=color, feature_node_hash=feature_node_hash)
+        self.add_skeleton_template(skeleton_template, feature_node_hash=obj.feature_node_hash)
+        return obj, skeleton_template
 
     def add_skeleton_template(
         self,

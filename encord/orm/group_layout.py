@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Dict, Optional, Union
 from uuid import UUID
 
-from encord.orm.base_dto import BaseDTO
+from encord.orm.base_dto import BaseDTO, Field
 
 try:
     from typing import Literal
@@ -81,7 +81,7 @@ class LayoutGrid(BaseDTO):
     split_percentage: float
 
 
-DataGroupLayout = Union[LayoutGrid, DataUnitCarouselTile]
+DataGroupLayout = Union[LayoutGrid, DataUnitTile, DataUnitCarouselTile]
 
 
 class StorageItemGroupChild(BaseDTO):
@@ -99,10 +99,12 @@ class DataGroupShortInfo(BaseDTO):
 
     Args:
         layout_contents: Mapping from layout keys to child item UUIDs.
-        layout: The layout structure of the data group.
+        layout: The optional layout structure of the data group.
         layout_settings: Settings for the layout.
+        timeline: Layout content keys displayed in the timeline.
     """
 
     layout_contents: Dict[str, StorageItemGroupChild]
-    layout: DataGroupLayout
+    layout: Optional[DataGroupLayout]
     layout_settings: LayoutSettings
+    timeline: list[str] = Field(default_factory=list)

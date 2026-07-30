@@ -385,6 +385,17 @@ class Project:
         """
         return self._client.add_users(user_emails, user_role)
 
+    def remove_users(self, user_emails: List[str]) -> None:
+        """Remove users from the project by email address.
+
+        Emails that do not have access to the project are ignored. Removing a
+        project admin requires the caller to be an organization admin.
+
+        Args:
+            user_emails: The email addresses of the users to remove.
+        """
+        self._client.remove_users(UUID(self.project_hash), user_emails)
+
     def list_users(self) -> Iterable[ProjectUser]:
         """List all users that have access to the project.
 
