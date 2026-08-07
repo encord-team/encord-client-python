@@ -56,10 +56,17 @@ from encord.orm.storage import (
     StorageItemType,
     StorageLocationName,
     StorageUserRole,
+    TimeSeriesViewSettings,
     UploadLongPollingState,
     UploadSignedUrlsPayload,
     _StorageItemPrivateSummary,
     _to_storage_item_summary,
+)
+from encord.orm.storage import (
+    TimeSeriesLineChannelViewSettings as TimeSeriesLineChannelViewSettings,
+)
+from encord.orm.storage import (
+    TimeSeriesPointsChannelViewSettings as TimeSeriesPointsChannelViewSettings,
 )
 
 logger = logging.getLogger(__name__)
@@ -770,6 +777,7 @@ class StorageFolder:
         title: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
         cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+        settings: Optional[TimeSeriesViewSettings] = None,
     ) -> UUID:
         """Upload a time-series file to an Encord storage folder.
 
@@ -778,6 +786,7 @@ class StorageFolder:
             title: Optional item title. Defaults to the local file name.
             client_metadata: Optional JSON-serializable metadata.
             cloud_upload_settings: Retry settings for the file upload.
+            settings: Optional initial channel visualization settings.
 
         Returns:
             UUID of the newly uploaded time-series item.
@@ -806,6 +815,7 @@ class StorageFolder:
                         object_url=upload_url_info[0].object_key,
                         title=title,
                         client_metadata=client_metadata or {},
+                        settings=settings,
                     )
                 ]
             ),
@@ -1898,6 +1908,11 @@ class StorageItem:
         return self._parsed_metadata
 
     @property
+    def timeseries_settings(self) -> Optional[TimeSeriesViewSettings]:
+        """Optional persisted visualization settings for a time-series item."""
+        return self._orm_item.timeseries_settings
+
+    @property
     def created_at(self) -> datetime:
         """datetime: The creation time of the storage item."""
         return self._orm_item.created_at
@@ -2068,6 +2083,7 @@ class StorageItem:
         name: Optional[str] = None,
         description: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
+        timeseries_settings: Optional[TimeSeriesViewSettings] = None,
         bundle: Optional[Bundle] = None,
     ) -> None:
         """Update modifiable properties of the item.
@@ -2076,6 +2092,7 @@ class StorageItem:
             name: New item name.
             description: New item description.
             client_metadata: New client metadata.
+            timeseries_settings: New time-series channel visualization settings.
             bundle: Optional :class:`encord.http.bundle.Bundle` to use for the operation. If provided, the operation
 
         Returns:
@@ -2087,7 +2104,7 @@ class StorageItem:
             If `bundle` is provided, the operation is bundled into a single server call with other item updates
             using the same bundle.
         """
-        if name is None and description is None and client_metadata is None:
+        if name is None and description is None and client_metadata is None and timeseries_settings is None:
             return
 
         if client_metadata is not None:
@@ -2102,6 +2119,7 @@ class StorageItem:
                             name=name,
                             description=description,
                             client_metadata=client_metadata,
+                            timeseries_settings=timeseries_settings,
                         ),
                     },
                 ),
@@ -2119,6 +2137,7 @@ class StorageItem:
                     name=name,
                     description=description,
                     client_metadata=client_metadata,
+                    timeseries_settings=timeseries_settings,
                 ),
                 result_type=orm_storage.StorageItem,
             )

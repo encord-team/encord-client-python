@@ -19,6 +19,13 @@ class IssueAnchorType(CamelStrEnum):
     ANNOTATION = auto()
 
 
+class IssueFrameRange(BaseDTO):
+    """Represents a range of frames [start, end] inclusive"""
+
+    start: int
+    end: int
+
+
 class _FileIssueAnchor(BaseDTO):
     type: Literal[IssueAnchorType.DATA_UNIT] = IssueAnchorType.DATA_UNIT
     data_uuid: UUID
@@ -50,7 +57,21 @@ class _SceneCoordinateIssueAnchor(BaseDTO):
     z: float
 
 
-_IssueAnchor = Union[_FileIssueAnchor, _FrameIssueAnchor, _CoordinateIssueAnchor, _SceneCoordinateIssueAnchor]
+class _AnnotationIssueAnchor(BaseDTO):
+    type: Literal[IssueAnchorType.ANNOTATION] = IssueAnchorType.ANNOTATION
+    data_uuid: UUID
+    annotation_id: str
+    space_id: Optional[str] = None
+    frame_ranges: Optional[List[IssueFrameRange]] = None
+
+
+_IssueAnchor = Union[
+    _FileIssueAnchor,
+    _FrameIssueAnchor,
+    _CoordinateIssueAnchor,
+    _SceneCoordinateIssueAnchor,
+    _AnnotationIssueAnchor,
+]
 
 
 class _NewIssue(BaseDTO):
@@ -144,13 +165,6 @@ class SceneCoordinateIssue(_BaseIssue):
     coordinate: SceneIssueCoordinate
 
 
-class IssueFrameRange(BaseDTO):
-    """Represents a range of frames [start, end] inclusive"""
-
-    start: int
-    end: int
-
-
 class FrameRangeIssue(_BaseIssue):
     """Issue anchored to a range of frames"""
 
@@ -164,6 +178,9 @@ class AnnotationIssue(_BaseIssue):
 
     type: Literal[IssueAnchorType.ANNOTATION] = IssueAnchorType.ANNOTATION
     annotation_id: str
+    space_id: Optional[str] = None
+    # Frame ranges the issue targets; None when the issue targets the whole annotation instance.
+    frame_ranges: Optional[List[IssueFrameRange]] = None
 
 
 Issue = Union[FileIssue, FrameIssue, CoordinateIssue, SceneCoordinateIssue, FrameRangeIssue, AnnotationIssue]
@@ -248,8 +265,9 @@ class TaskIssues:
         Args:
             comment (str): The comment for the issue.
             issue_tags (List[str]): The issue tags for the issue.
-            space_id (Optional[str]): For Data Groups, identifies which child of the data group
-                the issue is attached to. Leave as ``None`` for non-Data Group data units.
+            space_id (Optional[str]): For data units that use spaces (Data Groups and scenes),
+                identifies which space the issue is attached to. Leave as ``None`` for data
+                units without spaces.
         """
         self._issue_client.add_issue(
             project_uuid=self._project_uuid,
@@ -270,8 +288,9 @@ class TaskIssues:
             frame_index (int): The index of the frame to add the issue to.
             comment (str): The comment for the issue.
             issue_tags (List[str]): The issue tags for the issue.
-            space_id (Optional[str]): For Data Groups, identifies which child of the data group
-                the issue is attached to. Leave as ``None`` for non-Data Group data units.
+            space_id (Optional[str]): For data units that use spaces (Data Groups and scenes),
+                identifies which space the issue is attached to. Leave as ``None`` for data
+                units without spaces.
         """
         self._issue_client.add_issue(
             project_uuid=self._project_uuid,
@@ -297,8 +316,9 @@ class TaskIssues:
             y (float): The y coordinate of the issue.
             comment (str): The comment for the issue.
             issue_tags (List[str]): The issue tags for the issue.
-            space_id (Optional[str]): For Data Groups, identifies which child of the data group
-                the issue is attached to. Leave as ``None`` for non-Data Group data units.
+            space_id (Optional[str]): For data units that use spaces (Data Groups and scenes),
+                identifies which space the issue is attached to. Leave as ``None`` for data
+                units without spaces.
         """
         self._issue_client.add_issue(
             project_uuid=self._project_uuid,
@@ -334,6 +354,79 @@ class TaskIssues:
                 x=x,
                 y=y,
                 z=z,
+            ),
+            comment=comment,
+            issue_tags=issue_tags,
+        )
+
+    def add_annotation_issue(
+        self,
+        annotation_id: str,
+        comment: str,
+        issue_tags: List[str],
+        frame_ranges: Optional[List[IssueFrameRange]] = None,
+        space_id: Optional[str] = None,
+    ) -> None:
+        """Adds an issue anchored to a specific annotation (object or classification instance).
+
+        Args:
+            annotation_id (str): The annotation the issue is attached to. This is the
+                object instance ``object_hash`` (or classification instance
+                ``classification_hash``) of the annotation within this task's data unit.
+            comment (str): The comment for the issue.
+            issue_tags (List[str]): The issue tags for the issue.
+
+            frame_ranges (Optional[List[IssueFrameRange]]): The frame ranges to pin the issue
+                to, each an inclusive ``[start, end]`` range. Leave as ``None`` to
+                flag the whole annotation instance across every frame it appears on (e.g. a
+
+                wrong attribute value). Provide one or more ranges to target the instance on
+                those frames (e.g. a bad contour over a span of frames). A single frame is a
+                range where ``start == end``.
+            space_id (Optional[str]): For data units that use spaces (Data Groups and scenes),
+                identifies which space the annotation belongs to. Leave as ``None`` for data
+                units without spaces.
+
+        Example:
+            >>> for obj in label_row.get_object_instances():
+            ...     # Flag the whole instance (e.g. wrong attribute value):
+            ...     if not passes_attribute_qa(obj):
+            ...         task.issues.add_annotation_issue(
+            ...             annotation_id=obj.object_hash,
+            ...             comment="Wrong attribute value",
+            ...             issue_tags=["qa-automation"],
+            ...         )
+            ...     # Flag the instance over a span of frames (e.g. bad contour on frames 30-45):
+            ...     task.issues.add_annotation_issue(
+            ...         annotation_id=obj.object_hash,
+            ...         comment="Bad contour",
+            ...         issue_tags=["qa-automation"],
+            ...         frame_ranges=[IssueFrameRange(start=30, end=45)],
+            ...     )
+
+        Raises:
+            ValueError: If ``frame_ranges`` is an empty list (omit it, or pass ``None``, to
+                target the whole annotation instance) or contains an invalid range where
+                ``start`` is negative or ``start > end``.
+        """
+        if frame_ranges is not None:
+            if len(frame_ranges) == 0:
+                raise ValueError(
+                    "`frame_ranges` must be non-empty when provided; omit it to target the whole annotation instance."
+                )
+            for frame_range in frame_ranges:
+                if frame_range.start < 0 or frame_range.start > frame_range.end:
+                    raise ValueError(
+                        f"Invalid frame range [{frame_range.start}, {frame_range.end}]: expected 0 <= start <= end."
+                    )
+
+        self._issue_client.add_issue(
+            project_uuid=self._project_uuid,
+            anchor=_AnnotationIssueAnchor(
+                data_uuid=self._data_uuid,
+                annotation_id=annotation_id,
+                space_id=space_id,
+                frame_ranges=frame_ranges,
             ),
             comment=comment,
             issue_tags=issue_tags,

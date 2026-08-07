@@ -4,6 +4,8 @@ from encord.issues.issue_client import (
     FileIssue,
     FrameIssue,
     FrameRangeIssue,
+    Issue,
+    IssueFrameRange,
     SceneCoordinateIssue,
 )
 
@@ -13,5 +15,7 @@ __all__ = [
     "FileIssue",
     "FrameIssue",
     "FrameRangeIssue",
+    "Issue",
+    "IssueFrameRange",
     "SceneCoordinateIssue",
 ]

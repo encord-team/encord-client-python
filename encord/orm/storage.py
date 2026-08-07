@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import datetime
 from enum import auto
@@ -8,7 +9,7 @@ from uuid import UUID
 
 from encord.common.deprecated import deprecated
 from encord.orm.analytics import CamelStrEnum
-from encord.orm.base_dto import BaseDTO, Field, RootModelDTO
+from encord.orm.base_dto import BaseDTO, Field, RootModelDTO, dto_validator
 from encord.orm.dataset import DataUnitError, LongPollingStatus
 from encord.orm.group_layout import DataGroupLayout, DataGroupShortInfo, LayoutSettings
 
@@ -103,6 +104,49 @@ class PathElement(BaseDTO):
     parent_uuid: Optional[UUID]
     name: str
     synced_dataset_hash: Optional[UUID]
+
+
+class TimeSeriesChannelViewSettingsBase(BaseDTO):
+    """Settings shared by all time-series channel render styles."""
+
+    label: str = Field(min_length=1, max_length=1024)
+    color: str
+    hidden: bool
+
+    @dto_validator()
+    def validate_color(cls, values):
+        if not isinstance(values, dict):
+            return values
+        color = values.get("color")
+        if color is not None and re.fullmatch(r"#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})", color) is None:
+            raise ValueError("color must be a 3, 6, or 8 digit hexadecimal color")
+        return values
+
+
+class TimeSeriesLineChannelViewSettings(TimeSeriesChannelViewSettingsBase):
+    """Render a time-series channel as a line."""
+
+    style: Literal["line"] = "line"
+    line_width: float = Field(ge=0.5, le=6)
+
+
+class TimeSeriesPointsChannelViewSettings(TimeSeriesChannelViewSettingsBase):
+    """Render a time-series channel as points."""
+
+    style: Literal["points"] = "points"
+    point_radius: float = Field(ge=1, le=8)
+
+
+TimeSeriesChannelViewSettings = Union[
+    TimeSeriesLineChannelViewSettings,
+    TimeSeriesPointsChannelViewSettings,
+]
+
+
+class TimeSeriesViewSettings(BaseDTO):
+    """Persisted visualization settings for a time-series storage item."""
+
+    channels: Dict[str, TimeSeriesChannelViewSettings] = Field(max_length=100)
 
 
 class StorageFolder(BaseDTO):
@@ -203,6 +247,7 @@ class StorageItem(BaseDTO):
     audio_bit_depth: Optional[int]
     audio_codec: Optional[str]
     audio_num_channels: Optional[int]
+    timeseries_settings: Optional[TimeSeriesViewSettings] = None
 
 
 class StorageItemWithClientMetadataSignedUrl(StorageItem):
@@ -726,11 +771,17 @@ class DataUploadAudio(BaseDTO):
 
 
 class DataUploadTimeSeries(BaseDTO):
-    """Data about a time-series item to register with Encord storage."""
+    """Data about a time-series item to register with Encord storage.
+
+    ``settings`` can be supplied for either a cloud upload or an Encord-hosted upload
+    and will be stored on the resulting item.
+    """
 
     object_url: str
     title: Optional[str] = None
     client_metadata: Dict = Field(default_factory=dict)
+    settings: Optional[TimeSeriesViewSettings] = None
+    external_file_type: Literal["TIMESERIES"] = "TIMESERIES"
 
 
 class DataUploadScene(BaseDTO):
@@ -933,6 +984,7 @@ class PatchItemPayload(BaseDTO):
     name: Optional[str] = None
     description: Optional[str] = None
     client_metadata: Optional[dict] = None
+    timeseries_settings: Optional[TimeSeriesViewSettings] = None
 
 
 class PatchFolderPayload(BaseDTO):
