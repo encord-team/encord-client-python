@@ -6,7 +6,15 @@ from encord.beta.scene import (
     CompositeScene,
     Direction,
     SceneBuilder,
+    SceneHeightColouring,
+    SceneImageColouring,
+    SceneLayout,
+    SceneProvidedColouring,
+    SceneRadiusIndicator,
     SceneReader,
+    SceneSolidColouring,
+    SceneTimeSeriesTile,
+    SceneViewSettings,
     identity_pose,
     intrinsics_advanced,
     intrinsics_pinhole,
@@ -14,10 +22,21 @@ from encord.beta.scene import (
 )
 from encord.beta.scene.internal.scene import Scene as InternalScene
 from encord.beta.scene.internal.scene import SceneResponse
-from encord.beta.scene.internal.upload import InputPCDStream, InputScene, InputURIEvent, SceneContent, Streams
+from encord.beta.scene.internal.upload import (
+    InputEntityType,
+    InputPCDStream,
+    InputScene,
+    InputURIEvent,
+    SceneContent,
+    Streams,
+)
 from encord.beta.scene.reader import scene_from_internal
 from encord.exceptions import EncordException
-from encord.orm.storage import StorageItemType
+from encord.orm.storage import (
+    StorageItemType,
+    TimeSeriesLineChannelViewSettings,
+    TimeSeriesViewSettings,
+)
 from encord.storage import StorageItem
 
 
@@ -43,7 +62,7 @@ class _FakeApiClient:
                                 }
                             ],
                         },
-                    }
+                    },
                 },
             }
         )
@@ -71,6 +90,130 @@ def test_build_minimal_pcd_scene() -> None:
     }
 
 
+def test_build_scene_with_view_settings() -> None:
+    scene_builder = SceneBuilder()
+    scene_builder.settings = SceneViewSettings(
+        point_cloud_colouring=SceneHeightColouring(),
+        radius_indicators=[SceneRadiusIndicator(frame_of_reference_id="root", radius=10, color="#ffffff")],
+        radius_filter_enabled=True,
+    )
+    scene_builder.add_pcd_stream("lidar").add_pcd(uri="gs://bucket/frame0.pcd", timestamp=0)
+
+    scene = scene_builder._build()
+
+    assert scene["view_settings"] == {
+        "point_cloud_colouring": {"color_mode": "height"},
+        "radius_indicators": [{"frame_of_reference_id": "root", "radius": 10.0, "color": "#ffffff"}],
+        "radius_filter_enabled": True,
+    }
+    assert "lidar" in scene["content"]
+
+
+def test_build_scene_with_timeseries_layout() -> None:
+    scene_builder = SceneBuilder()
+    scene_builder.add_pcd_stream("lidar").add_pcd(uri="gs://bucket/frame0.pcd", timestamp=0)
+    scene_builder.add_time_series_stream("telemetry", uri="gs://bucket/telemetry.csv")
+    scene_builder.layout = SceneLayout(
+        tiles={
+            "speed": SceneTimeSeriesTile(
+                stream_name="telemetry",
+                timeseries_settings=TimeSeriesViewSettings(
+                    channels={
+                        "speed": TimeSeriesLineChannelViewSettings(
+                            label="Speed",
+                            color="#ffffff",
+                            hidden=False,
+                            line_width=2,
+                        )
+                    }
+                ),
+            )
+        },
+        timeline=["speed"],
+    )
+
+    scene = scene_builder._build()
+
+    assert scene["content"]["telemetry"] == {"type": InputEntityType.TIME_SERIES, "uri": "gs://bucket/telemetry.csv"}
+    assert scene["layout"]["timeline"] == ["speed"]
+
+
+def test_build_rejects_layout_tile_with_wrong_stream_type() -> None:
+    scene_builder = SceneBuilder()
+    scene_builder.add_pcd_stream("lidar").add_pcd(uri="gs://bucket/frame0.pcd", timestamp=0)
+    scene_builder.layout = SceneLayout(
+        tiles={
+            "speed": SceneTimeSeriesTile(
+                stream_name="lidar",
+                timeseries_settings=TimeSeriesViewSettings(channels={}),
+            )
+        },
+        timeline=["speed"],
+    )
+
+    with pytest.raises(EncordException, match="non-existent time_series stream 'lidar'"):
+        scene_builder._build()
+
+
+def test_scene_settings_fields_match_color_modes() -> None:
+    assert (
+        SceneViewSettings(
+            point_cloud_colouring=SceneSolidColouring(display_point_intensity=True),
+            point_radius=10,
+            render_image_outside_base_range=True,
+        ).point_radius
+        == 10
+    )
+    assert SceneProvidedColouring(srgb_colors=True).srgb_colors
+    assert SceneImageColouring(display_point_intensity=True).display_point_intensity
+    with pytest.raises(ValidationError):
+        SceneSolidColouring(color_height_bounds=(0, 1))
+    with pytest.raises(ValidationError):
+        SceneHeightColouring(display_point_intensity=True)
+    with pytest.raises(ValidationError):
+        SceneRadiusIndicator(frame_of_reference_id="root", radius=-1, color="#ffffff")
+    with pytest.raises(ValidationError, match="color"):
+        SceneRadiusIndicator(frame_of_reference_id="root", radius=1, color="white")
+    with pytest.raises(ValidationError, match="point_radius"):
+        SceneViewSettings(point_cloud_colouring=SceneSolidColouring(), point_radius=-1)
+    with pytest.raises(ValidationError, match="point_radius"):
+        SceneViewSettings(point_cloud_colouring=SceneSolidColouring(), point_radius=101)
+
+
+def test_build_rejects_radius_indicator_with_missing_frame_of_reference() -> None:
+    scene_builder = SceneBuilder()
+    scene_builder.add_for_stream("ego").add_pose(identity_pose(), timestamp=0)
+    scene_builder.settings = SceneViewSettings(
+        point_cloud_colouring=SceneHeightColouring(),
+        radius_indicators=[
+            SceneRadiusIndicator(
+                frame_of_reference_id="missing_for",
+                radius=10,
+                color="#ffffff",
+            )
+        ],
+    )
+    scene_builder.add_pcd_stream("lidar").add_pcd(uri="gs://bucket/frame0.pcd", timestamp=0)
+
+    with pytest.raises(
+        EncordException,
+        match="Radius indicator references frame of reference 'missing_for' which does not exist",
+    ):
+        scene_builder._build()
+
+    scene_builder.settings = SceneViewSettings(
+        point_cloud_colouring=SceneHeightColouring(),
+        radius_indicators=[
+            SceneRadiusIndicator(
+                frame_of_reference_id="ego",
+                radius=10,
+                color="#ffffff",
+            )
+        ],
+    )
+    assert scene_builder._build()["view_settings"]["radius_indicators"][0]["frame_of_reference_id"] == "ego"
+
+
 def test_build_scene_preserves_explicit_timestamps() -> None:
     scene_builder = SceneBuilder()
     scene_builder.add_pcd_stream("lidar").add_pcd(uri="gs://bucket/frame100.pcd", timestamp=100).add_pcd(
@@ -83,6 +226,20 @@ def test_build_scene_preserves_explicit_timestamps() -> None:
         {"timestamp": 100, "uri": "gs://bucket/frame100.pcd"},
         {"timestamp": 250, "uri": "gs://bucket/frame250.pcd"},
     ]
+
+
+def test_build_scene_with_time_series_stream() -> None:
+    scene_builder = SceneBuilder()
+    scene_builder.add_pcd_stream("lidar").add_pcd(uri="gs://bucket/frame0.pcd", timestamp=0)
+    time_series = scene_builder.add_time_series_stream("telemetry", uri="gs://bucket/telemetry.csv")
+
+    scene = scene_builder._build()
+
+    assert time_series.name == "telemetry"
+    assert scene["telemetry"] == {
+        "type": "time_series",
+        "uri": "gs://bucket/telemetry.csv",
+    }
 
 
 def test_build_scene_with_frame_of_reference_inline_camera_and_config() -> None:
@@ -234,6 +391,9 @@ def test_stream_builders_reject_empty_uris_immediately() -> None:
     )
     with pytest.raises(EncordException, match="Image stream 'front' event has an empty URI"):
         scene_builder.add_image_stream("front", camera="front/camera").add_image(uri="", timestamp=0)
+
+    with pytest.raises(EncordException, match="Time-series stream 'telemetry' has an empty URI"):
+        scene_builder.add_time_series_stream("telemetry", uri="")
 
 
 def test_scene_from_internal_ignores_image_camera_id() -> None:

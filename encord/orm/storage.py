@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Union
 from uuid import UUID
 
 from encord.common.deprecated import deprecated
+from encord.common.utils import HEX_COLOR_PATTERN
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO, Field, RootModelDTO, dto_validator
 from encord.orm.dataset import DataUnitError, LongPollingStatus
@@ -118,7 +119,7 @@ class TimeSeriesChannelViewSettingsBase(BaseDTO):
         if not isinstance(values, dict):
             return values
         color = values.get("color")
-        if color is not None and re.fullmatch(r"#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})", color) is None:
+        if color is not None and re.fullmatch(HEX_COLOR_PATTERN, color) is None:
             raise ValueError("color must be a 3, 6, or 8 digit hexadecimal color")
         return values
 

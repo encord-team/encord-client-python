@@ -23,6 +23,8 @@ from encord.beta.scene.internal.upload import (
     CameraIntrinsicsSimple,
     InputCameraParams,
 )
+from encord.beta.scene.layout import SceneLayout
+from encord.beta.scene.settings import SceneViewSettings
 from encord.orm.base_dto import RootModelDTO
 
 __all__ = [
@@ -44,6 +46,7 @@ __all__ = [
     "PCDStream",
     "Scene",
     "SelfContainedScene",
+    "SelfContainedStream",
     "URIEvent",
 ]
 
@@ -135,7 +138,15 @@ class EventStream(CamelModelApi):
     ]
 
 
-Stream = EventStream
+class SelfContainedStream(CamelModelApi):
+    type: Literal["self_contained"] = "self_contained"
+    id: str
+    entity_type: Literal["time_series"] = "time_series"
+    url: str
+    signed_url: str
+
+
+Stream = Annotated[Union[SelfContainedStream, EventStream], Field(discriminator="type")]
 
 
 # ---------------------------------------------------------------------------
@@ -147,6 +158,8 @@ class _SceneConfig(CamelModelApi):
     default_ground_height: Optional[float] = None
     world_convention: Convention = DEFAULT_CONVENTION
     camera_convention: Convention = DEFAULT_CONVENTION
+    view_settings: Optional[SceneViewSettings] = None
+    layout: Optional[SceneLayout] = None
 
     @field_validator("world_convention", "camera_convention", mode="before")
     @classmethod

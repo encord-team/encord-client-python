@@ -19,8 +19,10 @@ A scene is composed of **streams**, each representing a time-series from one sou
 | **Image stream**  | Camera images (URIs), linked to a camera stream               |
 | **Camera stream** | Camera intrinsics (focal length, principal point, distortion) |
 | **FoR stream**    | Frame-of-reference poses (rotation + translation over time)   |
+| **Time-series stream** | A self-contained CSV file                                |
 
-Each stream contains **events** -- ordered data points. Event timestamps are assigned sequentially.
+Event streams contain ordered, timestamped data points. Time-series streams instead reference one
+self-contained CSV file.
 
 ### Frame-of-Reference (FoR) tree
 
@@ -93,6 +95,11 @@ scene.add_image_stream("img_front", camera="cam_front").add_image(
     timestamp=0,
 )
 
+scene.add_time_series_stream(
+    "telemetry",
+    uri="s3://bucket/telemetry.csv",
+)
+
 # `storage_folder` is an `encord.storage.StorageFolder`.
 scene_uuid = storage_folder.upload_scene(
     scene=scene,
@@ -119,6 +126,9 @@ scene = SceneReader(item).read()
 
 front = scene.get_stream("img_front", kind="image")
 signed_url = front.get_event(timestamp=0).signed_url
+
+telemetry = scene.get_stream("telemetry", kind="time_series")
+csv_signed_url = telemetry.signed_url
 ```
 
 `get_stream` and `get_event` raise on missing entries. `find_stream` and `find_event` return

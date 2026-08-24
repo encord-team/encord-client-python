@@ -30,7 +30,6 @@ from encord.orm.dataset import (
     DatasetUserRole,
     Image,
     ImageGroup,
-    ImageGroupOCR,
     StorageLocation,
     Video,
 )
@@ -510,19 +509,6 @@ class Dataset:
 
         """
         return self._client.re_encode_data_status(job_id)
-
-    def run_ocr(self, image_group_id: str) -> List[ImageGroupOCR]:
-        """Returns an optical character recognition result for a given image group.
-
-        Args:
-            image_group_id: The ID of the image group in this dataset to run OCR on.
-
-        Returns:
-            List of ImageGroupOCR objects representing the text and corresponding coordinates
-            found in each frame of the image group.
-
-        """
-        return self._client.run_ocr(image_group_id)
 
     @deprecated(version="0.1.154", alternative="EncordUserClient.get_cloud_integrations")
     def get_cloud_integrations(self) -> List[CloudIntegration]:

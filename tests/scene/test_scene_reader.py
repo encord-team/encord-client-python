@@ -4,7 +4,19 @@ import pytest
 from deepdiff import DeepDiff
 from typing_extensions import cast
 
-from encord.beta.scene import CompositeScene, ImageStream, PointCloudStream, SceneEvent, SceneReader
+from encord.beta.scene import (
+    CompositeScene,
+    ImageStream,
+    PointCloudStream,
+    Scene3DViewerTile,
+    SceneEvent,
+    SceneHeightColouring,
+    SceneLayout,
+    SceneReader,
+    SceneTimeSeriesTile,
+    SceneViewSettings,
+    TimeSeriesStream,
+)
 from encord.beta.scene.internal.scene import Scene as InternalScene
 from encord.beta.scene.internal.scene import SceneResponse
 from encord.beta.scene.reader import scene_from_internal
@@ -68,6 +80,29 @@ def test_scene_reader_converts_internal_streams() -> None:
                         ],
                     },
                 },
+                "telemetry": {
+                    "type": "self_contained",
+                    "id": "telemetry",
+                    "entityType": "time_series",
+                    "url": "gs://bucket/telemetry.csv",
+                    "signedUrl": "https://signed.example/telemetry.csv",
+                },
+            },
+            "viewSettings": {
+                "pointCloudColouring": {"colorMode": "solid"},
+                "pointRadius": 10,
+            },
+            "layout": {
+                "tiles": {
+                    "0": {"type": "3d", "hasSideView": True, "showCameraSwitcher": True},
+                    "speed": {
+                        "type": "timeseries",
+                        "streamName": "telemetry",
+                        "timeseriesSettings": {"channels": {}},
+                    },
+                },
+                "layout": "0",
+                "timeline": ["speed"],
             },
         }
     )
@@ -77,10 +112,18 @@ def test_scene_reader_converts_internal_streams() -> None:
     assert isinstance(scene, CompositeScene)
     point_cloud_stream = scene.get_stream("lidar", kind="point_cloud")
     image_stream = scene.get_stream("front", kind="image")
+    time_series_stream = scene.get_stream("telemetry", kind="time_series")
     assert isinstance(point_cloud_stream, PointCloudStream)
     assert isinstance(image_stream, ImageStream)
+    assert isinstance(time_series_stream, TimeSeriesStream)
     assert point_cloud_stream.get_event(0).signed_url == "https://signed.example/lidar-0.pcd"
     assert image_stream.get_event(0).signed_url == "https://signed.example/front-0.jpg"
+    assert scene.view_settings is not None
+    assert scene.view_settings.point_radius == 10
+    assert time_series_stream.url == "gs://bucket/telemetry.csv"
+    assert time_series_stream.signed_url == "https://signed.example/telemetry.csv"
+    assert scene.layout is not None
+    assert isinstance(scene.layout.tiles["speed"], SceneTimeSeriesTile)
 
 
 @pytest.mark.parametrize(
@@ -161,6 +204,13 @@ def test_scene_reader_converts_internal_streams() -> None:
                             ],
                         },
                     },
+                    "telemetry": {
+                        "type": "self_contained",
+                        "id": "telemetry",
+                        "entityType": "time_series",
+                        "url": "gs://source/telemetry.csv",
+                        "signedUrl": "https://signed.example/telemetry.csv",
+                    },
                 },
             },
             {
@@ -217,6 +267,10 @@ def test_scene_reader_converts_internal_streams() -> None:
                                 }
                             ],
                         },
+                        "telemetry": {
+                            "type": "time_series",
+                            "uri": "s3://target/telemetry.csv",
+                        },
                     },
                     "default_ground_height": None,
                     "world_convention": {"x": "right", "y": "forward", "z": "up"},
@@ -261,6 +315,45 @@ def test_scene_read_to_upload_payload_converts_scene(
     assert not DeepDiff(payload.to_dict(by_alias=False), expected)
 
 
+def test_scene_reader_reuploads_modified_settings() -> None:
+    response = {
+        "type": "composite",
+        "streams": {
+            "lidar": {
+                "type": "event",
+                "id": "lidar",
+                "stream": {
+                    "entityType": "point_cloud",
+                    "events": [
+                        {
+                            "timestamp": 0,
+                            "url": "gs://bucket/lidar.pcd",
+                            "signedUrl": "https://signed.example/lidar.pcd",
+                        }
+                    ],
+                },
+            }
+        },
+    }
+    reader = SceneReader(cast(StorageItem, _FakeStorageItem(response)))
+    reader.view_settings = SceneViewSettings(point_cloud_colouring=SceneHeightColouring())
+    reader.layout = SceneLayout(
+        tiles={"0": Scene3DViewerTile(has_side_view=True, show_camera_switcher=True)},
+        layout="0",
+    )
+
+    payload = reader.to_upload_payload()
+
+    assert isinstance(reader.view_settings, SceneViewSettings)
+    assert reader.read().view_settings == reader.view_settings
+    assert payload.scene["view_settings"] == {"point_cloud_colouring": {"color_mode": "height"}}
+    assert payload.scene["layout"] == {
+        "tiles": {"0": {"type": "3d", "has_side_view": True, "show_camera_switcher": True}},
+        "layout": "0",
+        "timeline": [],
+    }
+
+
 def test_scene_read_caches_internal_scene_response() -> None:
     response = {
         "type": "composite",
@@ -300,12 +393,16 @@ def test_get_stream_raises_for_unknown_stream_id() -> None:
     with pytest.raises(KeyError, match="No image stream with id 'front'"):
         scene.get_stream("front", kind="image")
 
+    with pytest.raises(KeyError, match="No time series stream with id 'telemetry'"):
+        scene.get_stream("telemetry", kind="time_series")
+
 
 def test_find_stream_returns_none_for_unknown_stream_id() -> None:
     scene = CompositeScene(point_cloud_streams=[], image_streams=[])
 
     assert scene.find_stream("lidar", kind="point_cloud") is None
     assert scene.find_stream("front", kind="image") is None
+    assert scene.find_stream("telemetry", kind="time_series") is None
 
 
 def test_get_event_raises_when_event_missing() -> None:

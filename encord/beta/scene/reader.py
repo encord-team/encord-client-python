@@ -7,7 +7,7 @@ They are constructed from the internal types in ``beta/scene/internal/scene.py``
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal, cast, overload
 
 from encord.beta.scene.internal.scene import (
@@ -28,7 +28,12 @@ from encord.beta.scene.internal.scene import (
 from encord.beta.scene.internal.scene import (
     SelfContainedScene as _SelfContainedScene,
 )
+from encord.beta.scene.internal.scene import (
+    SelfContainedStream as _SelfContainedStream,
+)
+from encord.beta.scene.layout import SceneLayout
 from encord.beta.scene.scene_to_upload_playload import scene_to_upload_payload
+from encord.beta.scene.settings import SceneViewSettings
 from encord.common.deprecated import deprecated
 from encord.orm import storage as orm_storage
 from encord.orm.storage import StorageItemType
@@ -110,11 +115,25 @@ class ImageStream:
 
 
 @dataclass
+class TimeSeriesStream:
+    """A self-contained CSV time-series stream."""
+
+    stream_id: str
+    url: str
+    """Raw unsigned URI as stored in the scene definition."""
+    signed_url: str
+    """Time-limited signed URL for downloading the CSV file."""
+
+
+@dataclass
 class CompositeScene:
-    """A scene composed of multiple named streams (lidar + cameras)."""
+    """A scene composed of multiple named streams."""
 
     point_cloud_streams: list[PointCloudStream]
     image_streams: list[ImageStream]
+    time_series_streams: list[TimeSeriesStream] = field(default_factory=list)
+    view_settings: SceneViewSettings | None = None
+    layout: SceneLayout | None = None
 
     @overload
     def find_stream(self, stream_id: str, *, kind: Literal["point_cloud"]) -> PointCloudStream | None: ...
@@ -122,9 +141,12 @@ class CompositeScene:
     @overload
     def find_stream(self, stream_id: str, *, kind: Literal["image"]) -> ImageStream | None: ...
 
+    @overload
+    def find_stream(self, stream_id: str, *, kind: Literal["time_series"]) -> TimeSeriesStream | None: ...
+
     def find_stream(
-        self, stream_id: str, *, kind: Literal["point_cloud", "image"]
-    ) -> PointCloudStream | ImageStream | None:
+        self, stream_id: str, *, kind: Literal["point_cloud", "image", "time_series"]
+    ) -> PointCloudStream | ImageStream | TimeSeriesStream | None:
         """Return the stream with the given ID and kind, or ``None`` if not present."""
         if kind == "point_cloud":
             for pcd_stream in self.point_cloud_streams:
@@ -136,6 +158,11 @@ class CompositeScene:
                 if image_stream.stream_id == stream_id:
                     return image_stream
             return None
+        if kind == "time_series":
+            for time_series_stream in self.time_series_streams:
+                if time_series_stream.stream_id == stream_id:
+                    return time_series_stream
+            return None
         raise ValueError(f"Unsupported stream kind '{kind}'")
 
     @overload
@@ -144,7 +171,12 @@ class CompositeScene:
     @overload
     def get_stream(self, stream_id: str, *, kind: Literal["image"]) -> ImageStream: ...
 
-    def get_stream(self, stream_id: str, *, kind: Literal["point_cloud", "image"]) -> PointCloudStream | ImageStream:
+    @overload
+    def get_stream(self, stream_id: str, *, kind: Literal["time_series"]) -> TimeSeriesStream: ...
+
+    def get_stream(
+        self, stream_id: str, *, kind: Literal["point_cloud", "image", "time_series"]
+    ) -> PointCloudStream | ImageStream | TimeSeriesStream:
         """Return the stream with the given ID and kind.
 
         Raises:
@@ -152,10 +184,13 @@ class CompositeScene:
         """
         stream = self.find_stream(stream_id, kind=kind)
         if stream is None:
-            available = [
-                s.stream_id for s in (self.point_cloud_streams if kind == "point_cloud" else self.image_streams)
-            ]
-            kind_name = "point cloud" if kind == "point_cloud" else "image"
+            if kind == "point_cloud":
+                available = [stream.stream_id for stream in self.point_cloud_streams]
+            elif kind == "image":
+                available = [stream.stream_id for stream in self.image_streams]
+            else:
+                available = [stream.stream_id for stream in self.time_series_streams]
+            kind_name = {"point_cloud": "point cloud", "image": "image", "time_series": "time series"}[kind]
             raise KeyError(f"No {kind_name} stream with id '{stream_id}'. Available: {available}")
         return stream
 
@@ -186,15 +221,29 @@ class SceneReader:
 
     def _read_internal_scene(self) -> _Scene:
         if self._internal_scene is None:
-            self._internal_scene = cast(
-                _Scene,
-                self._item._api_client.get(
-                    f"scene/{self._item.uuid}",
-                    params=None,
-                    result_type=_SceneResponse,
-                ).root,
+            response = self._item._api_client.get(
+                f"scene/{self._item.uuid}",
+                params=None,
+                result_type=_SceneResponse,
             )
+            self._internal_scene = cast(_Scene, response.root)
         return self._internal_scene
+
+    @property
+    def view_settings(self) -> SceneViewSettings | None:
+        return self._read_internal_scene().view_settings
+
+    @view_settings.setter
+    def view_settings(self, view_settings: SceneViewSettings | None) -> None:
+        self._read_internal_scene().view_settings = view_settings
+
+    @property
+    def layout(self) -> SceneLayout | None:
+        return self._read_internal_scene().layout
+
+    @layout.setter
+    def layout(self, layout: SceneLayout | None) -> None:
+        self._read_internal_scene().layout = layout
 
     def read(self) -> Scene:
         """Fetch the scene structure with signed download URLs for all constituent files."""
@@ -218,9 +267,17 @@ class SceneReader:
             A scene upload payload suitable for ``DataUploadItems(scenes=[...])``.
         """
         metadata = self._item.client_metadata if client_metadata is None else client_metadata
+        scene_payload = scene_to_upload_payload(self._read_internal_scene(), uri_mapper=uri_mapper)
+        view_settings = self.view_settings
+        if view_settings is not None:
+            scene_payload["view_settings"] = view_settings.to_dict(by_alias=False)
+        layout = self.layout
+        if layout is not None:
+            scene_payload["layout"] = layout.to_dict(by_alias=False)
+
         return orm_storage.DataUploadScene(
             title=title or self._item.name,
-            scene=scene_to_upload_payload(self._read_internal_scene(), uri_mapper=uri_mapper),
+            scene=scene_payload,
             client_metadata=metadata or {},
         )
 
@@ -246,7 +303,17 @@ def scene_from_internal(internal: _Scene) -> Scene:
     )
     point_cloud_streams: list[PointCloudStream] = []
     image_streams: list[ImageStream] = []
+    time_series_streams: list[TimeSeriesStream] = []
     for stream_id, stream in internal.streams.items():
+        if isinstance(stream, _SelfContainedStream):
+            time_series_streams.append(
+                TimeSeriesStream(
+                    stream_id=stream_id,
+                    url=stream.url,
+                    signed_url=stream.signed_url,
+                )
+            )
+            continue
         if not isinstance(stream, _EventStream):
             continue
         inner = stream.stream
@@ -278,4 +345,10 @@ def scene_from_internal(internal: _Scene) -> Scene:
                     ],
                 )
             )
-    return CompositeScene(point_cloud_streams=point_cloud_streams, image_streams=image_streams)
+    return CompositeScene(
+        point_cloud_streams=point_cloud_streams,
+        image_streams=image_streams,
+        time_series_streams=time_series_streams,
+        view_settings=internal.view_settings,
+        layout=internal.layout,
+    )

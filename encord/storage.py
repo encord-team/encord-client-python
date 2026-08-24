@@ -26,12 +26,19 @@ import requests
 import encord
 import encord.orm.storage as orm_storage
 from encord.beta.scene.builder import SceneBuilder
+from encord.beta.scene.layout import SceneLayout
+from encord.beta.scene.settings import SceneViewSettings
 from encord.client import LONG_POLLING_RESPONSE_RETRY_N, LONG_POLLING_SLEEP_ON_FAILURE_SECONDS
 from encord.common.deprecated import deprecated
 from encord.exceptions import EncordException
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS
-from encord.http.utils import CloudUploadSettings, _upload_single_file, download_signed_urls_as_json
+from encord.http.utils import (
+    CloudUploadSettings,
+    UploadPresignedUrlsGetParams,
+    _upload_single_file,
+    download_signed_urls_as_json,
+)
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.orm.dataset import LongPollingStatus
@@ -72,6 +79,11 @@ from encord.orm.storage import (
 logger = logging.getLogger(__name__)
 
 STORAGE_BUNDLE_CREATE_LIMIT = 1000
+
+
+class _ScenePatchItemPayload(PatchItemPayload):
+    scene_view_settings: Optional[SceneViewSettings] = None
+    scene_layout: Optional[SceneLayout] = None
 
 
 class StorageFolder:
@@ -968,6 +980,62 @@ class StorageFolder:
         else:
             return upload_result.items_with_names[0].item_uuid
 
+    def upload_scene_file(
+        self,
+        file_path: Union[Path, str],
+        title: Optional[str] = None,
+        client_metadata: Optional[Dict[str, Any]] = None,
+        cloud_upload_settings: CloudUploadSettings = CloudUploadSettings(),
+    ) -> UUID:
+        """Upload a self-contained scene file to Encord-managed storage.
+
+        Supported formats include BAG, DB3, E57, LAS, LAZ, MCAP, PCD, and PLY.
+
+        Args:
+            file_path: Path to the local scene file.
+            title: Optional item title. Defaults to the local file name.
+            client_metadata: Optional JSON-serializable metadata to associate with the scene.
+            cloud_upload_settings: Retry settings for the file upload.
+
+        Returns:
+            UUID of the newly uploaded scene item.
+
+        Raises:
+            EncordException: If the scene format is unsupported or the upload cannot be completed.
+        """
+        scene_format = Path(file_path).suffix.lower().lstrip(".")
+        upload_url_info = self._get_scene_upload_signed_urls(count=1)
+        if len(upload_url_info) != 1:
+            raise EncordException("Can't access upload location")
+
+        title = self._guess_title(title, file_path)
+        self._upload_local_file(
+            file_path,
+            title,
+            StorageItemType.SCENE,
+            upload_url_info[0].signed_url,
+            cloud_upload_settings,
+            upload_headers=upload_url_info[0].upload_headers,
+        )
+
+        upload_result = self._add_data(
+            integration_id=None,
+            private_files=DataUploadItems(
+                scenes=[
+                    orm_storage.DataUploadScene(
+                        title=title,
+                        scene={"url": upload_url_info[0].object_key, "format": scene_format},
+                        client_metadata=client_metadata or {},
+                    )
+                ]
+            ),
+            ignore_errors=False,
+        )
+
+        if upload_result.status == LongPollingStatus.ERROR:
+            raise EncordException(f"Could not register scene file, errors occurred {upload_result.errors}")
+        return upload_result.items_with_names[0].item_uuid
+
     def upload_scene(
         self,
         scene: SceneBuilder,
@@ -1553,6 +1621,17 @@ class StorageFolder:
 
         return urls.results
 
+    def _get_scene_upload_signed_urls(self, count: int) -> List[orm_storage.UploadSignedUrl]:
+        """Request Encord-hosted upload URLs for self-contained scenes."""
+        return self._api_client.get(
+            "presigned-urls",
+            params=UploadPresignedUrlsGetParams(
+                count=count,
+                upload_item_type=StorageItemType.SCENE,
+            ),
+            result_type=Page[orm_storage.UploadSignedUrl],
+        ).results
+
     def _guess_title(self, title: Optional[str], file_path: Union[Path, str]) -> str:
         if title:
             return title
@@ -1586,6 +1665,8 @@ class StorageFolder:
             return "application/pdf"
         elif item_type == StorageItemType.TIMESERIES:
             return mimetypes.guess_type(str(file_path))[0] or "application/octet-stream"
+        elif item_type == StorageItemType.SCENE:
+            return "application/octet-stream"
         else:
             raise ValueError(f"Unsupported upload item type `{item_type}`")
 
@@ -2085,6 +2166,8 @@ class StorageItem:
         client_metadata: Optional[Dict[str, Any]] = None,
         timeseries_settings: Optional[TimeSeriesViewSettings] = None,
         bundle: Optional[Bundle] = None,
+        scene_view_settings: Optional[SceneViewSettings] = None,
+        scene_layout: Optional[SceneLayout] = None,
     ) -> None:
         """Update modifiable properties of the item.
 
@@ -2094,6 +2177,8 @@ class StorageItem:
             client_metadata: New client metadata.
             timeseries_settings: New time-series channel visualization settings.
             bundle: Optional :class:`encord.http.bundle.Bundle` to use for the operation. If provided, the operation
+            scene_view_settings: New scene visualization settings.
+            scene_layout: New scene tile and timeline layout.
 
         Returns:
             None
@@ -2104,7 +2189,14 @@ class StorageItem:
             If `bundle` is provided, the operation is bundled into a single server call with other item updates
             using the same bundle.
         """
-        if name is None and description is None and client_metadata is None and timeseries_settings is None:
+        if (
+            name is None
+            and description is None
+            and client_metadata is None
+            and timeseries_settings is None
+            and scene_view_settings is None
+            and scene_layout is None
+        ):
             return
 
         if client_metadata is not None:
@@ -2115,11 +2207,13 @@ class StorageItem:
                 operation=self._api_client.get_bound_operation(StorageItem._patch_multiple_items),
                 payload=orm_storage.BundledPatchItemPayload(
                     item_patches={
-                        str(self.uuid): PatchItemPayload(
+                        str(self.uuid): _ScenePatchItemPayload(
                             name=name,
                             description=description,
                             client_metadata=client_metadata,
                             timeseries_settings=timeseries_settings,
+                            scene_view_settings=scene_view_settings,
+                            scene_layout=scene_layout,
                         ),
                     },
                 ),
@@ -2133,11 +2227,13 @@ class StorageItem:
             self._orm_item = self._api_client.patch(
                 f"storage/folders/{self.parent_folder_uuid}/items/{self.uuid}",
                 params=None,
-                payload=PatchItemPayload(
+                payload=_ScenePatchItemPayload(
                     name=name,
                     description=description,
                     client_metadata=client_metadata,
                     timeseries_settings=timeseries_settings,
+                    scene_view_settings=scene_view_settings,
+                    scene_layout=scene_layout,
                 ),
                 result_type=orm_storage.StorageItem,
             )

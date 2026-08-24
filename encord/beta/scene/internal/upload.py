@@ -37,6 +37,8 @@ from encord.beta.scene.internal.common import RadialDistortionModel as RadialDis
 from encord.beta.scene.internal.common import RationalPolynomialDistortionModel as RationalPolynomialDistortionModel
 from encord.beta.scene.internal.common import SelfContainedFormat as SelfContainedFormat
 from encord.beta.scene.internal.common import UCMDistortionModel as UCMDistortionModel
+from encord.beta.scene.layout import SceneImageTile, SceneLayout, SceneTimeSeriesTile
+from encord.beta.scene.settings import SceneViewSettings
 
 
 class CameraIntrinsicsSimple(BaseModel):
@@ -356,6 +358,7 @@ class InputEntityType(str, Enum):
     FRAME_OF_REFERENCE = "frame_of_reference"
     IMAGE = "image"
     CAMERA_PARAMETERS = "camera_parameters"
+    TIME_SERIES = "time_series"
 
     @classmethod
     def _missing_(cls, value: object) -> InputEntityType:
@@ -403,8 +406,14 @@ class InputFoRStream(BaseModel):
     events: Annotated[list[InputFoREvent], Field(description="List of frame of reference")]
 
 
+class InputTimeSeriesStream(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    type: Literal["time_series"] = "time_series"
+    uri: Annotated[str, Field(description="URI of the CSV file containing the time-series data")]
+
+
 InputStream: TypeAlias = Annotated[
-    Union[InputPCDStream, InputCameraStream, InputFoRStream, InputImageStream],
+    Union[InputPCDStream, InputCameraStream, InputFoRStream, InputImageStream, InputTimeSeriesStream],
     Field(discriminator="type"),
 ]
 
@@ -462,6 +471,14 @@ class SceneWithConfig(BaseModel):
             description="The default ground height of the scene, value in the UP axis",
             validation_alias=AliasChoices("defaultGroundHeight", "defaultGround", "default_ground_height"),
         ),
+    ] = None
+    view_settings: Annotated[
+        Optional[SceneViewSettings],
+        Field(description="Initial rendering settings for the scene."),
+    ] = None
+    layout: Annotated[
+        Optional[SceneLayout],
+        Field(description="Initial tile and timeline layout for the scene."),
     ] = None
     world_convention: Annotated[
         Optional[Convention],
@@ -547,6 +564,12 @@ class InputScene(SceneOrSceneWithConfig):
         if isinstance(content, Streams):
             validate_streams(content)
 
+        if isinstance(self.root, SceneWithConfig) and self.root.view_settings is not None:
+            validate_scene_view_settings(self.root.view_settings, content)
+
+        if isinstance(self.root, SceneWithConfig) and self.root.layout is not None:
+            validate_scene_layout(self.root.layout, content)
+
         return self
 
 
@@ -579,3 +602,39 @@ def validate_streams(content: Streams) -> None:
                     f"Frame of reference '{stream.id}' references non-existent parent FoR ID: "
                     f"'{stream.parent_FoR_id}'. Available FoR IDs: {stream_ids.for_ids}"
                 )
+
+
+def validate_scene_view_settings(view_settings: SceneViewSettings, content: object) -> None:
+    if view_settings.radius_indicators is None:
+        return
+
+    frame_of_reference_ids = collect_stream_ids(content.root).for_ids if isinstance(content, Streams) else set()
+    for indicator in view_settings.radius_indicators:
+        if indicator.frame_of_reference_id not in frame_of_reference_ids and indicator.frame_of_reference_id != "root":
+            raise ValueError(
+                f"Radius indicator references non-existent frame of reference ID: "
+                f"'{indicator.frame_of_reference_id}'. Available FoR IDs: {frame_of_reference_ids}"
+            )
+
+
+def validate_scene_layout(scene_layout: SceneLayout, content: object) -> None:
+    streams = content.root if isinstance(content, Streams) else {}
+    for tile_id, tile in scene_layout.tiles.items():
+        expected_stream_type: type[InputImageStream] | type[InputTimeSeriesStream]
+        if isinstance(tile, SceneImageTile):
+            expected_stream_type = InputImageStream
+            expected_type_name = "image"
+        elif isinstance(tile, SceneTimeSeriesTile):
+            expected_stream_type = InputTimeSeriesStream
+            expected_type_name = "time_series"
+        else:
+            continue
+
+        if not isinstance(streams.get(tile.stream_name), expected_stream_type):
+            available_streams = sorted(
+                stream_name for stream_name, stream in streams.items() if isinstance(stream, expected_stream_type)
+            )
+            raise ValueError(
+                f"Scene {tile.type} tile '{tile_id}' references non-existent {expected_type_name} "
+                f"stream '{tile.stream_name}'. Available streams: {available_streams}"
+            )

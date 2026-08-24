@@ -4,6 +4,7 @@ from encord.beta.scene.builder import (
     ImageStreamBuilder,
     PCDStreamBuilder,
     SceneBuilder,
+    TimeSeriesStreamBuilder,
 )
 from encord.beta.scene.internal.upload import Direction
 from encord.beta.scene.intrinsics import (
@@ -18,6 +19,15 @@ from encord.beta.scene.intrinsics import (
     intrinsics_radial,
     intrinsics_rational_polynomial,
     intrinsics_simple,
+)
+from encord.beta.scene.layout import (
+    Scene3DViewerTile,
+    SceneImageTile,
+    SceneLayout,
+    SceneTile,
+    SceneTileLayout,
+    SceneTileLayoutDirection,
+    SceneTimeSeriesTile,
 )
 from encord.beta.scene.pose import (
     AffinePose,
@@ -40,6 +50,7 @@ from encord.beta.scene.reader import (
     SceneEvent,
     SceneRead,
     SceneReader,
+    TimeSeriesStream,
 )
 from encord.beta.scene.rotation import (
     EulerRotation,
@@ -50,6 +61,17 @@ from encord.beta.scene.rotation import (
     rotation_x,
     rotation_y,
     rotation_z,
+)
+from encord.beta.scene.settings import (
+    SceneColorMode,
+    SceneHeightColouring,
+    SceneImageColouring,
+    ScenePointCloudColouring,
+    SceneProvidedColouring,
+    SceneRadiusIndicator,
+    SceneSensorColouring,
+    SceneSolidColouring,
+    SceneViewSettings,
 )
 
 __all__ = [
@@ -72,11 +94,29 @@ __all__ = [
     "QuaternionRotation",
     "Rotation",
     "Scene",
+    "Scene3DViewerTile",
     "SceneBuilder",
+    "SceneColorMode",
     "SceneEvent",
+    "SceneHeightColouring",
+    "SceneImageColouring",
+    "SceneImageTile",
+    "SceneLayout",
+    "ScenePointCloudColouring",
+    "SceneProvidedColouring",
+    "SceneRadiusIndicator",
     "SceneRead",
     "SceneReader",
+    "SceneSensorColouring",
+    "SceneSolidColouring",
+    "SceneTile",
+    "SceneTileLayout",
+    "SceneTileLayoutDirection",
+    "SceneTimeSeriesTile",
+    "SceneViewSettings",
     "SimpleIntrinsics",
+    "TimeSeriesStream",
+    "TimeSeriesStreamBuilder",
     "affine_transform",
     "euler_pose",
     "identity_pose",

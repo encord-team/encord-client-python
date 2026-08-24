@@ -74,7 +74,6 @@ from encord.orm.dataset import (
     DatasetUsers,
     Image,
     ImageGroup,
-    ImageGroupOCR,
     LongPollingStatus,
     ReEncodeVideoTask,
     RemoveDatasetUsersPayload,
@@ -811,11 +810,6 @@ class EncordClientDataset(EncordClient):
     def re_encode_data_status(self, job_id: int):
         """This function is documented in :meth:`encord.dataset.Dataset.re_encode_data_status`."""
         return self._querier.basic_getter(ReEncodeVideoTask, uid=job_id)
-
-    def run_ocr(self, image_group_id: str) -> List[ImageGroupOCR]:
-        """This function is documented in :meth:`encord.dataset.Dataset.run_ocr`."""
-        payload = {"image_group_data_hash": image_group_id}
-        return self._querier.get_multiple(ImageGroupOCR, payload=payload)
 
 
 class EncordClientProject(EncordClient):

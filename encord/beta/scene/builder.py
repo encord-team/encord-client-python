@@ -8,8 +8,9 @@ type has its own nested builder, and event timestamps are assigned sequentially.
 1. Create a :class:`SceneBuilder` and (optionally) configure global settings.
 2. Add one or more streams -- each ``add_*_stream`` call returns a nested
    stream builder.
-3. Populate streams with events via the stream-specific method
-   (``add_pcd``, ``add_image``, ``add_camera_params``, ``add_pose``).
+3. Populate event streams via the stream-specific method
+   (``add_pcd``, ``add_image``, ``add_camera_params``, ``add_pose``), or
+   provide the CSV URI when creating a time-series stream.
 4. Pass the builder to SDK upload/create methods, which validates and
    serializes internally.
 
@@ -39,12 +40,15 @@ from encord.beta.scene.internal.upload import (
     Streams as _Streams,
 )
 from encord.beta.scene.intrinsics import AdvancedIntrinsics, Intrinsics
+from encord.beta.scene.layout import SceneImageTile, SceneLayout, SceneTimeSeriesTile
 from encord.beta.scene.pose import Pose
+from encord.beta.scene.settings import SceneViewSettings
 from encord.beta.scene.stream import (
     CameraStreamBuilder,
     FoRStreamBuilder,
     ImageStreamBuilder,
     PCDStreamBuilder,
+    TimeSeriesStreamBuilder,
     _StreamBuilderBase,
 )
 from encord.exceptions import EncordException
@@ -60,18 +64,21 @@ class SceneBuilder:
         * **Camera parameters** -- :meth:`add_camera_stream`
         * **Frame of reference** -- :meth:`add_for_stream`
         * **Image** -- :meth:`add_image_stream`
+        * **Time series** -- :meth:`add_time_series_stream`
 
     Stream names must be unique.  Re-using a name raises an error.
 
     The scene must contain at least one point-cloud or image stream, and every
-    stream must have at least one event. ``_build`` validates and serializes
-    builders internally for SDK upload/create methods.
+    event stream must have at least one event. ``_build`` validates and
+    serializes builders internally for SDK upload/create methods.
     """
 
     def __init__(self) -> None:
         self._streams: dict[str, _StreamBuilderBase] = {}
         self._world_convention: _Convention | None = None
         self._camera_convention: _Convention | None = None
+        self.settings: SceneViewSettings | None = None
+        self.layout: SceneLayout | None = None
 
     # -- global configuration ---------------------------------------------
 
@@ -105,6 +112,19 @@ class SceneBuilder:
         return self
 
     # -- stream factories -------------------------------------------------
+
+    def add_time_series_stream(self, name: str, *, uri: str) -> TimeSeriesStreamBuilder:
+        """Add a self-contained CSV time-series stream.
+
+        Args:
+            name: Unique stream name.
+            uri: Non-empty URI pointing to the CSV file.
+        """
+        sb = TimeSeriesStreamBuilder(name, self, uri=uri)
+        if name in self._streams:
+            raise RuntimeError(f"stream {name} is already defined")
+        self._streams[name] = sb
+        return sb
 
     def add_pcd_stream(
         self,
@@ -273,7 +293,7 @@ class SceneBuilder:
         **Client-side validation** (checked here):
 
         1. At least one point-cloud or image stream is present.
-        2. Every stream has at least one event.
+        2. Every event stream has at least one event.
         3. PCD / image event URIs are non-empty.
         4. Advanced intrinsics matrix sizes (``k``: 9, ``r``: 9,
            ``p``: 12).
@@ -283,6 +303,8 @@ class SceneBuilder:
         7. FoR ``parent_for_id`` references an existing FoR stream name or the
            implicit scene root.
         8. FoR parent chain is acyclic (no circular references).
+        9. Radius indicators reference an existing FoR stream or the implicit
+           scene root.
 
         Raises:
             EncordException: When validation fails.
@@ -374,21 +396,64 @@ class SceneBuilder:
                 visited.add(cur)
                 cur = parent_of[cur]
 
+        if self.settings is not None and self.settings.radius_indicators is not None:
+            for indicator in self.settings.radius_indicators:
+                if (
+                    indicator.frame_of_reference_id != ROOT_FOR
+                    and indicator.frame_of_reference_id not in for_stream_names
+                ):
+                    errors.append(
+                        f"Radius indicator references frame of reference '{indicator.frame_of_reference_id}' "
+                        "which does not exist. "
+                        f"Available FoR streams: {for_stream_names or '{}'}"
+                    )
+
+        if self.layout is not None:
+            for tile_id, tile in self.layout.tiles.items():
+                expected_stream_type: type[ImageStreamBuilder] | type[TimeSeriesStreamBuilder]
+                if isinstance(tile, SceneImageTile):
+                    expected_stream_type = ImageStreamBuilder
+                    expected_type_name = "image"
+                elif isinstance(tile, SceneTimeSeriesTile):
+                    expected_stream_type = TimeSeriesStreamBuilder
+                    expected_type_name = "time_series"
+                else:
+                    continue
+
+                if not isinstance(self._streams.get(tile.stream_name), expected_stream_type):
+                    available_streams = sorted(
+                        stream_name
+                        for stream_name, stream in self._streams.items()
+                        if isinstance(stream, expected_stream_type)
+                    )
+                    errors.append(
+                        f"Scene {tile.type} tile '{tile_id}' references non-existent {expected_type_name} "
+                        f"stream '{tile.stream_name}'. Available streams: {available_streams}"
+                    )
+
         if errors:
             raise EncordException("Scene validation failed:\n- " + "\n- ".join(errors))
 
         # Serialize via Pydantic models from internal.py.
         streams = _Streams.model_construct(root=stream_models)
 
-        has_config = self._world_convention is not None or self._camera_convention is not None
+        has_settings = self.settings is not None
+        has_layout = self.layout is not None
+        has_config = (
+            self._world_convention is not None or self._camera_convention is not None or has_settings or has_layout
+        )
         if has_config:
             scene_content = _SceneContent.model_construct(root=streams)
             config = _SceneWithConfig.model_construct(
                 content=scene_content,
-                default_ground_height=None,
                 world_convention=self._world_convention,
                 camera_convention=self._camera_convention,
             )
-            return config.model_dump()
+            result = config.model_dump()
+            if self.settings is not None:
+                result["view_settings"] = self.settings.to_dict(by_alias=False)
+            if self.layout is not None:
+                result["layout"] = self.layout.to_dict(by_alias=False)
+            return result
 
         return streams.model_dump()

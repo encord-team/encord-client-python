@@ -4,6 +4,8 @@ import re
 from typing import List, Optional, TypeVar, Union
 from uuid import UUID
 
+HEX_COLOR_PATTERN = r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+
 
 def snake_to_camel(snake_case_str: str) -> str:
     camel = re.sub("([0-9A-Za-z])_(?=[0-9A-Z])", lambda m: m.group(1), snake_case_str.title())

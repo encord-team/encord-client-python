@@ -1,6 +1,6 @@
 [project]
 name = "encord"
-version = "0.1.201"
+version = "0.1.202"
 description = "Encord Python SDK Client"
 authors = [
     { name = "Cord Technologies Limited", email = "hello@encord.com" },

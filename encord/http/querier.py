@@ -1,4 +1,6 @@
 import dataclasses
+import functools
+import inspect
 import logging
 import re
 from contextlib import contextmanager
@@ -231,7 +233,11 @@ class Querier:
             connect_retries=req_settings.connection_retries,
         ) as session:
             try:
-                res = session.send(req, timeout=timeouts)
+                # Session.send on a prepared request bypasses merge_environment_settings,
+                # so apply it ourselves — otherwise REQUESTS_CA_BUNDLE et al. are ignored.
+                # https://requests.readthedocs.io/en/latest/user/advanced/#prepared-requests
+                settings = session.merge_environment_settings(req.url, {}, None, None, None)
+                res = session.send(req, timeout=timeouts, **settings)
             except Exception as e:
                 raise RequestException(f"Request session.send failed {req.method=} {req.url=}", context=context) from e
 
@@ -249,10 +255,19 @@ class Querier:
         return res_json.get("response"), context
 
 
+@functools.lru_cache(maxsize=1)
+def _retry_supports_backoff_jitter() -> bool:
+    # ``backoff_jitter`` was only added to urllib3's ``Retry`` in urllib3 2.0. ``requests`` still
+    # allows urllib3 1.x, so we must not forward it there or every request raises ``TypeError``.
+    return "backoff_jitter" in inspect.signature(Retry.__init__).parameters
+
+
 @contextmanager
 def create_new_session(
     max_retries: Optional[int], backoff_factor: float, connect_retries: int, backoff_jitter: float = 0.0
 ) -> Generator[Session, None, None]:
+    # ``backoff_jitter`` only exists on urllib3 >= 2.0, so forward it only when supported.
+    retry_extra_args: Dict[str, Any] = {"backoff_jitter": backoff_jitter} if _retry_supports_backoff_jitter() else {}
     retry_policy = Retry(
         connect=connect_retries,
         read=max_retries,
@@ -261,8 +276,8 @@ def create_new_session(
         allowed_methods=["POST", "PUT", "GET"],  # type: ignore  # post is there since we use it for idempotent ops too.
         status_forcelist=[413, 429, 500, 502, 503],
         backoff_factor=backoff_factor,
-        backoff_jitter=backoff_jitter,
         raise_on_status=False,
+        **retry_extra_args,
     )
 
     with Session() as session:

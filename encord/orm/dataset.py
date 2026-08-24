@@ -998,18 +998,6 @@ class DicomDeidentifyTask:
     integration_hash: str
 
 
-@dataclasses.dataclass(frozen=True)
-class ImageGroupOCR:
-    """OCR results extracted from an image group.
-
-    Args:
-        processed_texts: Mapping of identifiers to recognized text blocks produced by
-            the OCR pipeline.
-    """
-
-    processed_texts: Dict
-
-
 class ReEncodeVideoTaskResult(BaseDTO):
     """Result of a video re-encoding task.
 

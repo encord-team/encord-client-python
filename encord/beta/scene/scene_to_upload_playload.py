@@ -40,6 +40,9 @@ from encord.beta.scene.internal.scene import (
 from encord.beta.scene.internal.scene import (
     SelfContainedScene as _SelfContainedScene,
 )
+from encord.beta.scene.internal.scene import (
+    SelfContainedStream as _SelfContainedStream,
+)
 
 
 def scene_to_upload_payload(
@@ -74,9 +77,15 @@ def _scene_with_config(internal: _SelfContainedScene | _CompositeScene, content:
 
 def _stream_to_upload(
     stream_id: str,
-    stream: _EventStream,
+    stream: _EventStream | _SelfContainedStream,
     uri_mapper: Callable[[str], str] | Mapping[str, str] | None,
 ) -> dict[str, Any]:
+    if isinstance(stream, _SelfContainedStream):
+        return {
+            "type": "time_series",
+            "uri": _map_uri(stream.url, uri_mapper),
+        }
+
     inner = stream.stream
     if isinstance(inner, _PCDStream):
         return {

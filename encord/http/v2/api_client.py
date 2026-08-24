@@ -250,7 +250,11 @@ class ApiClient:
             context = self._exception_context(req)
 
             try:
-                res = session.send(req, timeout=timeouts)
+                # Session.send on a prepared request bypasses merge_environment_settings,
+                # so apply it ourselves — otherwise REQUESTS_CA_BUNDLE et al. are ignored.
+                # https://requests.readthedocs.io/en/latest/user/advanced/#prepared-requests
+                settings = session.merge_environment_settings(req.url, {}, None, None, None)
+                res = session.send(req, timeout=timeouts, **settings)
             except Exception as e:
                 raise RequestException(f"Request session.send failed {req.method=} {req.url=}", context=context) from e
 

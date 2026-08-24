@@ -37,6 +37,9 @@ from encord.beta.scene.internal.upload import (
     InputPose as _InputPose,
 )
 from encord.beta.scene.internal.upload import (
+    InputTimeSeriesStream as _InputTimeSeriesStream,
+)
+from encord.beta.scene.internal.upload import (
     InputURIEvent as _InputURIEvent,
 )
 from encord.beta.scene.intrinsics import (
@@ -112,6 +115,31 @@ class _StreamBuilderBase:
     def name(self) -> str:
         """The stream name used to register this stream in the :class:`SceneBuilder`."""
         return self._name
+
+
+# -------------------------------------------------------------------
+# Time-series stream
+# -------------------------------------------------------------------
+
+
+class TimeSeriesStreamBuilder(_StreamBuilderBase):
+    """Builder for a self-contained CSV time-series stream.
+
+    Returned by :meth:`SceneBuilder.add_time_series_stream`.
+    """
+
+    def __init__(self, name: str, scene: SceneBuilder, *, uri: str) -> None:
+        super().__init__(name, scene)
+        if not uri:
+            raise EncordException(f"Time-series stream '{name}' has an empty URI")
+        self._uri = uri
+
+    @property
+    def _event_count(self) -> int:
+        return 1
+
+    def _to_internal(self) -> _InputTimeSeriesStream:
+        return _InputTimeSeriesStream.model_construct(uri=self._uri)
 
 
 # -------------------------------------------------------------------
