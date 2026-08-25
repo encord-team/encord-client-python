@@ -1108,7 +1108,13 @@ class CocoExporter:
 
         return ret
 
-    def get_radio_answer(self, attribute: Attribute, answers: List[Dict[str, str]]) -> Dict[str, str]:
+    def get_radio_answer(self, attribute: Attribute, answers: List[Dict[str, str]]) -> Dict[str, Any]:
+        if len(answers) == 0:
+            # An empty answers array is equivalent to "no such attribute" (see
+            # ClassificationInstance._set_answer_from_dict) and should be treated like an
+            # unselected attribute (add_unselected_attributes will fill it with `None`),
+            # instead of raising an IndexError during export.
+            return {}
         answer = answers[0]  # radios only have one answer by definition
         return {attribute.name: answer["name"]}
 
