@@ -17,6 +17,9 @@ from typing import (
 
 from encord.common.time_parser import format_datetime_to_long_string
 from encord.exceptions import LabelRowError
+from encord.objects.classification_ranges import resolve_classification_ranges
+from encord.objects.constants import ROOT_SPACE_ID
+from encord.objects.frames import Ranges
 from encord.objects.spaces.annotation.base_annotation import (
     _AnnotationData,
     _AnnotationMetadata,
@@ -79,6 +82,17 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
         self._space_info = space_info
         self.metadata = self._extract_metadata_from_space_info(space_id, space_info)
         self._label_row = label_row
+        self._reset_labels()
+
+    def _reset_labels(self) -> None:
+        """Drop all labels held by this space.
+
+        Spaces are built from the label row metadata and outlive a single `LabelRowV2.from_labels_dict` call,
+        so the labels they hold have to be cleared before a label row dict is (re-)parsed.
+
+        Subclasses must extend this with any label state of their own. It is called from `__init__`, so
+        implementations must only assign state, never read it.
+        """
         self._objects_map: dict[str, ObjectInstance] = dict()
         self._classifications_map: dict[str, ClassificationInstance] = dict()
         self._global_classification_hash_to_annotation_data = {}
@@ -186,6 +200,67 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
             )
             for classification_hash in self._global_classification_hash_to_annotation_data
             if filter_set is None or classification_hash in filter_set
+        )
+
+    def _parse_classification_answers(self, classification_answers: Dict[str, ClassificationAnswer]) -> None:
+        for classification_answer in classification_answers.values():
+            ranges = self._find_own_ranges(classification_answer)
+            if ranges is None:
+                continue
+
+            annotation_metadata = _AnnotationMetadata.from_dict(classification_answer)
+
+            if not ranges:
+                self._put_global_classification_instance(
+                    classification_instance=self._label_row._create_classification_instance_from_answer(
+                        classification_answer, frames=ranges
+                    ),
+                    on_overlap="replace",
+                    created_at=annotation_metadata.created_at,
+                    created_by=annotation_metadata.created_by,
+                    last_edited_at=annotation_metadata.last_edited_at,
+                    last_edited_by=annotation_metadata.last_edited_by,
+                    confidence=annotation_metadata.confidence,
+                    manual_annotation=annotation_metadata.manual_annotation,
+                )
+            else:
+                self._place_classification_from_answer(
+                    classification_instance=self._label_row._get_or_create_classification_instance_on_spaces(
+                        classification_answer
+                    ),
+                    ranges=ranges,
+                    annotation_metadata=annotation_metadata,
+                )
+
+    def _find_own_ranges(self, classification_answer: ClassificationAnswer) -> Optional[Ranges]:
+        """The ranges this space holds, if the answer places its classification here at all."""
+        resolved_ranges = resolve_classification_ranges(classification_answer)
+        if resolved_ranges is None:
+            return None
+
+        root_ranges, space_ranges = resolved_ranges
+        return root_ranges if self.space_id == ROOT_SPACE_ID else space_ranges.get(self.space_id)
+
+    def _place_classification_from_answer(
+        self,
+        classification_instance: ClassificationInstance,
+        ranges: Ranges,
+        annotation_metadata: _AnnotationMetadata,
+    ) -> None:
+        """Place a classification on the named frames.
+
+        Spaces that are not frame based have no frames to name, so their classifications always cover the
+        whole space and this is never reached. Frame based spaces override it.
+        """
+        self._put_global_classification_instance(
+            classification_instance=classification_instance,
+            on_overlap="replace",
+            created_at=annotation_metadata.created_at,
+            created_by=annotation_metadata.created_by,
+            last_edited_at=annotation_metadata.last_edited_at,
+            last_edited_by=annotation_metadata.last_edited_by,
+            confidence=annotation_metadata.confidence,
+            manual_annotation=annotation_metadata.manual_annotation,
         )
 
     def _put_global_classification_instance(
@@ -311,12 +386,12 @@ class Space(ABC, Generic[ObjectAnnotationT, ClassificationAnnotationT, Classific
         classification_instance: ClassificationInstance,
         classifications: List[AttributeDict],
         space_range: SpaceRange,
-        on_root: bool,
     ) -> ClassificationAnswer:
         annotation_data = self._global_classification_hash_to_annotation_data[
             classification_instance.classification_hash
         ]
         annotation_metadata = annotation_data.annotation_metadata
+        on_root = self.space_id == ROOT_SPACE_ID
 
         classification_index_element: ClassificationAnswer = {
             "classifications": classifications,

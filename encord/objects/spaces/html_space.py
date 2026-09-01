@@ -45,6 +45,9 @@ class HTMLSpace(Space[_HtmlObjectAnnotation, _GlobalClassificationAnnotation, Ht
 
     def __init__(self, space_id: str, label_row: LabelRowV2, space_info: SpaceInfo):
         super().__init__(space_id, label_row, space_info)
+
+    def _reset_labels(self) -> None:
+        super()._reset_labels()
         self._object_hash_to_html_ranges: dict[str, HtmlRanges] = dict()
 
     def put_object_instance(
@@ -243,30 +246,7 @@ class HTMLSpace(Space[_HtmlObjectAnnotation, _GlobalClassificationAnnotation, Ht
             answer_list = object_answer["classifications"]
             object_instance.set_answer_from_list(answer_list)
 
-        for classification_answer in classification_answers.values():
-            spaces = classification_answer["spaces"]
-            if spaces is None or self.space_id not in spaces:
-                continue
-
-            classification_instance = self._label_row._create_new_classification_instance_from_answer(
-                classification_answer
-            )
-
-            if classification_instance is None:
-                continue
-
-            annotation_metadata = _AnnotationMetadata.from_dict(classification_answer)  # type: ignore[arg-type]
-
-            self._put_global_classification_instance(
-                classification_instance=classification_instance,
-                on_overlap="replace",
-                created_at=annotation_metadata.created_at,
-                created_by=annotation_metadata.created_by,
-                confidence=annotation_metadata.confidence,
-                manual_annotation=annotation_metadata.manual_annotation,
-                last_edited_at=annotation_metadata.last_edited_at,
-                last_edited_by=annotation_metadata.last_edited_by,
-            )
+        self._parse_classification_answers(classification_answers)
 
     def _parse_html_ranges_from_space_info(self, space_info: dict) -> List[HtmlRange]:
         raw_ranges = space_info.get("range", [])
@@ -366,7 +346,6 @@ class HTMLSpace(Space[_HtmlObjectAnnotation, _GlobalClassificationAnnotation, Ht
                         classification_instance=classification,
                         classifications=reversed_classification_attributes,
                         space_range={"range": [], "type": "html"},
-                        on_root=False,
                     )
                 else:
                     classification_answer = {

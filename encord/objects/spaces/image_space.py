@@ -12,6 +12,7 @@ from encord.objects.coordinates import (
     add_coordinates_to_frame_object_dict,
     get_geometric_coordinates_from_frame_object_dict,
 )
+from encord.objects.frames import Ranges
 from encord.objects.label_utils import create_frame_classification_dict, create_frame_object_dict
 from encord.objects.spaces.annotation.base_annotation import (
     _AnnotationData,
@@ -33,7 +34,7 @@ from encord.objects.types import (
     LabelBlob,
     ObjectAnswer,
     ObjectAnswerForGeometric,
-    _is_global_classification_on_space,
+    SpaceFrameData,
 )
 
 logger = logging.getLogger(__name__)
@@ -53,15 +54,16 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
         space_info: SpaceInfo,
         width: Optional[int],
         height: Optional[int],
-        has_multilayer_labels: bool,
     ):
         super().__init__(space_id, label_row, space_info)
         self._space_info = space_info
-        self._object_hash_to_annotation_data: dict[str, _GeometricAnnotationData] = dict()
 
         self._width = width
         self._height = height
-        self._has_multilayer_labels = has_multilayer_labels
+
+    def _reset_labels(self) -> None:
+        super()._reset_labels()
+        self._object_hash_to_annotation_data: dict[str, _GeometricAnnotationData] = dict()
 
     @overload
     def put_object_instance(
@@ -259,28 +261,6 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
         label_class = ontology.get_child_by_hash(feature_hash, type_=Object)
         return ObjectInstance(ontology_object=label_class, object_hash=object_hash)
 
-    def _create_new_classification_from_frame_label_dict(
-        self, frame_classification_label: FrameClassification, classification_answers: Dict[str, ClassificationAnswer]
-    ) -> Optional[ClassificationInstance]:
-        from encord.objects import Classification, ClassificationInstance
-
-        ontology = self._label_row._ontology.structure
-        feature_hash = frame_classification_label["featureHash"]
-        classification_hash = frame_classification_label["classificationHash"]
-        label_class = ontology.get_child_by_hash(feature_hash, type_=Classification)
-
-        classification_answer = classification_answers.get(classification_hash)
-        if classification_answer is None:
-            raise LabelRowError("Classification exists in frame labels, but not in classification answers.")
-
-        new_classification_instance = ClassificationInstance(
-            ontology_classification=label_class, classification_hash=classification_hash
-        )
-        answers_dict = classification_answer["classifications"]
-        self._label_row._add_static_answers_from_dict(new_classification_instance, answers_dict)
-
-        return new_classification_instance
-
     def _to_encord_object(
         self,
         object_instance: ObjectInstance,
@@ -399,7 +379,7 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
             space_labels = cast(Dict[str, LabelBlob], space_info.get("labels"))
             frame_label = space_labels.get("0")
         if frame_label is not None:
-            self._parse_frame_label_dict(frame_label=frame_label, classification_answers=classification_answers)
+            self._parse_frame_label_dict(frame_label=frame_label)
 
         for answer in object_answers.values():
             object_hash = answer["objectHash"]
@@ -407,30 +387,27 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
                 answer_list = answer["classifications"]
                 object_instance.set_answer_from_list(answer_list)
 
-        for classification_answer in classification_answers.values():
-            spaces = classification_answer.get("spaces", {})
-            space_range = spaces.get(self.space_id, None)
-            if space_range is not None and _is_global_classification_on_space(space_range=space_range):
-                classification_instance = self._label_row._create_new_classification_instance_from_answer(
-                    classification_answer
-                )
+        self._parse_classification_answers(classification_answers)
 
-                if classification_instance is None:
-                    continue
+    def _place_classification_from_answer(
+        self,
+        classification_instance: ClassificationInstance,
+        ranges: Ranges,
+        annotation_metadata: _AnnotationMetadata,
+    ) -> None:
+        # An image space is a single frame, so any non-empty range names that one frame.
+        self.put_classification_instance(
+            classification_instance,
+            on_overlap="replace",
+            created_at=annotation_metadata.created_at,
+            created_by=annotation_metadata.created_by,
+            last_edited_at=annotation_metadata.last_edited_at,
+            last_edited_by=annotation_metadata.last_edited_by,
+            confidence=annotation_metadata.confidence,
+            manual_annotation=annotation_metadata.manual_annotation,
+        )
 
-                annotation_metadata = _AnnotationMetadata.from_dict(classification_answer)
-                self._put_global_classification_instance(
-                    classification_instance=classification_instance,
-                    on_overlap="replace",
-                    created_at=annotation_metadata.created_at,
-                    created_by=annotation_metadata.created_by,
-                    last_edited_at=annotation_metadata.last_edited_at,
-                    last_edited_by=annotation_metadata.last_edited_by,
-                    confidence=annotation_metadata.confidence,
-                    manual_annotation=annotation_metadata.manual_annotation,
-                )
-
-    def _parse_frame_label_dict(self, frame_label: LabelBlob, classification_answers: dict[str, ClassificationAnswer]):
+    def _parse_frame_label_dict(self, frame_label: LabelBlob):
         for frame_object_label in frame_label["objects"]:
             object_hash = frame_object_label["objectHash"]
             object_instance = None
@@ -458,30 +435,6 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
                 confidence=object_frame_instance_info.confidence,
             )
 
-        # Process classifications
-        for classification in frame_label["classifications"]:
-            classification_hash = classification["classificationHash"]
-            entity = self._label_row._space_classifications_map.get(classification_hash)
-
-            if entity is None:
-                entity = self._create_new_classification_from_frame_label_dict(
-                    frame_classification_label=classification, classification_answers=classification_answers
-                )
-
-            if entity is None:
-                continue
-
-            classification_frame_instance_info = _AnnotationMetadata.from_dict(classification)
-            self.put_classification_instance(
-                entity,
-                created_at=classification_frame_instance_info.created_at,
-                created_by=classification_frame_instance_info.created_by,
-                last_edited_at=classification_frame_instance_info.last_edited_at,
-                last_edited_by=classification_frame_instance_info.last_edited_by,
-                manual_annotation=classification_frame_instance_info.manual_annotation,
-                confidence=classification_frame_instance_info.confidence,
-            )
-
     def _to_object_answers(self, existing_object_answers: Dict[str, ObjectAnswer]) -> Dict[str, ObjectAnswer]:
         ret: dict[str, ObjectAnswerForGeometric] = {}
         for object_instance in self.get_object_instances():
@@ -504,37 +457,17 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
                 cast(AttributeDict, answer.to_encord_dict()) for answer in all_static_answers if answer.is_answered()
             ]
 
-            if classification.is_global():
-                ret[classification.classification_hash] = self._to_global_classification_answer(
-                    classification_instance=classification,
-                    classifications=classifications,
-                    space_range={"range": [], "type": "frame"},
-                    on_root=self._has_multilayer_labels,
-                )
-            else:
-                classification_index_element: ClassificationAnswer
+            # A global classification carries no placement, everything else sits on the space's single frame.
+            # `classification_answers` is the authoritative source of classifications data, so the annotation
+            # metadata is serialised alongside the answers in both cases.
+            space_range: SpaceFrameData = (
+                {"range": [], "type": "frame"} if classification.is_global() else {"range": [[0, 0]], "type": "frame"}
+            )
 
-                if self._has_multilayer_labels:
-                    classification_index_element = {
-                        "classifications": classifications,
-                        "classificationHash": classification.classification_hash,
-                        "featureHash": classification.feature_hash,
-                        "range": [[0, 0]],
-                        "spaces": {},
-                    }
-                else:
-                    classification_index_element = {
-                        "classifications": classifications,
-                        "classificationHash": classification.classification_hash,
-                        "featureHash": classification.feature_hash,
-                        "spaces": {
-                            self.space_id: {
-                                "range": [[0, 0]],  # For images, there is only one frame
-                                "type": "frame",
-                            }
-                        },
-                    }
-
-                ret[classification.classification_hash] = classification_index_element
+            ret[classification.classification_hash] = self._to_global_classification_answer(
+                classification_instance=classification,
+                classifications=classifications,
+                space_range=space_range,
+            )
 
         return ret

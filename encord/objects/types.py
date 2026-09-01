@@ -283,9 +283,8 @@ class ClassificationAnswerRequired(TypedDict):
 
 
 class ClassificationAnswer(ClassificationAnswerRequired, total=False):
-    """Classification answer that contains attributes (sadly here its called classifications too) for the classification"""
+    """Classification answer that contains attributes for the classification"""
 
-    # The values below are only guaranteed for non-geometric files (e.g. Audio & Text)
     range: Union[List[List[int]], None]
     confidence: Union[float, None]
     createdAt: Union[str, None]
@@ -294,7 +293,7 @@ class ClassificationAnswer(ClassificationAnswerRequired, total=False):
     lastEditedBy: Union[str, None]
     manualAnnotation: Union[bool, None]
     reviews: list[Any]  # TODO: Remove this as its deprecated
-    spaces: Dict[str, SpaceRange]  # Empty dict if no spaces
+    spaces: Dict[str, SpaceRange]
 
 
 class ObjectAnswerForGeometric(TypedDict):
@@ -359,12 +358,3 @@ class LabelRowDict(TypedDict, total=False):
     classification_answers: Dict[str, ClassificationAnswer]
     data_units: Dict
     spaces: Dict
-
-
-def _is_containing_metadata(answer: ClassificationAnswer) -> bool:
-    """Check if the classification answer contains necessary metadata fields."""
-    return "createdBy" in answer
-
-
-def _is_global_classification_on_space(space_range: SpaceRange) -> bool:
-    return len(space_range["range"]) == 0

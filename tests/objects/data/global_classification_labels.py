@@ -55,6 +55,7 @@ GLOBAL_CLASSIFICATION_LABELS = {
             "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
             "lastEditedBy": "user1Hash@encord.com",
             "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "confidence": 1.0,
             "manualAnnotation": True,
         },
     },

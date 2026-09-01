@@ -148,6 +148,13 @@ DATA_GROUP_WITH_TWO_VIDEOS_LABELS = {
                     "manualAnnotation": True,
                 }
             ],
+            "range": [],
+            "createdBy": "denis@cord.tech",
+            "createdAt": "Tue, 17 Jan 2023 11:45:01 UTC",
+            "lastEditedBy": "denis@cord.tech",
+            "lastEditedAt": "Tue, 17 Jan 2023 11:45:01 UTC",
+            "confidence": 1,
+            "manualAnnotation": True,
         },
     },
     "object_actions": {

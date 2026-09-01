@@ -9,6 +9,7 @@ from encord.common.range_manager import RangeManager
 from encord.common.time_parser import format_datetime_to_long_string, format_datetime_to_long_string_optional
 from encord.exceptions import LabelRowError
 from encord.objects import ClassificationInstance, Shape
+from encord.objects.constants import ROOT_SPACE_ID
 from encord.objects.frames import Range, Ranges
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.spaces.annotation.base_annotation import _AnnotationMetadata
@@ -52,6 +53,9 @@ class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, 
 
     def __init__(self, space_id: str, label_row: LabelRowV2, space_info: SpaceInfo):
         super().__init__(space_id, label_row, space_info)
+
+    def _reset_labels(self) -> None:
+        super()._reset_labels()
         self._object_hash_to_range_manager: dict[str, RangeManager] = dict()
 
     @abstractmethod
@@ -360,30 +364,7 @@ class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, 
             answer_list = object_answer["classifications"]
             object_instance.set_answer_from_list(answer_list)
 
-        for classification_answer in classification_answers.values():
-            spaces = classification_answer["spaces"]
-            if spaces is None or self.space_id not in spaces:
-                continue
-
-            classification_instance = self._label_row._create_new_classification_instance_from_answer(
-                classification_answer
-            )
-
-            if classification_instance is None:
-                continue
-
-            annotation_metadata = _AnnotationMetadata.from_dict(classification_answer)
-
-            self._put_global_classification_instance(
-                classification_instance=classification_instance,
-                on_overlap="replace",
-                created_at=annotation_metadata.created_at,
-                created_by=annotation_metadata.created_by,
-                confidence=annotation_metadata.confidence,
-                manual_annotation=annotation_metadata.manual_annotation,
-                last_edited_at=annotation_metadata.last_edited_at,
-                last_edited_by=annotation_metadata.last_edited_by,
-            )
+        self._parse_classification_answers(classification_answers)
 
     def _to_object_answers(self, existing_object_answers: Dict[str, ObjectAnswer]) -> dict[str, ObjectAnswer]:
         ret: Dict[str, ObjectAnswerForNonGeometric] = {}
@@ -437,12 +418,11 @@ class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, 
             if does_classification_exist:
                 existing_classification_answer = existing_classification_answers[classification.classification_hash]
                 space_range_to_add: SpaceRange = {"range": [], "type": "frame"}
-                spaces = existing_classification_answer["spaces"]
-
-                if spaces is None:
-                    spaces = {}
-
-                spaces[self.space_id] = space_range_to_add
+                if self.space_id != ROOT_SPACE_ID:
+                    spaces = existing_classification_answer["spaces"]
+                    if spaces is None:
+                        spaces = {}
+                    spaces[self.space_id] = space_range_to_add
                 ret[classification.classification_hash] = existing_classification_answer
             else:
                 all_static_answers = classification.get_all_static_answers()
@@ -460,7 +440,6 @@ class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, 
                         classification_instance=classification,
                         classifications=reversed_classification_attributes,
                         space_range={"range": [], "type": "frame"},
-                        on_root=False,
                     )
                 else:
                     classification_answer = {
@@ -474,7 +453,9 @@ class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, 
                         "lastEditedAt": format_datetime_to_long_string_optional(annotation_metadata.last_edited_at),
                         "manualAnnotation": annotation_metadata.manual_annotation,
                         "confidence": annotation_metadata.confidence,
-                        "spaces": {self.space_id: {"range": [], "type": "frame"}},
+                        "spaces": (
+                            {} if self.space_id == ROOT_SPACE_ID else {self.space_id: {"range": [], "type": "frame"}}
+                        ),
                     }
 
                 ret[classification.classification_hash] = classification_answer

@@ -424,6 +424,13 @@ image_group_labels = {
                 }
             ],
             "featureHash": "6nyvIs5W",
+            "range": [[0, 0]],
+            "createdAt": "Tue, 06 Dec 2022 10:45:32 UTC",
+            "createdBy": "denis@cord.tech",
+            "lastEditedAt": "Tue, 06 Dec 2022 10:45:32 UTC",
+            "lastEditedBy": "denis@cord.tech",
+            "confidence": 1.0,
+            "manualAnnotation": True,
             "spaces": {},
         },
         "mBR5wa0v": {
@@ -438,6 +445,13 @@ image_group_labels = {
                 }
             ],
             "featureHash": "6nyvIs5W",
+            "range": [[1, 1]],
+            "createdAt": "Tue, 06 Dec 2022 10:45:41 UTC",
+            "createdBy": "denis@cord.tech",
+            "lastEditedAt": "Tue, 06 Dec 2022 10:45:41 UTC",
+            "lastEditedBy": "denis@cord.tech",
+            "confidence": 1.0,
+            "manualAnnotation": True,
             "spaces": {},
         },
         "TyZQ6kOO": {
@@ -452,6 +466,13 @@ image_group_labels = {
                 }
             ],
             "featureHash": "R0SMUli5",
+            "range": [[2, 4]],
+            "createdAt": "Tue, 06 Dec 2022 10:45:51 UTC",
+            "createdBy": "denis@cord.tech",
+            "lastEditedAt": "Tue, 06 Dec 2022 10:45:51 UTC",
+            "lastEditedBy": "denis@cord.tech",
+            "confidence": 1.0,
+            "manualAnnotation": True,
             "spaces": {},
         },
     },

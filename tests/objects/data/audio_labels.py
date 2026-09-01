@@ -48,6 +48,7 @@ AUDIO_LABELS = {
             "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
             "lastEditedBy": "user1Hash",
             "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "confidence": 1.0,
             "manualAnnotation": True,
         },
         "radioClassificationHash": {
@@ -81,6 +82,7 @@ AUDIO_LABELS = {
             "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
             "lastEditedBy": "user1Hash",
             "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "confidence": 1.0,
             "manualAnnotation": True,
         },
         "checklistClassificationHash": {
@@ -112,6 +114,7 @@ AUDIO_LABELS = {
             "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
             "lastEditedBy": "user1Hash",
             "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "confidence": 1.0,
             "manualAnnotation": True,
         },
     },

@@ -27,6 +27,7 @@ labels: LabelRowDict = {
             "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
             "lastEditedBy": "user1Hash",
             "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+            "confidence": 1.0,
             "manualAnnotation": True,
             "spaces": {},
             "classifications": [
@@ -59,11 +60,14 @@ labels: LabelRowDict = {
                         {
                             "name": "Radio classification 1",
                             "value": "radio_classification_1",
-                            "createdAt": "Tue, 17 Jan 2023 11:44:53 UTC",
-                            "createdBy": "dev@encord.com",
-                            "confidence": 1,
+                            # The metadata mirrors the classification answer, which is the authoritative
+                            # source of classifications data.
+                            "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+                            "createdBy": "user1Hash",
+                            "confidence": 1.0,
                             "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
-                            "lastEditedAt": "Tue, 17 Jan 2023 11:44:53 UTC",
+                            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+                            "lastEditedBy": "user1Hash",
                             "classificationHash": "3AqiIPrF",
                             "manualAnnotation": True,
                         },
@@ -75,11 +79,14 @@ labels: LabelRowDict = {
                         {
                             "name": "Radio classification 1",
                             "value": "radio_classification_1",
-                            "createdAt": "Tue, 17 Jan 2023 11:44:53 UTC",
-                            "createdBy": "dev@encord.com",
-                            "confidence": 1,
+                            # The metadata mirrors the classification answer, which is the authoritative
+                            # source of classifications data.
+                            "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+                            "createdBy": "user1Hash",
+                            "confidence": 1.0,
                             "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
-                            "lastEditedAt": "Tue, 17 Jan 2023 11:44:53 UTC",
+                            "lastEditedAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+                            "lastEditedBy": "user1Hash",
                             "classificationHash": "3AqiIPrF",
                             "manualAnnotation": True,
                         },
@@ -96,5 +103,6 @@ for answer in labels_without_answer_meta["classification_answers"].values():
     answer.pop("createdBy", None)
     answer.pop("lastEditedAt", None)
     answer.pop("lastEditedBy", None)
+    answer.pop("confidence", None)
     answer.pop("manualAnnotation", None)
     answer.pop("range", None)

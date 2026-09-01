@@ -66,7 +66,6 @@ class ClassificationInstance:
         *,
         classification_hash: Optional[str] = None,
         range_only: bool = False,
-        _created_with_answer: bool = False,
     ):
         self._ontology_classification = ontology_classification
         self._classification_hash = classification_hash or short_uuid_str()
@@ -84,8 +83,6 @@ class ClassificationInstance:
         # Only used for frame entities
         self._frames_to_data: Dict[int, _AnnotationData] = {}
 
-        # If it's a range-only classification, or it was created from a classification answer, we want to include that information back when serialising
-        self._include_instance_data = self.is_range_only() or _created_with_answer
         self._spaces: dict[str, Space] = dict()
 
     @property
@@ -522,7 +519,6 @@ class ClassificationInstance:
         ret._static_answer_map = deepcopy(self._static_answer_map)
         ret._frames_to_data = deepcopy(self._frames_to_data)
         ret._range_manager = deepcopy(self._range_manager)
-        ret._include_instance_data = self._include_instance_data
 
         return ret
 

@@ -22,6 +22,7 @@ from typing import (
 
 from encord.common.bitmask_operations.bitmask_operations import rle_string_to_bitmask_coordinates
 from encord.common.range_manager import RangeManager
+from encord.common.time_parser import format_datetime_to_long_string
 from encord.exceptions import LabelRowError
 from encord.objects.answers import NumericAnswerValue
 from encord.objects.attributes import (
@@ -59,7 +60,6 @@ from encord.objects.types import (
     ObjectAnswer,
     ObjectAnswerForGeometric,
     SpaceFrameData,
-    _is_global_classification_on_space,
 )
 
 logger = logging.getLogger(__name__)
@@ -84,6 +84,12 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
     ):
         super().__init__(space_id, label_row, space_info)
 
+        # Need to check if this is 1-indexed
+        self._number_of_frames: int = number_of_frames
+
+    def _reset_labels(self) -> None:
+        super()._reset_labels()
+
         # Keeps track of object/classification annotation data on each frame
         self._frames_to_object_hash_to_annotation_data: defaultdict[int, dict[str, _GeometricAnnotationData]] = (
             defaultdict(dict)
@@ -104,9 +110,6 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         # Used to track whether an instance of a classification_ontology exists on frames
         # Global classifications are NOT tracked here
         self._classifications_ontology_to_ranges: defaultdict[Classification, RangeManager] = defaultdict(RangeManager)
-
-        # Need to check if this is 1-indexed
-        self._number_of_frames: int = number_of_frames
 
     @abstractmethod
     def _get_frame_dimensions(self, frame: int) -> tuple[int, int]:
@@ -820,28 +823,6 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         label_class = ontology.get_child_by_hash(feature_hash, type_=Object)
         return ObjectInstance(ontology_object=label_class, object_hash=object_hash)
 
-    def _create_new_classification_from_frame_label_dict(
-        self, frame_classification_label: FrameClassification, classification_answers: dict
-    ) -> ClassificationInstance:
-        from encord.objects import Classification, ClassificationInstance
-
-        ontology = self._label_row._ontology.structure
-        feature_hash = frame_classification_label["featureHash"]
-        classification_hash = frame_classification_label["classificationHash"]
-        label_class = ontology.get_child_by_hash(feature_hash, type_=Classification)
-
-        classification_answer = classification_answers.get(classification_hash)
-        if classification_answer is None:
-            raise LabelRowError("No classification answer found for classification hash {}".format(classification_hash))
-
-        new_classification_instance = ClassificationInstance(
-            ontology_classification=label_class, classification_hash=classification_hash
-        )
-        answers_dict = classification_answer["classifications"]
-        self._label_row._add_static_answers_from_dict(new_classification_instance, answers_dict)
-
-        return new_classification_instance
-
     def _get_frame_object_annotation_data(self, object_hash: str, frame: int) -> Optional[_GeometricAnnotationData]:
         object_to_frame_annotation_data = self._frames_to_object_hash_to_annotation_data.get(frame)
         if object_to_frame_annotation_data is None:
@@ -967,6 +948,21 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
 
         return cast(Dict[str, ObjectAnswer], ret)
 
+    def _get_element_annotation_metadata(self, classification_hash: str, placed_ranges: Ranges) -> _AnnotationMetadata:
+        """The annotation metadata to serve for a classification placed on this space's frames.
+
+        Taken from the first frame the classification is placed on, since the classifications index it is
+        serialised into holds a single metadata entry per classification.
+        """
+        if placed_ranges:
+            annotation_data = self._get_frame_classification_annotation_data(
+                classification_hash=classification_hash, frame=placed_ranges[0].start
+            )
+            if annotation_data is not None:
+                return annotation_data.annotation_metadata
+
+        return _AnnotationMetadata()
+
     def _to_classification_answers(
         self, existing_classification_answers: dict[str, ClassificationAnswer]
     ) -> dict[str, ClassificationAnswer]:
@@ -986,28 +982,39 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
                     classification_instance=classification_instance,
                     classifications=classifications,
                     space_range={"range": [], "type": "frame"},
-                    on_root=False,
                 )
                 ret[classification_instance.classification_hash] = classification_answer
-            else:
-                if classification_range_manager is None:
-                    continue
+                continue
 
-                space_range: SpaceFrameData = {
-                    "range": ranges_to_list(
-                        classification_range_manager.get_ranges(),
-                    ),
-                    "type": "frame",
-                }
+            if classification_range_manager is None:
+                continue
 
-                classification_index_element: ClassificationAnswer = {
-                    "classifications": classifications,
-                    "classificationHash": classification_instance.classification_hash,
-                    "featureHash": classification_instance.feature_hash,
-                    "spaces": {self.space_id: space_range},
-                }
+            placed_ranges = classification_range_manager.get_ranges()
+            space_range: SpaceFrameData = {
+                "range": ranges_to_list(placed_ranges),
+                "type": "frame",
+            }
 
-                ret[classification_instance.classification_hash] = classification_index_element
+            annotation_metadata = self._get_element_annotation_metadata(
+                classification_hash=classification_instance.classification_hash,
+                placed_ranges=placed_ranges,
+            )
+
+            classification_index_element: ClassificationAnswer = {
+                "classifications": classifications,
+                "classificationHash": classification_instance.classification_hash,
+                "featureHash": classification_instance.feature_hash,
+                "spaces": {self.space_id: space_range},
+                "createdBy": annotation_metadata.created_by,
+                "createdAt": format_datetime_to_long_string(annotation_metadata.created_at),
+                "lastEditedBy": annotation_metadata.last_edited_by,
+                "lastEditedAt": format_datetime_to_long_string(annotation_metadata.last_edited_at),
+                "confidence": annotation_metadata.confidence,
+                "manualAnnotation": annotation_metadata.manual_annotation,
+                "range": [],
+            }
+
+            ret[classification_instance.classification_hash] = classification_index_element
 
         return ret
 
@@ -1022,7 +1029,6 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             self._parse_frame_label_dict(
                 frame=int(frame_str),
                 frame_label=frame_label,
-                classification_answers=classification_answers,
             )
 
         for answer in object_answers.values():
@@ -1031,30 +1037,27 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
                 answer_list = answer["classifications"]
                 object_instance.set_answer_from_list(answer_list)
 
-        for classification_answer in classification_answers.values():
-            spaces = classification_answer.get("spaces", {})
-            space_range = spaces.get(self.space_id, None)
-            if space_range is not None and _is_global_classification_on_space(space_range=space_range):
-                classification_instance = self._label_row._create_new_classification_instance_from_answer(
-                    classification_answer
-                )
+        self._parse_classification_answers(classification_answers)
 
-                if classification_instance is None:
-                    continue
+    def _place_classification_from_answer(
+        self,
+        classification_instance: ClassificationInstance,
+        ranges: Ranges,
+        annotation_metadata: _AnnotationMetadata,
+    ) -> None:
+        self.put_classification_instance(
+            classification_instance,
+            ranges,
+            on_overlap="replace",
+            created_at=annotation_metadata.created_at,
+            created_by=annotation_metadata.created_by,
+            last_edited_at=annotation_metadata.last_edited_at,
+            last_edited_by=annotation_metadata.last_edited_by,
+            confidence=annotation_metadata.confidence,
+            manual_annotation=annotation_metadata.manual_annotation,
+        )
 
-                annotation_metadata = _AnnotationMetadata.from_dict(classification_answer)
-                self._put_global_classification_instance(
-                    classification_instance=classification_instance,
-                    on_overlap="replace",
-                    created_at=annotation_metadata.created_at,
-                    created_by=annotation_metadata.created_by,
-                    last_edited_at=annotation_metadata.last_edited_at,
-                    last_edited_by=annotation_metadata.last_edited_by,
-                    confidence=annotation_metadata.confidence,
-                    manual_annotation=annotation_metadata.manual_annotation,
-                )
-
-    def _parse_frame_label_dict(self, frame: int, frame_label: LabelBlob, classification_answers: dict):
+    def _parse_frame_label_dict(self, frame: int, frame_label: LabelBlob):
         for obj in frame_label["objects"]:
             object_hash = obj["objectHash"]
             # TODO: Might have to keep track of all objects on spaces in parent
@@ -1080,32 +1083,4 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
                 last_edited_by=object_frame_instance_info.last_edited_by,
                 manual_annotation=object_frame_instance_info.manual_annotation,
                 confidence=object_frame_instance_info.confidence,
-            )
-
-        # Process classifications
-        for classification in frame_label["classifications"]:
-            classification_hash = classification["classificationHash"]
-
-            classification_instance = None
-            for space in self._label_row._space_map.values():
-                classification_instance = space._classifications_map.get(classification_hash)
-                if classification_instance is not None:
-                    break
-
-            if classification_instance is None:
-                classification_instance = self._create_new_classification_from_frame_label_dict(
-                    frame_classification_label=classification,
-                    classification_answers=classification_answers,
-                )
-
-            classification_frame_instance_info = _AnnotationMetadata.from_dict(classification)
-            self.put_classification_instance(
-                classification_instance,
-                frame,
-                created_at=classification_frame_instance_info.created_at,
-                created_by=classification_frame_instance_info.created_by,
-                last_edited_at=classification_frame_instance_info.last_edited_at,
-                last_edited_by=classification_frame_instance_info.last_edited_by,
-                manual_annotation=classification_frame_instance_info.manual_annotation,
-                confidence=classification_frame_instance_info.confidence,
             )

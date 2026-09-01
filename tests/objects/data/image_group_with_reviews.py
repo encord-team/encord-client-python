@@ -1223,6 +1223,13 @@ labels = {
     "classification_answers": {
         "hLs1sDAr": {
             "classificationHash": "hLs1sDAr",
+            "range": [[0, 0]],
+            "createdAt": "Fri, 10 Feb 2023 11:08:18 UTC",
+            "createdBy": "denis@cord.tech",
+            "lastEditedAt": "Fri, 10 Feb 2023 11:08:18 UTC",
+            "lastEditedBy": None,
+            "confidence": 1.0,
+            "manualAnnotation": True,
             "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
             "spaces": {},
             "classifications": [

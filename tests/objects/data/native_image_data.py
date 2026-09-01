@@ -240,6 +240,13 @@ labels = {
     "classification_answers": {
         "3AqiIPrF": {
             "classificationHash": "3AqiIPrF",
+            "range": [[0, 0]],
+            "createdAt": "Tue, 17 Jan 2023 11:44:53 UTC",
+            "createdBy": "denis@cord.tech",
+            "lastEditedAt": "Tue, 17 Jan 2023 11:44:53 UTC",
+            "lastEditedBy": "denis@cord.tech",
+            "confidence": 1.0,
+            "manualAnnotation": True,
             "featureHash": RADIO_CLASSIFICATION.feature_node_hash,
             "spaces": {},
             "classifications": [
@@ -261,6 +268,13 @@ labels = {
         },
         "HVwOV4hB": {
             "classificationHash": "HVwOV4hB",
+            "range": [[0, 0]],
+            "createdAt": "Tue, 17 Jan 2023 11:45:01 UTC",
+            "createdBy": "denis@cord.tech",
+            "lastEditedAt": "Tue, 17 Jan 2023 11:45:01 UTC",
+            "lastEditedBy": "denis@cord.tech",
+            "confidence": 1.0,
+            "manualAnnotation": True,
             "featureHash": "jPOcEsbw",
             "spaces": {},
             "classifications": [
@@ -275,6 +289,13 @@ labels = {
         },
         "37vDK5u0": {
             "classificationHash": "37vDK5u0",
+            "range": [[0, 0]],
+            "createdAt": "Tue, 17 Jan 2023 11:45:07 UTC",
+            "createdBy": "denis@cord.tech",
+            "lastEditedAt": "Tue, 17 Jan 2023 11:45:07 UTC",
+            "lastEditedBy": "denis@cord.tech",
+            "confidence": 1.0,
+            "manualAnnotation": True,
             "featureHash": "3DuQbFxo",
             "spaces": {},
             "classifications": [

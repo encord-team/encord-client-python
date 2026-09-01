@@ -95,3 +95,47 @@ def test_get_tags_use_cache_false(api_get: MagicMock, project: Project) -> None:
     project.get_tags(use_cache=False)
 
     assert api_get.call_count == 2
+
+
+@patch.object(EncordClientProject, "get_label_rows")
+def test_get_label_rows_reconstructs_frame_classifications(get_label_rows_mock: MagicMock, project: Project):
+    """The deprecated label row functions hand the raw response to the caller.
+
+    The backend serves classifications through `classification_answers` only, so the SDK reconstructs the
+    per-frame classifications to keep the shape of the returned dict intact.
+    """
+    get_label_rows_mock.return_value = [
+        LabelRow(
+            {
+                "data_type": "video",
+                "classification_answers": {
+                    "clf": {
+                        "classificationHash": "clf",
+                        "featureHash": "feature",
+                        "classifications": [{"name": "A classification", "value": "a_classification"}],
+                        "createdBy": "user@encord.com",
+                        "createdAt": "Tue, 05 Nov 2024 09:41:37 UTC",
+                        "range": [[0, 1]],
+                        "spaces": {},
+                    }
+                },
+                "object_answers": {},
+                "data_units": {
+                    "data-hash": {
+                        "labels": {
+                            "0": {"objects": [], "classifications": []},
+                            "1": {"objects": [], "classifications": []},
+                        }
+                    }
+                },
+            }
+        )
+    ]
+
+    label_rows = project.get_label_rows(["label-hash"])
+
+    frames = label_rows[0]["data_units"]["data-hash"]["labels"]
+    for frame in ("0", "1"):
+        assert [c["classificationHash"] for c in frames[frame]["classifications"]] == ["clf"]
+        assert frames[frame]["classifications"][0]["name"] == "A classification"
+        assert frames[frame]["classifications"][0]["createdBy"] == "user@encord.com"

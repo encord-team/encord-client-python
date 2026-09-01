@@ -24,6 +24,7 @@ from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.issues.issue_client import GetIssueTagsParams, IssueTag
 from encord.objects import LabelRowV2, OntologyStructure
+from encord.objects.classification_expansion import expand_classification_answers_into_frame_labels
 from encord.ontology import Ontology
 from encord.orm.active import ActiveProjectMode
 from encord.orm.analytics import (
@@ -812,14 +813,24 @@ class Project:
             ResourceNotFoundError: If no label exists by the specified label_hash (uid).
             UnknownError: If an error occurs while retrieving the label.
             OperationNotAllowed: If the read operation is not allowed by the API key.
+
+        Note:
+            The per-frame classifications under `data_units[*].labels` and `spaces[*].labels` are
+            reconstructed by the SDK from `classification_answers`, which is the authoritative source of
+            classifications data. This is supported until **October 2026** only, and may be removed at any
+            time after that date. Read classifications from `classification_answers`, or use
+            :meth:`encord.project.Project.list_label_rows_v2`.
         """
-        return self._client.get_label_row(
+        label_row = self._client.get_label_row(
             uid,
             get_signed_url,
             include_object_feature_hashes=include_object_feature_hashes,
             include_classification_feature_hashes=include_classification_feature_hashes,
             include_reviews=include_reviews,
         )
+        expand_classification_answers_into_frame_labels(label_row)
+
+        return label_row
 
     @deprecated(version="0.1.123", alternative=".list_label_rows_v2")
     def get_label_rows(
@@ -852,14 +863,25 @@ class Project:
             ResourceNotFoundError: If no label exists by the specified label_hash (uid).
             UnknownError: If an error occurs while retrieving the label.
             OperationNotAllowed: If the read operation is not allowed by the API key.
+
+        Note:
+            The per-frame classifications under `data_units[*].labels` and `spaces[*].labels` are
+            reconstructed by the SDK from `classification_answers`, which is the authoritative source of
+            classifications data. This is supported until **October 2026** only, and may be removed at any
+            time after that date. Read classifications from `classification_answers`, or use
+            :meth:`encord.project.Project.list_label_rows_v2`.
         """
-        return self._client.get_label_rows(
+        label_rows = self._client.get_label_rows(
             uids,
             get_signed_url,
             include_object_feature_hashes=include_object_feature_hashes,
             include_classification_feature_hashes=include_classification_feature_hashes,
             include_reviews=include_reviews,
         )
+        for label_row in label_rows:
+            expand_classification_answers_into_frame_labels(label_row)
+
+        return label_rows
 
     def get_tags(self, use_cache: bool = True) -> List[ProjectTag]:
         """Get the tags assigned to the project.

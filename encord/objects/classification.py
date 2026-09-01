@@ -115,7 +115,7 @@ class Classification(OntologyElement):
         Returns:
             ClassificationInstance: An instance of ClassificationInstance.
         """
-        return ClassificationInstance(self, range_only=range_only, _created_with_answer=True)
+        return ClassificationInstance(self, range_only=range_only)
 
     @classmethod
     def from_dict(cls, d: dict) -> Classification:

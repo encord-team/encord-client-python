@@ -70,6 +70,7 @@ from encord.objects.classification import Classification
 from encord.objects.classification_instance import (
     ClassificationInstance,
 )
+from encord.objects.classification_ranges import resolve_classification_ranges
 from encord.objects.constants import (  # pylint: disable=unused-import # for backward compatibility
     DEFAULT_CONFIDENCE,
     DEFAULT_MANUAL_ANNOTATION,
@@ -102,7 +103,6 @@ from encord.objects.frames import (
     Range,
     Ranges,
     frames_class_to_frames_list,
-    ranges_list_to_ranges,
     ranges_to_list,
 )
 from encord.objects.html_node import HtmlRange
@@ -131,14 +131,12 @@ from encord.objects.types import (
     BaseFrameObject,
     ClassificationAnswer,
     DynamicAttributeObject,
-    FrameClassification,
     FrameObject,
     ObjectAction,
     ObjectAnswer,
     ObjectAnswerForGeometric,
     ObjectAnswerForHtml,
     ObjectAnswerForNonGeometric,
-    _is_containing_metadata,
 )
 from encord.objects.utils import _lower_snake_case
 from encord.ontology import Ontology
@@ -1207,6 +1205,11 @@ class LabelRowV2:
 
         self._objects_map = dict()
         self._classifications_map = dict()
+
+        self._space_objects_map = {}
+        self._space_classifications_map = {}
+        for space in self._space_map.values():
+            space._reset_labels()
 
         # We need to do below three in order:
         # 1. Parse labels on root
@@ -2730,36 +2733,46 @@ class LabelRowV2:
         return ret
 
     def _to_classification_answers(self) -> Dict[str, ClassificationAnswer]:
-        ret: Dict[str, ClassificationAnswer] = {}
+        answers: Dict[str, ClassificationAnswer] = {}
         for classification in self._classifications_map.values():
             all_static_answers = classification.get_all_static_answers()
             classifications = [answer.to_encord_dict() for answer in all_static_answers if answer.is_answered()]
             answered_classifications = cast(List[AttributeDict], classifications)
-            ret[classification.classification_hash] = {
+            answers[classification.classification_hash] = {
                 "classifications": list(reversed(answered_classifications)),
                 "classificationHash": classification.classification_hash,
                 "featureHash": classification.feature_hash,
                 "spaces": {},
+                "range": ranges_to_list(classification.range_list),
+                "createdBy": classification.created_by,
+                "createdAt": format_datetime_to_long_string_optional(classification.created_at),
+                "lastEditedBy": classification.last_edited_by,
+                "lastEditedAt": format_datetime_to_long_string_optional(classification.last_edited_at),
+                "confidence": classification.confidence,
+                "manualAnnotation": classification.manual_annotation,
             }
 
-            # If the classification includes instance data
-            if classification._include_instance_data:
-                ret[classification.classification_hash]["range"] = ranges_to_list(classification.range_list)
-                ret[classification.classification_hash]["createdBy"] = classification.created_by
-                ret[classification.classification_hash]["createdAt"] = format_datetime_to_long_string_optional(
-                    classification.created_at
-                )
-                ret[classification.classification_hash]["lastEditedBy"] = classification.last_edited_by
-                ret[classification.classification_hash]["lastEditedAt"] = format_datetime_to_long_string_optional(
-                    classification.last_edited_at
-                )
-                ret[classification.classification_hash]["manualAnnotation"] = classification.manual_annotation
-
         for space in self._space_map.values():
-            space_classification_answers = space._to_classification_answers(ret)
-            ret.update(space_classification_answers)
+            for classification_hash, space_answer in space._to_classification_answers(answers).items():
+                existing_answer = answers.get(classification_hash)
+                if existing_answer is None:
+                    answers[classification_hash] = space_answer
+                    continue
 
-        return ret
+                # A classification can be placed on several spaces, and on the root layer as well as on a
+                # space. Each placement is reported by whoever holds it, so they are merged rather than
+                # overwritten: the `spaces` entries are unioned and a placement on the root layer is kept.
+                merged_answer: ClassificationAnswer = {
+                    **existing_answer,
+                    **space_answer,
+                    "spaces": {**existing_answer.get("spaces", {}), **space_answer.get("spaces", {})},
+                }
+                if not space_answer.get("range"):
+                    merged_answer["range"] = existing_answer.get("range") or []
+
+                answers[classification_hash] = merged_answer
+
+        return answers
 
     @staticmethod
     def _get_all_static_answers(object_instance: ObjectInstance) -> List[AttributeDict]:
@@ -3115,7 +3128,6 @@ class LabelRowV2:
                         space_info=space_info,
                         width=space_info["width"],
                         height=space_info["height"],
-                        has_multilayer_labels=True,
                     )
                     res[ROOT_SPACE_ID] = multilayer_image_space
                 elif space_info["space_type"] == SpaceType.TIME_SERIES:
@@ -3154,7 +3166,6 @@ class LabelRowV2:
                     space_info=space_info,
                     width=space_info["width"],
                     height=space_info["height"],
-                    has_multilayer_labels=False,
                 )
                 res[space_id] = image_space
             elif space_info["space_type"] == SpaceType.IMAGE_SEQUENCE:
@@ -3225,7 +3236,6 @@ class LabelRowV2:
                     space_info=space_info,
                     width=space_info.get("width"),
                     height=space_info.get("height"),
-                    has_multilayer_labels=False,
                 )
                 res[space_id] = scene_image_space
             elif space_info["space_type"] == SpaceType.POINT_CLOUD:
@@ -3485,18 +3495,14 @@ class LabelRowV2:
             ),
         )
 
-    def _parse_labels_from_dict(self, label_row_dict: dict):
-        classification_answers = label_row_dict["classification_answers"]
+    def _parse_labels_from_dict(
+        self,
+        label_row_dict: dict,
+    ) -> None:
         object_answers = label_row_dict["object_answers"]
+        classification_answers = label_row_dict["classification_answers"]
 
-        # Attempt to instantiate all classifications - ranged only or with frames
-        for classification_answer in classification_answers.values():
-            # Classifications belonging to a space will be parsed and created later
-            if classification_answer["spaces"]:
-                continue
-
-            if classification_instance := self._create_new_classification_instance_from_answer(classification_answer):
-                self.add_classification_instance(classification_instance)
+        self._parse_root_classifications_from_answers(classification_answers)
 
         for data_unit in label_row_dict["data_units"].values():
             data_type = DataType(label_row_dict["data_type"])
@@ -3505,11 +3511,6 @@ class LabelRowV2:
             if data_type == DataType.IMG_GROUP or data_type == DataType.IMAGE:
                 frame = int(data_unit["data_sequence"])
                 self._add_object_instances_from_objects(labels.get("objects", []), frame)
-                self._add_classification_instances_from_classifications_frame(
-                    labels.get("classifications", []),
-                    classification_answers,
-                    frame,
-                )
                 self._add_objects_answers(object_answers)
 
             elif (
@@ -3524,9 +3525,6 @@ class LabelRowV2:
                         continue
                     frame_num = int(frame)
                     self._add_object_instances_from_objects(frame_data["objects"], frame_num)
-                    self._add_classification_instances_from_classifications_frame(
-                        frame_data["classifications"], classification_answers, frame_num
-                    )
                     self._add_frame_metadata(frame_num, frame_data.get("metadata"))
                 self._add_objects_answers(object_answers)
 
@@ -3766,20 +3764,38 @@ class LabelRowV2:
             is_deleted=object_frame_instance_info.is_deleted,
         )
 
-    def _add_classification_instances_from_classifications_frame(
-        self,
-        classifications_list: List[FrameClassification],
-        classification_answers: Dict[str, ClassificationAnswer],
-        frame: int,
-    ):
-        for frame_classification_label in classifications_list:
-            classification_hash = frame_classification_label["classificationHash"]
-            if classification_hash in self._classifications_map:
-                self._add_frames_to_classification_instance(frame_classification_label, frame)
-            elif classification_instance := self._create_new_classification_instance_from_frame(
-                frame_classification_label, frame, classification_answers
-            ):
-                self.add_classification_instance(classification_instance)
+    def _parse_root_classifications_from_answers(self, classification_answers: Dict[str, ClassificationAnswer]) -> None:
+        """Create the classification instances the label row holds itself from `classification_answers`.
+
+        Classifications held by a space are created while parsing that space, see
+        `Space._parse_classification_answers`.
+        """
+        if ROOT_SPACE_ID in self._space_map:
+            # Some data types (multilayer images, time series) model the root layer as a space of its own,
+            # which then holds everything placed on it. Nothing is left for the label row to hold.
+            return
+
+        for classification_answer in classification_answers.values():
+            resolved_ranges = resolve_classification_ranges(classification_answer)
+            if resolved_ranges is None:
+                continue
+
+            root_ranges, space_ranges = resolved_ranges
+
+            # A classification instance lives either on the label row or on spaces, never both, so when a
+            # space holds the classification too its placement is the one that is kept.
+            if space_ranges:
+                continue
+
+            classification_instance = self._create_classification_instance_from_answer(
+                classification_answer, frames=root_ranges
+            )
+
+            if not root_ranges and not classification_instance.is_range_only():
+                # A frame based classification has to be on at least one frame to exist
+                continue
+
+            self.add_classification_instance(classification_instance)
 
     def _parse_image_group_frame_level_data(self, label_row_data_units: dict) -> Dict[int, FrameLevelImageGroupData]:
         frame_level_data: Dict[int, LabelRowV2.FrameLevelImageGroupData] = {}
@@ -3800,67 +3816,53 @@ class LabelRowV2:
             frame_level_data[frame_number] = frame_level_image_group_data
         return frame_level_data
 
-    def _create_new_classification_instance_from_frame(
-        self,
-        frame_classification_label: FrameClassification,
-        frame: int,
-        classification_answers: Dict[str, ClassificationAnswer],
-    ) -> Optional[ClassificationInstance]:
-        feature_hash = frame_classification_label["featureHash"]
-        classification_hash = frame_classification_label["classificationHash"]
+    def _get_or_create_classification_instance_on_spaces(
+        self, classification_answer: ClassificationAnswer
+    ) -> ClassificationInstance:
+        """Get the classification instance for an answer, creating it if no space holds it yet.
 
+        A classification may be placed on several spaces. All of those placements belong to a single
+        ClassificationInstance, so an instance already created while parsing another space is reused here.
+
+        The returned instance carries no placement of its own: the space applies it.
+        """
+        classification_hash = classification_answer["classificationHash"]
+
+        for space in self._space_map.values():
+            if classification_instance := space._classifications_map.get(classification_hash):
+                return classification_instance
+
+        feature_hash = classification_answer["featureHash"]
         label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Classification)
         classification_instance = ClassificationInstance(label_class, classification_hash=classification_hash)
+        self._add_static_answers_from_dict(classification_instance, classification_answer["classifications"])
 
-        frame_view = _AnnotationMetadata.from_dict(frame_classification_label)
-        classification_instance.set_for_frames(
-            frame,
-            created_at=frame_view.created_at,
-            created_by=frame_view.created_by,
-            confidence=frame_view.confidence,
-            manual_annotation=frame_view.manual_annotation,
-            last_edited_at=frame_view.last_edited_at,
-            last_edited_by=frame_view.last_edited_by,
-            reviews=frame_view.reviews,
-            overwrite=True,  # Always overwrite during label row dict parsing, as older dicts known to have duplicates
-        )
+        return classification_instance
 
-        # For some older label rows we might have a classification entry, but without an assigned answer.
-        # These cases are equivalent to not having classifications at all, so just ignoring them
-        if classification_answer := classification_answers.get(classification_hash):
-            answers_dict = classification_answer["classifications"]
-            self._add_static_answers_from_dict(classification_instance, answers_dict)
-            return classification_instance
+    def _create_classification_instance_from_answer(
+        self, classification_answer: ClassificationAnswer, frames: Ranges
+    ) -> ClassificationInstance:
+        """Create a ClassificationInstance from a classification answer.
 
-        return None
-
-    def _create_new_classification_instance_from_answer(
-        self, classification_answer: ClassificationAnswer
-    ) -> ClassificationInstance | None:
-        """Create a ClassificationInstance from a classification answer if sufficient metadata is present"""
-        if not _is_containing_metadata(classification_answer):
-            return None
-
+        Args:
+            classification_answer: The answer to build the classification instance from.
+            frames: The frames to place the classification on, as resolved from the answer.
+        """
         feature_hash = classification_answer["featureHash"]
         classification_hash = classification_answer["classificationHash"]
 
         label_class = self._ontology.structure.get_child_by_hash(feature_hash, type_=Classification)
 
         range_view = _AnnotationMetadata.from_dict(classification_answer)
-        # Free-time scenes (e.g. MCAP) are geometric by data type but range-based like audio.
-        is_data_type_range_only = not is_geometric(self.data_type) or self._is_free_time_scene()
 
         classification_instance = ClassificationInstance(
             label_class,
             classification_hash=classification_hash,
-            range_only=is_data_type_range_only,
-            _created_with_answer=True,
+            range_only=self._is_free_time_scene() or not is_geometric(self.data_type),
         )
 
-        frame_ranges = classification_answer.get("range", [])
-        parsed_frame_ranges = ranges_list_to_ranges(frame_ranges or [])
         classification_instance.set_for_frames(
-            frames=parsed_frame_ranges,
+            frames=frames,
             created_at=range_view.created_at,
             created_by=range_view.created_by,
             confidence=range_view.confidence,
@@ -3880,14 +3882,6 @@ class LabelRowV2:
         self, classification_instance: ClassificationInstance, answers_list: List[AttributeDict]
     ) -> None:
         classification_instance.set_answer_from_list(answers_list)
-
-    def _add_frames_to_classification_instance(
-        self, frame_classification_label: FrameClassification, frame: int
-    ) -> None:
-        object_hash = frame_classification_label["classificationHash"]
-        classification_instance = self._classifications_map[object_hash]
-        frame_view = _AnnotationMetadata.from_dict(frame_classification_label)
-        classification_instance.set_frame_data(frame_view, frame)
 
     def _check_labelling_is_initalised(self):
         if not self.is_labelling_initialised:

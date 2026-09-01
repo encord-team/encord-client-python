@@ -25,9 +25,20 @@ def test_put_classification_on_video_space(ontology):
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
 
     # Act
+    date = datetime(2024, 1, 1, 12, 0, 0)
     new_classification_instance = text_classification.create_instance()
-    video_space_1.put_classification_instance(classification_instance=new_classification_instance, frames=[1])
-    video_space_1.put_classification_instance(classification_instance=new_classification_instance, frames=[0, 2, 3])
+    put_kwargs = {
+        "created_at": date,
+        "created_by": "user@encord.com",
+        "last_edited_at": date,
+        "last_edited_by": "user@encord.com",
+    }
+    video_space_1.put_classification_instance(
+        classification_instance=new_classification_instance, frames=[1], **put_kwargs
+    )
+    video_space_1.put_classification_instance(
+        classification_instance=new_classification_instance, frames=[0, 2, 3], **put_kwargs
+    )
 
     text_answer = "Some answer"
     new_classification_instance.set_answer(answer=text_answer)
@@ -63,6 +74,15 @@ def test_put_classification_on_video_space(ontology):
             "classificationHash": new_classification_instance.classification_hash,
             "featureHash": "jPOcEsbw",
             "spaces": {"video-1-uuid": {"range": [[0, 3]], "type": "frame"}},
+            # `classification_answers` is authoritative, so it carries the annotation metadata too. The
+            # metadata is per classification rather than per frame, taken from the first placed frame.
+            "range": [],
+            "createdAt": format_datetime_to_long_string(date),
+            "createdBy": "user@encord.com",
+            "lastEditedAt": format_datetime_to_long_string(date),
+            "lastEditedBy": "user@encord.com",
+            "confidence": 1.0,
+            "manualAnnotation": True,
         }
     }
 

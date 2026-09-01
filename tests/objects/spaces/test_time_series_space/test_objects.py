@@ -3,10 +3,12 @@ from unittest.mock import Mock
 
 from encord.constants.enums import DataType, SpaceType
 from encord.objects import LabelRowV2, Object, OntologyStructure, Shape
+from encord.objects.constants import ROOT_SPACE_ID
 from encord.objects.coordinates import TimeRangeCoordinates
 from encord.objects.frames import Range
 from encord.objects.spaces.range_space.time_series_space import TimeSeriesSpace
 from encord.orm.label_row import AnnotationTaskStatus, LabelRowMetadata, LabelStatus
+from tests.objects.data.all_types_ontology_structure import GLOBAL_CLASSIFICATION, RADIO_CLASSIFICATION
 
 
 def _time_series_label_row() -> LabelRowV2:
@@ -224,3 +226,36 @@ def test_add_time_range_object_on_standalone_time_series_root():
     assert object_answer["shape"] == "time_range"
     assert object_answer["range"] == [[0, 100]]
     assert "spaces" not in object_answer
+
+
+def test_root_time_series_classifications_serialize_as_root_ranges():
+    space = TimeSeriesSpace(
+        space_id=ROOT_SPACE_ID,
+        label_row=Mock(),
+        space_info={
+            "space_type": SpaceType.TIME_SERIES,
+            "root_info": {"file_name": "time-series.csv"},
+            "labels": {},
+        },
+    )
+
+    global_classification = GLOBAL_CLASSIFICATION.create_instance()
+    space.put_classification_instance(
+        global_classification,
+        created_at=datetime.now(),
+        last_edited_at=datetime.now(),
+    )
+
+    classification = RADIO_CLASSIFICATION.create_instance()
+    classification.set_answer("cl_1_option_1")
+    space.put_classification_instance(
+        classification,
+        created_at=datetime.now(),
+        last_edited_at=datetime.now(),
+    )
+
+    answers = space._to_classification_answers({})
+    assert len(answers) == 2
+    for answer in answers.values():
+        assert answer["range"] == []
+        assert answer["spaces"] == {}

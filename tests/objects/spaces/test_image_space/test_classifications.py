@@ -33,8 +33,15 @@ def test_put_classification_on_image_space(ontology):
     image_space_1 = label_row.get_space(id="image-1-uuid", type_="image")
 
     # Act
+    date = datetime(2024, 1, 1, 12, 0, 0)
     new_classification_instance = text_classification.create_instance()
-    image_space_1.put_classification_instance(classification_instance=new_classification_instance)
+    image_space_1.put_classification_instance(
+        classification_instance=new_classification_instance,
+        created_at=date,
+        created_by="user@encord.com",
+        last_edited_at=date,
+        last_edited_by="user@encord.com",
+    )
 
     text_answer = "Some answer"
     new_classification_instance.set_answer(answer=text_answer)
@@ -70,6 +77,14 @@ def test_put_classification_on_image_space(ontology):
             "classificationHash": new_classification_instance.classification_hash,
             "featureHash": "jPOcEsbw",
             "spaces": {"image-1-uuid": {"range": [[0, 0]], "type": "frame"}},
+            # `classification_answers` is authoritative, so it carries the annotation metadata too.
+            "range": [],
+            "createdAt": format_datetime_to_long_string(date),
+            "createdBy": "user@encord.com",
+            "lastEditedAt": format_datetime_to_long_string(date),
+            "lastEditedBy": "user@encord.com",
+            "confidence": 1.0,
+            "manualAnnotation": True,
         }
     }
 

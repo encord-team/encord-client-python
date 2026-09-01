@@ -1,6 +1,7 @@
 """All tests regarding converting from and to Encord dict to the label row."""
 
 import json
+from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime
 from typing import Dict
@@ -10,6 +11,8 @@ import pytest
 
 from encord.common.time_parser import parse_datetime
 from encord.objects import ClassificationInstance, OntologyStructure
+from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
+from encord.objects.frames import Range
 from encord.objects.ontology_labels_impl import LabelRowV2
 from encord.ontology import Ontology
 from encord.orm.label_row import LabelRowMetadata
@@ -450,18 +453,53 @@ def test_classification_with_frames_and_answer(all_types_ontology) -> None:
     validate_label_row_serialisation(label_row)
 
 
-def test_classification_with_frames(all_types_ontology) -> None:
+def _video_with_classifications_label_row(all_types_ontology) -> LabelRowV2:
     label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["duration"] = 0.08  # update to match video_with_classifications.labels
     label_row_metadata_dict["frames_per_second"] = 25.0  # update to match video_with_classifications.labels
-    label_row_metadata = LabelRowMetadata(**label_row_metadata_dict)
+    return LabelRowV2(LabelRowMetadata(**label_row_metadata_dict), Mock(), all_types_ontology)
 
-    label_row = LabelRowV2(label_row_metadata, Mock(), all_types_ontology)
+
+def test_classification_answer_without_annotation_metadata_is_still_parsed(all_types_ontology) -> None:
+    """An answer missing its annotation metadata still answers a classification.
+
+    The metadata falls back to its defaults rather than the classification being dropped. Only a backend
+    predating `classification_answers` being authoritative serves label rows in this shape.
+    """
+    labels = deepcopy(video_with_classifications.labels)
+    answer = labels["classification_answers"]["3AqiIPrF"]
+    for metadata_field in ("createdAt", "createdBy", "lastEditedAt", "lastEditedBy", "manualAnnotation"):
+        del answer[metadata_field]
+
+    label_row = _video_with_classifications_label_row(all_types_ontology)
+    label_row.from_labels_dict(labels)
+
+    classifications = label_row.get_classification_instances()
+    assert [classification.classification_hash for classification in classifications] == ["3AqiIPrF"]
+    assert classifications[0].range_list == [Range(0, 1)], "The answer's own range still places it"
+    assert classifications[0].get_answer().value == "cl_1_option_2"
+    assert classifications[0].created_by is None
+    assert classifications[0].manual_annotation is DEFAULT_MANUAL_ANNOTATION
+
+    assert_json_serializable(label_row.to_encord_dict())
+    validate_label_row_serialisation(label_row)
+
+
+def test_classification_answer_naming_no_frames_is_skipped_on_frame_based_data(all_types_ontology) -> None:
+    """A classification has to be on at least one frame to exist on a frame based data type.
+
+    The per-frame classifications that used to carry the placement are never read, so an answer naming no
+    frames places its classification nowhere and there is nothing to build.
+    """
+    label_row = _video_with_classifications_label_row(all_types_ontology)
     label_row.from_labels_dict(video_with_classifications.labels_without_answer_meta)
 
-    actual = label_row.to_encord_dict()
+    assert label_row.get_classification_instances() == []
 
-    deep_diff_enhanced(actual, video_with_classifications.labels_without_answer_meta)
+    actual = label_row.to_encord_dict()
+    assert actual["classification_answers"] == {}
+    for frame_labels in actual["data_units"]["cd57cf5c-2541-4a46-a836-444540ee987a"]["labels"].values():
+        assert frame_labels["classifications"] == []
 
     assert_json_serializable(actual)
     validate_label_row_serialisation(label_row)

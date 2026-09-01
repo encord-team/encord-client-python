@@ -152,11 +152,11 @@ class Config(BaseConfig):
 
     Args:
         web_file_path (str): The web file path for the endpoint.
-        domain (Optional[str]): The domain.
+        domain (Optional[str]): The domain. Trailing slashes are stripped.
         requests_settings (RequestsSettings): Settings for HTTP requests.
 
     Attributes:
-        domain (str): The domain.
+        domain (str): The domain, without any trailing slash.
     """
 
     def __init__(
@@ -169,9 +169,9 @@ class Config(BaseConfig):
         if domain is None:
             raise RuntimeError("`domain` must be specified")
 
-        self.domain = domain
+        self.domain = domain.rstrip("/")
         self.user_agent_suffix = validate_user_agent_suffix(user_agent_suffix) if user_agent_suffix else None
-        endpoint = domain + web_file_path
+        endpoint = self.domain + web_file_path
         super().__init__(endpoint, requests_settings=requests_settings)
 
     def _user_agent(self) -> str:
