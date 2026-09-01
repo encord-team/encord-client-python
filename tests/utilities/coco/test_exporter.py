@@ -4,6 +4,8 @@ import pytest
 from deepdiff import DeepDiff
 from shapely.geometry import MultiPolygon
 
+from encord.objects import RadioAttribute
+from encord.objects.options import NestableOption
 from encord.utilities.coco.exporter import CocoExporter, OntologyStructure
 from tests.utilities.coco.data.exporter import (
     COCO_EXPORTER_EXPECTED_RES,
@@ -98,3 +100,37 @@ def test_get_rle_segmentation_from_multipolygon(
     segmentation = coco_exporter.get_rle_segmentation_from_multipolygon(multipolygon, w, h)
 
     assert not DeepDiff(segmentation, expected_segmentation)
+    assert not DeepDiff(segmentation, expected_segmentation)
+
+
+def test_get_radio_answer_with_empty_answers_does_not_raise(coco_exporter: CocoExporter) -> None:
+    """Regression test: an unanswered radio classification ("answers": []) used to raise an
+    IndexError during COCO export. It must be treated as an unselected attribute instead."""
+    radio_attribute = RadioAttribute(
+        uid=[1, 1],
+        feature_node_hash="MjI5MTA5",
+        name="Radio classification 1",
+        required=False,
+        archived=False,
+        dynamic=False,
+        options=[
+            NestableOption(
+                uid=[1, 1, 1],
+                feature_node_hash="MTcwMjM5",
+                label="cl 1 option 1",
+                value="cl_1_option_1",
+                archived=False,
+                nested_options=[],
+            ),
+        ],
+    )
+
+    # Empty answers list (unanswered radio attribute) must not crash.
+    assert coco_exporter.get_radio_answer(radio_attribute, []) == {}
+
+    # Sanity check: a properly answered radio still resolves to the answer name.
+    answered = coco_exporter.get_radio_answer(
+        radio_attribute,
+        [{"name": "cl 1 option 1", "featureHash": "MTcwMjM5"}],
+    )
+    assert answered == {"Radio classification 1": "cl 1 option 1"}
