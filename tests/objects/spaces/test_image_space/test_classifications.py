@@ -381,27 +381,24 @@ def test_update_annotation_from_object_annotation(ontology):
     )
 
     current_label_row_dict = label_row.to_encord_dict()
-    current_frame_dict = current_label_row_dict["spaces"]["image-1-uuid"]["labels"]
+    assert current_label_row_dict["spaces"]["image-1-uuid"]["labels"] == {}
 
-    EXPECTED_CURRENT_LABELS_DICT = {
-        "0": {
-            "objects": [],
-            "classifications": [
-                {
-                    "classificationHash": classification_instance_1.classification_hash,
-                    "featureHash": "jPOcEsbw",
-                    "name": "Text classification",
-                    "value": "text_classification",
-                    "createdAt": format_datetime_to_long_string(date),
-                    "confidence": 1.0,
-                    "manualAnnotation": True,
-                    "lastEditedAt": format_datetime_to_long_string(date),
-                    "lastEditedBy": name,
-                }
-            ],
+    expected_answers = {
+        classification_instance_1.classification_hash: {
+            "classifications": [],
+            "classificationHash": classification_instance_1.classification_hash,
+            "featureHash": "jPOcEsbw",
+            "spaces": {"image-1-uuid": {"range": [[0, 0]], "type": "frame"}},
+            "range": [],
+            "createdAt": format_datetime_to_long_string(date),
+            "createdBy": None,
+            "confidence": 1.0,
+            "manualAnnotation": True,
+            "lastEditedAt": format_datetime_to_long_string(date),
+            "lastEditedBy": name,
         }
     }
-    assert not DeepDiff(current_frame_dict, EXPECTED_CURRENT_LABELS_DICT)
+    assert not DeepDiff(current_label_row_dict["classification_answers"], expected_answers)
 
     # Act
     classification_annotations = list(image_space_1.get_annotations(type_="classification"))
@@ -414,25 +411,14 @@ def test_update_annotation_from_object_annotation(ontology):
 
     # Assert
     new_label_row_dict = label_row.to_encord_dict()
-    new_frame_dict = new_label_row_dict["spaces"]["image-1-uuid"]["labels"]
+    assert new_label_row_dict["spaces"]["image-1-uuid"]["labels"] == {}
 
-    EXPECTED_NEW_LABELS_DICT = {
-        "0": {
-            "objects": [],
-            "classifications": [
-                {
-                    "classificationHash": classification_instance_1.classification_hash,
-                    "featureHash": "jPOcEsbw",
-                    "name": "Text classification",
-                    "value": "text_classification",
-                    "createdAt": format_datetime_to_long_string(new_date),
-                    "createdBy": new_name,
-                    "confidence": 1.0,
-                    "manualAnnotation": True,
-                    "lastEditedAt": format_datetime_to_long_string(new_date),
-                    "lastEditedBy": new_name,
-                }
-            ],
+    expected_answers[classification_instance_1.classification_hash].update(
+        {
+            "createdAt": format_datetime_to_long_string(new_date),
+            "createdBy": new_name,
+            "lastEditedAt": format_datetime_to_long_string(new_date),
+            "lastEditedBy": new_name,
         }
-    }
-    assert not DeepDiff(new_frame_dict, EXPECTED_NEW_LABELS_DICT)
+    )
+    assert not DeepDiff(new_label_row_dict["classification_answers"], expected_answers)

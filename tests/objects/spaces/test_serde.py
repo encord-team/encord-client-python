@@ -12,6 +12,7 @@ from tests.objects.data.data_group.two_videos import (
     DATA_GROUP_WITH_TWO_VIDEOS_LABELS,
     DATA_GROUP_WITH_TWO_VIDEOS_METADATA,
 )
+from tests.objects.objects_test_utils import expected_compact_labels
 
 
 def test_read_and_export_all_space_labels(ontology):
@@ -123,7 +124,7 @@ def test_read_and_export_all_space_labels(ontology):
     # Verify round-trip serialization
     output_dict = label_row.to_encord_dict()
     assert not DeepDiff(
-        DATA_GROUP_WITH_LABELS,
+        expected_compact_labels(DATA_GROUP_WITH_LABELS),
         output_dict,
         exclude_regex_paths=[
             r".*\['trackHash'\]",
@@ -149,7 +150,7 @@ def test_read_and_export_multilayer_image_labels(ontology):
     # Verify round-trip serialization
     output_dict = label_row.to_encord_dict()
     assert not DeepDiff(
-        DATA_GROUP_MULTILAYER_IMAGE_LABELS,
+        expected_compact_labels(DATA_GROUP_MULTILAYER_IMAGE_LABELS),
         output_dict,
         exclude_regex_paths=[
             r".*\['trackHash'\]",
@@ -166,7 +167,7 @@ def test_read_and_export_video_group_with_dynamic_attributes(ontology):
     output_dict = label_row.to_encord_dict()
 
     assert not DeepDiff(
-        DATA_GROUP_WITH_TWO_VIDEOS_LABELS,
+        expected_compact_labels(DATA_GROUP_WITH_TWO_VIDEOS_LABELS),
         output_dict,
         exclude_regex_paths=[
             r".*\['trackHash'\]",

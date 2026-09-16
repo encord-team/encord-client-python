@@ -44,6 +44,8 @@ from encord.beta.scene.pose import (
 )
 from encord.beta.scene.reader import (
     CompositeScene,
+    FrameOfReferenceEvent,
+    FrameOfReferenceStream,
     ImageStream,
     PointCloudStream,
     Scene,
@@ -83,6 +85,8 @@ __all__ = [
     "Direction",
     "EulerRotation",
     "FoRStreamBuilder",
+    "FrameOfReferenceEvent",
+    "FrameOfReferenceStream",
     "ImageStream",
     "ImageStreamBuilder",
     "Intrinsics",

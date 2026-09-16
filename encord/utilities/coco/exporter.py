@@ -23,7 +23,9 @@ from shapely.geometry import MultiPolygon, Polygon
 from encord.exceptions import EncordException
 from encord.objects.answers import NumericAnswerValue
 from encord.objects.attributes import Attribute
+from encord.objects.classification_ranges import resolve_classification_ranges
 from encord.objects.common import PropertyType, Shape
+from encord.objects.constants import ROOT_SPACE_ID
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_structure import OntologyStructure
 
@@ -208,6 +210,19 @@ class CocoExporter:
         for labels in self._labels_list:
             cord_data_type = labels["data_type"]  # This is set to FileType Enum
             for data_unit in labels["data_units"].values():
+                if cord_data_type.lower() in {"video", "dicom", "nifti"} and ROOT_SPACE_ID not in (
+                    labels.get("spaces") or {}
+                ):
+                    # COCO needs classification-only images, even when no attribute is answered.
+                    # Copy the frame map so export does not expand the caller's compact labels.
+                    data_unit = {**data_unit, "labels": dict(data_unit["labels"])}
+                    for answer in labels.get("classification_answers", {}).values():
+                        placement = resolve_classification_ranges(answer)
+                        if placement is None:
+                            continue
+                        for frame_range in placement[0]:
+                            for frame in range(frame_range.start, frame_range.end + 1):
+                                data_unit["labels"].setdefault(str(frame), {"objects": [], "classifications": []})
                 data_type = data_unit["data_type"]
                 if "application/dicom" in data_type:
                     images.extend(self.get_dicom(data_unit))

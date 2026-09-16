@@ -200,16 +200,40 @@ def test_root_space_entry_does_not_override_the_top_level_range() -> None:
     assert frames["1"]["classifications"][0]["classificationHash"] == RADIO_CLASSIFICATION_HASH
 
 
-@pytest.mark.parametrize(
-    "answer_overrides",
-    [
-        pytest.param({"classifications": []}, id="no_attribute_answers"),
-        pytest.param({"range": [], "spaces": {}}, id="no_placement"),
-    ],
-)
-def test_answers_that_cannot_be_expanded_are_skipped(answer_overrides) -> None:
+@pytest.mark.parametrize("data_type", ["video", "image", "img_group"])
+def test_expands_empty_attribute_answers(data_type: str) -> None:
     compact = _without_frame_classifications(video_with_classifications.labels)
-    compact["classification_answers"][RADIO_CLASSIFICATION_HASH].update(answer_overrides)
+    answer = compact["classification_answers"][RADIO_CLASSIFICATION_HASH]
+    answer["classifications"] = []
+    answer["range"] = [[0, 0]]
+    compact["data_type"] = data_type
+    if data_type != "video":
+        compact["data_units"] = {
+            "first": {"data_sequence": 0, "labels": {"objects": [], "classifications": []}},
+            "second": {"data_sequence": 1, "labels": {"objects": [], "classifications": []}},
+        }
+    expected_classification = deepcopy(
+        video_with_classifications.labels["data_units"][VIDEO_DATA_HASH]["labels"]["0"]["classifications"][0]
+    )
+    expected_classification.update(name="", value="")
+    original_answers = deepcopy(compact["classification_answers"])
+
+    expand_classification_answers_into_frame_labels(compact)
+    expand_classification_answers_into_frame_labels(compact)
+
+    if data_type == "video":
+        frames = compact["data_units"][VIDEO_DATA_HASH]["labels"]
+        assert frames["0"]["classifications"] == [expected_classification]
+        assert frames["1"]["classifications"] == []
+    else:
+        assert compact["data_units"]["first"]["labels"]["classifications"] == [expected_classification]
+        assert compact["data_units"]["second"]["labels"]["classifications"] == []
+    assert compact["classification_answers"] == original_answers
+
+
+def test_answers_without_placement_are_skipped() -> None:
+    compact = _without_frame_classifications(video_with_classifications.labels)
+    compact["classification_answers"][RADIO_CLASSIFICATION_HASH].update({"range": [], "spaces": {}})
 
     expand_classification_answers_into_frame_labels(compact)
 

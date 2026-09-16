@@ -11,7 +11,13 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal, cast, overload
 
 from encord.beta.scene.internal.scene import (
+    CameraStream as _CameraStream,
+)
+from encord.beta.scene.internal.scene import (
     EventStream as _EventStream,
+)
+from encord.beta.scene.internal.scene import (
+    FORStream as _FORStream,
 )
 from encord.beta.scene.internal.scene import (
     ImageStream as _ImageStream,
@@ -60,6 +66,8 @@ class PointCloudStream:
 
     stream_id: str
     events: list[SceneEvent]
+    frame_of_reference_id: str | None = None
+    """Frame of reference in which this stream's point clouds are expressed."""
 
     @property
     def num_events(self) -> int:
@@ -90,6 +98,8 @@ class ImageStream:
 
     stream_id: str
     events: list[SceneEvent]
+    frame_of_reference_id: str | None = None
+    """Frame of reference associated with the image stream's camera."""
 
     @property
     def num_events(self) -> int:
@@ -126,6 +136,52 @@ class TimeSeriesStream:
 
 
 @dataclass
+class FrameOfReferenceEvent:
+    """A pose of a frame of reference relative to its parent frame."""
+
+    timestamp: float
+    """Timestamp of the pose."""
+    frame_id: str
+    """ID of the frame represented by this event."""
+    parent_frame_id: str | None
+    """ID of the parent frame, or ``None`` when no parent is declared."""
+    rotation: tuple[float, float, float, float, float, float, float, float, float]
+    """3x3 column-major rotation matrix from this frame to its parent frame."""
+    position: tuple[float, float, float]
+    """Translation from this frame to its parent frame."""
+
+
+@dataclass
+class FrameOfReferenceStream:
+    """A stream describing a named frame of reference over time."""
+
+    stream_id: str
+    events: list[FrameOfReferenceEvent]
+
+    @property
+    def num_events(self) -> int:
+        return len(self.events)
+
+    def find_event(self, timestamp: float) -> FrameOfReferenceEvent | None:
+        """Return the event with the given timestamp, or ``None`` if not present."""
+        for event in self.events:
+            if event.timestamp == timestamp:
+                return event
+        return None
+
+    def get_event(self, timestamp: float) -> FrameOfReferenceEvent:
+        """Return the event with the given timestamp.
+
+        Raises:
+            KeyError: If no event with that timestamp exists.
+        """
+        event = self.find_event(timestamp)
+        if event is None:
+            raise KeyError(f"No event with timestamp {timestamp} for stream '{self.stream_id}'")
+        return event
+
+
+@dataclass
 class CompositeScene:
     """A scene composed of multiple named streams."""
 
@@ -134,6 +190,7 @@ class CompositeScene:
     time_series_streams: list[TimeSeriesStream] = field(default_factory=list)
     view_settings: SceneViewSettings | None = None
     layout: SceneLayout | None = None
+    frame_of_reference_streams: list[FrameOfReferenceStream] = field(default_factory=list)
 
     @overload
     def find_stream(self, stream_id: str, *, kind: Literal["point_cloud"]) -> PointCloudStream | None: ...
@@ -144,9 +201,12 @@ class CompositeScene:
     @overload
     def find_stream(self, stream_id: str, *, kind: Literal["time_series"]) -> TimeSeriesStream | None: ...
 
+    @overload
+    def find_stream(self, stream_id: str, *, kind: Literal["frame_of_reference"]) -> FrameOfReferenceStream | None: ...
+
     def find_stream(
-        self, stream_id: str, *, kind: Literal["point_cloud", "image", "time_series"]
-    ) -> PointCloudStream | ImageStream | TimeSeriesStream | None:
+        self, stream_id: str, *, kind: Literal["point_cloud", "image", "time_series", "frame_of_reference"]
+    ) -> PointCloudStream | ImageStream | TimeSeriesStream | FrameOfReferenceStream | None:
         """Return the stream with the given ID and kind, or ``None`` if not present."""
         if kind == "point_cloud":
             for pcd_stream in self.point_cloud_streams:
@@ -163,6 +223,11 @@ class CompositeScene:
                 if time_series_stream.stream_id == stream_id:
                     return time_series_stream
             return None
+        if kind == "frame_of_reference":
+            for frame_of_reference_stream in self.frame_of_reference_streams:
+                if frame_of_reference_stream.stream_id == stream_id:
+                    return frame_of_reference_stream
+            return None
         raise ValueError(f"Unsupported stream kind '{kind}'")
 
     @overload
@@ -174,9 +239,12 @@ class CompositeScene:
     @overload
     def get_stream(self, stream_id: str, *, kind: Literal["time_series"]) -> TimeSeriesStream: ...
 
+    @overload
+    def get_stream(self, stream_id: str, *, kind: Literal["frame_of_reference"]) -> FrameOfReferenceStream: ...
+
     def get_stream(
-        self, stream_id: str, *, kind: Literal["point_cloud", "image", "time_series"]
-    ) -> PointCloudStream | ImageStream | TimeSeriesStream:
+        self, stream_id: str, *, kind: Literal["point_cloud", "image", "time_series", "frame_of_reference"]
+    ) -> PointCloudStream | ImageStream | TimeSeriesStream | FrameOfReferenceStream:
         """Return the stream with the given ID and kind.
 
         Raises:
@@ -188,9 +256,16 @@ class CompositeScene:
                 available = [stream.stream_id for stream in self.point_cloud_streams]
             elif kind == "image":
                 available = [stream.stream_id for stream in self.image_streams]
-            else:
+            elif kind == "time_series":
                 available = [stream.stream_id for stream in self.time_series_streams]
-            kind_name = {"point_cloud": "point cloud", "image": "image", "time_series": "time series"}[kind]
+            else:
+                available = [stream.stream_id for stream in self.frame_of_reference_streams]
+            kind_name = {
+                "point_cloud": "point cloud",
+                "image": "image",
+                "time_series": "time series",
+                "frame_of_reference": "frame of reference",
+            }[kind]
             raise KeyError(f"No {kind_name} stream with id '{stream_id}'. Available: {available}")
         return stream
 
@@ -304,6 +379,12 @@ def scene_from_internal(internal: _Scene) -> Scene:
     point_cloud_streams: list[PointCloudStream] = []
     image_streams: list[ImageStream] = []
     time_series_streams: list[TimeSeriesStream] = []
+    frame_of_reference_streams: list[FrameOfReferenceStream] = []
+    camera_streams = {
+        stream_id: stream.stream
+        for stream_id, stream in internal.streams.items()
+        if isinstance(stream, _EventStream) and isinstance(stream.stream, _CameraStream)
+    }
     for stream_id, stream in internal.streams.items():
         if isinstance(stream, _SelfContainedStream):
             time_series_streams.append(
@@ -329,9 +410,11 @@ def scene_from_internal(internal: _Scene) -> Scene:
                         )
                         for index, e in enumerate(inner.events)
                     ],
+                    frame_of_reference_id=inner.frame_of_reference_id,
                 )
             )
         elif isinstance(inner, _ImageStream):
+            camera = camera_streams.get(inner.camera_id or "")
             image_streams.append(
                 ImageStream(
                     stream_id=stream_id,
@@ -343,6 +426,23 @@ def scene_from_internal(internal: _Scene) -> Scene:
                         )
                         for index, e in enumerate(inner.events)
                     ],
+                    frame_of_reference_id=camera.frame_of_reference_id if camera is not None else None,
+                )
+            )
+        elif isinstance(inner, _FORStream):
+            frame_of_reference_streams.append(
+                FrameOfReferenceStream(
+                    stream_id=stream_id,
+                    events=[
+                        FrameOfReferenceEvent(
+                            timestamp=e.timestamp if e.timestamp is not None else min_timestamp + index,
+                            frame_id=e.id,
+                            parent_frame_id=e.parent_for,
+                            rotation=e.rotation,
+                            position=e.position,
+                        )
+                        for index, e in enumerate(inner.events)
+                    ],
                 )
             )
     return CompositeScene(
@@ -351,4 +451,5 @@ def scene_from_internal(internal: _Scene) -> Scene:
         time_series_streams=time_series_streams,
         view_settings=internal.view_settings,
         layout=internal.layout,
+        frame_of_reference_streams=frame_of_reference_streams,
     )

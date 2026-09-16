@@ -10,7 +10,7 @@ import encord.exceptions
 from encord.configs import _ENCORD_SSH_KEY, _ENCORD_SSH_KEY_FILE
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
-from encord.orm.project import ProjectTag
+from encord.orm.project import CreateOrganisationTagPayload, OrganisationTag, ProjectTag
 from encord.user_client import EncordUserClient
 from tests.conftest import PRIVATE_KEY_PEM
 
@@ -89,24 +89,148 @@ def test_initialise_with_wrong_ssh_file_content_from_env():
     ],
 )
 @patch.object(ApiClient, "get")
-def test_list_project_tags(api_get: MagicMock, user_client: EncordUserClient, tag_names: list[str]) -> None:
-    tags = [ProjectTag(uuid=uuid.uuid4(), name=name) for name in tag_names]
+def test_list_organisation_tags(api_get: MagicMock, user_client: EncordUserClient, tag_names: list[str]) -> None:
+    tags = [OrganisationTag(uuid=uuid.uuid4(), name=name) for name in tag_names]
     api_get.return_value = Page(results=tags)
 
-    result = user_client.list_project_tags()
+    result = user_client.list_organisation_tags()
 
     assert result == tags
-    api_get.assert_called_once()
+    api_get.assert_called_once_with("organisation/organisation-tags", params=None, result_type=Page[OrganisationTag])
+
+
+@patch.object(ApiClient, "get")
+def test_list_project_tags_is_deprecated_and_delegates(api_get: MagicMock, user_client: EncordUserClient) -> None:
+    tags = [OrganisationTag(uuid=uuid.uuid4(), name="my-tag")]
+    api_get.return_value = Page(results=tags)
+
+    with pytest.warns(DeprecationWarning, match="list_organisation_tags"):
+        result = user_client.list_project_tags()
+
+    assert result == tags
+    api_get.assert_called_once_with("organisation/organisation-tags", params=None, result_type=Page[OrganisationTag])
 
 
 @patch.object(ApiClient, "get_paged_iterator")
-def test_list_projects_tags_anyof_accepts_project_tag_instances(
+def test_list_projects_tags_anyof_accepts_organisation_tag_instances(
     api_get_paged: MagicMock, user_client: EncordUserClient
 ) -> None:
     api_get_paged.return_value = iter([])
-    tags = [ProjectTag(uuid=uuid.uuid4(), name=name) for name in ["alpha", "beta"]]
+    tags = [OrganisationTag(uuid=uuid.uuid4(), name=name) for name in ["alpha", "beta"]]
 
     list(user_client.list_projects(tags_anyof=tags))
 
     _, call_kwargs = api_get_paged.call_args
     assert call_kwargs["params"].tags_anyof == ["alpha", "beta"]
+
+
+def test_project_tag_is_an_alias_of_organisation_tag() -> None:
+    assert ProjectTag is OrganisationTag
+
+
+@patch.object(ApiClient, "post")
+def test_create_organisation_tag_posts_expected_payload(api_post: MagicMock, user_client: EncordUserClient) -> None:
+    created = OrganisationTag(uuid=uuid.uuid4(), name="batch-3")
+    api_post.return_value = created
+
+    result = user_client.create_organisation_tag("batch-3", description="Batch 3 of the rollout")
+
+    assert result == created
+    api_post.assert_called_once_with(
+        "organisation/organisation-tags",
+        params=None,
+        payload=CreateOrganisationTagPayload(name="batch-3", description="Batch 3 of the rollout"),
+        result_type=OrganisationTag,
+    )
+
+
+def test_create_organisation_tag_payload_omits_missing_description() -> None:
+    assert CreateOrganisationTagPayload(name="batch-3").to_dict() == {"name": "batch-3"}
+    assert CreateOrganisationTagPayload(name="batch-3", description="d").to_dict() == {
+        "name": "batch-3",
+        "description": "d",
+    }
+
+
+@pytest.mark.parametrize("as_str", [False, True], ids=["UUID", "str"])
+@patch.object(ApiClient, "get")
+@patch.object(ApiClient, "delete")
+def test_delete_organisation_tag_by_uuid_does_not_list(
+    api_delete: MagicMock, api_get: MagicMock, user_client: EncordUserClient, as_str: bool
+) -> None:
+    tag_uuid = uuid.uuid4()
+
+    user_client.delete_organisation_tag(tag_uuid=str(tag_uuid) if as_str else tag_uuid)
+
+    api_get.assert_not_called()
+    api_delete.assert_called_once_with(f"organisation/organisation-tags/{tag_uuid}", params=None, result_type=None)
+
+
+@patch.object(ApiClient, "get")
+@patch.object(ApiClient, "delete")
+def test_delete_organisation_tag_by_instance_does_not_list(
+    api_delete: MagicMock, api_get: MagicMock, user_client: EncordUserClient
+) -> None:
+    tag = OrganisationTag(uuid=uuid.uuid4(), name="batch-3")
+
+    user_client.delete_organisation_tag(tag)
+
+    api_get.assert_not_called()
+    api_delete.assert_called_once_with(f"organisation/organisation-tags/{tag.uuid}", params=None, result_type=None)
+
+
+@pytest.mark.parametrize("bad_tag", [pytest.param("batch-3", id="str"), pytest.param(uuid.uuid4(), id="UUID")])
+@patch.object(ApiClient, "get")
+@patch.object(ApiClient, "delete")
+def test_delete_organisation_tag_rejects_positional_identifiers(
+    api_delete: MagicMock, api_get: MagicMock, user_client: EncordUserClient, bad_tag: object
+) -> None:
+    with pytest.raises(TypeError, match="OrganisationTag"):
+        user_client.delete_organisation_tag(bad_tag)  # type: ignore[arg-type]
+
+    api_get.assert_not_called()
+    api_delete.assert_not_called()
+
+
+@patch.object(ApiClient, "get")
+@patch.object(ApiClient, "delete")
+def test_delete_organisation_tag_by_name_resolves_uuid_from_listing(
+    api_delete: MagicMock, api_get: MagicMock, user_client: EncordUserClient
+) -> None:
+    other = OrganisationTag(uuid=uuid.uuid4(), name="batch-2")
+    target = OrganisationTag(uuid=uuid.uuid4(), name="batch-3")
+    api_get.return_value = Page(results=[other, target])
+
+    user_client.delete_organisation_tag(tag_name="batch-3")
+
+    api_get.assert_called_once_with("organisation/organisation-tags", params=None, result_type=Page[OrganisationTag])
+    api_delete.assert_called_once_with(f"organisation/organisation-tags/{target.uuid}", params=None, result_type=None)
+
+
+@patch.object(ApiClient, "get")
+@patch.object(ApiClient, "delete")
+def test_delete_organisation_tag_by_unknown_name_raises(
+    api_delete: MagicMock, api_get: MagicMock, user_client: EncordUserClient
+) -> None:
+    api_get.return_value = Page(results=[OrganisationTag(uuid=uuid.uuid4(), name="batch-2")])
+
+    with pytest.raises(encord.exceptions.ResourceNotFoundError):
+        user_client.delete_organisation_tag(tag_name="batch-3")
+
+    api_delete.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [pytest.param({}, id="neither"), pytest.param({"tag_name": "batch-3", "tag_uuid": uuid.uuid4()}, id="both")],
+)
+@patch.object(ApiClient, "get")
+@patch.object(ApiClient, "delete")
+def test_delete_organisation_tag_requires_exactly_one_identifier(
+    api_delete: MagicMock, api_get: MagicMock, user_client: EncordUserClient, kwargs: dict
+) -> None:
+    with pytest.raises(ValueError, match="Exactly one of"):
+        user_client.delete_organisation_tag(**kwargs)
+
+    api_get.assert_not_called()
+    api_delete.assert_not_called()

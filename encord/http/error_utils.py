@@ -18,6 +18,7 @@ from encord.exceptions import (
     ModelWeightsInconsistentError,
     MultiLabelLimitError,
     OperationNotAllowed,
+    RateLimitExceededError,
     ResourceExistsError,
     ResourceNotFoundError,
     SshKeyNotFound,
@@ -30,6 +31,7 @@ from encord.http.common import RequestContext
 # Error messages
 AUTHENTICATION_ERROR = ["AUTHENTICATION_ERROR"]
 AUTHORISATION_ERROR = ["AUTHORISATION_ERROR"]
+RATE_LIMIT_ERROR = ["RATE_LIMIT_ERROR"]
 RESOURCE_NOT_FOUND_ERROR = ["RESOURCE_NOT_FOUND_ERROR"]
 METHOD_NOT_ALLOWED_ERROR = ["METHOD_NOT_ALLOWED_ERROR"]
 UNKNOWN_ERROR = ["UNKNOWN_ERROR"]
@@ -69,6 +71,13 @@ def check_error_response(response, context: Optional[RequestContext] = None, pay
 
     if response == AUTHORISATION_ERROR:
         raise AuthorisationError("You are not authorised to access this asset.", context=context)
+
+    if response == RATE_LIMIT_ERROR:
+        # Rate limits the API rejects from inside a request handler come back through the legacy
+        # envelope, which has no room for the `Retry-After` the server sends as a header - hence no
+        # back-off hint for the caller here.
+        message = payload if isinstance(payload, str) and payload else "Rate limit exceeded."
+        raise RateLimitExceededError(message=message, context=context)
 
     if response == RESOURCE_NOT_FOUND_ERROR:
         if payload:

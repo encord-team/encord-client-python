@@ -17,6 +17,7 @@ from uuid import UUID
 from encord.client import EncordClientProject
 from encord.collection import ProjectCollection
 from encord.common.deprecated import deprecated
+from encord.common.organisation_tags import resolve_organisation_tag_uuid
 from encord.common.utils import ensure_list, ensure_uuid_list
 from encord.filter_preset import ProjectFilterPreset
 from encord.http.bundle import Bundle
@@ -59,11 +60,11 @@ from encord.orm.project import (
     CopyLabelsOptions,
     LabelClassificationsEntry,
     ListBranchesParams,
+    OrganisationTag,
     ProjectBranchResult,
     ProjectDataset,
     ProjectDTO,
     ProjectStatus,
-    ProjectTag,
     ProjectType,
 )
 from encord.orm.project import Project as OrmProject
@@ -102,7 +103,7 @@ class Project:
         self._project_instance = project_instance
         self._ontology_internal = ontology
         self._api_client = api_client
-        self._tags: Optional[List[ProjectTag]] = None
+        self._tags: Optional[List[OrganisationTag]] = None
 
         if project_instance.workflow:
             self._workflow = Workflow(api_client, project_instance.project_hash, project_instance.workflow)
@@ -883,23 +884,90 @@ class Project:
 
         return label_rows
 
-    def get_tags(self, use_cache: bool = True) -> List[ProjectTag]:
-        """Get the tags assigned to the project.
+    def get_organisation_tags(self, use_cache: bool = True) -> List[OrganisationTag]:
+        """Get the organization tags attached to the project.
 
         Args:
             use_cache: If ``True`` (default), returns the cached result from a previous call.
                 Set to ``False`` to force a fresh fetch from the API.
 
         Returns:
-            List[ProjectTag]: The tags assigned to this project.
+            List[OrganisationTag]: The tags attached to this project.
         """
         if self._tags is None or not use_cache:
             self._tags = self._api_client.get(
                 f"projects/{self.project_hash}/tags",
                 params=None,
-                result_type=Page[ProjectTag],
+                result_type=Page[OrganisationTag],
             ).results
         return self._tags
+
+    @deprecated(version="0.1.205", alternative=".get_organisation_tags")
+    def get_tags(self, use_cache: bool = True) -> List[OrganisationTag]:
+        """DEPRECATED: Renamed to :meth:`encord.project.Project.get_organisation_tags`, which returns the same
+        tags, to distinguish from the project's issue tags.
+
+        Args:
+            use_cache: If ``True`` (default), returns the cached result from a previous call.
+
+        Returns:
+            List[OrganisationTag]: The tags attached to this project.
+        """
+        return self.get_organisation_tags(use_cache=use_cache)
+
+    def add_organisation_tag(
+        self,
+        tag: Optional[OrganisationTag] = None,
+        *,
+        tag_name: Optional[str] = None,
+        tag_uuid: Optional[Union[UUID, str]] = None,
+    ) -> None:
+        """Attach an existing organization tag to this project.
+
+        Pass the tag itself, or exactly one of ``tag_name`` or ``tag_uuid``. Create tags with
+        :meth:`encord.user_client.EncordUserClient.create_organisation_tag` or find them with
+        :meth:`encord.user_client.EncordUserClient.list_organisation_tags`. Attaching a tag that is already
+        attached is a no-op. Requires project admin.
+
+        Args:
+            tag: The tag to attach, as returned by ``create_organisation_tag`` or ``list_organisation_tags``.
+            tag_name: Name of the tag to attach.
+            tag_uuid: Unique identifier of the tag to attach.
+
+        Raises:
+            ValueError: If the tag is not identified by exactly one of ``tag``, ``tag_name`` or ``tag_uuid``.
+            TypeError: ``tag`` is not an :class:`encord.orm.project.OrganisationTag`.
+            encord.exceptions.ResourceNotFoundError: No tag with this name or UUID exists in the organization.
+        """
+        resolved_uuid = resolve_organisation_tag_uuid(self._api_client, tag=tag, tag_name=tag_name, tag_uuid=tag_uuid)
+        self._api_client.put(f"projects/{self.project_hash}/tags/{resolved_uuid}", params=None, payload=None)
+        self._tags = None
+
+    def remove_organisation_tag(
+        self,
+        tag: Optional[OrganisationTag] = None,
+        *,
+        tag_name: Optional[str] = None,
+        tag_uuid: Optional[Union[UUID, str]] = None,
+    ) -> None:
+        """Detach an organization tag from this project.
+
+        Pass the tag itself, or exactly one of ``tag_name`` or ``tag_uuid``. Detaching a tag that is not attached
+        is a no-op. The tag itself is not deleted. Requires project admin.
+
+        Args:
+            tag: The tag to detach, as returned by ``get_organisation_tags`` or ``list_organisation_tags``.
+            tag_name: Name of the tag to detach.
+            tag_uuid: Unique identifier of the tag to detach.
+
+        Raises:
+            ValueError: If the tag is not identified by exactly one of ``tag``, ``tag_name`` or ``tag_uuid``.
+            TypeError: ``tag`` is not an :class:`encord.orm.project.OrganisationTag`.
+            encord.exceptions.ResourceNotFoundError: No tag with this name or UUID exists in the organization.
+        """
+        resolved_uuid = resolve_organisation_tag_uuid(self._api_client, tag=tag, tag_name=tag_name, tag_uuid=tag_uuid)
+        self._api_client.delete(f"projects/{self.project_hash}/tags/{resolved_uuid}", params=None, result_type=None)
+        self._tags = None
 
     def get_issue_tags(self) -> Iterable[IssueTag]:
         """Get the issue tags linked to a Project.

@@ -1,4 +1,5 @@
 from copy import deepcopy
+from datetime import datetime, timezone
 from typing import cast
 from unittest.mock import Mock
 
@@ -6,6 +7,7 @@ import pytest
 from deepdiff import DeepDiff
 
 from encord.common.bitmask_operations.bitmask_operations import _rle_to_string, ranges_to_rle_counts
+from encord.common.time_parser import format_datetime_to_long_string
 from encord.constants.enums import DataType, SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects import Classification, LabelRowV2, Object
@@ -169,6 +171,95 @@ def test_parse_scene_image_labels_from_data_unit_stream_start_frame_key(ontology
     assert len(image_space.get_object_instances()) == 1
     annotation = next(image_space.get_annotations("object"))
     assert annotation.coordinates == BoundingBoxCoordinates(height=0.4, width=0.5, top_left_x=0.1, top_left_y=0.2)
+
+
+@pytest.mark.parametrize("with_object", [False, True], ids=["classification-only", "mixed-object"])
+def test_scene_image_classification_compact_roundtrip(ontology, with_object):
+    label_row = LabelRowV2(SCENE_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(SCENE_NO_LABELS)
+    image_space = label_row.get_space(id="path/to/image1.jpg", type_="image")
+    classification = text_classification.create_instance()
+    classification.set_answer("Scene answer")
+    created_at = datetime(2024, 1, 1, 12, tzinfo=timezone.utc)
+    edited_at = datetime(2024, 1, 2, 13, tzinfo=timezone.utc)
+    image_space.put_classification_instance(
+        classification,
+        created_at=created_at,
+        created_by="creator@example.com",
+        last_edited_at=edited_at,
+        last_edited_by="editor@example.com",
+        confidence=0.75,
+        manual_annotation=False,
+    )
+    coordinates = BoundingBoxCoordinates(height=0.4, width=0.5, top_left_x=0.1, top_left_y=0.2)
+    box = box_with_attributes_ontology_item.create_instance()
+    if with_object:
+        image_space.put_object_instance(box, coordinates=coordinates)
+
+    result = label_row.to_encord_dict()
+    expected_answers = {
+        classification.classification_hash: {
+            "classificationHash": classification.classification_hash,
+            "featureHash": "jPOcEsbw",
+            "classifications": [
+                {
+                    "name": "Text classification",
+                    "value": "text_classification",
+                    "answers": "Scene answer",
+                    "featureHash": "OxrtEM+v",
+                    "manualAnnotation": True,
+                }
+            ],
+            "range": [],
+            "spaces": {image_space.space_id: {"range": [[0, 0]], "type": "frame"}},
+            "createdAt": format_datetime_to_long_string(created_at),
+            "createdBy": "creator@example.com",
+            "lastEditedAt": format_datetime_to_long_string(edited_at),
+            "lastEditedBy": "editor@example.com",
+            "confidence": 0.75,
+            "manualAnnotation": False,
+        }
+    }
+    assert result["classification_answers"] == expected_answers
+    assert result["spaces"][image_space.space_id]["labels"] == {"objects": [], "classifications": []}
+    frame_labels = result["data_units"][SCENE_METADATA.data_hash]["labels"]
+    if with_object:
+        assert set(frame_labels) == {"camera1#10"}
+        assert frame_labels["camera1#10"]["classifications"] == []
+        assert [obj["objectHash"] for obj in frame_labels["camera1#10"]["objects"]] == [box.object_hash]
+    else:
+        assert frame_labels == {}
+
+    restored = LabelRowV2(SCENE_METADATA, Mock(), ontology)
+    restored.from_labels_dict(result)
+    restored_space = restored.get_space(id=image_space.space_id, type_="image")
+    for space in (image_space, restored_space):
+        instances = space.get_classification_instances()
+        assert len(instances) == 1
+        assert instances[0].get_answer() == "Scene answer"
+        annotations = list(space.get_annotations("classification"))
+        assert len(annotations) == 1
+        annotation = annotations[0]
+        assert annotation.frame == 0
+        assert annotation.classification_hash == classification.classification_hash
+        assert annotation.created_at == created_at
+        assert annotation.created_by == "creator@example.com"
+        assert annotation.last_edited_at == edited_at
+        assert annotation.last_edited_by == "editor@example.com"
+        assert annotation.confidence == 0.75
+        assert annotation.manual_annotation is False
+        objects = list(space.get_annotations("object"))
+        assert len(objects) == int(with_object)
+        if with_object:
+            assert objects[0].coordinates == coordinates
+            assert objects[0].object_hash == box.object_hash
+
+    assert restored.to_encord_dict()["classification_answers"] == expected_answers
+    next(restored_space.get_annotations("classification")).last_edited_by = "updated@example.com"
+    assert (
+        restored.to_encord_dict()["classification_answers"][classification.classification_hash]["lastEditedBy"]
+        == "updated@example.com"
+    )
 
 
 def test_parse_scene_image_labels_from_data_unit_uri_key(ontology):

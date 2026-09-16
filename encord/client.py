@@ -154,6 +154,19 @@ def _validate_project_user_role_for_write(user_role: ProjectUserRole) -> None:
         raise ValueError("ProjectUserRole.UNKNOWN cannot be used when adding users or groups to a project.")
 
 
+def _long_polling_retry_delay_seconds(error: Exception) -> int:
+    """How long to wait before retrying a long-polling request that failed.
+
+    A rate limit is one of the failures these loops absorb, and it is the one that says how long
+    to wait. Honor that: the retry budget is only `LONG_POLLING_RESPONSE_RETRY_N` attempts, so
+    coming back before the caller's bucket has refilled would spend it without ever succeeding.
+    """
+    if isinstance(error, encord.exceptions.RateLimitExceededError) and error.retry_after:
+        return max(LONG_POLLING_SLEEP_ON_FAILURE_SECONDS, error.retry_after)
+
+    return LONG_POLLING_SLEEP_ON_FAILURE_SECONDS
+
+
 class EncordClient:
     """Encord client. Allows you to query db items associated
     with a project (e.g. label rows, datasets).
@@ -350,13 +363,17 @@ class EncordClientDataset(EncordClient):
                     return res
 
                 failed_requests_count = 0
-            except (requests.exceptions.RequestException, encord.exceptions.RequestException):
+            except (
+                requests.exceptions.RequestException,
+                encord.exceptions.RequestException,
+                encord.exceptions.RateLimitExceededError,
+            ) as e:
                 failed_requests_count += 1
 
                 if failed_requests_count >= LONG_POLLING_RESPONSE_RETRY_N:
                     raise
 
-                time.sleep(LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
+                time.sleep(_long_polling_retry_delay_seconds(e))
 
     def upload_video(
         self,
@@ -784,13 +801,17 @@ class EncordClientDataset(EncordClient):
                     logger.info("Processed all files, dataset data linking and task creation is performed, please wait")
 
                 failed_requests_count = 0
-            except (requests.exceptions.RequestException, encord.exceptions.RequestException):
+            except (
+                requests.exceptions.RequestException,
+                encord.exceptions.RequestException,
+                encord.exceptions.RateLimitExceededError,
+            ) as e:
                 failed_requests_count += 1
 
                 if failed_requests_count >= LONG_POLLING_RESPONSE_RETRY_N:
                     raise
 
-                time.sleep(LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
+                time.sleep(_long_polling_retry_delay_seconds(e))
 
     def update_data_item(self, data_hash: str, new_title: str) -> bool:
         """This function is documented in :meth:`encord.dataset.Dataset.update_data_item`."""

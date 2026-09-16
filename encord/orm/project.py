@@ -406,16 +406,33 @@ class TaskPriorityParams(BaseDTO):
     priorities: List[Tuple[str, float]]
 
 
-class ProjectTag(BaseDTO):
-    """A tag assigned to a project.
+class OrganisationTag(BaseDTO):
+    """A tag defined at the organization level. It can be attached to projects or to storage folders.
 
     Args:
         uuid: Unique identifier of the tag.
-        name: Human-readable name of the tag.
+        name: Human-readable name of the tag. Unique within the organization.
     """
 
     uuid: UUID
     name: str
+
+
+ProjectTag = OrganisationTag
+"""Deprecated since 0.1.205: use :class:`OrganisationTag`. Kept as an alias so existing imports and
+``isinstance`` checks keep working."""
+
+
+class CreateOrganisationTagPayload(BaseDTO):
+    """Payload for creating an organization tag.
+
+    Args:
+        name: Human-readable name of the tag. Must be unique within the organization.
+        description: Optional free-text description of the tag.
+    """
+
+    name: str
+    description: Optional[str] = None
 
 
 class AddProjectIssueTagsPayload(BaseDTO):

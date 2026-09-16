@@ -108,11 +108,11 @@ class PathElement(BaseDTO):
 
 
 class TimeSeriesChannelViewSettingsBase(BaseDTO):
-    """Settings shared by all time-series channel render styles."""
+    """Optional channel overrides; omitted label/color use the CSV header and editor palette."""
 
-    label: str = Field(min_length=1, max_length=1024)
-    color: str
-    hidden: bool
+    label: Optional[str] = Field(default=None, min_length=1, max_length=1024)
+    color: Optional[str] = None
+    hidden: bool = False
 
     @dto_validator()
     def validate_color(cls, values):
@@ -128,14 +128,14 @@ class TimeSeriesLineChannelViewSettings(TimeSeriesChannelViewSettingsBase):
     """Render a time-series channel as a line."""
 
     style: Literal["line"] = "line"
-    line_width: float = Field(ge=0.5, le=6)
+    line_width: float = Field(default=1.5, ge=0.5, le=6)
 
 
 class TimeSeriesPointsChannelViewSettings(TimeSeriesChannelViewSettingsBase):
     """Render a time-series channel as points."""
 
     style: Literal["points"] = "points"
-    point_radius: float = Field(ge=1, le=8)
+    point_radius: float = Field(default=2, ge=1, le=8)
 
 
 TimeSeriesChannelViewSettings = Union[
@@ -145,9 +145,19 @@ TimeSeriesChannelViewSettings = Union[
 
 
 class TimeSeriesViewSettings(BaseDTO):
-    """Persisted visualization settings for a time-series storage item."""
+    """Persisted visualization settings for a time-series storage item.
 
-    channels: Dict[str, TimeSeriesChannelViewSettings] = Field(max_length=100)
+    Channel keys are CSV header names. Channel headers must be unique.
+    Omitted style defaults to line.
+    """
+
+    channels: Dict[str, TimeSeriesChannelViewSettings]
+
+    @dto_validator()
+    def validate_channel_count(cls, values):
+        if isinstance(values, dict) and isinstance(values.get("channels"), dict) and len(values["channels"]) > 100:
+            raise ValueError("channels must contain at most 100 entries")
+        return values
 
 
 class StorageFolder(BaseDTO):

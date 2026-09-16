@@ -7,6 +7,25 @@ from encord.objects import LabelRowV2
 from tests.objects.common import BASE_LABEL_ROW_METADATA
 
 
+def expected_compact_labels(legacy_labels: dict) -> dict:
+    """Compact only label blobs in a fixture copy, leaving all answer payloads intact."""
+    expected = deepcopy(legacy_labels)
+    for container in [*expected["data_units"].values(), *expected.get("spaces", {}).values()]:
+        labels = container["labels"]
+        if "objects" in labels:
+            # Root image/image-group data units retain their flat blob, even without objects.
+            assert set(labels) == {"objects", "classifications"}
+            labels["classifications"] = []
+        else:
+            for frame, blob in list(labels.items()):
+                assert set(blob) == {"objects", "classifications"}
+                if blob["objects"]:
+                    blob["classifications"] = []
+                else:
+                    del labels[frame]
+    return expected
+
+
 def validate_label_row_serialisation(label_row: LabelRowV2) -> None:
     """
     Validates that a LabelRowV2 can be serialized to a labels dict and deserialized back without loss of information.

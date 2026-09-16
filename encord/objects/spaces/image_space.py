@@ -13,11 +13,8 @@ from encord.objects.coordinates import (
     get_geometric_coordinates_from_frame_object_dict,
 )
 from encord.objects.frames import Ranges
-from encord.objects.label_utils import create_frame_classification_dict, create_frame_object_dict
-from encord.objects.spaces.annotation.base_annotation import (
-    _AnnotationData,
-    _AnnotationMetadata,
-)
+from encord.objects.label_utils import create_frame_object_dict
+from encord.objects.spaces.annotation.base_annotation import _AnnotationMetadata
 from encord.objects.spaces.annotation.geometric_annotation import (
     _GeometricAnnotationData,
     _GeometricObjectAnnotation,
@@ -29,7 +26,6 @@ from encord.objects.spaces.types import ImageSpaceInfo, SceneImageSpaceInfo, Spa
 from encord.objects.types import (
     AttributeDict,
     ClassificationAnswer,
-    FrameClassification,
     FrameObject,
     LabelBlob,
     ObjectAnswer,
@@ -286,34 +282,8 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
 
         return frame_object_dict
 
-    def _to_encord_classification(
-        self,
-        classification_instance: ClassificationInstance,
-        frame_classification_annotation_data: _AnnotationData,
-    ) -> FrameClassification:
-        from encord.objects import Classification
-        from encord.objects.attributes import Attribute
-
-        ontology_hash = classification_instance._ontology_classification.feature_node_hash
-        ontology_classification = self._label_row._ontology.structure.get_child_by_hash(
-            ontology_hash, type_=Classification
-        )
-
-        attribute_hash = classification_instance.ontology_item.attributes[0].feature_node_hash
-        attribute = self._label_row._ontology.structure.get_child_by_hash(attribute_hash, type_=Attribute)
-
-        frame_object_dict = create_frame_classification_dict(
-            ontology_classification=ontology_classification,
-            classification_instance_annotation=frame_classification_annotation_data.annotation_metadata,
-            classification_hash=classification_instance.classification_hash,
-            attribute=attribute,
-        )
-
-        return frame_object_dict
-
     def _build_frame_label_dict(self) -> LabelBlob:
         object_list = []
-        classification_list = []
 
         for object_hash, frame_object_annotation_data in self._object_hash_to_annotation_data.items():
             space_object = self._objects_map[object_hash]
@@ -323,24 +293,9 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
                 )
             )
 
-        for (
-            classification_hash,
-            frame_classification_annotation_data,
-        ) in self._global_classification_hash_to_annotation_data.items():
-            space_classification = self._classifications_map[classification_hash]
-            if space_classification.is_global():
-                continue
-
-            classification_list.append(
-                self._to_encord_classification(
-                    classification_instance=space_classification,
-                    frame_classification_annotation_data=frame_classification_annotation_data,
-                )
-            )
-
         return LabelBlob(
             objects=object_list,
-            classifications=classification_list,
+            classifications=[],
         )
 
     def _to_space_dict(self) -> Union[ImageSpaceInfo, SceneImageSpaceInfo]:
@@ -361,9 +316,7 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
             space_type=SpaceType.IMAGE,
             width=self._width,
             height=self._height,
-            labels={
-                "0": frame_label,
-            },
+            labels={"0": frame_label} if frame_label["objects"] else {},
         )
 
     def _parse_space_dict(

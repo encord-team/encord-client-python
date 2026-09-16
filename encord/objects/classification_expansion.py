@@ -36,9 +36,6 @@ def expand_classification_answers_into_frame_labels(label: Dict[str, Any]) -> Di
 
     for answer in classification_answers.values():
         frame_classification = _to_frame_classification(answer)
-        if frame_classification is None:
-            continue
-
         resolved_ranges = resolve_classification_ranges(answer)
         if resolved_ranges is None:
             continue
@@ -59,13 +56,11 @@ def expand_classification_answers_into_frame_labels(label: Dict[str, Any]) -> Di
     return label
 
 
-def _to_frame_classification(answer: ClassificationAnswer) -> Optional[FrameClassification]:
+def _to_frame_classification(answer: ClassificationAnswer) -> FrameClassification:
     attributes = answer.get("classifications") or []
-    if not attributes:
-        return None
-
-    name = attributes[0].get("name") or ""
-    value = attributes[0].get("value") or ""
+    # Legacy writers can leave attributes empty while still recording a classification's placement.
+    name = (attributes[0].get("name") or "") if attributes else ""
+    value = (attributes[0].get("value") or "") if attributes else ""
     classification_hash = answer["classificationHash"]
     feature_hash = answer["featureHash"]
     created_at = answer.get("createdAt") or ""

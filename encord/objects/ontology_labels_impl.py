@@ -56,7 +56,6 @@ from encord.http.limits import (
     LABEL_ROW_BUNDLE_GET_LIMIT,
 )
 from encord.objects import Shape
-from encord.objects.attributes import Attribute
 from encord.objects.bundled_operations import (
     BundledCreateRowsPayload,
     BundledGetRowsPayload,
@@ -2100,6 +2099,9 @@ class LabelRowV2:
     def to_encord_dict(self) -> Dict[str, Any]:
         """Convert the label row to a dictionary in Encord format.
 
+        Classifications are serialized only in ``classification_answers``, with their ranges and metadata.
+        Per-frame classification access remains available through the label row's frame and annotation APIs.
+
         This is an internal helper function. Likely this should not be used by a user. To upload labels use the
         :meth:`encord.objects.ontology_labels_impl.LabelRowV2.save` function.
 
@@ -2917,7 +2919,13 @@ class LabelRowV2:
             or data_type == DataType.PDF
             or data_type == DataType.SCENE
         ):
-            for frame in self._frame_to_hashes.keys():
+            # Classifications carry their own ranges; only objects need frame label entries.
+            object_frames = {
+                frame
+                for object_instance in self._objects_map.values()
+                for frame in object_instance.get_annotation_frames()
+            }
+            for frame in sorted(object_frames):
                 ret[str(frame)] = self._to_encord_label(frame)
 
         elif data_type == DataType.AUDIO or data_type == DataType.TIME_SERIES or data_type == DataType.PLAIN_TEXT:
@@ -2938,7 +2946,7 @@ class LabelRowV2:
         ret: Dict[str, Any] = {}
 
         ret["objects"] = self._to_encord_objects_list(frame)
-        ret["classifications"] = self._to_encord_classifications_list(frame)
+        ret["classifications"] = []
 
         return ret
 
@@ -3021,43 +3029,6 @@ class LabelRowV2:
             encord_object["circle"] = coordinates.to_dict()
         else:
             raise NotImplementedError(f"adding coordinatees for this type not yet implemented {type(coordinates)}")
-
-    def _to_encord_classifications_list(self, frame: int) -> List:
-        ret: List[Dict[str, Any]] = []
-
-        classifications = self._get_classification_instances(include_spaces=False, filter_frames=frame)
-        for classification in classifications:
-            encord_classification = self._to_encord_classification(classification, frame)
-            ret.append(encord_classification)
-
-        return ret
-
-    def _to_encord_classification(self, classification: ClassificationInstance, frame: int) -> Dict[str, Any]:
-        ret: Dict[str, Any] = {}
-
-        annotation = classification.get_annotation(frame)
-        classification_feature_hash = classification.ontology_item.feature_node_hash
-        ontology_classification = self._ontology.structure.get_child_by_hash(
-            classification_feature_hash, type_=Classification
-        )
-        attribute_hash = classification.ontology_item.attributes[0].feature_node_hash
-        ontology_attribute = self._ontology.structure.get_child_by_hash(attribute_hash, type_=Attribute)
-
-        ret["name"] = ontology_attribute.name
-        ret["value"] = _lower_snake_case(ontology_attribute.name)
-        ret["createdAt"] = format_datetime_to_long_string_optional(annotation.created_at)
-        ret["createdBy"] = annotation.created_by
-        ret["confidence"] = annotation.confidence
-        ret["featureHash"] = ontology_classification.feature_node_hash
-        ret["classificationHash"] = classification.classification_hash
-        ret["manualAnnotation"] = annotation.manual_annotation
-
-        if annotation.last_edited_at is not None:
-            ret["lastEditedAt"] = format_datetime_to_long_string_optional(annotation.last_edited_at)
-        if annotation.last_edited_by is not None:
-            ret["lastEditedBy"] = annotation.last_edited_by
-
-        return ret
 
     def _is_classification_present_on_frames(
         self, classification: Classification, frames: Frames

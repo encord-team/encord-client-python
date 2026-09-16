@@ -2,10 +2,14 @@ from copy import deepcopy
 from typing import Dict
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from encord import Project
 from encord.client import EncordClientProject
-from encord.objects import LabelRowV2
+from encord.objects import Classification, LabelRowV2
+from encord.ontology import Ontology
 from encord.orm.label_row import LabelRow, LabelRowMetadata
+from tests.objects.data.data_group.scene import SCENE_METADATA, SCENE_NO_LABELS
 from tests.test_data.label_rows_metadata_blurb import (
     LABEL_ROW_BLURB,
     LABEL_ROW_METADATA_BLURB,
@@ -179,3 +183,46 @@ def test_bundled_label_save_with_explicit_bundle_size(save_label_rows_mock: Magi
     assert args_1 is not None
     assert len(args_1["uids"]) == 1, "Expected 1 updates bundled in the first bundle"
     assert len(args_1["payload"]) == 1, "Expected 1 updates bundled in the fist bundle"
+
+
+@pytest.mark.parametrize("bundled", [False, True], ids=["immediate", "bundled"])
+@pytest.mark.parametrize("validate_before_saving", [False, True], ids=["no-validation", "validation"])
+def test_save_compact_payload_at_transport_boundary(
+    project: Project, all_types_ontology: Ontology, bundled: bool, validate_before_saving: bool
+):
+    row = LabelRowV2(SCENE_METADATA, project._client, all_types_ontology)
+    row.from_labels_dict(SCENE_NO_LABELS)
+    space = row.get_space(id="path/to/image1.jpg", type_="image")
+    classification = all_types_ontology.structure.get_child_by_hash("jPOcEsbw", Classification).create_instance()
+    classification.set_answer("Saved scene answer")
+    space.put_classification_instance(classification, created_by="creator@example.com", confidence=0.75)
+    expected_row = row.to_encord_dict()
+    bundle = project.create_bundle() if bundled else None
+
+    with patch.object(project._client._querier, "basic_setter") as setter:
+        row.save(bundle=bundle, validate_before_saving=validate_before_saving)
+        if bundle is not None:
+            setter.assert_not_called()
+            bundle.execute()
+
+    setter.assert_called_once_with(
+        LabelRow,
+        uid=[row.label_hash],
+        payload={
+            "multi_request": True,
+            "labels": [expected_row],
+            "validate_before_saving": validate_before_saving,
+        },
+        retryable=True,
+    )
+    saved_row = setter.call_args.kwargs["payload"]["labels"][0]
+    assert saved_row["data_units"][row.data_hash]["labels"] == {}
+    assert saved_row["spaces"][space.space_id]["labels"] == {"objects": [], "classifications": []}
+    answers = saved_row["classification_answers"]
+    assert set(answers) == {classification.classification_hash}
+    answer = answers[classification.classification_hash]
+    assert answer["classifications"][0]["answers"] == "Saved scene answer"
+    assert answer["range"] == []
+    assert answer["spaces"] == {space.space_id: {"range": [[0, 0]], "type": "frame"}}
+    assert answer["createdBy"] == "creator@example.com"
+    assert answer["confidence"] == 0.75

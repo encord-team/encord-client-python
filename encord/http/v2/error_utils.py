@@ -13,7 +13,7 @@ from encord.exceptions import (
     ResourceNotFoundError,
     UnknownException,
 )
-from encord.http.common import RequestContext
+from encord.http.common import RequestContext, parse_retry_after
 
 HTTP_BAD_REQUEST = 400
 HTTP_UNAUTHORIZED = 401
@@ -66,8 +66,6 @@ def handle_error_response(
         )
 
     if status_code == HTTP_TOO_MANY_REQUESTS:
-        retry_after_header = response_headers.get("Retry-After", "")
-        retry_after = int(retry_after_header) if retry_after_header.isdigit() else None
-        raise RateLimitExceededError(retry_after=retry_after, context=context)
+        raise RateLimitExceededError(retry_after=parse_retry_after(response_headers), context=context)
 
     raise UnknownException(message or "An unknown error occurred.", context=context)

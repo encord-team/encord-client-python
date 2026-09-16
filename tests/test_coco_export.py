@@ -1,6 +1,16 @@
+from dataclasses import replace
 from typing import Any, Dict
+from unittest.mock import Mock, PropertyMock, patch
 
+import pytest
+
+from encord.objects import LabelRowV2, Object
+from encord.objects.coordinates import BoundingBoxCoordinates
 from encord.objects.ontology_structure import OntologyStructure
+from encord.ontology import Ontology
+from encord.project import Project
+from tests.objects.common import BASE_LABEL_ROW_METADATA
+from tests.objects.data import video_with_classifications
 from tests.objects.data.data_1 import labels as BASE_LABEL_DICT
 from tests.objects.data.data_1 import ontology as BASE_ONTOLOGY_DICT
 
@@ -249,3 +259,52 @@ def test_coco_exporter_with_coco_extra():
 
     output = CocoExporter([BASE_LABEL_DICT], ontology_structure).export()
     assert output == EXPECTED_COCO_RESULT
+
+
+@pytest.mark.parametrize("include_object", [False, True], ids=["classification-only", "mixed-object-frame"])
+@pytest.mark.parametrize("answered", [False, True], ids=["unanswered", "answered"])
+def test_project_coco_export_preserves_classification_only_frames(
+    project: Project, all_types_ontology: Ontology, include_object: bool, answered: bool
+) -> None:
+    row = LabelRowV2(
+        replace(BASE_LABEL_ROW_METADATA, duration=0.08, frames_per_second=25.0, number_of_frames=2),
+        Mock(),
+        all_types_ontology,
+    )
+    row.from_labels_dict(video_with_classifications.labels)
+    if not answered:
+        row.get_classification_instances()[0].delete_answer()
+    if include_object:
+        box = all_types_ontology.structure.get_child_by_hash("MTA2MjAx", Object).create_instance()
+        box.set_for_frames(BoundingBoxCoordinates(height=0.4, width=0.5, top_left_x=0.1, top_left_y=0.2), frames=0)
+        row.add_object_instance(box)
+
+    compact = row.to_encord_dict()
+    data_unit = next(iter(compact["data_units"].values()))
+    assert set(data_unit["labels"]) == ({"0"} if include_object else set())
+
+    with (
+        patch.object(
+            Project, "ontology_structure", new_callable=PropertyMock, return_value=all_types_ontology.structure
+        ),
+        patch.object(project, "list_label_rows_v2", return_value=[row]),
+        patch.object(row, "initialise_labels"),
+    ):
+        output = project.export_coco_labels()
+
+    assert output["images"] == [
+        {
+            "coco_url": data_unit["data_link"],
+            "id": frame,
+            "video_title": data_unit["data_title"],
+            "file_name": f"videos/{data_unit['data_hash']}/{frame}.jpg",
+            "height": data_unit["height"],
+            "width": data_unit["width"],
+        }
+        for frame in (0, 1)
+    ]
+    assert len(output["annotations"]) == int(include_object)
+    if include_object:
+        assert output["annotations"][0]["image_id"] == 0
+        assert output["annotations"][0]["attributes"]["encord_track_uuid"] == box.object_hash
+    assert row.to_encord_dict() == compact

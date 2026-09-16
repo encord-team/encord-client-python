@@ -6,6 +6,7 @@ from typing_extensions import cast
 
 from encord.beta.scene import (
     CompositeScene,
+    FrameOfReferenceStream,
     ImageStream,
     PointCloudStream,
     Scene3DViewerTile,
@@ -57,6 +58,7 @@ def test_scene_reader_converts_internal_streams() -> None:
                     "id": "lidar",
                     "stream": {
                         "entityType": "point_cloud",
+                        "frameOfReferenceId": "lidar-frame",
                         "events": [
                             {
                                 "timestamp": 0,
@@ -71,11 +73,37 @@ def test_scene_reader_converts_internal_streams() -> None:
                     "id": "front",
                     "stream": {
                         "entityType": "image",
+                        "cameraId": "front-camera",
                         "events": [
                             {
                                 "timestamp": 0,
                                 "url": "gs://bucket/front-0.jpg",
                                 "signedUrl": "https://signed.example/front-0.jpg",
+                            }
+                        ],
+                    },
+                },
+                "front-camera": {
+                    "type": "event",
+                    "id": "front-camera",
+                    "stream": {
+                        "entityType": "camera_parameters",
+                        "frameOfReferenceId": "camera-frame",
+                        "events": [],
+                    },
+                },
+                "lidar-frame": {
+                    "type": "event",
+                    "id": "lidar-frame",
+                    "stream": {
+                        "entityType": "frame_of_reference",
+                        "events": [
+                            {
+                                "id": "lidar-frame",
+                                "parentFor": "ego",
+                                "timestamp": 0,
+                                "rotation": [0, 1, 0, -1, 0, 0, 0, 0, 1],
+                                "position": [1, 2, 3],
                             }
                         ],
                     },
@@ -113,11 +141,26 @@ def test_scene_reader_converts_internal_streams() -> None:
     point_cloud_stream = scene.get_stream("lidar", kind="point_cloud")
     image_stream = scene.get_stream("front", kind="image")
     time_series_stream = scene.get_stream("telemetry", kind="time_series")
+    frame_of_reference_stream = scene.get_stream("lidar-frame", kind="frame_of_reference")
+
     assert isinstance(point_cloud_stream, PointCloudStream)
     assert isinstance(image_stream, ImageStream)
     assert isinstance(time_series_stream, TimeSeriesStream)
+    assert isinstance(frame_of_reference_stream, FrameOfReferenceStream)
+
     assert point_cloud_stream.get_event(0).signed_url == "https://signed.example/lidar-0.pcd"
+    assert point_cloud_stream.frame_of_reference_id == "lidar-frame"
+
     assert image_stream.get_event(0).signed_url == "https://signed.example/front-0.jpg"
+    assert image_stream.frame_of_reference_id == "camera-frame"
+
+    assert frame_of_reference_stream.stream_id == "lidar-frame"
+    assert frame_of_reference_stream.num_events == 1
+    assert frame_of_reference_stream.get_event(0).frame_id == "lidar-frame"
+    assert frame_of_reference_stream.get_event(0).parent_frame_id == "ego"
+    assert frame_of_reference_stream.get_event(0).rotation == (0, 1, 0, -1, 0, 0, 0, 0, 1)
+    assert frame_of_reference_stream.get_event(0).position == (1, 2, 3)
+
     assert scene.view_settings is not None
     assert scene.view_settings.point_radius == 10
     assert time_series_stream.url == "gs://bucket/telemetry.csv"
@@ -396,6 +439,9 @@ def test_get_stream_raises_for_unknown_stream_id() -> None:
     with pytest.raises(KeyError, match="No time series stream with id 'telemetry'"):
         scene.get_stream("telemetry", kind="time_series")
 
+    with pytest.raises(KeyError, match="No frame of reference stream with id 'ego'"):
+        scene.get_stream("ego", kind="frame_of_reference")
+
 
 def test_find_stream_returns_none_for_unknown_stream_id() -> None:
     scene = CompositeScene(point_cloud_streams=[], image_streams=[])
@@ -403,6 +449,7 @@ def test_find_stream_returns_none_for_unknown_stream_id() -> None:
     assert scene.find_stream("lidar", kind="point_cloud") is None
     assert scene.find_stream("front", kind="image") is None
     assert scene.find_stream("telemetry", kind="time_series") is None
+    assert scene.find_stream("ego", kind="frame_of_reference") is None
 
 
 def test_get_event_raises_when_event_missing() -> None:

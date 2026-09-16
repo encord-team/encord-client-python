@@ -13,10 +13,11 @@ from requests import Session
 from requests.adapters import HTTPAdapter, Retry
 
 from encord.configs import BaseConfig
-from encord.exceptions import RequestException, ResourceNotFoundError
+from encord.exceptions import RateLimitExceededError, RequestException, ResourceNotFoundError
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
     RequestContext,
+    parse_retry_after,
 )
 from encord.http.error_utils import check_error_response
 from encord.http.query_methods import QueryMethods
@@ -240,6 +241,17 @@ class Querier:
                 res = session.send(req, timeout=timeouts, **settings)
             except Exception as e:
                 raise RequestException(f"Request session.send failed {req.method=} {req.url=}", context=context) from e
+
+            if res.status_code == requests.codes.too_many_requests:  # pylint: disable=no-member
+                # Rate limiting is the one error the legacy protocol can report as a real HTTP
+                # status rather than through the "HTTP 200 with the actual status in the body"
+                # envelope: the limiter rejects a request before the handler that would wrap it,
+                # and the infrastructure in front of the API can shed load on its own. Retries for
+                # this status are exhausted by the session's retry policy above, which then hands
+                # the last 429 back to us. Its body carries no legacy envelope - and need not even
+                # be JSON - so translate it here, before the envelope handling below reports it as
+                # an unknown server error.
+                raise RateLimitExceededError(retry_after=parse_retry_after(res.headers), context=context)
 
             try:
                 res_json = orjson.loads(res.content)

@@ -7,12 +7,15 @@ parsed, placed and serialised correctly.
 
 from copy import deepcopy
 from dataclasses import asdict
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
-from encord.objects import Classification, LabelRowV2
+from encord.objects import Classification, LabelRowV2, Object
+from encord.objects.classification_expansion import expand_classification_answers_into_frame_labels
 from encord.objects.constants import ROOT_SPACE_ID
+from encord.objects.coordinates import BoundingBoxCoordinates
 from encord.objects.frames import Range
 from encord.orm.label_row import LabelRowMetadata
+from encord.orm.storage import CustomerProvidedVideoMetadata
 from tests.objects.common import BASE_LABEL_ROW_METADATA
 from tests.objects.data import empty_video, video_with_classifications
 from tests.objects.data.all_types_ontology_structure import all_types_structure
@@ -21,6 +24,7 @@ from tests.objects.data.data_group.two_videos import (
     DATA_GROUP_WITH_TWO_VIDEOS_LABELS,
     DATA_GROUP_WITH_TWO_VIDEOS_METADATA,
 )
+from tests.objects.objects_test_utils import expected_compact_labels
 
 RADIO_CLASSIFICATION_HASH = "3AqiIPrF"
 TEXT_CLASSIFICATION = all_types_structure.get_child_by_hash("jPOcEsbw", Classification)
@@ -76,7 +80,62 @@ def test_video_classifications_are_parsed_without_frame_classifications(all_type
 
     # Dropping the per-frame classifications changes nothing, in either direction.
     assert compact.to_encord_dict() == expanded.to_encord_dict()
-    assert compact.to_encord_dict() == video_with_classifications.labels
+    serialised = compact.to_encord_dict()
+    assert serialised == expected_compact_labels(video_with_classifications.labels)
+
+    # Classification-only frames remain accessible before and after a compact round trip.
+    for row in (compact, expanded):
+        row.from_labels_dict(serialised)
+        for frame in (0, 1):
+            classification = row.get_frame_view(frame).get_classification_instances()[0]
+            assert classification.classification_hash == RADIO_CLASSIFICATION_HASH
+            assert classification.get_annotation(frame).created_by == "user1Hash"
+        assert row.to_encord_dict() == serialised
+
+    # Explicit dictionary expansion remains available without affecting subsequent exports.
+    expanded_dict = expand_classification_answers_into_frame_labels(deepcopy(serialised))
+    assert expanded_dict == video_with_classifications.labels
+    assert compact.to_encord_dict() == serialised
+
+
+def test_serialization_does_not_visit_classification_only_frames(all_types_ontology) -> None:
+    label_row = LabelRowV2.from_media_metadata(
+        all_types_ontology,
+        CustomerProvidedVideoMetadata(
+            width=100, height=100, fps=25, duration=400, mime_type="video/mp4", file_size=1000
+        ),
+    )
+    classification = TEXT_CLASSIFICATION.create_instance()
+    classification.set_answer("Whole video", attribute=TEXT_ATTRIBUTE)
+    classification.set_for_frames(Range(0, 9999), confidence=0.42)
+    label_row.add_classification_instance(classification)
+
+    box = all_types_structure.get_child_by_hash("MTA2MjAx", Object).create_instance()
+    box.set_for_frames(BoundingBoxCoordinates(height=0.4, width=0.5, top_left_x=0.1, top_left_y=0.2), frames=42)
+    label_row.add_object_instance(box)
+
+    with (
+        patch.object(classification, "get_annotation", side_effect=AssertionError("Expanded a classification")),
+        patch.object(label_row, "_to_encord_label", wraps=label_row._to_encord_label) as serialize_frame,
+    ):
+        serialised = label_row.to_encord_dict()
+
+    serialize_frame.assert_called_once_with(42)
+    labels = serialised["data_units"][label_row.data_hash]["labels"]
+    assert set(labels) == {"42"}
+    assert labels["42"]["classifications"] == []
+    assert labels["42"]["objects"][0]["objectHash"] == box.object_hash
+    answer = serialised["classification_answers"][classification.classification_hash]
+    assert answer["range"] == [[0, 9999]]
+    assert answer["confidence"] == 0.42
+    assert answer["classifications"][0]["answers"] == "Whole video"
+
+    label_row.from_labels_dict(serialised)
+    for frame in (0, 42, 9999):
+        restored = label_row.get_frame_view(frame).get_classification_instances()[0]
+        assert restored.classification_hash == classification.classification_hash
+        assert restored.get_annotation(frame).confidence == 0.42
+    assert label_row.to_encord_dict() == serialised
 
 
 def test_frame_classifications_are_ignored_when_they_contradict_the_answer(all_types_ontology) -> None:
@@ -145,6 +204,17 @@ def test_space_classifications_are_parsed_without_frame_classifications(ontology
     assert frame_placed.get_answer() == "Video answer"
 
     assert compact.to_encord_dict() == expanded.to_encord_dict()
+
+    serialised = compact.to_encord_dict()
+    compact.from_labels_dict(serialised)
+    for space_id in ("video-uuid", "image-uuid", "image-sequence-uuid", "dicom-uuid", "pdf-uuid"):
+        space = compact._space_map[space_id]
+        assert set(space._classifications_map) == set(expanded._space_map[space_id]._classifications_map)
+        assert list(space.get_annotations(type_="classification"))
+        for labels in serialised["spaces"][space_id]["labels"].values():
+            assert labels["objects"]
+            assert labels["classifications"] == []
+    assert compact.to_encord_dict() == serialised
 
 
 def test_data_group_root_classification_is_parsed_from_the_top_level_range(ontology) -> None:

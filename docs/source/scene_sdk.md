@@ -129,8 +129,18 @@ signed_url = front.get_event(timestamp=0).signed_url
 
 telemetry = scene.get_stream("telemetry", kind="time_series")
 csv_signed_url = telemetry.signed_url
+
+# Point-cloud and image streams expose the frame in which their data is expressed.
+lidar = scene.get_stream("lidar", kind="point_cloud")
+if lidar.frame_of_reference_id is not None:
+    lidar_frame = scene.get_stream(lidar.frame_of_reference_id, kind="frame_of_reference")
+    pose = lidar_frame.get_event(timestamp=0)
+    parent_frame_id = pose.parent_frame_id
+    rotation = pose.rotation  # 3x3, column-major
+    position = pose.position
 ```
 
 `get_stream` and `get_event` raise on missing entries. `find_stream` and `find_event` return
 ``None`` for the same lookups, and ``get_images_at_timestamp`` skips streams without a matching
-event.
+event. Frame-of-reference streams are also available in `scene.frame_of_reference_streams`.
+For image streams, `frame_of_reference_id` is resolved from the associated camera-parameters stream.

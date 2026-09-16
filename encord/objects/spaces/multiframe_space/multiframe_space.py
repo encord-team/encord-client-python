@@ -40,7 +40,7 @@ from encord.objects.frames import (
     ranges_to_list,
 )
 from encord.objects.internal_helpers import _infer_attribute_from_answer
-from encord.objects.label_utils import create_frame_classification_dict, create_frame_object_dict
+from encord.objects.label_utils import create_frame_object_dict
 from encord.objects.ontology_object_instance import AnswersForFrames, check_coordinate_type
 from encord.objects.spaces.annotation.base_annotation import _AnnotationData, _AnnotationMetadata
 from encord.objects.spaces.annotation.geometric_annotation import (
@@ -54,7 +54,6 @@ from encord.objects.spaces.types import SpaceInfo
 from encord.objects.types import (
     AttributeDict,
     ClassificationAnswer,
-    FrameClassification,
     FrameObject,
     LabelBlob,
     ObjectAnswer,
@@ -867,50 +866,20 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
 
         return frame_object
 
-    def _to_encord_classification(
-        self,
-        classification_instance: ClassificationInstance,
-        frame_classification_annotation_data: _AnnotationData,
-    ) -> FrameClassification:
-        from encord.objects import Classification
-        from encord.objects.attributes import Attribute
-
-        ontology_hash = classification_instance._ontology_classification.feature_node_hash
-        ontology_classification = self._label_row._ontology.structure.get_child_by_hash(
-            ontology_hash, type_=Classification
-        )
-
-        attribute_hash = classification_instance.ontology_item.attributes[0].feature_node_hash
-        attribute = self._label_row._ontology.structure.get_child_by_hash(attribute_hash, type_=Attribute)
-
-        frame_object_dict = create_frame_classification_dict(
-            ontology_classification=ontology_classification,
-            classification_instance_annotation=frame_classification_annotation_data.annotation_metadata,
-            classification_hash=classification_instance.classification_hash,
-            attribute=attribute,
-        )
-
-        return frame_object_dict
-
     def _build_frame_labels_dict(self) -> dict[str, LabelBlob]:
         """Export space to dictionary format."""
         labels: dict[str, LabelBlob] = {}
-        frames_with_objects = list(self._frames_to_object_hash_to_annotation_data.keys())
-        frames_with_classifications = list(self._frames_to_classification_hash_to_annotation_data.keys())
-        frames_with_both_objects_and_classifications = sorted(set(frames_with_objects + frames_with_classifications))
 
-        for frame in frames_with_both_objects_and_classifications:
-            frame_label = self._build_frame_label_dict(frame=frame)
-            labels[str(frame)] = frame_label
+        for frame in sorted(self._frames_to_object_hash_to_annotation_data):
+            if self._frames_to_object_hash_to_annotation_data[frame]:
+                labels[str(frame)] = self._build_frame_label_dict(frame=frame)
 
         return labels
 
     def _build_frame_label_dict(self, frame: int) -> LabelBlob:
         object_list: List[FrameObject] = []
-        classification_list: List[FrameClassification] = []
 
         objects_to_annotation_data = self._frames_to_object_hash_to_annotation_data.get(frame, {})
-        classifications_to_annotation_data = self._frames_to_classification_hash_to_annotation_data.get(frame, {})
 
         for object_hash, frame_object_annotation_data in objects_to_annotation_data.items():
             space_object = self._objects_map[object_hash]
@@ -922,18 +891,9 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
                 )
             )
 
-        for classification_hash, frame_classification_annotation_data in classifications_to_annotation_data.items():
-            space_classification = self._classifications_map[classification_hash]
-            classification_list.append(
-                self._to_encord_classification(
-                    classification_instance=space_classification,
-                    frame_classification_annotation_data=frame_classification_annotation_data,
-                )
-            )
-
         return LabelBlob(
             objects=object_list,
-            classifications=classification_list,
+            classifications=[],
         )
 
     def _to_object_answers(self, existing_object_answers: dict[str, ObjectAnswer]) -> Dict[str, ObjectAnswer]:

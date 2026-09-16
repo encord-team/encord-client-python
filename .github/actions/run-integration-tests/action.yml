@@ -25,9 +25,19 @@ inputs:
   robot-account-password:
     description: 'Password of the robot account for integration tests'
     required: true
+  google-credentials:
+    description: 'Server accounts credentials to get docker artifacts'
+    required: true
+  private-key-local-docker:
+    description: 'PRIVATE_KEY_LOCAL_DOCKER for dotenvx'
+    required: true
+  backend-repo-location:
+    description: 'backend repo location'
+    default: ./encord-backend
+    required: false
   integration-tests-location:
-    description: 'project of the backend repo.'
-    default: ./encord-backend/projects/sdk-integration-tests
+    description: 'relative to the backend repo'
+    default: projects/sdk-integration-tests
     required: false
   test-dir:
     description: 'Test directory of the integration tests project.'
@@ -47,6 +57,31 @@ runs:
   using: "composite"
 
   steps:
+    - name: Set up Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ inputs.google-credentials }}
+
+    - name: Configure Docker for Artifact Registry
+      run: gcloud --quiet auth configure-docker europe-west2-docker.pkg.dev
+      shell: bash
+
+    - name: Provide dotenvx decryption key
+      shell: bash
+      working-directory: ${{ inputs.backend-repo-location }}
+      env:
+        DOTENV_PRIVATE_KEY_LOCAL_DOCKER: ${{ inputs.private-key-local-docker }}
+      run: printf 'DOTENV_PRIVATE_KEY_LOCAL_DOCKER="%s"\n' "$DOTENV_PRIVATE_KEY_LOCAL_DOCKER" > .env.keys
+
+    - name: Spin up api server docker
+      id: backend
+      shell: bash
+      run: |
+        cores=$(nproc)
+        export CELERY_WORKERS=$(( cores / 2 > 4 ? cores / 2 : 4 ))
+        bash e2e.sh up -d --wait
+      working-directory: ${{ inputs.backend-repo-location }}/local-dev
+
     - name: Setup uv environment
       uses: ./.github/actions/setup-uv-environment
       with:
@@ -56,8 +91,10 @@ runs:
       uses: FedericoCarboni/setup-ffmpeg@v2
 
     - name: Run tests
+      env:
+        ENCORD_URL: http://127.0.0.1:6969
       run: |
-        cd ${{ inputs.integration-tests-location }}
+        cd ${{ inputs.backend-repo-location }}/${{ inputs.integration-tests-location }}
         export PRIVATE_KEY="${{ inputs.private-key }}"
         export PRIVATE_KEY_SERVICE_ACCOUNT="${{ inputs.private-key-service-account }}"
         export PRIVATE_KEY_NON_ORG='${{ inputs.private-key-non-org }}'
@@ -67,7 +104,7 @@ runs:
         uv sync
         uv add git+${{ inputs.sdk-repository-url }}
         source .venv/bin/activate
-        pytest --timeout=600 -n 4 ${{ inputs.test-dir }} --rootdir=${{ inputs.test-dir }} --verbose --junitxml=${{ inputs.test-report-file }}
+        pytest --timeout=600 -n auto ${{ inputs.test-dir }} --rootdir=${{ inputs.test-dir }} --verbose --junitxml=${{ inputs.test-report-file }}
       shell: bash
 
     - name: Upload report
@@ -75,11 +112,19 @@ runs:
       if: always()
       with:
         name: ${{ inputs.test-report-file }}
-        path: ${{ inputs.integration-tests-location }}/${{ inputs.test-report-file }}
+        path: ${{ inputs.backend-repo-location }}/${{ inputs.integration-tests-location }}/${{ inputs.test-report-file }}
 
     - name: Publish integration test report Python ${{ inputs.python-version }}
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
-        files: ${{ inputs.integration-tests-location }}/${{ inputs.test-report-file }}
+        files: ${{ inputs.backend-repo-location }}/${{ inputs.integration-tests-location }}/${{ inputs.test-report-file }}
         check_name: SDK integration test report
+
+    - name: Dump backend logs on failure
+      if: ${{ failure() && (steps.backend.outcome == 'failure' || steps.backend.outcome == 'success') }}
+      shell: bash
+      working-directory: ${{ inputs.backend-repo-location }}/local-dev
+      run: |
+        bash e2e.sh ps -a
+        bash e2e.sh logs --no-color

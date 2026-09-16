@@ -31,6 +31,7 @@ from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.client_metadata_schema import get_client_metadata_schema, set_client_metadata_schema_from_dict
 from encord.collection import Collection
 from encord.common.deprecated import deprecated
+from encord.common.organisation_tags import ORGANISATION_TAGS_PATH, resolve_organisation_tag_uuid
 from encord.common.time_parser import parse_datetime, parse_datetime_optional
 from encord.configs import ENCORD_DOMAIN, BearerConfig, SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_PROJECT
@@ -85,6 +86,7 @@ from encord.orm.organisation_user import (
 )
 from encord.orm.project import (
     BenchmarkQaWorkflowSettings,
+    CreateOrganisationTagPayload,
     CvatExportType,
     CvatImportDataItem,
     CvatImportGetResultLongPollingStatus,
@@ -93,9 +95,9 @@ from encord.orm.project import (
     CvatImportStartPayload,
     CvatReviewMode,
     ManualReviewWorkflowSettings,
+    OrganisationTag,
     ProjectDTO,
     ProjectFilterParams,
-    ProjectTag,
     ProjectWorkflowSettings,
     ProjectWorkflowType,
     ReviewMode,
@@ -489,7 +491,7 @@ class EncordUserClient:
         edited_before: Optional[Union[str, datetime]] = None,
         edited_after: Optional[Union[str, datetime]] = None,
         include_org_access: bool = False,
-        tags_anyof: Optional[Union[List[str], List[ProjectTag]]] = None,
+        tags_anyof: Optional[Union[List[str], List[OrganisationTag]]] = None,
     ) -> Iterable[Project]:
         """List either all (if called with no arguments) or matching projects the user has access to.
 
@@ -505,12 +507,14 @@ class EncordUserClient:
             include_org_access: if set to true and the calling user is the organization admin, the
               method will return all projects in the organization.
             tags_anyof: optional tag names filter; matches projects having at least one of the tag
-                names. Accepts either tag name strings or :class:`encord.orm.project.ProjectTag` instances.
+                names. Accepts either tag name strings or :class:`encord.orm.project.OrganisationTag` instances.
 
         Returns:
             list of Projects matching filter conditions, as :class:`encord.project.Project` instances.
         """
-        tag_names = [t.name if isinstance(t, ProjectTag) else t for t in tags_anyof] if tags_anyof is not None else None
+        tag_names = (
+            [t.name if isinstance(t, OrganisationTag) else t for t in tags_anyof] if tags_anyof is not None else None
+        )
         properties_filter = ProjectFilterParams.from_dict(self.__validate_filter(locals()))
         properties_filter.include_org_access = include_org_access
         properties_filter.tags_anyof = tag_names
@@ -525,17 +529,80 @@ class EncordUserClient:
                 api_client=self._api_client,
             )
 
-    def list_project_tags(self) -> List[ProjectTag]:
-        """List all project tags defined in the Organization.
+    def list_organisation_tags(self) -> List[OrganisationTag]:
+        """List all tags defined in the Organization.
 
         Returns:
-            List[ProjectTag]: All project tags available in the organization.
+            List[OrganisationTag]: All tags in the organization. Each can be attached to projects or to
+            storage folders.
         """
         return self._api_client.get(
-            "organisation/project-tags",
+            ORGANISATION_TAGS_PATH,
             params=None,
-            result_type=Page[ProjectTag],
+            result_type=Page[OrganisationTag],
         ).results
+
+    @deprecated(version="0.1.205", alternative=".list_organisation_tags")
+    def list_project_tags(self) -> List[OrganisationTag]:
+        """DEPRECATED: Renamed to :meth:`encord.user_client.EncordUserClient.list_organisation_tags`, which returns
+        the same tags, because tags are defined at organization level and can also be attached to storage folders.
+
+        Returns:
+            List[OrganisationTag]: All tags in the organization.
+        """
+        return self.list_organisation_tags()
+
+    def create_organisation_tag(self, name: str, description: Optional[str] = None) -> OrganisationTag:
+        """Create a new tag in the Organization.
+
+        Organization tags can be attached to projects, with :meth:`encord.project.Project.add_organisation_tag`, or to
+        storage folders, in the Encord app. Requires the caller to be an organization admin (the
+        ``tags.manage`` permission).
+
+        Args:
+            name: Name of the tag. Must be unique within the organization.
+            description: Optional free-text description of the tag.
+
+        Returns:
+            OrganisationTag: The newly created tag.
+
+        Raises:
+            encord.exceptions.ResourceExistsError: A tag with this name already exists.
+            encord.exceptions.AuthorisationError: The caller is not an organization admin.
+        """
+        return self._api_client.post(
+            ORGANISATION_TAGS_PATH,
+            params=None,
+            payload=CreateOrganisationTagPayload(name=name, description=description),
+            result_type=OrganisationTag,
+        )
+
+    def delete_organisation_tag(
+        self,
+        tag: Optional[OrganisationTag] = None,
+        *,
+        tag_name: Optional[str] = None,
+        tag_uuid: Optional[Union[UUID, str]] = None,
+    ) -> None:
+        """Delete a tag from the Organization.
+
+        Pass the tag itself, or exactly one of ``tag_name`` or ``tag_uuid``. This detaches the tag from every
+        project and storage folder it is attached to. Requires the caller to be an organization admin (the
+        ``tags.manage`` permission).
+
+        Args:
+            tag: The tag to delete, as returned by ``create_organisation_tag`` or ``list_organisation_tags``.
+            tag_name: Name of the tag to delete.
+            tag_uuid: Unique identifier of the tag to delete.
+
+        Raises:
+            ValueError: If the tag is not identified by exactly one of ``tag``, ``tag_name`` or ``tag_uuid``.
+            TypeError: ``tag`` is not an :class:`encord.orm.project.OrganisationTag`.
+            encord.exceptions.ResourceNotFoundError: No tag with this name or UUID exists in the organization.
+            encord.exceptions.AuthorisationError: The caller is not an organization admin.
+        """
+        resolved_uuid = resolve_organisation_tag_uuid(self._api_client, tag=tag, tag_name=tag_name, tag_uuid=tag_uuid)
+        self._api_client.delete(f"{ORGANISATION_TAGS_PATH}/{resolved_uuid}", params=None, result_type=None)
 
     def create_project(
         self,

@@ -49,7 +49,11 @@ from tests.objects.data.ontology_with_many_dynamic_classifications import (
     ontology as ontology_with_many_dynamic_classifications,
 )
 from tests.objects.data.plain_text import PLAIN_TEXT_LABELS
-from tests.objects.objects_test_utils import deep_diff_enhanced, validate_label_row_serialisation
+from tests.objects.objects_test_utils import (
+    deep_diff_enhanced,
+    expected_compact_labels,
+    validate_label_row_serialisation,
+)
 
 
 def ontology_from_dict(ontology_structure_dict: Dict) -> Ontology:
@@ -86,7 +90,7 @@ def test_serialise_image_group_with_classifications():
     label_row.from_labels_dict(empty_image_group_labels)
 
     actual = label_row.to_encord_dict()
-    assert actual == empty_image_group_labels
+    assert actual == expected_compact_labels(empty_image_group_labels)
 
     label_row = LabelRowV2(label_row_metadata, Mock(), ontology_from_dict(image_group_ontology))
     label_row.from_labels_dict(image_group_labels)
@@ -94,7 +98,7 @@ def test_serialise_image_group_with_classifications():
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
         actual,
-        image_group_labels,
+        expected_compact_labels(image_group_labels),
         exclude_regex_paths=[r"\['reviews'\]", r"\['isDeleted'\]"],
     )
     assert_json_serializable(actual)
@@ -115,7 +119,7 @@ def test_serialise_video():
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
         actual,
-        data_1.labels,
+        expected_compact_labels(data_1.labels),
     )
     assert_json_serializable(actual)
     validate_label_row_serialisation(label_row)
@@ -134,7 +138,7 @@ def test_serialise_image_with_object_answers():
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
         actual,
-        native_image_data.labels,
+        expected_compact_labels(native_image_data.labels),
     )
     assert_json_serializable(actual)
     validate_label_row_serialisation(label_row)
@@ -237,7 +241,7 @@ def test_serialise_dicom_with_dynamic_classifications():
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
         actual,
-        dicom_labels,
+        expected_compact_labels(dicom_labels),
         exclude_regex_paths=[r"\['trackHash'\]", r"\['data_links'\]"],
     )
     # NOTE: likely we do not care about the trackHash. If we end up caring about it, we'll have to ensure that we can
@@ -258,7 +262,7 @@ def test_dynamic_classifications():
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
         actual,
-        video_with_dynamic_classifications.labels,
+        expected_compact_labels(video_with_dynamic_classifications.labels),
         exclude_regex_paths=[r"\['trackHash'\]"],
     )
     assert_json_serializable(actual)
@@ -279,7 +283,7 @@ def test_dynamic_classification_with_multiple_checklist_answers_as_constructed_b
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
         actual,
-        video_with_dynamic_classifications.labels,
+        expected_compact_labels(video_with_dynamic_classifications.labels),
         exclude_regex_paths=[r"\['trackHash'\]"],
     )
     assert_json_serializable(actual)
@@ -328,7 +332,7 @@ def test_label_row_with_reviews(all_types_ontology):
     actual = label_row.to_encord_dict()
     deep_diff_enhanced(
         actual,
-        image_group_with_reviews.labels,
+        expected_compact_labels(image_group_with_reviews.labels),
         exclude_regex_paths=[r"\['trackHash'\]", r"\['reviews'\]"],
     )
     assert_json_serializable(actual)
@@ -398,7 +402,7 @@ def test_parse_serialise_global_classification(all_types_ontology) -> None:
 
     actual = label_row.to_encord_dict()
 
-    deep_diff_enhanced(actual, GLOBAL_CLASSIFICATION_LABELS)
+    deep_diff_enhanced(actual, expected_compact_labels(GLOBAL_CLASSIFICATION_LABELS))
     assert_json_serializable(actual)
     validate_label_row_serialisation(label_row)
 
@@ -431,7 +435,7 @@ def test_serialise_global_classification(all_types_ontology) -> None:
     label_row.add_classification_instance(classification_instance)
 
     actual = label_row.to_encord_dict()
-    deep_diff_enhanced(actual, GLOBAL_CLASSIFICATION_LABELS)
+    deep_diff_enhanced(actual, expected_compact_labels(GLOBAL_CLASSIFICATION_LABELS))
     assert_json_serializable(actual)
     validate_label_row_serialisation(label_row)
 
@@ -447,7 +451,7 @@ def test_classification_with_frames_and_answer(all_types_ontology) -> None:
 
     actual = label_row.to_encord_dict()
 
-    deep_diff_enhanced(actual, video_with_classifications.labels)
+    deep_diff_enhanced(actual, expected_compact_labels(video_with_classifications.labels))
 
     assert_json_serializable(actual)
     validate_label_row_serialisation(label_row)
@@ -498,8 +502,7 @@ def test_classification_answer_naming_no_frames_is_skipped_on_frame_based_data(a
 
     actual = label_row.to_encord_dict()
     assert actual["classification_answers"] == {}
-    for frame_labels in actual["data_units"]["cd57cf5c-2541-4a46-a836-444540ee987a"]["labels"].values():
-        assert frame_labels["classifications"] == []
+    assert actual["data_units"]["cd57cf5c-2541-4a46-a836-444540ee987a"]["labels"] == {}
 
     assert_json_serializable(actual)
     validate_label_row_serialisation(label_row)

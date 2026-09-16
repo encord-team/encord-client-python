@@ -1103,6 +1103,15 @@ def test_both_polygons_supported(empty_video_label_row: LabelRowV2):
     validate_label_row_serialisation(empty_video_label_row)
 
 
+def test_serialization_does_not_silently_drop_unsupported_range_objects(empty_video_label_row: LabelRowV2):
+    audio_object = audio_obj_ontology_item.create_instance()
+    audio_object.set_for_frames(AudioCoordinates(range=[Range(0, 1)]))
+    empty_video_label_row.add_object_instance(audio_object)
+
+    with pytest.raises(NotImplementedError, match="AudioCoordinates"):
+        empty_video_label_row.to_encord_dict()
+
+
 def test_non_range_classification_cannot_be_added_to_audio_label_row(all_types_ontology):
     label_row_metadata_dict = asdict(BASE_LABEL_ROW_METADATA)
     label_row_metadata_dict["frames_per_second"] = 1000
