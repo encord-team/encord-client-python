@@ -119,7 +119,9 @@ class ReviewTaskStatus(str, Enum):
     NEW = "NEW"
     ASSIGNED = "ASSIGNED"
     RELEASED = "RELEASED"
+    SKIPPED = "SKIPPED"
     REOPENED = "REOPENED"
+    COMPLETED = "COMPLETED"
 
 
 class _ReviewTasksQueryParams(TasksQueryParams):
