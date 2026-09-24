@@ -144,6 +144,9 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
             )
 
     def _are_frames_valid(self, frames: List[int]) -> None:
+        if not frames:
+            raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
+
         max_frame = max(frames)
         min_frame = min(frames)
 

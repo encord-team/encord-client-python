@@ -169,6 +169,19 @@ def test_add_object_instance_to_label_row(all_types_ontology):
     validate_label_row_serialisation(label_row)
 
 
+def test_add_object_instance_without_frames_to_label_row_throws_error(all_types_ontology):
+    label_row = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), all_types_ontology)
+    label_row.from_labels_dict(empty_image_group_labels)
+
+    object_instance = ObjectInstance(box_ontology_item)
+
+    with pytest.raises(LabelRowError) as e:
+        label_row.add_object_instance(object_instance)
+
+    assert e.value.message == "ObjectInstance is not on any frames. Please add it to at least one frame."
+    assert label_row.get_object_instances() == []
+
+
 def test_add_remove_access_object_instances_in_label_row(all_types_ontology):
     label_row = LabelRowV2(BASE_LABEL_ROW_METADATA, Mock(), all_types_ontology)
     label_row.from_labels_dict(empty_image_group_labels)

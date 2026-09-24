@@ -6,14 +6,21 @@ from encord.exceptions import LabelRowError
 from encord.objects import Classification, LabelRowV2, Object
 from encord.objects.attributes import Attribute
 from encord.objects.coordinates import BoundingBoxCoordinates, PointCoordinate
+from encord.objects.frames import Range
 from tests.objects.data.all_types_ontology_structure import all_types_structure
 from tests.objects.data.data_group.all_modalities import DATA_GROUP_METADATA, DATA_GROUP_NO_LABELS
+from tests.objects.data.data_group.scene import SCENE_METADATA, SCENE_NO_LABELS
+from tests.objects.data.data_group.two_videos import (
+    DATA_GROUP_TWO_VIDEOS_NO_LABELS,
+    DATA_GROUP_WITH_TWO_VIDEOS_METADATA,
+)
 
 box_ontology_item = all_types_structure.get_child_by_hash("MjI2NzEy", Object)
 box_with_attributes_ontology_item = all_types_structure.get_child_by_hash("MTA2MjAx", Object)
 box_text_attribute_ontology_item = box_with_attributes_ontology_item.get_child_by_hash("OTkxMjU1", type_=Attribute)
 text_classification = all_types_structure.get_child_by_hash("jPOcEsbw", Classification)
 keypoint_with_dynamic_attributes_ontology_item = all_types_structure.get_child_by_hash("MTY2MTQx", Object)
+segmentation_ontology_item = all_types_structure.get_child_by_hash("segmentationFeatureNodeHash", Object)
 key_point_dynamic_text_attribute = keypoint_with_dynamic_attributes_ontology_item.get_child_by_hash(
     "OTkxMjU1", type_=Attribute
 )
@@ -292,3 +299,43 @@ def test_place_object_on_space_throws_error_if_object_has_dynamic_attributes(ont
         e.value.message
         == "Object instance contains dynamic attributes. Please ensure no dynamic attributes were set on this ObjectInstance. "
     )
+
+
+def test_place_object_on_range_space_with_empty_ranges_throws_error_and_leaves_space_clean(ontology):
+    # Arrange
+    label_row = LabelRowV2(SCENE_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(SCENE_NO_LABELS)
+    point_cloud_space = label_row.get_space(id="path/to/file1.pcd", type_="point_cloud")
+    new_object_instance = segmentation_ontology_item.create_instance()
+
+    # Act
+    with pytest.raises(LabelRowError) as e:
+        point_cloud_space.put_object_instance(object_instance=new_object_instance, ranges=[])
+
+    assert e.value.message == "The array of ranges is empty. Please specify at least one range."
+    assert point_cloud_space.get_object_instances() == []
+    assert not new_object_instance._is_assigned_to_space()
+
+    point_cloud_space.put_object_instance(object_instance=new_object_instance, ranges=[Range(0, 5)])
+    assert point_cloud_space.get_object_instances() == [new_object_instance]
+
+
+def test_place_object_on_multiframe_space_with_empty_frames_throws_error(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
+    video_space = label_row.get_space(id="video-1-uuid", type_="video")
+    new_object_instance = box_ontology_item.create_instance()
+    box_coordinates = BoundingBoxCoordinates(height=1.0, width=1.0, top_left_x=1.0, top_left_y=1.0)
+
+    # Act
+    with pytest.raises(LabelRowError) as e:
+        video_space.put_object_instance(
+            object_instance=new_object_instance,
+            frames=[],
+            coordinates=box_coordinates,
+        )
+
+    assert e.value.message == "ObjectInstance is not on any frames. Please add it to at least one frame."
+    assert video_space.get_object_instances() == []
+    assert not new_object_instance._is_assigned_to_space()

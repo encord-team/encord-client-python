@@ -113,13 +113,13 @@ class RangeSpace(Space[_RangeObjectAnnotation, _GlobalClassificationAnnotation, 
         self._method_not_supported_for_object_instance_with_frames(object_instance=object_instance)
         self._method_not_supported_for_object_instance_with_dynamic_attributes(object_instance=object_instance)
 
-        self._objects_map[object_instance.object_hash] = object_instance
-        object_instance._add_to_space(self)
-
         if isinstance(ranges, Range):
             ranges = [ranges]
 
         self._are_ranges_valid(ranges)
+
+        self._objects_map[object_instance.object_hash] = object_instance
+        object_instance._add_to_space(self)
 
         existing_annotation_range_manager = self._object_hash_to_range_manager.get(object_instance.object_hash)
         has_overlap = False
