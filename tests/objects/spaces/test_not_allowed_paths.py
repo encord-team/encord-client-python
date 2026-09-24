@@ -339,3 +339,21 @@ def test_place_object_on_multiframe_space_with_empty_frames_throws_error(ontolog
     assert e.value.message == "ObjectInstance is not on any frames. Please add it to at least one frame."
     assert video_space.get_object_instances() == []
     assert not new_object_instance._is_assigned_to_space()
+
+
+def test_place_classification_on_multiframe_space_with_empty_frames_throws_error(ontology):
+    # Arrange
+    label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
+    video_space = label_row.get_space(id="video-1-uuid", type_="video")
+    new_classification_instance = text_classification.create_instance()
+
+    # Act
+    with pytest.raises(LabelRowError) as e:
+        video_space.put_classification_instance(
+            classification_instance=new_classification_instance,
+            frames=[],
+        )
+
+    assert e.value.message == "ClassificationInstance is not on any frames. Please add it to at least one frame."
+    assert video_space.get_classification_instances() == []

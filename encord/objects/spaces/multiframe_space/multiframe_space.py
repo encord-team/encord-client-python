@@ -145,7 +145,7 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
 
     def _are_frames_valid(self, frames: List[int]) -> None:
         if not frames:
-            raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
+            raise LabelRowError("Please specify at least one frame.")
 
         max_frame = max(frames)
         min_frame = min(frames)
@@ -189,6 +189,9 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         manual_annotation: Optional[bool] = None,
     ) -> None:
         frame_list = frames_class_to_frames_list(frames)
+        if not frame_list:
+            raise LabelRowError("ObjectInstance is not on any frames. Please add it to at least one frame.")
+
         self._are_frames_valid(frame_list)
         self._objects_map[object_instance.object_hash] = object_instance
 
@@ -577,6 +580,9 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         manual_annotation: Optional[bool],
     ) -> None:
         frame_list = frames_class_to_frames_list(frames)
+        if not frame_list:
+            raise LabelRowError("ClassificationInstance is not on any frames. Please add it to at least one frame.")
+
         self._are_frames_valid(frame_list)
         is_present, conflicting_ranges = self._is_classification_present_on_frames(
             classification_instance._ontology_classification, frame_list
