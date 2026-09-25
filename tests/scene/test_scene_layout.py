@@ -25,10 +25,11 @@ def _timeseries_settings() -> TimeSeriesViewSettings:
     )
 
 
-def test_scene_layout_serializes_to_api_shape() -> None:
+@pytest.mark.parametrize("viewer_tile_id", ["0", "1", "scene-view"])
+def test_scene_layout_serializes_to_api_shape(viewer_tile_id: str) -> None:
     scene_layout = SceneLayout(
         tiles={
-            "0": Scene3DViewerTile(has_side_view=True, show_camera_switcher=False),
+            viewer_tile_id: Scene3DViewerTile(has_side_view=True, show_camera_switcher=False),
             "front": SceneImageTile(stream_name="front_camera"),
             "speed": SceneTimeSeriesTile(
                 stream_name="telemetry",
@@ -37,7 +38,7 @@ def test_scene_layout_serializes_to_api_shape() -> None:
         },
         layout=SceneTileLayout(
             direction=SceneTileLayoutDirection.ROW,
-            first="0",
+            first=viewer_tile_id,
             second="front",
             split_percentage=60,
         ),
@@ -46,7 +47,7 @@ def test_scene_layout_serializes_to_api_shape() -> None:
 
     assert scene_layout.to_dict() == {
         "tiles": {
-            "0": {"type": "3d", "hasSideView": True, "showCameraSwitcher": False},
+            viewer_tile_id: {"type": "3d", "hasSideView": True, "showCameraSwitcher": False},
             "front": {"type": "image", "streamName": "front_camera"},
             "speed": {
                 "type": "timeseries",
@@ -66,7 +67,7 @@ def test_scene_layout_serializes_to_api_shape() -> None:
         },
         "layout": {
             "direction": "row",
-            "first": "0",
+            "first": viewer_tile_id,
             "second": "front",
             "splitPercentage": 60.0,
         },
@@ -74,13 +75,34 @@ def test_scene_layout_serializes_to_api_shape() -> None:
     }
 
 
+@pytest.mark.parametrize("viewer_tile_id", ["0", "1", "scene-view"])
+def test_scene_layout_serializes_single_viewer(viewer_tile_id: str) -> None:
+    scene_layout = SceneLayout(
+        tiles={viewer_tile_id: Scene3DViewerTile(has_side_view=True, show_camera_switcher=True)},
+        layout=viewer_tile_id,
+    )
+
+    assert scene_layout.to_dict() == {
+        "tiles": {viewer_tile_id: {"type": "3d", "hasSideView": True, "showCameraSwitcher": True}},
+        "layout": viewer_tile_id,
+        "timeline": [],
+    }
+
+
+@pytest.mark.parametrize("viewer_tile_ids", [("0", "scene-view"), ("1", "scene-view")])
+def test_scene_layout_rejects_multiple_3d_viewers(viewer_tile_ids: tuple) -> None:
+    with pytest.raises(ValidationError, match="at most one 3D viewer tile"):
+        SceneLayout(
+            tiles={
+                tile_id: Scene3DViewerTile(has_side_view=True, show_camera_switcher=True) for tile_id in viewer_tile_ids
+            },
+            layout=SceneTileLayout(direction="row", first=viewer_tile_ids[0], second=viewer_tile_ids[1]),
+        )
+
+
 @pytest.mark.parametrize(
     "scene_layout",
     [
-        {
-            "tiles": {"viewer": {"type": "3d", "hasSideView": True, "showCameraSwitcher": True}},
-            "layout": "viewer",
-        },
         {
             "tiles": {"front": {"type": "image", "streamName": "front"}},
             "layout": {"direction": "row", "first": "front", "second": "front"},

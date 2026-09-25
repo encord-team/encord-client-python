@@ -13,7 +13,12 @@ from requests import Session
 from requests.adapters import HTTPAdapter, Retry
 
 from encord.configs import BaseConfig
-from encord.exceptions import RateLimitExceededError, RequestException, ResourceNotFoundError
+from encord.exceptions import (
+    PayloadTooLargeError,
+    RateLimitExceededError,
+    RequestException,
+    ResourceNotFoundError,
+)
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
     RequestContext,
@@ -242,16 +247,27 @@ class Querier:
             except Exception as e:
                 raise RequestException(f"Request session.send failed {req.method=} {req.url=}", context=context) from e
 
+            # A few rejections reach us as a real HTTP status rather than through the legacy
+            # "HTTP 200 with the actual status in the body" envelope, because they happen before
+            # the handler that would wrap them: the rate limiter turns the request away, the
+            # payload limit trips while the body is still being read. The infrastructure in front
+            # of the API answers in its own format too. None of those responses carry an envelope,
+            # and need not even be JSON, so translate them from the status alone - before the
+            # envelope handling below finds no error in them and reports an unknown one. Retries
+            # for both statuses are exhausted by the session's retry policy above, which then
+            # hands the last response back to us.
             if res.status_code == requests.codes.too_many_requests:  # pylint: disable=no-member
-                # Rate limiting is the one error the legacy protocol can report as a real HTTP
-                # status rather than through the "HTTP 200 with the actual status in the body"
-                # envelope: the limiter rejects a request before the handler that would wrap it,
-                # and the infrastructure in front of the API can shed load on its own. Retries for
-                # this status are exhausted by the session's retry policy above, which then hands
-                # the last 429 back to us. Its body carries no legacy envelope - and need not even
-                # be JSON - so translate it here, before the envelope handling below reports it as
-                # an unknown server error.
                 raise RateLimitExceededError(retry_after=parse_retry_after(res.headers), context=context)
+
+            if res.status_code == requests.codes.request_entity_too_large:  # pylint: disable=no-member
+                # The server names the limit it enforced, which is the useful half of this error,
+                # so pass its message on the way the /v2 client does. Rate limiting has no use for
+                # one: what the caller needs from a 429 is the delay, not prose.
+                raise PayloadTooLargeError(
+                    _message_from_non_envelope_body(res)
+                    or "Request payload is too large and exceeds the maximum allowed size.",
+                    context=context,
+                )
 
             try:
                 res_json = orjson.loads(res.content)
@@ -301,3 +317,22 @@ def create_new_session(
 
 def _domain_from_endpoint(endpoint: str) -> str:
     return re.sub(r"(https?://[^/]+/).*", r"\1", endpoint)
+
+
+def _message_from_non_envelope_body(res: requests.Response) -> Optional[str]:
+    """The server's own message from a response that bypassed the legacy envelope.
+
+    Those come either from a handler answering before the envelope wrapper, as FastAPI's `detail`,
+    or from the API's own `message`. Anything else - an HTML error page from the infrastructure in
+    front of the API - has no message to give, hence the `None`.
+    """
+    try:
+        body = orjson.loads(res.content)
+    except Exception:
+        return None
+
+    if not isinstance(body, dict):
+        return None
+
+    message = body.get("message") or body.get("detail")
+    return message if isinstance(message, str) else None

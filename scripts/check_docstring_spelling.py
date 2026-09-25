@@ -59,6 +59,9 @@ KNOWN_WORDS = {
     "deidentified",
     "deidentification",
     "geospatial",
+    "upsert",
+    "upserts",
+    "upserted",
     # Common abbreviations
     "uuid",
     "uuids",

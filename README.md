@@ -30,14 +30,11 @@ First, install Encord Python API Client using the [pip](https://pip.pypa.io/en/s
 python3 -m pip install encord
 ```
 
-Some functionality is available through optional extras. Install them if you need COCO import/export or MCAP support:
+Install the optional COCO extra if you need COCO import/export:
 
 ```bash
 # COCO import/export helpers (pycocotools, shapely, opencv, numpy)
 python3 -m pip install "encord[coco]"
-
-# MCAP support (mcap, protobuf, Pillow)
-python3 -m pip install "encord[mcap]"
 ```
 
 Then, create a service account, generate a key pair, and register the public key in the Encord platform.

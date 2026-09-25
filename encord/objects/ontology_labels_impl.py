@@ -76,6 +76,7 @@ from encord.objects.constants import (  # pylint: disable=unused-import # for ba
     ROOT_SPACE_ID,
 )
 from encord.objects.coordinates import (
+    EVENT_SHAPES,
     AudioCoordinates,
     BitmaskCoordinates,
     BoundingBoxCoordinates,
@@ -95,13 +96,15 @@ from encord.objects.coordinates import (
     SkeletonCoordinates,
     TextCoordinates,
     TimeRangeCoordinates,
-    get_coordinates_from_frame_object_dict,
+    frame_object_coordinates,
 )
+from encord.objects.events import event_ranges
 from encord.objects.frames import (
     Frames,
     Range,
     Ranges,
     frames_class_to_frames_list,
+    frames_class_to_ranges,
     ranges_to_list,
 )
 from encord.objects.html_node import HtmlRange
@@ -117,6 +120,7 @@ from encord.objects.spaces.annotation.base_annotation import (
 from encord.objects.spaces.base_space import Space
 from encord.objects.spaces.html_space import HTMLSpace
 from encord.objects.spaces.image_space import ImageSpace
+from encord.objects.spaces.mcap_spaces import McapSpaceManager
 from encord.objects.spaces.multiframe_space.medical_space import MedicalSpace
 from encord.objects.spaces.multiframe_space.pdf_space import PdfSpace
 from encord.objects.spaces.multiframe_space.video_space import VideoSpace
@@ -124,7 +128,11 @@ from encord.objects.spaces.range_space.audio_space import AudioSpace
 from encord.objects.spaces.range_space.point_cloud_space import PointCloudFileSpace
 from encord.objects.spaces.range_space.text_space import TextSpace
 from encord.objects.spaces.range_space.time_series_space import TimeSeriesSpace
-from encord.objects.spaces.types import ChildInfo, SceneMetadata, SpaceInfo
+from encord.objects.spaces.types import (
+    ChildInfo,
+    SceneMetadata,
+    SpaceInfo,
+)
 from encord.objects.types import (
     AttributeDict,
     BaseFrameObject,
@@ -399,6 +407,10 @@ class LabelRowV2:
         )
         self._space_objects_map: dict[str, ObjectInstance] = {}
         self._space_classifications_map: dict[str, ClassificationInstance] = {}
+        self._mcap_spaces = McapSpaceManager(self, self._space_map)
+        # Enriched MCAP rows are continuous scenes with an explicitly empty top-level `spaces` map. Keep this
+        # separate from `is_event_based` so other continuous scene formats cannot opt into inferred spaces.
+        self._mcap_trust_mode = False
 
         self._classifications_to_frames: defaultdict[Classification, Set[int]] = defaultdict(set)
         self._classifications_to_ranges: defaultdict[Classification, RangeManager] = defaultdict(RangeManager)
@@ -410,38 +422,43 @@ class LabelRowV2:
 
         self._storage_item: Optional[StorageItem] = None
 
-        # Cache for the free-time scene probe (None = not yet checked).
-        self._free_time_scene: Optional[bool] = None
+        # Enriched scene metadata from the label row response, the source of `is_event_based`. `_event_based` is a
+        # test-only override that forces it either way.
+        self._scene_metadata: dict[str, Any] = {}
+        self._event_based: Optional[bool] = None
 
-    def _is_free_time_scene(self) -> bool:
-        """Internal. True if this label row backs a free-time scene (e.g. an MCAP recording).
+    def _check_not_event_based(self, method: str, reason: str) -> None:
+        """Internal. Refuse a per-frame API on a row whose labels are sparse events on a continuous timeline.
 
-        A free-time scene carries time/range-based labels like audio, but ``DataType.SCENE`` is
-        bucketed with the geometric (frame-based) types, so the generic parse path treats its
-        classifications as frame labels and they fail validation. We disambiguate by reading the
-        scene definition: a self-contained MCAP scene is free-time; a composite (scene-image)
-        scene is not.
+        These rows have no frame grid: positions are nanosecond offsets and there is no image behind one.
         """
-        if self.data_type != DataType.SCENE:
-            return False
-        if self._free_time_scene is not None:
-            return self._free_time_scene
+        if self.is_event_based:
+            raise LabelRowError(
+                f"`{method}` is not available on an event-based label row. {reason} Use `get_object_instances` "
+                f"and `ObjectInstance.get_ranges` instead."
+            )
 
-        from encord.beta.scene.internal.common import SelfContainedFormat
-        from encord.beta.scene.internal.scene import SceneResponse, SelfContainedScene
+    @property
+    def is_event_based(self) -> bool:
+        """Whether this label row sits on a continuous timeline rather than a frame grid.
 
-        result = False
-        backing_item_uuid = self._label_row_read_only_data.backing_item_uuid
-        if backing_item_uuid is not None:
-            scene = self._project_client._api_client.get(
-                f"scene/{backing_item_uuid}",
-                params=None,
-                result_type=SceneResponse,
-            ).root
-            result = isinstance(scene, SelfContainedScene) and scene.format == SelfContainedFormat.MCAP
+        True when the enriched label-row response marks the scene as continuous, which is the case for a
+        self-contained (MCAP) recording. Such a row has no frame grid: positions are nanosecond offsets, so
+        classifications are held as ranges rather than as an entry per frame. ``DataType.SCENE`` is otherwise
+        bucketed with the geometric (frame-based) types, and the generic parse path would treat those
+        classifications as frame labels and fail validation. Legacy initialised rows carrying no scene metadata
+        are not event-based.
 
-        self._free_time_scene = result
-        return result
+        Root geometric objects on such a row are stored as sparse upsert/delete events: frame-based reads on
+        :class:`~encord.objects.ObjectInstance` resolve to read-only views and frame-based writes raise; use
+        `ObjectInstance.upsert_event` and friends.
+
+        Labels must be initialised before reading this property.
+        """
+        if self._event_based is not None:
+            return self._event_based
+        self._check_labelling_is_initalised()
+        return self.data_type == DataType.SCENE and bool(self._scene_metadata.get("isContinuous"))
 
     @classmethod
     def from_media_metadata(
@@ -1193,8 +1210,11 @@ class LabelRowV2:
             saved_identity = self._extract_identity()
 
         self._is_labelling_initialised = True
+        self._scene_metadata = label_row_dict.get("scene") or {}
 
         self._label_row_read_only_data = self._parse_label_row_dict(label_row_dict)
+        self._mcap_trust_mode = self.is_event_based and label_row_dict.get("spaces") == {}
+        self._mcap_spaces.reset()
         self._frame_to_hashes = defaultdict(set)
         self._classifications_to_frames = defaultdict(set)
         self._classifications_to_ranges = defaultdict(RangeManager)
@@ -1218,6 +1238,13 @@ class LabelRowV2:
         spaces_dict = label_row_dict.get("spaces", {})
         if label_row_dict.get("data_type") == DataType.SCENE.value:
             spaces_dict = self._add_scene_image_labels_to_spaces(label_row_dict, spaces_dict)
+            if self._mcap_trust_mode:
+                spaces_dict = self._mcap_spaces.add_labels_to_spaces(
+                    label_row_dict,
+                    spaces_dict,
+                    object_answers=label_row_dict["object_answers"],
+                    classification_answers=label_row_dict["classification_answers"],
+                )
         self._parse_space_labels(
             spaces_info=spaces_dict,
             object_answers=label_row_dict["object_answers"],
@@ -1301,6 +1328,11 @@ class LabelRowV2:
 
         Returns:
             A list of all Space objects.
+
+        On a self-contained (MCAP) scene the row carries no space metadata, so this lists only spaces taken on
+        trust: point clouds with labels stored under a `stream@timestamp_ns` key, time-series channels referenced
+        by annotations, and spaces already asked for by id. It may be empty and is not a complete inventory of the
+        recording; use `get_space(id=..., type_=...)` for the space you want.
         """
         return list(self._space_map.values())
 
@@ -1415,6 +1447,11 @@ class LabelRowV2:
 
         Throws an exception if more than one or no space with the specified id and type is found.
 
+        On a self-contained (MCAP) scene, asking for `type_="point_cloud"` by an `id` of the form
+        `stream@timestamp_ns` that the row has no labels for creates that space, empty, so segmentations can be
+        written to it. Asking for `type_="time_series"` by a non-empty channel id does the same for time-range
+        annotations. The row has no metadata for such spaces and takes the id and requested type on trust.
+
         Args:
             id: The id of the space to find.
             layout_key: The layout key of the data unit within its data group layout.
@@ -1438,6 +1475,12 @@ class LabelRowV2:
                 if element.space_id == id:
                     space = element
                     break
+
+        if space is None and id is not None and self._mcap_trust_mode:
+            if type_ == "point_cloud":
+                space = self._mcap_spaces.get_or_create_point_cloud_space(id)
+            elif type_ == "time_series":
+                space = self._mcap_spaces.get_or_create_time_series_space(id)
 
         if space is None and layout_key is not None:
             space_id = self._layout_key_to_space_id.get(layout_key)
@@ -1550,6 +1593,10 @@ class LabelRowV2:
 
         Returns:
             FrameView: A view of the specified frame.
+
+        On an event-based label row `frame` is a nanosecond offset. The view resolves: its object reads return
+        every object whose range covers that offset, not only the ones with a keyframe exactly on it. Writing
+        through the view is refused by `FrameView.add_object_instance`.
         """
         self._method_not_supported_for_range_data_type()
 
@@ -1634,8 +1681,16 @@ class LabelRowV2:
 
         Returns:
             List[FrameView]: A list of frame views in order of available frames.
+
+        Raises:
+            LabelRowError: If the label row is event-based.
         """
         self._check_labelling_is_initalised()
+        self._check_not_event_based(
+            "get_frame_views",
+            "There is no frame grid to enumerate: the timeline is continuous and `number_of_frames` is `0`, so "
+            "this would silently return an empty list for a row that does hold labels.",
+        )
         ret = []
         for frame in range(self.number_of_frames):
             ret.append(self.get_frame_view(frame))
@@ -1673,10 +1728,14 @@ class LabelRowV2:
 
         ret: List[ObjectInstance] = list()
 
-        if filter_frames is not None:
-            filtered_frames_list = frames_class_to_frames_list(filter_frames)
-        else:
-            filtered_frames_list = list()
+        # Ranges, not a frame list: on an event-based row a frame is a nanosecond offset, so expanding a range
+        # would materialise billions of entries. Presence there is range containment, resolved per object below.
+        filter_ranges = frames_class_to_ranges(filter_frames) if filter_frames is not None else []
+        filtered_frames_list = (
+            frames_class_to_frames_list(filter_frames)
+            if filter_frames is not None and not self.is_event_based
+            else list()
+        )
 
         # Objects on label row
         for object_ in self._objects_map.values():
@@ -1690,13 +1749,15 @@ class LabelRowV2:
             # filter by frame
             if filter_frames is None:
                 append = True
+            elif object_._is_event_based():
+                append = object_._is_present_over(filter_ranges)
             else:
                 append = False
-            for frame in filtered_frames_list:
-                hashes = self._frame_to_hashes.get(frame, set())
-                if object_.object_hash in hashes:
-                    append = True
-                    break
+                for frame in filtered_frames_list:
+                    hashes = self._frame_to_hashes.get(frame, set())
+                    if object_.object_hash in hashes:
+                        append = True
+                        break
 
             if append:
                 ret.append(object_)
@@ -1757,6 +1818,9 @@ class LabelRowV2:
     def add_object_instance(self, object_instance: ObjectInstance, force: bool = True) -> None:
         """Add an object instance to the label row. If the object instance already exists, it overwrites the current instance.
 
+        On an event-based row, an empty geometric object can be attached before its first `upsert_event`.
+        Saving the row raises until that first event is written, or the object is removed.
+
         Args:
             object_instance: The object instance to add.
             force: If `True`, overwrites the current objects; otherwise, it will replace the current object.
@@ -1773,7 +1837,28 @@ class LabelRowV2:
                 "Object instance already exists on a space. It cannot be placed directly onto the label row. Please use Space.place_object instead."
             )
 
-        object_instance.is_valid()
+        if self.is_event_based and not object_instance.is_range_only():
+            if object_instance.ontology_item.shape not in EVENT_SHAPES:
+                raise LabelRowError(
+                    f"Objects of shape `{object_instance.ontology_item.shape}` cannot be placed on an event-based "
+                    f"label row; only {sorted(s.value for s in EVENT_SHAPES)} are supported."
+                )
+
+            # Two shapes of object are admissible: an empty one, to be authored with `upsert_event`, and one
+            # whose stored entries are terminated events (a `copy()` of a saved object). Anything else is dense
+            # authoring — `set_for_frames` never writes a delete marker — and its entries would be reinterpreted
+            # as events, ending on a dangling upsert.
+            events = object_instance._sorted_events()
+            if events and events[-1].kind != "delete":
+                raise LabelRowError(
+                    "An event-based label row cannot accept an object with per-frame coordinates: they would be "
+                    "reinterpreted as events, ending on an upsert with no closing `delete`. Add an empty object, "
+                    "then write its keyframes with `ObjectInstance.upsert_event` and end it with `delete_event`."
+                )
+            object_instance._check_dynamic_answers_within(event_ranges(events))
+        else:
+            object_instance.is_valid()
+
         object_hash = object_instance.object_hash
 
         # We want to ensure that we are only adding the object_instance to a label_row
@@ -1801,13 +1886,15 @@ class LabelRowV2:
                 "The supplied ObjectInstance was already previously added. (the object_hash is the same)."
             )
         elif object_hash in self._objects_map and force:
-            self._objects_map.pop(object_hash)
+            if self._objects_map[object_hash]._is_event_based():
+                self.remove_object(self._objects_map[object_hash])
+            else:
+                self._objects_map.pop(object_hash)
 
         self._objects_map[object_hash] = object_instance
         object_instance._parent = self
 
-        frames = set(_frame_views_to_frame_numbers(object_instance.get_annotations()))
-        self._add_to_frame_to_hashes_map(object_instance, frames)
+        self._add_to_frame_to_hashes_map(object_instance, object_instance._stored_frames())
 
     def add_classification_instance(self, classification_instance: ClassificationInstance, force: bool = False) -> None:
         """Add a classification instance to the label row.
@@ -1837,6 +1924,15 @@ class LabelRowV2:
                 "range_only property set to True."
                 "You can do ClassificationInstance(range_only=True) or "
                 "Classification.create_instance(range_only=True) to achieve this."
+            )
+        elif not classification_instance.is_range_only() and self.is_event_based:
+            # A frame-based classification stores an entry per frame. On a nanosecond timeline that is a billion
+            # entries per second, and the row has no frame grid for them to sit on anyway.
+            raise LabelRowError(
+                "To add a ClassificationInstance to an event-based label row, the ClassificationInstance needs to "
+                "be created with the range_only property set to True: its frames are nanosecond offsets, so it is "
+                "held as ranges rather than per-frame entries. You can do ClassificationInstance(range_only=True) "
+                "or Classification.create_instance(range_only=True) to achieve this."
             )
         elif classification_instance.is_assigned_to_label_row():
             raise LabelRowError(
@@ -1990,11 +2086,6 @@ class LabelRowV2:
 
         ret: List[ClassificationInstance] = list()
 
-        if filter_frames is not None:
-            filtered_frames_list = frames_class_to_frames_list(filter_frames)
-        else:
-            filtered_frames_list = list()
-
         for classification in self._classifications_map.values():
             # filter by ontology object
             if not (
@@ -2003,19 +2094,13 @@ class LabelRowV2:
             ):
                 continue
 
-            # filter by frame
-            if filter_frames is None:
-                append = True
-            else:
-                append = False
-
-            if classification.is_on_frame(filtered_frames_list):
-                append = True
-
-            if append:
+            # Filter by frame as a range intersection, never by expanding the filter: on an event-based row a
+            # frame is a nanosecond offset and a `Range` filter can span billions of them.
+            if filter_frames is None or classification.is_on_frame(filter_frames):
                 ret.append(classification)
 
         if include_spaces:
+            filtered_frames_list = frames_class_to_frames_list(filter_frames) if filter_frames is not None else []
             # Needed to remove filter out duplicate classification instances across spaces
             classification_hashes: set[str] = set()
             for space in self._space_map.values():
@@ -2091,9 +2176,7 @@ class LabelRowV2:
         self._objects_map.pop(object_instance.object_hash, None)
 
         if not object_instance.is_range_only():
-            self._remove_from_frame_to_hashes_map(
-                _frame_views_to_frame_numbers(object_instance.get_annotations()), object_instance.object_hash
-            )
+            self._remove_from_frame_to_hashes_map(object_instance._stored_frames(), object_instance.object_hash)
         object_instance._parent = None
 
     def to_encord_dict(self) -> Dict[str, Any]:
@@ -2109,6 +2192,7 @@ class LabelRowV2:
             Dict[str, Any]: A dictionary representing the label row in Encord format.
         """
         self._check_labelling_is_initalised()
+        self._check_event_labels_consistent()
 
         ret: Dict[str, Any] = {}
         read_only_data = self._label_row_read_only_data
@@ -2131,7 +2215,12 @@ class LabelRowV2:
         ret["data_units"] = self._to_encord_data_units()
         ret["spaces"] = self._to_encord_spaces()
         if read_only_data.data_type == DataType.SCENE:
+            if self._scene_metadata:
+                # Round-trip the enriched scene metadata
+                ret["scene"] = dict(self._scene_metadata)
             self._move_scene_image_space_labels_to_data_units(ret)
+            if self._mcap_trust_mode:
+                self._mcap_spaces.prepare_export(ret)
 
         return ret
 
@@ -2426,8 +2515,14 @@ class LabelRowV2:
                 manual_annotation: Optional flag indicating manual annotation.
 
             Raises:
-                LabelRowError: If the object instance is already assigned to a different label row.
+                LabelRowError: If the row is event-based or the object belongs to a different label row.
             """
+            if self._label_row.is_event_based:
+                raise LabelRowError(
+                    "`FrameView.add_object_instance` is not allowed on an event-based label row. "
+                    "Attach an empty object with `LabelRowV2.add_object_instance`, then write keyframes "
+                    "with `ObjectInstance.upsert_event`."
+                )
             label_row = object_instance.is_assigned_to_label_row()
             if label_row and self._label_row != label_row:
                 raise LabelRowError(
@@ -2919,11 +3014,11 @@ class LabelRowV2:
             or data_type == DataType.PDF
             or data_type == DataType.SCENE
         ):
-            # Classifications carry their own ranges; only objects need frame label entries.
+            # Classifications carry their own ranges; only objects need frame label entries. Drive this off the
+            # stored frames rather than the annotation frames: on an event-based row a `delete` marker is not an
+            # annotation, so serialising only the annotations would drop every object's terminator.
             object_frames = {
-                frame
-                for object_instance in self._objects_map.values()
-                for frame in object_instance.get_annotation_frames()
+                frame for object_instance in self._objects_map.values() for frame in object_instance._stored_frames()
             }
             for frame in sorted(object_frames):
                 ret[str(frame)] = self._to_encord_label(frame)
@@ -2954,8 +3049,16 @@ class LabelRowV2:
         # Get objects for frame
         ret: List[dict] = []
 
+        # Serialisation walks the entries stored on this frame, not the objects present over it. On an
+        # event-based row those differ: a `delete` marker is stored exactly where the object is absent, so
+        # asking `get_object_instances(filter_frames=frame)` — which answers presence — would drop it.
         # Spaces are excluded here, because we export them in their own spaces dict.
-        objects = self._get_object_instances(include_spaces=False, filter_frames=frame)
+        stored_here = self._frame_to_hashes.get(frame, set())
+        objects = [
+            object_
+            for object_ in self._objects_map.values()
+            if object_.object_hash in stored_here and not object_._is_assigned_to_space()
+        ]
         for object_ in objects:
             encord_object = self._to_encord_object(object_, frame)
             ret.append(encord_object)
@@ -2968,7 +3071,12 @@ class LabelRowV2:
     ) -> Dict[str, Any]:
         ret: Dict[str, Any] = {}
 
-        object_instance_annotation = object_.get_annotation(frame)
+        if object_._is_event_based():
+            # Read the stored entry directly: a delete marker is absent to `get_annotation` but must be saved.
+            object_instance_annotation = object_.Annotation(object_, frame)
+        else:
+            object_instance_annotation = object_.get_annotation(frame)
+
         coordinates = object_instance_annotation.coordinates
         ontology_hash = object_.ontology_item.feature_node_hash
         ontology_object = self._ontology.structure.get_child_by_hash(ontology_hash, type_=Object)
@@ -2990,6 +3098,17 @@ class LabelRowV2:
             ret["lastEditedBy"] = object_instance_annotation.last_edited_by
         if object_instance_annotation.is_deleted is not None:
             ret["isDeleted"] = object_instance_annotation.is_deleted
+        # An `event` tag and an event-based row imply each other, so the tag is written exactly when the row is
+        # one: every entry on a continuous row carries it, and no entry on a frame-based row does. A stored
+        # entry that arrived untagged reads as an `upsert` and is normalised to one here, so a row loaded from
+        # a mix of tagged and untagged entries saves back fully tagged. `_check_event_labels_consistent` has
+        # already refused the contradictory case — a tag on a frame-based row — before reaching this.
+        if object_._is_event_based():
+            ret["event"] = object_._event_kind_at(frame)
+        # Reserved editor field: round-tripped verbatim where the label carried it, never emitted otherwise.
+        interpolate = object_._frames_to_instance_data[frame].annotation_metadata._interpolate
+        if interpolate is not None:
+            ret["interpolate"] = interpolate
 
         self._add_coordinates_to_encord_object(coordinates, frame, ret)
 
@@ -3068,7 +3187,7 @@ class LabelRowV2:
             frames_set = range_manager.get_ranges_as_frames()
             for frame in frames_set:
                 present_frames.remove(frame)
-                self._frame_to_hashes[frame].remove(classification_instance.classification_hash)
+                self._discard_from_frame_to_hashes_map(frame, classification_instance.classification_hash)
 
     def _add_to_frame_to_hashes_map(
         self, label_item: Union[ObjectInstance, ClassificationInstance], frames: Iterable[int]
@@ -3079,7 +3198,19 @@ class LabelRowV2:
     @deprecated("Only used in the ObjectInstance removal")
     def _remove_from_frame_to_hashes_map(self, frames: Iterable[int], item_hash: str):
         for frame in frames:
-            self._frame_to_hashes[frame].remove(item_hash)
+            self._discard_from_frame_to_hashes_map(frame, item_hash)
+
+    def _discard_from_frame_to_hashes_map(self, frame: int, item_hash: str) -> None:
+        """Drop one label from a frame, forgetting the frame once nothing is left on it.
+
+        A frame left behind with an empty hash set is still exported, as an empty `{"objects": [], ...}` entry.
+        That is noise on a dense row and a phantom keyframe on an event-based one, where a frame exists only
+        because an event sits on it.
+        """
+        hashes = self._frame_to_hashes[frame]
+        hashes.remove(item_hash)
+        if not hashes:
+            del self._frame_to_hashes[frame]
 
     def _initiate_spaces(
         self,
@@ -3517,6 +3648,43 @@ class LabelRowV2:
 
             self._add_data_unit_metadata(data_type, data_unit.get("metadata"))
 
+        self._check_event_labels_consistent()
+
+    def _check_event_labels_consistent(self) -> None:
+        """Internal. Refuse a row that mixes event-based and frame-based labels.
+
+        A row is one or the other, and which one is a property of the data, not of the individual label. On a
+        continuous row every geometric object is a sequence of events closed by a `delete`; on a frame-based row
+        no entry is an event at all, so an `event` tag there is a label the SDK could not have written and does
+        not know how to read — carrying it through would mean saving back a claim it never verified.
+
+        Checked at the two points where the row meets stored labels, parsing them and writing them back out.
+        Half-built objects are free to dangle in between, but not to be saved: an object attached and never given
+        an event has no labels to write, so saving it would drop it without a word.
+        """
+        if self.is_event_based:
+            for object_ in self._objects_map.values():
+                if object_._is_event_based():
+                    if not object_._frames_to_instance_data:
+                        raise LabelRowError(
+                            f"Object `{object_.object_hash}` was added to this event-based label row but has no "
+                            f"events, so it has no labels to save. Write one with `upsert_event` (and end it with "
+                            f"`delete_event`), or remove the object with `remove_object`."
+                        )
+                    object_._check_events_terminated()
+            return
+
+        for object_ in self._objects_map.values():
+            tagged_frames = object_._event_tagged_frames()
+            if tagged_frames:
+                raise LabelRowError(
+                    f"Object `{object_.object_hash}` carries an `event` tag on frame(s) "
+                    f"{tagged_frames[:5]}{'...' if len(tagged_frames) > 5 else ''}, but this label row is not "
+                    f"event-based. `event` marks a sparse upsert/delete on a continuous timeline and only has a "
+                    f"meaning on a continuous scene, where the whole row is stored that way. A frame-based row "
+                    f"holds frame labels, so this entry cannot be read as either one."
+                )
+
     def _add_frame_metadata(self, frame: int, metadata: Optional[Dict[str, str]]):
         if metadata is not None:
             self._frame_metadata[frame] = DICOMSliceMetadata.from_dict(metadata)
@@ -3566,11 +3734,19 @@ class LabelRowV2:
     ) -> None:
         for frame_object_label in objects_list:
             object_hash = frame_object_label["objectHash"]
-            if object_hash not in self._objects_map:
+            if object_hash in self._objects_map:
+                self._add_coordinates_to_object_instance(frame_object_label, frame)
+            elif self.is_event_based:
+                # Attach empty, then write the stored entry: `add_object_instance` only admits an event-based
+                # object that is empty or terminated, and the first stored entry alone is neither.
+                label_class = self._ontology.structure.get_child_by_hash(
+                    frame_object_label["featureHash"], type_=Object
+                )
+                self.add_object_instance(ObjectInstance(label_class, object_hash=object_hash))
+                self._add_coordinates_to_object_instance(frame_object_label, frame)
+            else:
                 object_instance = self._create_new_object_instance(frame_object_label, frame)
                 self.add_object_instance(object_instance)
-            else:
-                self._add_coordinates_to_object_instance(frame_object_label, frame)
 
     def _add_objects_answers(self, object_answers: dict):
         for answer in object_answers.values():
@@ -3606,7 +3782,7 @@ class LabelRowV2:
         label_class = ontology.get_child_by_hash(feature_hash, type_=Object)
         object_instance = ObjectInstance(label_class, object_hash=object_hash)
 
-        coordinates = get_coordinates_from_frame_object_dict(frame_object_label)
+        coordinates = frame_object_coordinates(frame_object_label)
         object_frame_instance_info = _AnnotationMetadata.from_dict(frame_object_label)
 
         object_instance.set_for_frames(
@@ -3620,7 +3796,12 @@ class LabelRowV2:
             manual_annotation=object_frame_instance_info.manual_annotation,
             reviews=object_frame_instance_info.reviews,
             is_deleted=object_frame_instance_info.is_deleted,
+            event_kind=object_frame_instance_info.event_kind,
         )
+        # Reserved editor field: `set_for_frames` copies only the fields it knows, so carry it over by hand.
+        object_instance._frames_to_instance_data[
+            frame
+        ].annotation_metadata._interpolate = object_frame_instance_info._interpolate
         return object_instance
 
     # This is only to be used by non-frame modalities (e.g. Audio)
@@ -3719,10 +3900,10 @@ class LabelRowV2:
         object_hash = frame_object_label["objectHash"]
         object_instance = self._objects_map[object_hash]
 
-        coordinates = get_coordinates_from_frame_object_dict(frame_object_label)
+        coordinates = frame_object_coordinates(frame_object_label)
         object_frame_instance_info = _AnnotationMetadata.from_dict(frame_object_label)
 
-        object_instance.set_for_frames(
+        object_instance._set_for_frames(
             coordinates=coordinates,
             frames=frame,
             created_at=object_frame_instance_info.created_at,
@@ -3733,7 +3914,12 @@ class LabelRowV2:
             manual_annotation=object_frame_instance_info.manual_annotation,
             reviews=object_frame_instance_info.reviews,  # type: ignore
             is_deleted=object_frame_instance_info.is_deleted,
+            event_kind=object_frame_instance_info.event_kind,
         )
+        # Reserved editor field: `set_for_frames` copies only the fields it knows, so carry it over by hand.
+        object_instance._frames_to_instance_data[
+            frame
+        ].annotation_metadata._interpolate = object_frame_instance_info._interpolate
 
     def _parse_root_classifications_from_answers(self, classification_answers: Dict[str, ClassificationAnswer]) -> None:
         """Create the classification instances the label row holds itself from `classification_answers`.
@@ -3829,7 +4015,7 @@ class LabelRowV2:
         classification_instance = ClassificationInstance(
             label_class,
             classification_hash=classification_hash,
-            range_only=self._is_free_time_scene() or not is_geometric(self.data_type),
+            range_only=self.is_event_based or not is_geometric(self.data_type),
         )
 
         classification_instance.set_for_frames(

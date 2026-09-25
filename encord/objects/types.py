@@ -160,6 +160,13 @@ class BaseFrameObject(BaseFrameObjectRequired, total=False):
     manualAnnotation: bool
     reviews: list[Any]  # TODO: Remove this as its deprecated
     isDeleted: bool  # TODO: Remove this as its deprecated, although its still being sent out
+    event: Literal["upsert", "delete"]
+    """Only present on event-based (continuous scene) label rows, where an entry is a sparse event on a
+    continuous timeline rather than a label on a frame. Missing reads as ``"upsert"``."""
+    interpolate: Literal["hold"]
+    """Reserved per-keyframe field on continuous scenes, in practice unset. Unset, ``null`` and ``"hold"`` all
+    mean no interpolation; every other mode is refused, as the SDK would have to interpolate to read it
+    correctly."""
 
 
 class BoundingBoxFrameObject(BaseFrameObject, BoundingBoxFrameCoordinatesDict):

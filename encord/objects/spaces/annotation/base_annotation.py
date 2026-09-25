@@ -4,9 +4,10 @@ import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, cast
 
 from encord.common.time_parser import parse_datetime
+from encord.exceptions import LabelRowError
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import Coordinates
 from encord.objects.types import BaseFrameObject, ClassificationAnswer, FrameClassification
@@ -17,6 +18,28 @@ if TYPE_CHECKING:
     from encord.objects.spaces.base_space import Space
 
 logger = logging.getLogger(__name__)
+
+SUPPORTED_INTERPOLATION_MODES = {"hold"}
+"""The `interpolate` modes the SDK can read."""
+
+
+def _parse_interpolate(value: Any) -> Optional[Literal["hold"]]:
+    """Read a stored `interpolate` value, refusing any mode the SDK would misread.
+
+    Absent (the usual case), `null`, and `hold` all mean no interpolation: the keyframe's geometry stands until
+    the next keyframe, which is what the SDK already does. Any other mode means the platform draws something
+    between keyframes that the SDK does not compute, so reading a frame in between would report the keyframe's
+    coordinates — not what the label means. Refuse it rather than misreport it.
+    """
+    if value is None or value in SUPPORTED_INTERPOLATION_MODES:
+        return cast(Optional[Literal["hold"]], value)
+    supported_modes = ", ".join(sorted(SUPPORTED_INTERPOLATION_MODES))
+    raise LabelRowError(
+        f"This label carries `interpolate: {value!r}`, which this version of the SDK does not support: it reads "
+        f"only `{supported_modes}`, with the geometry standing unchanged until the next "
+        f"keyframe. Reading an interpolated label that way would report coordinates the platform does not show, "
+        f"so the label is refused rather than misread. Upgrade the SDK to work with this label row."
+    )
 
 
 @dataclass
@@ -35,6 +58,13 @@ class _AnnotationMetadata:
     is_deleted: Optional[bool] = None
     # TODO: We want tod deprecate this field.
     reviews: Optional[List[dict[Any, Any]]] = None
+    event_kind: Optional[Literal["upsert", "delete"]] = None
+    """Only set on event-based label rows. None means the entry is untagged and reads as an upsert."""
+    _interpolate: Optional[Literal["hold"]] = None
+    """Reserved: a per-keyframe `interpolate` value the editor may write on continuous scenes. In practice it is
+    unset; unset, `null` and `hold` all mean no interpolation, which is what the SDK does. Any other mode is
+    refused at parse time rather than misread. Round-tripped verbatim where a label carries it, never exposed on
+    any public object, never invented, and not emitted when absent."""
 
     @staticmethod
     def from_dict(d: BaseFrameObject | FrameClassification | ClassificationAnswer) -> "_AnnotationMetadata":
@@ -63,6 +93,8 @@ class _AnnotationMetadata:
             is_deleted=cast(
                 Optional[bool], d.get("isDeleted", None)
             ),  # Only here for backwards compatibility, do not use this
+            event_kind=cast(Optional[Literal["upsert", "delete"]], d.get("event", None)),
+            _interpolate=_parse_interpolate(d.get("interpolate", None)),
         )
 
     def update_from_optional_fields(
@@ -76,6 +108,7 @@ class _AnnotationMetadata:
         manual_annotation: Optional[bool] = None,
         is_deleted: Optional[bool] = None,  # This field is deprecated. Please do not use this field.
         reviews: Optional[List[Dict[Any, Any]]] = None,  # This field is deprecated. Please do not use this field.
+        event_kind: Optional[Literal["upsert", "delete"]] = None,
     ) -> None:
         """Update the AnnotationInfo fields with the specified values.
         Args:
@@ -87,6 +120,7 @@ class _AnnotationMetadata:
             manual_annotation: Optional manual annotation flag.
             reviews: Optional list of reviews.
             is_deleted: Optional deleted flag.
+            event_kind: Optional event kind on an event-based label row.
         """
         self.created_at = created_at or self.created_at
         if created_by is not None:
@@ -102,6 +136,8 @@ class _AnnotationMetadata:
             self.is_deleted = is_deleted
         if reviews is not None:
             self.reviews = reviews
+        if event_kind is not None:
+            self.event_kind = event_kind
 
 
 @dataclass

@@ -12,6 +12,7 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from dataclasses import dataclass
+from operator import index
 from typing import Collection, List, Set, Union, cast
 
 
@@ -155,6 +156,31 @@ def ranges_list_to_ranges(range_list: List[List[int]]) -> Ranges:
         Ranges: A list of Range objects created from the input list of lists.
     """
     return [Range(start, end) for start, end in range_list]
+
+
+def frames_class_to_ranges(frames_class: Frames) -> Ranges:
+    """Convert a frame selector to ranges without enumerating the frames inside them.
+
+    Reversed ranges select no frames, matching `frames_class_to_frames_list`.
+
+    Args:
+        frames_class: A single int, a list of ints, a Range, or a list of Ranges.
+
+    Raises:
+        RuntimeError: If the input frames_class is of an unexpected type.
+    """
+    if isinstance(frames_class, int):
+        return [Range(frames_class, frames_class)]
+    elif isinstance(frames_class, Range):
+        start, end = index(frames_class.start), index(frames_class.end)
+        return [Range(start, end)] if start <= end else []
+    elif isinstance(frames_class, list):
+        if all(isinstance(x, int) for x in frames_class):
+            return frames_to_ranges(sorted(set(cast(List[int], frames_class))))
+        elif all(isinstance(x, Range) for x in frames_class):
+            return [r for frame_range in cast(Ranges, frames_class) for r in frames_class_to_ranges(frame_range)]
+
+    raise RuntimeError("Unexpected type for frames.")
 
 
 def frames_class_to_frames_list(frames_class: Frames) -> List[int]:

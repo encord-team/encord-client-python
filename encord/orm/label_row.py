@@ -187,6 +187,7 @@ class LabelRow(base_orm.BaseORM):
             ("annotation_task_status", str),
             ("is_valid", bool),
             ("spaces", dict),
+            ("scene", dict),
         ]
     )
 

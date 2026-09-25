@@ -42,9 +42,9 @@ class SceneTimeSeriesTile(_SceneLayoutModel):
         Field(min_length=1, description="Name of the composite scene time-series stream displayed by the tile."),
     ]
     timeseries_settings: Annotated[
-        TimeSeriesViewSettings,
+        Optional[TimeSeriesViewSettings],
         Field(description="Initial rendering settings for the time-series stream."),
-    ]
+    ] = None
 
 
 SceneTile = Annotated[
@@ -114,8 +114,8 @@ class SceneLayout(_SceneLayoutModel):
         viewer_tile_ids = [
             tile_id for tile_id, tile in scene_layout.tiles.items() if isinstance(tile, Scene3DViewerTile)
         ]
-        if viewer_tile_ids and viewer_tile_ids != ["0"]:
-            raise ValueError("The 3D viewer must be the single tile with ID '0'")
+        if len(viewer_tile_ids) > 1:
+            raise ValueError("Layout can contain at most one 3D viewer tile")
 
         referenced_tile_ids = set(layout_tile_ids) | timeline_tile_ids
         if unknown_tile_ids := referenced_tile_ids - tile_ids:

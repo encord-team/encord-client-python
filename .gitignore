@@ -138,3 +138,7 @@ script.py
 
 # VIM temporary files
 .*.swp
+
+# Local planning artefacts (coding-skills specs/plans and SDD workspace)
+docs/coding-skills/
+.coding-skills/

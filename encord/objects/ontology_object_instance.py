@@ -11,6 +11,7 @@ category: "64e481b57b6027003f20aaa0"
 
 from __future__ import annotations
 
+from bisect import bisect_left
 from collections import defaultdict
 from copy import deepcopy
 from dataclasses import dataclass
@@ -38,19 +39,35 @@ from encord.objects.attributes import Attribute, NumericAttribute, _get_attribut
 from encord.objects.constants import DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import (
     ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS,
+    EVENT_SHAPES,
     NON_GEOMETRIC_COORDINATES,
     AudioCoordinates,
     Coordinates,
+    EventCoordinates,
     GeometricCoordinates,
     HtmlCoordinates,
     TextCoordinates,
     TimeRangeCoordinates,
+    UpsertEventCoordinates,
+    zeroed_coordinates,
+)
+from encord.objects.events import (
+    EventKind,
+    LabelDeleteEvent,
+    LabelEvent,
+    LabelUpsertEvent,
+    check_events_terminated,
+    event_ranges,
+    events_intersect,
+    prune_dangling_deletes,
+    resolve_event_at,
 )
 from encord.objects.frames import (
     Frames,
     Range,
     Ranges,
     frames_class_to_frames_list,
+    frames_class_to_ranges,
     frames_to_ranges,
     ranges_list_to_ranges,
 )
@@ -100,6 +117,311 @@ class ObjectInstance:
 
     def _is_assigned_to_space(self) -> bool:
         return bool(self._spaces)
+
+    def _is_event_based(self) -> bool:
+        """Whether this object's labels are sparse events on a continuous timeline.
+
+        Range-based shapes (audio, text, time range) keep their range semantics regardless of the row flag, and
+        objects on a space have no time axis of their own: neither is ever event-based.
+        """
+        return (
+            not self._non_geometric
+            and not self._is_assigned_to_space()
+            and self._parent is not None
+            and self._parent.is_event_based
+        )
+
+    def _stored_frames(self) -> set[int]:
+        """Every frame this object has a stored entry on, `delete` markers included.
+
+        The internal counterpart to `get_annotation_frames`, which is a read API and is refused outright on an
+        event-based row. Serialisation and the frame-to-hash bookkeeping need the markers: dropping them would
+        strip each object's terminator and leave it present with no end.
+        """
+        return set(self._frames_to_instance_data.keys())
+
+    def _check_not_event_based(self, method: str, reason: str) -> None:
+        """Internal. Refuse a frame-grid API on a row whose labels are sparse events.
+
+        Raised rather than answered: every one of these either assumes a frame grid the row does not have, or
+        would quietly report something that means a different thing here than it does on a dense row.
+        """
+        if self._is_event_based():
+            raise LabelRowError(
+                f"`{method}` is not available on an event-based label row. {reason} Read the object with "
+                f"`get_events`, `get_ranges` and `get_annotation(frame)`; write it with `upsert_event`, "
+                f"`delete_event` and `remove_event`."
+            )
+
+    def _event_kind_at(self, frame: int) -> EventKind:
+        """The kind of the entry stored on `frame`, defaulting an untagged entry to `upsert`."""
+        kind = self._frames_to_instance_data[frame].annotation_metadata.event_kind
+        return "upsert" if kind is None else kind
+
+    def _sorted_events(self) -> List[LabelEvent]:
+        """This object's stored entries as events, sorted by frame ascending."""
+        events: List[LabelEvent] = []
+        for frame in sorted(self._frames_to_instance_data.keys()):
+            data = self._frames_to_instance_data[frame]
+            metadata = data.annotation_metadata
+            if self._event_kind_at(frame) == "delete":
+                events.append(LabelDeleteEvent(frame=frame, metadata=metadata))
+            else:
+                events.append(
+                    LabelUpsertEvent(
+                        frame=frame,
+                        metadata=metadata,
+                        coordinates=cast(EventCoordinates, cast(_GeometricAnnotationData, data).coordinates),
+                    )
+                )
+        return events
+
+    def _check_events_terminated(self) -> None:
+        """Raise if this object's events end on an upsert, leaving it present with no end.
+
+        Dangling while a caller is still building the object up is fine — `upsert` then `delete` must not be a
+        two-step error — so the label row applies this only on parse and on save.
+        """
+        check_events_terminated(self._sorted_events(), object_hash=self.object_hash)
+
+    def _has_event_tags(self) -> bool:
+        """Whether any stored entry carries an `event` tag. Cheap: stored entries are sparse."""
+        return any(data.annotation_metadata.event_kind is not None for data in self._frames_to_instance_data.values())
+
+    def _event_tagged_frames(self) -> List[int]:
+        """Frames whose stored entry carries an `event` tag, sorted ascending."""
+        return [
+            frame
+            for frame in sorted(self._frames_to_instance_data)
+            if self._frames_to_instance_data[frame].annotation_metadata.event_kind is not None
+        ]
+
+    def _is_present_over(self, ranges: Ranges) -> bool:
+        """Whether this object is present anywhere in `ranges` on an event-based row.
+
+        Presence is range containment, not keyframe membership: an object upserted once holds until its
+        delete, so it is present at every offset in between even though nothing is stored there.
+        """
+        events = self._sorted_events()
+        return any(events_intersect(events, range_.start, range_.end) for range_ in ranges)
+
+    def _check_event_based(self, method: str) -> None:
+        if self._parent is None and not self._is_assigned_to_space():
+            raise LabelRowError(
+                f"`{method}` requires this object to be attached to an event-based label row. "
+                "Call `label_row.add_object_instance(object_instance)` first."
+            )
+        if not self._is_event_based():
+            raise LabelRowError(
+                f"`{method}` is only available on an event-based label row. "
+                "This object's label row is not event-based; use `set_for_frames`, `get_annotation` and "
+                "`remove_from_frames` instead."
+            )
+
+    def get_events(self) -> List[LabelEvent]:
+        """All stored events of this object on an event-based label row, sorted by frame.
+
+        Includes `delete` markers. Use :meth:`get_ranges` for the ranges the object is present over.
+
+        Raises:
+            LabelRowError: If the label row is not event-based.
+        """
+        self._check_event_based("get_events")
+        return self._sorted_events()
+
+    def get_ranges(self) -> Ranges:
+        """The minimal closed ranges this object is present over.
+
+        On a frame-based label row these are the frames it is annotated on, run-length encoded. On an
+        event-based row they are the stretches each `upsert` holds over, closed by the `delete` that ends
+        them. On a range-only object (audio, text, time range) they are the object's own ranges.
+
+        Raises:
+            LabelRowError: If the object's events end on an `upsert` with no closing `delete`.
+        """
+        if self._non_geometric:
+            return self.range_list or []
+        if self._is_event_based():
+            return event_ranges(self._sorted_events())
+        return frames_to_ranges(self.get_annotation_frames())
+
+    def _store_event(
+        self,
+        frame: int,
+        kind: EventKind,
+        coordinates: Coordinates,
+        *,
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        confidence: Optional[float] = None,
+        manual_annotation: Optional[bool] = None,
+    ) -> None:
+        geometric_coordinates = cast(GeometricCoordinates, coordinates)
+        existing = self._frames_to_instance_data.get(frame)
+        if existing is None:
+            existing = _GeometricAnnotationData(
+                coordinates=geometric_coordinates, annotation_metadata=_AnnotationMetadata()
+            )
+            self._frames_to_instance_data[frame] = existing
+        cast(_GeometricAnnotationData, existing).coordinates = geometric_coordinates
+        if kind == "delete":
+            # A marker is not a keyframe: reserved keyframe fields must not carry over onto it.
+            existing.annotation_metadata._interpolate = None
+        existing.annotation_metadata.update_from_optional_fields(
+            created_at=created_at,
+            created_by=created_by,
+            last_edited_at=last_edited_at,
+            last_edited_by=last_edited_by,
+            confidence=confidence,
+            manual_annotation=manual_annotation,
+            event_kind=kind,
+        )
+        if self._parent is not None:
+            # Re-register with the row: `_drop_event_frames` removes the object from `_objects_map` once it has
+            # no frames left, but leaves `_parent` set. Without this, a later upsert would be added to
+            # `_frame_to_hashes` but stay absent from `_objects_map`, so it would never be exported.
+            self._parent._objects_map.setdefault(self.object_hash, self)
+            self._parent.add_to_single_frame_to_hashes_map(self, frame)
+
+    def _drop_event_frames(self, frames: Iterable[int]) -> None:
+        frames_list = [f for f in frames if f in self._frames_to_instance_data]
+        for frame in frames_list:
+            self._frames_to_instance_data.pop(frame)
+        if self._parent is not None:
+            self._parent._remove_from_frame_to_hashes_map(frames_list, self.object_hash)
+            if len(self._frames_to_instance_data) == 0 and self.object_hash in self._parent._objects_map:
+                del self._parent._objects_map[self.object_hash]
+
+    def _prune_dangling_deletes(self) -> None:
+        if self._frames_to_instance_data:
+            self._drop_event_frames(prune_dangling_deletes(self._sorted_events()))
+
+    def upsert_event(
+        self,
+        coordinates: UpsertEventCoordinates,
+        frame: int,
+        *,
+        overwrite: bool = False,
+        created_at: Optional[datetime] = None,
+        created_by: Optional[str] = None,
+        last_edited_at: Optional[datetime] = None,
+        last_edited_by: Optional[str] = None,
+        confidence: Optional[float] = None,
+        manual_annotation: Optional[bool] = None,
+    ) -> None:
+        """Write a keyframe on an event-based label row: from `frame` on, the object has these coordinates.
+
+        The keyframe holds until the object's next event, or indefinitely if there is none. A `delete` marker
+        stored on `frame` is replaced.
+
+        Args:
+            coordinates: The geometry from `frame` onward. Must match the ontology object's shape.
+            frame: The frame (nanosecond offset relative to the start of the scene on a continuous scene) the
+                keyframe starts at. Must be >= 0.
+            overwrite: Required to replace an upsert already stored on `frame`.
+            created_at: Optionally the creation time. Defaults to now.
+            created_by: Optionally the creator. Defaults to the SDK user.
+            last_edited_at: Optionally the last edit time. Defaults to now.
+            last_edited_by: Optionally the last editor. Defaults to the SDK user.
+            confidence: Optionally the confidence. Defaults to `1.0`.
+            manual_annotation: Optionally whether this was a manual annotation. Defaults to `True`.
+
+        Raises:
+            LabelRowError: If the row is not event-based, the coordinates do not match the ontology shape,
+                `frame` is negative, or an upsert exists on `frame` and `overwrite` is False.
+        """
+        self._check_event_based("upsert_event")
+        self._operation_not_allowed_for_objects_on_space()
+        if self._ontology_object.shape not in EVENT_SHAPES:
+            raise LabelRowError(
+                f"Objects of shape `{self._ontology_object.shape}` cannot be written to an event-based label row; "
+                f"only {sorted(s.value for s in EVENT_SHAPES)} are supported."
+            )
+        check_coordinate_type(coordinates, self._ontology_object, self._parent)
+        if frame < 0:
+            raise LabelRowError(f"The supplied frame of `{frame}` must be `0` or greater.")
+
+        if frame in self._frames_to_instance_data and self._event_kind_at(frame) == "upsert" and not overwrite:
+            raise LabelRowError(
+                f"An upsert already exists at frame `{frame}`. Set `overwrite=True` to replace it, "
+                "or call `remove_event(frame)` first."
+            )
+
+        self._store_event(
+            frame,
+            "upsert",
+            coordinates,
+            created_at=created_at,
+            created_by=created_by,
+            last_edited_at=last_edited_at,
+            last_edited_by=last_edited_by,
+            confidence=confidence,
+            manual_annotation=manual_annotation,
+        )
+        self._prune_dangling_deletes()
+
+    def delete_event(self, frame: int) -> None:
+        """Write a `delete` on an event-based label row: from `frame` on, the object does not exist.
+
+        The object reappears at its next upsert, if any. A delete that would terminate nothing (the object is
+        already absent at `frame`) is not written. Where `frame` holds the object's own opening keyframe, that
+        keyframe is removed instead. Deletes left terminating nothing are pruned, and an object with no events
+        left is removed from its label row.
+
+        Args:
+            frame: The frame (nanosecond offset relative to the start of the scene on a continuous scene) the
+                object ends at.
+
+        Raises:
+            LabelRowError: If the row is not event-based.
+        """
+        self._check_event_based("delete_event")
+        self._operation_not_allowed_for_objects_on_space()
+
+        events = self._sorted_events()
+        resolved = resolve_event_at(events, frame)
+        if resolved is None:
+            return
+
+        opens_a_stretch = resolved.frame == frame and (frame == 0 or resolve_event_at(events, frame - 1) is None)
+        if opens_a_stretch:
+            self._drop_event_frames([frame])
+            self._prune_dangling_deletes()
+            return
+
+        self._store_event(
+            frame,
+            "delete",
+            zeroed_coordinates(self._ontology_object.shape),
+            created_at=resolved.metadata.created_at,
+            created_by=resolved.metadata.created_by,
+            last_edited_at=resolved.metadata.last_edited_at,
+            last_edited_by=resolved.metadata.last_edited_by,
+            confidence=resolved.metadata.confidence,
+            manual_annotation=resolved.metadata.manual_annotation,
+        )
+        self._prune_dangling_deletes()
+
+    def remove_event(self, frame: int) -> None:
+        """Erase the event stored on `frame` on an event-based label row, as if it were never written.
+
+        Unlike :meth:`delete_event`, which adds an event saying the object ends, this removes one. Deletes left
+        terminating nothing are pruned. An object with no events left is removed from its label row.
+
+        Args:
+            frame: The frame of the stored event.
+
+        Raises:
+            LabelRowError: If the row is not event-based or nothing is stored on `frame`.
+        """
+        self._check_event_based("remove_event")
+        self._operation_not_allowed_for_objects_on_space()
+        if frame not in self._frames_to_instance_data:
+            raise LabelRowError(f"No event is stored at frame `{frame}`. See `get_events()` for the stored frames.")
+        self._drop_event_frames([frame])
+        self._prune_dangling_deletes()
 
     def _add_to_space(self, space: Space) -> None:
         self._spaces[space.space_id] = space
@@ -488,6 +810,7 @@ class ObjectInstance:
         manual_annotation: Optional[bool] = None,
         reviews: Optional[List[dict]] = None,  # This field is deprecated. It will always be None.
         is_deleted: Optional[bool] = None,
+        event_kind: Optional[EventKind] = None,  # Should only be set by internal functions.
     ) -> None:
         """Place the object onto the specified frame(s).
 
@@ -513,6 +836,7 @@ class ObjectInstance:
             manual_annotation: Optionally specify whether the object instance on this frame was manually annotated. Defaults to `True`.
             reviews: Should only be set by internal functions.
             is_deleted: Should only be set by internal functions.
+            event_kind: Should only be set by internal functions.
         """
         if self._non_geometric:
             if not isinstance(coordinates, tuple(NON_GEOMETRIC_COORDINATES)):
@@ -523,6 +847,11 @@ class ObjectInstance:
                     f"For objects with a non-geometric shape (e.g. {Shape.TEXT} and {Shape.AUDIO}), "
                     f"There is only one frame. Please ensure `set_for_frames` is called with `frames=0`."
                 )
+
+        self._check_not_event_based(
+            "set_for_frames",
+            "Labels are sparse events rather than per-frame entries; a keyframe is written with `upsert_event`.",
+        )
 
         self._operation_not_allowed_for_objects_on_space(
             extended_message="For adding the object to different frames on a space, use Space.place_object."
@@ -540,7 +869,20 @@ class ObjectInstance:
             manual_annotation=manual_annotation,
             reviews=reviews,
             is_deleted=is_deleted,
+            event_kind=event_kind,
         )
+
+        if event_kind is None and self._has_event_tags():
+            # A real (non-parsing) write of coordinates invalidates any `event` tag parsed onto this frame: the
+            # row must not export freshly written geometry still labelled `event: "delete"`.
+            #
+            # Guarded, because this is a second expansion of `frames` on top of the one `_set_for_frames` just
+            # did. Stored entries are sparse even on an event-based row, so the guard is cheap, and it skips the
+            # pass outright on every row that has no tags to clear — which is every frame-based row.
+            for frame in frames_class_to_frames_list(frames):
+                frame_data = self._frames_to_instance_data.get(frame)
+                if frame_data is not None:
+                    frame_data.annotation_metadata.event_kind = None
 
     def _set_for_frames(
         self,
@@ -556,6 +898,7 @@ class ObjectInstance:
         manual_annotation: Optional[bool] = None,
         reviews: Optional[List[dict]] = None,  # This field is deprecated. It will always be None.
         is_deleted: Optional[bool] = None,
+        event_kind: Optional[EventKind] = None,
     ):
         """
         Used internally to set the frames on the object instance itself
@@ -603,6 +946,7 @@ class ObjectInstance:
                 manual_annotation=manual_annotation,
                 is_deleted=is_deleted,
                 reviews=reviews,
+                event_kind=event_kind,
             )
 
             if isinstance(existing_frame_data, _GeometricAnnotationData):
@@ -630,6 +974,10 @@ class ObjectInstance:
 
     def get_annotation(self, frame: Union[int, str] = 0) -> Annotation:
         """Get the annotation for the object instance on the specified frame.
+
+        On an event-based label row this returns a read-only `ObjectInstance.ResolvedAnnotation` (see its
+        `is_virtual` and `keyframe`) resolved from the keyframe holding over the frame; it raises where the
+        object does not exist.
 
         Args:
             frame: Either the frame number or the image hash if the data type is an image or image group.
@@ -661,6 +1009,15 @@ class ObjectInstance:
         else:
             frame_num = frame
 
+        if self._is_event_based():
+            resolved = resolve_event_at(self._sorted_events(), frame_num)
+            if resolved is None:
+                raise LabelRowError(
+                    f"The object does not exist at frame `{frame_num}` on this event-based label row: no upsert "
+                    "holds over it. Use `get_ranges()` to see where the object is present."
+                )
+            return self.ResolvedAnnotation(self, frame_num, keyframe=resolved.frame)
+
         return self.Annotation(self, frame_num)
 
     def copy(self) -> ObjectInstance:
@@ -683,7 +1040,17 @@ class ObjectInstance:
 
         Returns:
             List[Annotation]: A list of `ObjectInstance.Annotation` in order of available frames.
+
+        Raises:
+            LabelRowError: If the label row is event-based.
         """
+        self._check_not_event_based(
+            "get_annotations",
+            "The object is present over ranges rather than on a list of frames, and its stored entries are "
+            "keyframes and `delete` markers rather than annotations, so a marker would be reported as a label "
+            "carrying zeroed geometry.",
+        )
+
         if self._is_assigned_to_space():
             res: List[ObjectInstance.Annotation] = []
             for space in self._spaces.values():
@@ -703,8 +1070,16 @@ class ObjectInstance:
 
         Returns:
             List[Annotation]: A list of `ObjectInstance.Annotation` in order of available frames.
+
+        Raises:
+            LabelRowError: If the label row is event-based.
         """
         self._operation_not_allowed_for_objects_on_space()
+        self._check_not_event_based(
+            "get_annotation_frames",
+            "The stored frames are keyframes and `delete` markers, so the answer would include the offset at "
+            "which the object stops existing as one it is annotated on.",
+        )
 
         return {self.get_annotation(frame_num).frame for frame_num in sorted(self._frames_to_instance_data.keys())}
 
@@ -719,6 +1094,12 @@ class ObjectInstance:
                 f"For objects with a non-geometric shape (e.g. {Shape.TEXT} and {Shape.AUDIO}), "
                 f"There is only one frame. Please ensure `remove_from_frames` is called with `frames=0`."
             )
+
+        self._check_not_event_based(
+            "remove_from_frames",
+            "Labels are sparse events rather than per-frame entries; end the object with `delete_event` or erase "
+            "a stored event with `remove_event`.",
+        )
 
         self._operation_not_allowed_for_objects_on_space(
             extended_message="For removing the object from different frames on a space, use Space.unplace_object."
@@ -755,10 +1136,15 @@ class ObjectInstance:
         Raises:
             LabelRowError: If there are dynamic answers on frames without coordinates.
         """
-        dynamic_frames = set(self._dynamic_answer_manager.frames())
-        local_frames = self.get_annotation_frames()
+        self._operation_not_allowed_for_objects_on_space()
+        self._check_dynamic_answers_within(self.get_ranges())
 
-        if not len(dynamic_frames - local_frames) == 0:
+    def _check_dynamic_answers_within(self, ranges: Ranges) -> None:
+        """Raise if any dynamic answer sits outside `ranges`, the frames the object has coordinates on."""
+        answered = RangeManager(self._dynamic_answer_manager.answered_ranges())
+        answered.remove_ranges(ranges)
+
+        if answered.get_ranges():
             raise LabelRowError(
                 "There are some dynamic answers on frames that have no coordinates. "
                 "Please ensure that all the dynamic answers are only on frames where coordinates "
@@ -830,6 +1216,97 @@ class ObjectInstance:
                 raise LabelRowError(
                     "Trying to use an ObjectInstance.Annotation for an ObjectInstance that is not on the frame"
                 )
+
+    class ResolvedAnnotation(Annotation):
+        """A read-only view of an object at a frame on an event-based label row.
+
+        The view reads from the upsert keyframe holding over `frame`. `is_virtual` is `False` when an upsert is
+        stored on exactly this frame and `True` when the frame inherits an earlier keyframe. Writes must go
+        through `ObjectInstance.upsert_event`, `delete_event` and `remove_event`; every setter here raises.
+        """
+
+        _READ_ONLY_MESSAGE = (
+            "This is a read-only resolved view on an event-based label row. "
+            "Use `ObjectInstance.upsert_event(...)` to write a keyframe instead."
+        )
+
+        def __init__(self, object_instance: ObjectInstance, frame: int, *, keyframe: int):
+            super().__init__(object_instance, frame)
+            self._keyframe = keyframe
+
+        @property
+        def keyframe(self) -> int:
+            """The frame of the stored upsert this view reads from."""
+            return self._keyframe
+
+        @property
+        def is_virtual(self) -> bool:
+            """True when no upsert is stored on exactly this frame and the view inherits an earlier keyframe."""
+            return self._frame != self._keyframe
+
+        def _get_annotation_data(self) -> _AnnotationData:
+            return self._object_instance._frames_to_instance_data[self._keyframe]
+
+        def _check_if_annotation_is_valid(self) -> None:
+            if self._keyframe not in self._object_instance._frames_to_instance_data:
+                raise LabelRowError("The keyframe this resolved view reads from no longer exists.")
+
+        @property
+        def coordinates(self) -> Coordinates:
+            self._check_if_annotation_is_valid()
+            return cast(_GeometricAnnotationData, self._get_annotation_data()).coordinates
+
+        @coordinates.setter
+        def coordinates(self, coordinates: Coordinates) -> None:
+            raise LabelRowError(self._READ_ONLY_MESSAGE)
+
+        @property
+        def created_at(self) -> datetime:
+            return super().created_at
+
+        @created_at.setter
+        def created_at(self, created_at: datetime) -> None:
+            raise LabelRowError(self._READ_ONLY_MESSAGE)
+
+        @property
+        def created_by(self) -> Optional[str]:
+            return super().created_by
+
+        @created_by.setter
+        def created_by(self, created_by: Optional[str]) -> None:
+            raise LabelRowError(self._READ_ONLY_MESSAGE)
+
+        @property
+        def last_edited_at(self) -> datetime:
+            return super().last_edited_at
+
+        @last_edited_at.setter
+        def last_edited_at(self, last_edited_at: datetime) -> None:
+            raise LabelRowError(self._READ_ONLY_MESSAGE)
+
+        @property
+        def last_edited_by(self) -> Optional[str]:
+            return super().last_edited_by
+
+        @last_edited_by.setter
+        def last_edited_by(self, last_edited_by: Optional[str]) -> None:
+            raise LabelRowError(self._READ_ONLY_MESSAGE)
+
+        @property
+        def confidence(self) -> float:
+            return super().confidence
+
+        @confidence.setter
+        def confidence(self, confidence: float) -> None:
+            raise LabelRowError(self._READ_ONLY_MESSAGE)
+
+        @property
+        def manual_annotation(self) -> bool:
+            return super().manual_annotation
+
+        @manual_annotation.setter
+        def manual_annotation(self, manual_annotation: bool) -> None:
+            raise LabelRowError(self._READ_ONLY_MESSAGE)
 
     @dataclass
     class FrameData:
@@ -961,6 +1438,148 @@ def check_coordinate_type(coordinates: Coordinates, ontology_object: Object, par
             )
 
 
+class AnswerRangeIndex:
+    """Internal range storage for dynamic answers, preserving global answer insertion order.
+
+    The attribute index contains sorted, non-overlapping intervals. The answer index
+    maps interval starts to ends so replacing a fragment does not shift a sorted list.
+    All mutations update both indexes together.
+    """
+
+    def __init__(self) -> None:
+        self._answers_to_ranges: Dict[Answer, Dict[int, int]] = {}
+        self._ranges_by_attribute: Dict[str, List[Tuple[int, int, Answer]]] = {}
+
+    def assign(self, answer: Answer, ranges: Ranges) -> None:
+        """Assign an answer over ranges, replacing overlaps and merging equal neighbors."""
+        ranges = RangeManager(ranges).get_ranges()
+        if not ranges:
+            return
+        attribute = answer.ontology_attribute
+
+        # Replace a complete interval in place to avoid shifting the index twice per point edit.
+        replace_in_place = False
+        intervals = self._ranges_by_attribute.get(attribute.feature_node_hash, [])
+        if len(ranges) == 1:
+            range_ = ranges[0]
+            index = bisect_left(intervals, (range_.start,))
+            if index < len(intervals):
+                start, end, previous_answer = intervals[index]
+                if start == range_.start and end == range_.end and previous_answer.ontology_attribute == attribute:
+                    replace_in_place = True
+                    previous_ranges = self._answers_to_ranges[previous_answer]
+                    del previous_ranges[start]
+                    if not previous_ranges:
+                        del self._answers_to_ranges[previous_answer]
+        if not replace_in_place:
+            self.remove(attribute, ranges)
+
+        answer_ranges = self._answers_to_ranges.setdefault(answer, {})
+        intervals = self._ranges_by_attribute.setdefault(attribute.feature_node_hash, [])
+        for range_ in ranges:
+            first = last = bisect_left(intervals, (range_.start,))
+            if replace_in_place:
+                last += 1
+            start, end = range_.start, range_.end
+            if first > 0 and intervals[first - 1][1] == start - 1 and intervals[first - 1][2] == answer:
+                first -= 1
+                start = intervals[first][0]
+                del answer_ranges[start]
+            if last < len(intervals) and intervals[last][0] == end + 1 and intervals[last][2] == answer:
+                del answer_ranges[intervals[last][0]]
+                end = intervals[last][1]
+                last += 1
+            answer_ranges[start] = end
+            intervals[first:last] = [(start, end, answer)]
+
+    def remove(
+        self,
+        attribute: Attribute,
+        ranges: Optional[Ranges] = None,
+        filter_answer: Union[str, NumericAnswerValue, Option, Iterable[Option], None] = None,
+    ) -> None:
+        """Remove matching answers on selected ranges, or throughout the attribute when omitted."""
+        intervals = self._ranges_by_attribute.get(attribute.feature_node_hash)
+        if not intervals:
+            return
+        if ranges is None:
+            ranges = [Range(intervals[0][0], intervals[-1][1])]
+        for range_ in ranges:
+            if range_.start > range_.end:
+                continue
+            first, last = self._overlap_bounds(intervals, range_)
+            remaining = []
+            for start, end, answer in intervals[first:last]:
+                if answer.ontology_attribute != attribute or (
+                    filter_answer is not None and answer.is_answered() and answer.get() != filter_answer
+                ):
+                    remaining.append((start, end, answer))
+                    continue
+                answer_ranges = self._answers_to_ranges[answer]
+                del answer_ranges[start]
+                if start < range_.start:
+                    remaining.append((start, range_.start - 1, answer))
+                    answer_ranges[start] = range_.start - 1
+                if end > range_.end:
+                    remaining.append((range_.end + 1, end, answer))
+                    answer_ranges[range_.end + 1] = end
+                if not answer_ranges:
+                    del self._answers_to_ranges[answer]
+            intervals[first:last] = remaining
+        if not intervals:
+            del self._ranges_by_attribute[attribute.feature_node_hash]
+
+    def overlapping(self, attribute: Attribute, ranges: Ranges) -> Set[Answer]:
+        """Find answers whose intervals overlap any selected range."""
+        matching_answers: Set[Answer] = set()
+        intervals = self._ranges_by_attribute.get(attribute.feature_node_hash, [])
+        for range_ in ranges:
+            if range_.start > range_.end:
+                continue
+            first, last = self._overlap_bounds(intervals, range_)
+            matching_answers.update(answer for _, _, answer in intervals[first:last])
+        return matching_answers
+
+    @staticmethod
+    def _overlap_bounds(intervals: List[Tuple[int, int, Answer]], range_: Range) -> Tuple[int, int]:
+        first = bisect_left(intervals, (range_.start,))
+        if first > 0 and intervals[first - 1][1] >= range_.start:
+            first -= 1
+        last = bisect_left(intervals, (range_.end + 1,))
+        return first, last
+
+    def answers(self) -> Iterable[Answer]:
+        """Iterate answers in insertion order across all attributes."""
+        return self._answers_to_ranges.keys()
+
+    def ranges_for(self, answer: Answer) -> Ranges:
+        """Return independent, sorted ranges for a stored answer."""
+        return [Range(start, end) for start, end in sorted(self._answers_to_ranges[answer].items())]
+
+    def answered_ranges(self) -> Ranges:
+        """Return the merged coverage of every stored answer."""
+        merged = RangeManager()
+        # Merge in frame order to avoid repeatedly shifting interleaved answer fragments.
+        intervals = sorted(
+            interval for answer_ranges in self._answers_to_ranges.values() for interval in answer_ranges.items()
+        )
+        merged.add_ranges([Range(start, end) for start, end in intervals])
+        return merged.get_ranges()
+
+    def copy(self) -> AnswerRangeIndex:
+        """Copy both indexes together so they share the same copied answer objects."""
+        ret = AnswerRangeIndex()
+        ret._answers_to_ranges, ret._ranges_by_attribute = deepcopy(
+            (self._answers_to_ranges, self._ranges_by_attribute)
+        )
+        return ret
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, AnswerRangeIndex):
+            return False
+        return self._answers_to_ranges == other._answers_to_ranges
+
+
 class DynamicAnswerManager:
     """Manages dynamic answers for different frames of an ObjectInstance.
 
@@ -969,12 +1588,9 @@ class DynamicAnswerManager:
 
     def __init__(self, object_instance: ObjectInstance):
         self._object_instance = object_instance
-        self._frames_to_answers: Dict[int, Set[Answer]] = defaultdict(set)
-        self._answers_to_frames: Dict[Answer, Set[int]] = defaultdict(set)
+        self._range_index = AnswerRangeIndex()
+        # Unanswered templates used to validate which dynamic attributes belong to this object.
         self._dynamic_uninitialised_answer_options: Set[Answer] = self._get_dynamic_answers()
-        # ^ these are like the static answers. Everything that is possibly an answer. However,
-        # don't forget also nested-ness. In this case nested-ness should be ignored.
-        # ^ I might not need this object but only need the _get_dynamic_answers object.
 
     def is_valid_dynamic_attribute(self, attribute: Attribute) -> bool:
         """Check if the attribute is a valid dynamic attribute.
@@ -1003,29 +1619,8 @@ class DynamicAnswerManager:
             frames (Optional[Frames]): The frames to delete the answer for.
             filter_answer (Union[str, Option, Iterable[Option], None]): The specific answer to delete.
         """
-        if frames is None:
-            frames = [Range(i, i) for i in self._frames_to_answers.keys()]
-        frame_list = frames_class_to_frames_list(frames)
-
-        for frame in frame_list:
-            to_remove_answer = None
-            for answer_object in self._frames_to_answers[frame]:
-                if filter_answer is not None:
-                    if answer_object.is_answered() and answer_object.get() != filter_answer:
-                        continue
-
-                # ideally this would not be a log(n) operation, however these will not be extremely large.
-                if answer_object.ontology_attribute == attribute:
-                    to_remove_answer = answer_object
-                    break
-
-            if to_remove_answer is not None:
-                self._frames_to_answers[frame].remove(to_remove_answer)
-                if self._frames_to_answers[frame] == set():
-                    del self._frames_to_answers[frame]
-                self._answers_to_frames[to_remove_answer].remove(frame)
-                if self._answers_to_frames[to_remove_answer] == set():
-                    del self._answers_to_frames[to_remove_answer]
+        ranges = None if frames is None else frames_class_to_ranges(frames)
+        self._range_index.remove(attribute, ranges, filter_answer)
 
     def set_answer(
         self,
@@ -1041,8 +1636,13 @@ class DynamicAnswerManager:
             frames (Optional[Frames]): The frames to set the answer for.
         """
         if frames is None:
-            for available_frame_view in self._object_instance.get_annotations():
-                self._set_answer(answer, attribute, available_frame_view.frame)
+            if self._object_instance._is_event_based():
+                # Everywhere the object has coordinates: the stretches its upserts hold over, not the keyframes.
+                self._set_answer(answer, attribute, self._object_instance.get_ranges())
+            else:
+                # Preserve dense update order, including the insertion order of serialized answers.
+                for annotation in self._object_instance.get_annotations():
+                    self._set_answer(answer, attribute, annotation.frame)
             return
         self._set_answer(answer, attribute, frames)
 
@@ -1052,19 +1652,23 @@ class DynamicAnswerManager:
         attribute: Attribute,
         frames: Frames,
     ) -> None:
-        frame_list = frames_class_to_frames_list(frames)
-        for frame in frame_list:
-            self._object_instance.check_within_range(frame)
-
-        self.delete_answer(attribute, frames)
+        # Validate every range before deleting anything, including later entries in a range list.
+        ranges = sorted(frames_class_to_ranges(frames), key=lambda range_: range_.start)
+        for range_ in ranges:
+            self._object_instance.check_within_range(range_.start)
+            # Report the first invalid frame, as the expanded-frame implementation did.
+            end = min(range_.end, self._object_instance._last_frame)
+            self._object_instance.check_within_range(cast(int, end))
 
         default_answer = get_default_answer_from_attribute(attribute)
-        default_answer.set(answer)
+        try:
+            default_answer.set(answer)
+        except Exception:
+            # Preserve the existing deletion-before-answer-validation behavior on failed writes.
+            self.delete_answer(attribute, ranges)
+            raise
 
-        frame_list = frames_class_to_frames_list(frames)
-        for frame in frame_list:
-            self._frames_to_answers[frame].add(default_answer)
-            self._answers_to_frames[default_answer].add(frame)
+        self._range_index.assign(default_answer, ranges)
 
     def get_answer(
         self,
@@ -1083,29 +1687,26 @@ class DynamicAnswerManager:
             AnswersForFrames: A list of answers and their associated frames.
         """
         ret = []
-        filter_frames_set = None if filter_frames is None else set(frames_class_to_frames_list(filter_frames))
-        for answer in self._answers_to_frames:
+        filter_ranges = None if filter_frames is None else frames_class_to_ranges(filter_frames)
+        matching_answers = None if filter_ranges is None else self._range_index.overlapping(attribute, filter_ranges)
+        for answer in self._range_index.answers():
             if answer.ontology_attribute != attribute:
                 continue
             if not answer.is_answered():
                 continue
             if not (filter_answer is None or filter_answer == answer.get()):
                 continue
-            actual_frames = self._answers_to_frames[answer]
-            if not (filter_frames_set is None or len(actual_frames & filter_frames_set) > 0):
+            # Filters select whole answers whose ranges overlap, without clipping the returned ranges.
+            if matching_answers is not None and answer not in matching_answers:
                 continue
 
-            ranges = frames_to_ranges(self._answers_to_frames[answer])
+            ranges = self._range_index.ranges_for(answer)
             ret.append(AnswerForFrames(answer=answer.get(), ranges=ranges))
         return ret
 
-    def frames(self) -> Iterable[int]:
-        """Get all frames that have answers set.
-
-        Returns:
-            Iterable[int]: An iterable of frames.
-        """
-        return self._frames_to_answers.keys()
+    def answered_ranges(self) -> Ranges:
+        """Get the ranges that have answers set, merged across every answer."""
+        return self._range_index.answered_ranges()
 
     def get_all_answers(self) -> List[Tuple[Answer, Ranges]]:
         """Get all answers that are set.
@@ -1113,7 +1714,7 @@ class DynamicAnswerManager:
         Returns:
             List[Tuple[Answer, Ranges]]: A list of tuples containing the answer and its associated ranges.
         """
-        return [(answer, frames_to_ranges(frames)) for answer, frames in self._answers_to_frames.items()]
+        return [(answer, self._range_index.ranges_for(answer)) for answer in self._range_index.answers()]
 
     def copy(self) -> DynamicAnswerManager:
         """Create a deep copy of the DynamicAnswerManager instance.
@@ -1122,8 +1723,7 @@ class DynamicAnswerManager:
             DynamicAnswerManager: A new instance of DynamicAnswerManager with copied data.
         """
         ret = DynamicAnswerManager(self._object_instance)
-        ret._frames_to_answers = deepcopy(self._frames_to_answers)
-        ret._answers_to_frames = deepcopy(self._answers_to_frames)
+        ret._range_index = self._range_index.copy()
         return ret
 
     def _get_dynamic_answers(self) -> Set[Answer]:
@@ -1137,9 +1737,7 @@ class DynamicAnswerManager:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, DynamicAnswerManager):
             return False
-        return (
-            self._frames_to_answers == other._frames_to_answers and self._answers_to_frames == other._answers_to_frames
-        )
+        return self._range_index == other._range_index
 
     def __hash__(self) -> int:
         return hash(id(self))

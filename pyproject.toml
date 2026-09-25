@@ -1,6 +1,6 @@
 [project]
 name = "encord"
-version = "0.1.205"
+version = "0.1.206"
 description = "Encord Python SDK Client"
 authors = [
     { name = "Cord Technologies Limited", email = "hello@encord.com" },
@@ -64,13 +64,6 @@ coco = [
     "opencv-python>=4.11.0.86,<5.0.0.0",
     "numpy>=1.24,<2.0.0; python_version < \"3.12\"",
     "numpy>=1.26,<2.0.0; python_version >= \"3.12\"",
-]
-mcap = [
-    "mcap>=0.4.0",
-    "mcap-protobuf-support>=0.5.0",
-    "mcap-ros2-support>=0.5.0",
-    "Pillow>=10.0.0",
-    "protobuf>=4.0.0",
 ]
 
 [build-system]

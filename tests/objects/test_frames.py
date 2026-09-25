@@ -33,3 +33,31 @@ def test_frames_class_to_frames_list():
         frames_class_to_frames_list([4, Range(4, 6)])
     with pytest.raises(RuntimeError):
         frames_class_to_frames_list({3, 5, 7})
+
+
+@pytest.mark.parametrize(
+    "frames",
+    [0, 10, [], [5, 2, 2, 1], Range(1, 4), Range(5, 4), [Range(5, 4), Range(1, 3), Range(2, 6)]],
+)
+def test_frames_class_to_ranges_matches_expanded_selection(frames):
+    from encord.objects.frames import frames_class_to_ranges
+
+    assert frames_class_to_frames_list(frames_class_to_ranges(frames)) == frames_class_to_frames_list(frames)
+
+
+@pytest.mark.parametrize("frames", [{1, 2}, (1, 2), [1, Range(2, 3)], ["1"], "1"])
+def test_frames_class_to_ranges_rejects_unsupported_selectors(frames):
+    from encord.objects.frames import frames_class_to_ranges
+
+    with pytest.raises(RuntimeError, match="Unexpected type for frames"):
+        frames_class_to_ranges(frames)
+
+
+@pytest.mark.parametrize("frames", [Range(0.5, 2), Range(3, 1.5), [Range(0, 2), Range(3.5, 4)]])
+def test_frames_class_to_ranges_rejects_non_integer_endpoints(frames):
+    from encord.objects.frames import frames_class_to_ranges
+
+    with pytest.raises(TypeError):
+        frames_class_to_frames_list(frames)
+    with pytest.raises(TypeError):
+        frames_class_to_ranges(frames)

@@ -807,6 +807,40 @@ GeometricCoordinates = Union[
     Cuboid2DIsometricCoordinates,
 ]
 
+EVENT_SHAPES: frozenset[Shape] = frozenset(
+    {
+        Shape.BOUNDING_BOX,
+        Shape.ROTATABLE_BOUNDING_BOX,
+        Shape.POINT,
+        Shape.CIRCLE,
+        Shape.ELLIPSE,
+        Shape.POLYLINE,
+        Shape.CUBOID,
+    }
+)
+"""Shapes an event-based label row can store: those with a zeroed placeholder geometry for delete markers."""
+
+EventCoordinates = Union[
+    BoundingBoxCoordinates,
+    RotatableBoundingBoxCoordinates,
+    PointCoordinate,
+    PointCoordinate3D,
+    CircleCoordinates,
+    EllipseCoordinates,
+    PolylineCoordinates,
+    CuboidCoordinates,
+]
+"""Coordinates of the shapes in ``EVENT_SHAPES``: what an event of an event-based label row can carry."""
+
+UpsertEventCoordinates = Union[
+    CuboidCoordinates,
+    PointCoordinate3D,
+    PolylineCoordinates,
+]
+"""What `ObjectInstance.upsert_event` is typed to accept: the 3D shapes only, for now. Narrower than
+``EventCoordinates``, which also covers what rows saved elsewhere may hold."""
+
+
 ACCEPTABLE_COORDINATES_FOR_ONTOLOGY_ITEMS: Dict[Shape, List[Type[Coordinates]]] = {
     Shape.BOUNDING_BOX: [BoundingBoxCoordinates],
     Shape.ROTATABLE_BOUNDING_BOX: [RotatableBoundingBoxCoordinates],
@@ -941,3 +975,69 @@ def get_geometric_coordinates_from_frame_object_dict(
 
     # The cast is safe because we've excluded the non-geometric types.
     return cast(GeometricCoordinates, coordinates)
+
+
+def zeroed_coordinates(shape: Shape) -> EventCoordinates:
+    """The placeholder geometry a delete marker carries: the same shape, all zeroes.
+
+    An event-based label row terminates an object with a `delete` entry. The entry is not geometry anyone reads,
+    but it is stored in the same shape-keyed layout as a real one, so it needs a geometry to stand in.
+
+    Raises:
+        LabelRowError: For shapes with no natural zero (polygon, skeleton, bitmask, segmentation, cuboid_2d) and
+            for non-geometric shapes, none of which may live in an event-based row.
+    """
+    if shape == Shape.BOUNDING_BOX:
+        return BoundingBoxCoordinates(height=0, width=0, top_left_x=0, top_left_y=0)
+    if shape == Shape.ROTATABLE_BOUNDING_BOX:
+        return RotatableBoundingBoxCoordinates(height=0, width=0, top_left_x=0, top_left_y=0, theta=0)
+    if shape == Shape.POINT:
+        return PointCoordinate(x=0, y=0)
+    if shape == Shape.CIRCLE:
+        return CircleCoordinates(center_x=0, center_y=0, radius=0, stretch=0, theta=0)
+    if shape == Shape.ELLIPSE:
+        return EllipseCoordinates(center_x=0, center_y=0, rx=0, ry=0, theta=0)
+    if shape == Shape.POLYLINE:
+        return PolylineCoordinates(values=[])
+    if shape == Shape.CUBOID:
+        return CuboidCoordinates(position=(0, 0, 0), orientation=(0, 0, 0), size=(0, 0, 0))
+    raise LabelRowError(
+        f"Shape `{shape}` cannot be stored as an event-based label; only {sorted(s.value for s in EVENT_SHAPES)} "
+        "are supported."
+    )
+
+
+_GEOMETRY_KEYS = frozenset(
+    {
+        "boundingBox",
+        "rotatableBoundingBox",
+        "polygon",
+        "polygons",
+        "cuboid_2d",
+        "point",
+        "polyline",
+        "circle",
+        "ellipse",
+        "skeleton",
+        "bitmask",
+        "cuboid",
+    }
+)
+
+
+def frame_object_coordinates(frame_object_dict: FrameObject) -> Coordinates:
+    """Coordinates of a stored frame object, tolerating a `delete` marker saved without geometry.
+
+    The editor writes a delete marker with zeroed geometry, but the saved label may carry the geometry key as
+    ``null`` or omit it altogether. Nothing reads a delete marker's geometry, so either form parses to the shape's
+    zeroed placeholder. Every other entry must carry real geometry and is parsed as usual.
+
+    This normalizes: a marker stored without geometry is re-exported *with* the zeroed placeholder, so the first
+    save after loading such a row differs from what was loaded, and is stable from then on. That is deliberate —
+    the zeroed form is what the editor writes, so normalizing towards it converges on the platform's own shape
+    rather than preserving an incomplete one.
+    """
+    has_geometry = any(frame_object_dict.get(key) is not None for key in _GEOMETRY_KEYS)  # type: ignore[misc]
+    if frame_object_dict.get("event") == "delete" and not has_geometry:
+        return zeroed_coordinates(Shape(frame_object_dict["shape"]))
+    return get_coordinates_from_frame_object_dict(frame_object_dict)
