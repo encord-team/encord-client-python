@@ -12,7 +12,7 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from enum import Enum
-from typing import Iterable, List, Literal, Optional, Tuple, Union
+from typing import Any, Iterable, List, Literal, Optional, Tuple, Union
 from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
@@ -36,6 +36,17 @@ class LabelReviewStatus(str, Enum):
     REJECTED = "REJECTED"
     RESOLVED = "RESOLVED"
     REOPENED = "REOPENED"
+
+    UNKNOWN = "_UNKNOWN_"
+    """
+    Returned when the Encord platform reports a label review status that this SDK version
+    does not recognize.
+    """
+
+    @classmethod
+    def _missing_(cls, value: Any) -> "LabelReviewStatus":
+        """Return UNKNOWN for any unrecognized label review status values."""
+        return cls.UNKNOWN
 
 
 class _LabelReviewActionApprove(WorkflowReviewAction):
@@ -120,6 +131,18 @@ class ReviewTaskStatus(str, Enum):
     ASSIGNED = "ASSIGNED"
     RELEASED = "RELEASED"
     REOPENED = "REOPENED"
+    SKIPPED = "SKIPPED"
+
+    UNKNOWN = "_UNKNOWN_"
+    """
+    Returned when the Encord platform reports a task status that this SDK version
+    does not recognize.
+    """
+
+    @classmethod
+    def _missing_(cls, value: Any) -> "ReviewTaskStatus":
+        """Return UNKNOWN for any unrecognized review task status values."""
+        return cls.UNKNOWN
 
 
 class _ReviewTasksQueryParams(TasksQueryParams):

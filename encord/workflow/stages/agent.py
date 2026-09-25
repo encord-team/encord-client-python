@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Iterable, List, Literal, Optional, Union
+from typing import Any, Iterable, List, Literal, Optional, Union
 from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
@@ -19,6 +19,17 @@ class AgentTaskStatus(str, Enum):
     SKIPPED = "SKIPPED"
     REOPENED = "REOPENED"
     COMPLETED = "COMPLETED"
+
+    UNKNOWN = "_UNKNOWN_"
+    """
+    Returned when the Encord platform reports a task status that this SDK version
+    does not recognize.
+    """
+
+    @classmethod
+    def _missing_(cls, value: Any) -> "AgentTaskStatus":
+        """Return UNKNOWN for any unrecognized agent task status values."""
+        return cls.UNKNOWN
 
 
 class _ActionPathway(WorkflowAction):

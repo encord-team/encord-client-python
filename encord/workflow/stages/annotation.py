@@ -12,7 +12,7 @@ category: "64e481b57b6027003f20aaa0"
 from __future__ import annotations
 
 from enum import Enum
-from typing import Iterable, List, Literal, Optional, Union
+from typing import Any, Iterable, List, Literal, Optional, Union
 from uuid import UUID
 
 from encord.common.utils import ensure_list, ensure_uuid_list
@@ -34,6 +34,17 @@ class AnnotationTaskStatus(str, Enum):
     SKIPPED = "SKIPPED"
     REOPENED = "REOPENED"
     COMPLETED = "COMPLETED"
+
+    UNKNOWN = "_UNKNOWN_"
+    """
+    Returned when the Encord platform reports a task status that this SDK version
+    does not recognize.
+    """
+
+    @classmethod
+    def _missing_(cls, value: Any) -> "AnnotationTaskStatus":
+        """Return UNKNOWN for any unrecognized annotation task status values."""
+        return cls.UNKNOWN
 
 
 class _AnnotationTasksQueryParams(TasksQueryParams):
