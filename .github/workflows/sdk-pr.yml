@@ -62,11 +62,20 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: cord-team
+          repositories: cord-backend
+
       - name: Checkout backend repo
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BACKEND_REPO }}
-          token: ${{ secrets.ACCESS_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           path: encord-backend
 
       - name: Run integration tests
