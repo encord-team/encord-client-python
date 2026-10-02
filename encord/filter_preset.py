@@ -24,7 +24,7 @@ from encord.orm.filter_preset import ProjectFilterPreset as OrmProjectFilterPres
 
 
 class FilterPreset:
-    """Represents preset in Index.
+    """Represents preset in Curate.
     Preset is a group of filters persisted which can be reused for faster data curation.
     """
 
@@ -180,7 +180,7 @@ class FilterPreset:
 
 
 class ProjectFilterPreset:
-    """Represents Active filter presets."""
+    """Represents Project Explorer filter presets."""
 
     def __init__(
         self,

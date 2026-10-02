@@ -83,7 +83,7 @@ class UpdateCollectionPayload(BaseDTO):
 
 
 class Collection(BaseDTO):
-    """Represents a top-level Collection of items in Index.
+    """Represents a top-level Collection of items in Curate.
 
     Collections are logical groupings of storage items
     that can be used for data curation and downstream
@@ -134,6 +134,53 @@ class CollectionBulkItemResponse(BaseDTO):
         failed_items: UUIDs of items for which the bulk operation failed.
     """
 
+    failed_items: List[uuid.UUID]
+
+
+# Server-side cap on a single add-data-title-items request. Larger sets are batched by
+# Collection.add_items_by_title.
+MAX_DATA_TITLE_ITEMS_PER_REQUEST = 1000
+
+# Data title request size limit, used by Collection.add_items_by_title.
+MAX_DATA_TITLE_BYTES_PER_REQUEST = 200_000
+
+
+class CollectionDataTitleRequest(BaseDTO):
+    """Request payload for adding items to a Collection by Data Title.
+
+    Args:
+        data_titles: Data Titles to resolve to storage items. Capped per request;
+            split larger sets across multiple calls.
+    """
+
+    data_titles: List[str]
+
+
+class CollectionDataTitleResponse(BaseDTO):
+    """Outcome of adding items to a Collection by Data Title.
+
+    Counts are returned so that a caller batching across several requests can confirm the
+    whole set landed, rather than inferring success from the absence of an error.
+
+    Every requested title ends up in exactly one of three outcomes, so for distinct input
+    ``requested == matched_titles + len(ambiguous_titles) + len(unmatched_titles)``.
+
+    Args:
+        requested: Number of *distinct* Data Titles sent. Repeats in the input are sent
+            once, so this can be lower than the number of titles supplied.
+        matched_titles: How many resolved to exactly one storage item. These were added.
+        items_added: Storage items added.
+        ambiguous_titles: Titles matching more than one storage item. Nothing is added for
+            these — which item was meant cannot be known, so the title is reported back.
+        unmatched_titles: Supplied titles that matched no storage item.
+        failed_items: UUIDs of items that could not be added.
+    """
+
+    requested: int
+    matched_titles: int
+    items_added: int
+    ambiguous_titles: List[str]
+    unmatched_titles: List[str]
     failed_items: List[uuid.UUID]
 
 

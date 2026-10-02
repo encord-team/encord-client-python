@@ -144,7 +144,7 @@ class EncordUserClient:
     - Accessing project configuration, ontology, and workflows
     - Managing storage and data units
     - Running analytics queries
-    - Interacting with collections and Index
+    - Interacting with collections and Curate
 
     Args:
     config : UserConfig The user configuration containing authentication credentials

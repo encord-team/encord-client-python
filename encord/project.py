@@ -1342,13 +1342,13 @@ class Project:
         return self.get_collection(new_uuid)
 
     def active_sync(self) -> None:
-        """Sync the associated Active project"""
+        """Sync the associated Project with Project Explorer"""
         self._client.active_sync()
 
     def active_import(self, project_mode: ActiveProjectMode, *, video_sampling_rate: Optional[float] = None) -> None:
-        """Import the associated Active project. Progress in the app
+        """Import the associated Project into Project Explorer. Progress in the app
         Args:
-            project_mode: Active projects can be imported up to a certain stage. Use the ActiveProjectModeEnum to select the stage
+            project_mode: Projects can be imported into Project Explorer up to a certain stage. Use the ActiveProjectModeEnum to select the stage
             video_sampling_rate: Optional[float]: For videos, what's the sampling rate of frames for analysis
         Returns:
             None

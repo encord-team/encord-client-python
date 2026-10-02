@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Iterator, List, Optional, Sequence, Tuple, Union
+from typing import Iterable, Iterator, List, Optional, Sequence, Tuple, Union
 from uuid import UUID
 
 import encord.orm.storage as orm_storage
@@ -12,11 +12,14 @@ from encord.filter_preset import FilterPreset
 from encord.http.v2.api_client import ApiClient
 from encord.objects.ontology_labels_impl import LabelRowV2
 from encord.ontology import Ontology
-from encord.orm.collection import Collection as OrmCollection
 from encord.orm.collection import (
+    MAX_DATA_TITLE_BYTES_PER_REQUEST,
+    MAX_DATA_TITLE_ITEMS_PER_REQUEST,
     CollectionBulkItemRequest,
     CollectionBulkItemResponse,
     CollectionBulkPresetRequest,
+    CollectionDataTitleRequest,
+    CollectionDataTitleResponse,
     CreateCollectionParams,
     CreateCollectionPayload,
     CreateProjectCollectionParams,
@@ -36,6 +39,7 @@ from encord.orm.collection import (
     ProjectLabelCollectionItemResponse,
     UpdateCollectionPayload,
 )
+from encord.orm.collection import Collection as OrmCollection
 from encord.orm.collection import ProjectCollection as OrmProjectCollection
 from encord.orm.label_row import label_row_metadata_dto_to_label_row_metadata
 from encord.storage import StorageItem, StorageItemInaccessible
@@ -43,8 +47,38 @@ from encord.storage import StorageItem, StorageItemInaccessible
 log = logging.getLogger(__name__)
 
 
+def _title_cost(title: str) -> int:
+    """Approximate number of bytes a Data Title adds to a request.
+
+    Measured in UTF-8 rather than characters, so titles that aren't plain ASCII are not
+    underestimated, plus a small allowance per title for separators and for characters that
+    take extra space once encoded.
+    """
+    return len(title.encode("utf-8")) + 3 + title.count("'") + title.count("\\")
+
+
+def _batch_titles(titles: List[str], max_items: int, max_bytes: int) -> Iterator[List[str]]:
+    """Split titles into consecutive batches bounded by count and by size, whichever fills first.
+
+    Order is preserved and every title appears in exactly one batch. A single title larger
+    than ``max_bytes`` would get a batch of its own and still be too big, so callers should
+    reject those before batching.
+    """
+    batch: List[str] = []
+    size = 0
+    for title in titles:
+        cost = _title_cost(title)
+        if batch and (len(batch) == max_items or size + cost > max_bytes):
+            yield batch
+            batch, size = [], 0
+        batch.append(title)
+        size += cost
+    if batch:
+        yield batch
+
+
 class Collection:
-    """Represents collections in Index.
+    """Represents collections in Curate.
     Collections are a logical grouping of data items that can be used to
     create datasets and perform various data curation flows.
     """
@@ -262,6 +296,85 @@ class Collection:
         )
         return res
 
+    def add_items_by_title(self, data_titles: Iterable[str]) -> CollectionDataTitleResponse:
+        """Add storage items to the collection by Data Title.
+
+        Unlike :meth:`add_items`, the caller does not need to resolve titles to storage item
+        UUIDs: resolution happens server-side. A Data Title is not unique, so a title that
+        matches more than one storage item is not resolved to a guess: nothing is added for
+        it and it comes back in ``ambiguous_titles`` for the caller to deal with.
+
+        Each request is synchronous and returns counts describing what happened, so a large
+        set can be verified rather than assumed. Titles are sent in successive batches, each
+        bounded both by count and by the total size of its titles, and the counts are summed,
+        so the returned totals describe the whole set however it was split. Long titles
+        therefore mean more, smaller requests rather than a failed one. Duplicate titles in
+        the input are sent once.
+
+        Note:
+            Ambiguity is judged per request. A title is resolved against the whole folder,
+            not against the batch, so splitting an input across batches does not change
+            which titles are ambiguous.
+
+        Args:
+            data_titles (Iterable[str]): Data Titles to add. Any length; batched internally.
+
+        Returns:
+            CollectionDataTitleResponse: Summed counts of what matched, what was added,
+            which titles were ambiguous, and which matched nothing.
+
+        Raises:
+            TypeError: If a single string or bytes is passed instead of a collection of
+                titles. Both are iterable, so they would otherwise be silently taken apart
+                into characters and sent as titles.
+            ValueError: If any single title is too long to fit in a request on its own.
+                Raised before anything is sent, so no part of the input is added.
+        """
+        if isinstance(data_titles, (str, bytes)):
+            raise TypeError(
+                f"data_titles must be a collection of Data Titles, not {type(data_titles).__name__}. "
+                f"Pass [{data_titles!r}] to add a single title."
+            )
+
+        unique_titles = list(dict.fromkeys(data_titles))
+
+        # Checked up front rather than when its batch comes round: failing midway would leave
+        # the earlier batches added and the rest not, which is harder to recover from than
+        # nothing at all.
+        for title in unique_titles:
+            if _title_cost(title) > MAX_DATA_TITLE_BYTES_PER_REQUEST:
+                raise ValueError(
+                    f"A Data Title of {len(title):,} characters is too long to send "
+                    f"(limit {MAX_DATA_TITLE_BYTES_PER_REQUEST:,} bytes per request). "
+                    f"It begins {title[:60]!r}."
+                )
+        total = CollectionDataTitleResponse(
+            requested=0,
+            matched_titles=0,
+            items_added=0,
+            ambiguous_titles=[],
+            unmatched_titles=[],
+            failed_items=[],
+        )
+        for batch in _batch_titles(unique_titles, MAX_DATA_TITLE_ITEMS_PER_REQUEST, MAX_DATA_TITLE_BYTES_PER_REQUEST):
+            result = self._add_items_by_title_batch(batch)
+            total.requested += result.requested
+            total.matched_titles += result.matched_titles
+            total.items_added += result.items_added
+            total.ambiguous_titles.extend(result.ambiguous_titles)
+            total.unmatched_titles.extend(result.unmatched_titles)
+            total.failed_items.extend(result.failed_items)
+        return total
+
+    def _add_items_by_title_batch(self, data_titles: List[str]) -> CollectionDataTitleResponse:
+        """Send a single batch of Data Titles. Callers should use :meth:`add_items_by_title`."""
+        return self._client.post(
+            f"index/collections/{self.uuid}/add-data-title-items",
+            params=None,
+            payload=CollectionDataTitleRequest(data_titles=data_titles),
+            result_type=CollectionDataTitleResponse,
+        )
+
     def add_preset_items(self, filter_preset: Union[FilterPreset, UUID, str]) -> None:
         """Async operation to add storage items matching a filter preset to the collection.
 
@@ -310,8 +423,8 @@ class Collection:
 
 
 class ProjectCollection:
-    """Represents Active collections inside a Project.
-    Active Project Collections are a logical grouping of frames (images or video frames) or
+    """Represents Project Collections inside a Project.
+    Project Collections are a logical grouping of frames (images or video frames) or
     annotations (objects and classifications) that can be used to perform various data curation flows.
     """
 
