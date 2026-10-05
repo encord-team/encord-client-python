@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Mapping, Optional
 
 from encord.common.time_parser import format_datetime_to_long_string
 from encord.objects.attributes import Attribute
@@ -10,6 +10,14 @@ from encord.objects.utils import _lower_snake_case
 
 if TYPE_CHECKING:
     from encord.objects import Classification, Object
+
+
+def _read_object_id(source: Mapping[str, Any]) -> Optional[int]:
+    """Read a caller-visible objectID from a payload fragment."""
+    value = source.get("objectId")
+    if value is None:
+        value = source.get("objectID")
+    return value
 
 
 def create_frame_object_dict(

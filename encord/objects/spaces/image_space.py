@@ -13,7 +13,7 @@ from encord.objects.coordinates import (
     get_geometric_coordinates_from_frame_object_dict,
 )
 from encord.objects.frames import Ranges
-from encord.objects.label_utils import create_frame_object_dict
+from encord.objects.label_utils import _read_object_id, create_frame_object_dict
 from encord.objects.spaces.annotation.base_annotation import _AnnotationMetadata
 from encord.objects.spaces.annotation.geometric_annotation import (
     _GeometricAnnotationData,
@@ -337,6 +337,7 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
         for answer in object_answers.values():
             object_hash = answer["objectHash"]
             if object_instance := self._objects_map.get(object_hash):
+                object_instance.object_id = _read_object_id(answer)
                 answer_list = answer["classifications"]
                 object_instance.set_answer_from_list(answer_list)
 
@@ -396,6 +397,8 @@ class ImageSpace(Space[_GeometricObjectAnnotation, _GlobalClassificationAnnotati
                 "classifications": list(reversed(all_static_answers)),
                 "objectHash": object_instance.object_hash,
             }
+            if object_instance.object_id is not None:
+                object_index_element["objectId"] = object_instance.object_id
             ret[object_instance.object_hash] = object_index_element
 
         return cast(Dict[str, ObjectAnswer], ret)

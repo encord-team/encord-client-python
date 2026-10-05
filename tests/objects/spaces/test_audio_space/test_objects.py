@@ -914,3 +914,29 @@ def test_range_list_raises_for_space_based_object(ontology):
     # Act & Assert
     with pytest.raises(LabelRowError):
         _ = object_instance.range_list
+
+
+def test_parse_space_dict_reads_object_id_from_object_answers(ontology):
+    # Mirrors the html-space test, but for the RangeSpace._parse_space_dict wiring
+    # (shared by AudioSpace, TextSpace and TimeSeriesSpace).
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_AUDIO_NO_LABELS)
+    audio_space_1 = label_row.get_space(id="audio-1-uuid", type_="audio")
+
+    object_answers = {
+        "obj-hash-1": {
+            "objectHash": "obj-hash-1",
+            "featureHash": audio_obj_ontology_item.feature_node_hash,
+            "classifications": [],
+            "objectId": 13,
+            "spaces": {
+                "audio-1-uuid": {"range": [[0, 100]], "type": "frame"},
+            },
+        }
+    }
+
+    audio_space_1._parse_space_dict(space_info={}, object_answers=object_answers, classification_answers={})
+
+    objects_on_space = audio_space_1.get_object_instances()
+    assert len(objects_on_space) == 1
+    assert objects_on_space[0].object_id == 13

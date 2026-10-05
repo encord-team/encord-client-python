@@ -40,7 +40,7 @@ from encord.objects.frames import (
     ranges_to_list,
 )
 from encord.objects.internal_helpers import _infer_attribute_from_answer
-from encord.objects.label_utils import create_frame_object_dict
+from encord.objects.label_utils import _read_object_id, create_frame_object_dict
 from encord.objects.ontology_object_instance import AnswersForFrames, check_coordinate_type
 from encord.objects.spaces.annotation.base_annotation import _AnnotationData, _AnnotationMetadata
 from encord.objects.spaces.annotation.geometric_annotation import (
@@ -904,6 +904,8 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
                 "classifications": list(reversed(all_static_answers)),
                 "objectHash": object_instance.object_hash,
             }
+            if object_instance.object_id is not None:
+                object_index_element["objectId"] = object_instance.object_id
             ret[object_instance.object_hash] = object_index_element
 
         return cast(Dict[str, ObjectAnswer], ret)
@@ -994,6 +996,7 @@ class MultiFrameSpace(Space[_GeometricFrameObjectAnnotation, _FrameClassificatio
         for answer in object_answers.values():
             object_hash = answer["objectHash"]
             if object_instance := self._objects_map.get(object_hash):
+                object_instance.object_id = _read_object_id(answer)
                 answer_list = answer["classifications"]
                 object_instance.set_answer_from_list(answer_list)
 

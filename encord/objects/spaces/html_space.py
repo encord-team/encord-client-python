@@ -9,6 +9,7 @@ from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects import ClassificationInstance, Shape
 from encord.objects.html_node import HtmlNode, HtmlRange, HtmlRanges
+from encord.objects.label_utils import _read_object_id
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.spaces.annotation.base_annotation import _AnnotationMetadata
 from encord.objects.spaces.annotation.global_annotation import _GlobalClassificationAnnotation
@@ -191,12 +192,14 @@ class HTMLSpace(Space[_HtmlObjectAnnotation, _GlobalClassificationAnnotation, Ht
         classification_instance = self._classifications_map[classification_hash]
         return self._remove_global_classification_instance(classification=classification_instance)
 
-    def _create_new_object(self, feature_hash: str, object_hash: str) -> ObjectInstance:
+    def _create_new_object(
+        self, feature_hash: str, object_hash: str, object_id: Optional[int] = None
+    ) -> ObjectInstance:
         from encord.objects.ontology_object import Object, ObjectInstance
 
         ontology = self._label_row._ontology.structure
         label_class = ontology.get_child_by_hash(feature_hash, type_=Object)
-        return ObjectInstance(ontology_object=label_class, object_hash=object_hash)
+        return ObjectInstance(ontology_object=label_class, object_hash=object_hash, object_id=object_id)
 
     def _to_space_dict(self) -> HtmlSpaceInfo:
         return HtmlSpaceInfo(
@@ -226,6 +229,7 @@ class HTMLSpace(Space[_HtmlObjectAnnotation, _GlobalClassificationAnnotation, Ht
             object_instance = self._create_new_object(
                 object_hash=non_geometric_object_answer["objectHash"],
                 feature_hash=non_geometric_object_answer["featureHash"],
+                object_id=_read_object_id(non_geometric_object_answer),
             )
 
             frame_info_dict = {k: v for k, v in object_answer.items() if v is not None}
@@ -307,6 +311,8 @@ class HTMLSpace(Space[_HtmlObjectAnnotation, _GlobalClassificationAnnotation, Ht
                     "range": [],
                     "spaces": {self.space_id: {"range": ranges, "type": "html"}},
                 }
+                if obj.object_id is not None:
+                    object_answer["objectId"] = obj.object_id
 
                 ret[obj.object_hash] = object_answer
 

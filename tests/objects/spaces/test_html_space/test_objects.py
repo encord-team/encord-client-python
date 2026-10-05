@@ -773,3 +773,63 @@ def test_update_annotation_for_object_reflected_on_different_spaces(ontology):
         },
     }
     assert not DeepDiff(new_object_answers_dict, EXPECTED_NEW_OBJECT_ANSWERS_DICT)
+
+
+def test_object_id_included_in_object_answers_for_html_space(ontology):
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
+    range_1 = HtmlRange(start=HtmlNode(xpath="start", offset=0), end=HtmlNode(xpath="end", offset=1))
+    new_object_instance = html_text_obj_ontology_item.create_instance(object_id=13)
+
+    html_space_1.put_object_instance(
+        object_instance=new_object_instance,
+        ranges=range_1,
+    )
+    object_answers = label_row.to_encord_dict()["object_answers"]
+
+    assert object_answers[new_object_instance.object_hash]["objectId"] == 13
+
+
+def test_renumber_object_ids_true_omits_object_id_for_html_space(ontology):
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
+    range_1 = HtmlRange(start=HtmlNode(xpath="start", offset=0), end=HtmlNode(xpath="end", offset=1))
+    new_object_instance = html_text_obj_ontology_item.create_instance(object_id=13)
+    html_space_1.put_object_instance(
+        object_instance=new_object_instance,
+        ranges=range_1,
+    )
+
+    object_answers = label_row.to_encord_dict(renumber_object_ids=True)["object_answers"]
+
+    assert "objectId" not in object_answers[new_object_instance.object_hash]
+    assert new_object_instance.object_id == 13  # non-destructive
+
+
+def test_parse_space_dict_reads_object_id_from_object_answers(ontology):
+    label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
+    label_row.from_labels_dict(DATA_GROUP_TWO_HTML_NO_LABELS)
+    html_space_1 = label_row.get_space(id="html-1-uuid", type_="html")
+
+    object_answers = {
+        "obj-hash-1": {
+            "objectHash": "obj-hash-1",
+            "featureHash": html_text_obj_ontology_item.feature_node_hash,
+            "classifications": [],
+            "objectId": 13,
+            "spaces": {
+                "html-1-uuid": {
+                    "range": [[{"xpath": "start", "offset": 0}, {"xpath": "end", "offset": 1}]],
+                    "type": "html",
+                },
+            },
+        }
+    }
+
+    html_space_1._parse_space_dict(space_info={}, object_answers=object_answers, classification_answers={})
+
+    objects_on_space = html_space_1.get_object_instances()
+    assert len(objects_on_space) == 1
+    assert objects_on_space[0].object_id == 13
