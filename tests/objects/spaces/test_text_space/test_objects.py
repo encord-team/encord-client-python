@@ -906,11 +906,11 @@ def test_range_list_raises_for_space_based_text_object(ontology):
         _ = object_instance.range_list
 
 
-def test_object_id_included_in_object_answers_for_text_space(ontology):
+def test_object_number_included_in_object_answers_for_text_space(ontology):
     label_row = LabelRowV2(DATA_GROUP_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_TEXT_NO_LABELS)
     text_space_1 = label_row.get_space(id="text-1-uuid", type_="text")
-    new_object_instance = text_obj_ontology_item.create_instance(object_id=17)
+    new_object_instance = text_obj_ontology_item.create_instance(object_number=17)
 
     text_space_1.put_object_instance(
         object_instance=new_object_instance,
@@ -918,4 +918,4 @@ def test_object_id_included_in_object_answers_for_text_space(ontology):
     )
     object_answers = label_row.to_encord_dict()["object_answers"]
 
-    assert object_answers[new_object_instance.object_hash]["objectId"] == 17
+    assert object_answers[new_object_instance.object_hash]["objectNumber"] == 17

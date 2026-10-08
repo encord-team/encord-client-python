@@ -291,12 +291,12 @@ def test_a_scene_that_is_not_continuous_still_parses_and_saves(all_types_ontolog
     assert str(mcap_scene.KEYFRAME_NS) in exported_labels
 
 
-def test_object_id_included_in_object_answers_for_point_cloud_space(mcap_row):
+def test_object_number_included_in_object_answers_for_point_cloud_space(mcap_row):
     segmentation = all_types_structure.get_child_by_hash(SEG_FEATURE, type_=Object)
     space = mcap_row.get_space(id=KEY_3, type_="point_cloud")
-    obj = segmentation.create_instance(object_id=21)
+    obj = segmentation.create_instance(object_number=21)
     space.put_object_instance(obj, ranges=[Range(20, 25)])
 
     exported = mcap_row.to_encord_dict()
 
-    assert exported["object_answers"][obj.object_hash]["objectId"] == 21
+    assert exported["object_answers"][obj.object_hash]["objectNumber"] == 21

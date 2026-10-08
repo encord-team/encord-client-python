@@ -15,7 +15,6 @@ from encord.constants.enums import SpaceType
 from encord.exceptions import LabelRowError
 from encord.objects.common import Shape
 from encord.objects.frames import Range, Ranges, frames_to_ranges
-from encord.objects.label_utils import _read_object_id
 from encord.objects.ontology_object_instance import ObjectInstance
 from encord.objects.spaces.annotation.base_annotation import _AnnotationMetadata
 from encord.objects.spaces.range_space.range_space import RangeOverlapStrategy, RangeSpace
@@ -156,13 +155,13 @@ class PointCloudFileSpace(RangeSpace):
             if not ranges:
                 continue
 
-            # The per-frame labels blob (obj_data) never carries objectId for point-cloud
+            # The per-frame labels blob (obj_data) never carries objectNumber for point-cloud
             # segmentation objects; object_answers is the reliable source here.
             object_answer = object_answers.get(obj_data["objectHash"])
             object_instance = self._create_new_object(
                 feature_hash=obj_data["featureHash"],
                 object_hash=obj_data["objectHash"],
-                object_id=_read_object_id(object_answer if object_answer is not None else obj_data),
+                object_number=object_answer.get("objectNumber") if object_answer is not None else None,
             )
 
             frame_info_dict = {k: v for k, v in obj_data.items() if v is not None}
@@ -255,8 +254,8 @@ class PointCloudFileSpace(RangeSpace):
                     object_answer["createdBy"] = annotation_metadata.created_by
                 if annotation_metadata.last_edited_by is not None:
                     object_answer["lastEditedBy"] = annotation_metadata.last_edited_by
-                if obj.object_id is not None:
-                    object_answer["objectId"] = obj.object_id
+                if obj.object_number is not None:
+                    object_answer["objectNumber"] = obj.object_number
 
                 ret[obj.object_hash] = object_answer
 

@@ -632,11 +632,11 @@ def test_update_annotation_from_object_annotation(ontology):
     assert not DeepDiff(new_label_row_dict, EXPECTED_CURRENT_LABELS_DICT)
 
 
-def test_object_id_included_in_object_answers_for_video_space(ontology):
+def test_object_number_included_in_object_answers_for_video_space(ontology):
     label_row = LabelRowV2(DATA_GROUP_WITH_TWO_VIDEOS_METADATA, Mock(), ontology)
     label_row.from_labels_dict(DATA_GROUP_TWO_VIDEOS_NO_LABELS)
     video_space_1 = label_row.get_space(id="video-1-uuid", type_="video")
-    object_instance = box_ontology_item.create_instance(object_id=23)
+    object_instance = box_ontology_item.create_instance(object_number=23)
 
     video_space_1.put_object_instance(
         object_instance=object_instance,
@@ -645,4 +645,4 @@ def test_object_id_included_in_object_answers_for_video_space(ontology):
     )
     object_answers = label_row.to_encord_dict()["object_answers"]
 
-    assert object_answers[object_instance.object_hash]["objectId"] == 23
+    assert object_answers[object_instance.object_hash]["objectNumber"] == 23

@@ -1303,11 +1303,11 @@ def test_html_text_classification_can_be_added_removed(all_types_ontology, empty
     validate_label_row_serialisation(label_row)
 
 
-def test_html_text_object_id_survives_a_fetch_then_save_cycle(
+def test_html_text_object_number_survives_a_fetch_then_save_cycle(
     all_types_ontology, empty_html_text_label_row: LabelRowV2
 ):
     label_row = empty_html_text_label_row
-    obj_instance = ObjectInstance(text_obj_ontology_item, object_id=13)
+    obj_instance = ObjectInstance(text_obj_ontology_item, object_number=13)
     obj_instance.set_for_frames(
         HtmlCoordinates(
             range=[
@@ -1321,13 +1321,13 @@ def test_html_text_object_id_survives_a_fetch_then_save_cycle(
     label_row.add_object_instance(obj_instance)
 
     exported = label_row.to_encord_dict()
-    assert exported["object_answers"][obj_instance.object_hash]["objectId"] == 13
+    assert exported["object_answers"][obj_instance.object_hash]["objectNumber"] == 13
 
     # Reload through the same label row, exactly as a real fetch would.
     label_row.from_labels_dict(exported)
 
     [reloaded_obj] = label_row.get_object_instances()
-    assert reloaded_obj.object_id == 13
+    assert reloaded_obj.object_number == 13
 
 
 def test_html_text_object_can_be_added_edited_and_removed(all_types_ontology, empty_html_text_label_row: LabelRowV2):

@@ -1,13 +1,18 @@
+from functools import partial
 from types import SimpleNamespace
-from typing import cast
+from typing import Optional, cast
 from unittest.mock import ANY, Mock, patch
 from uuid import UUID
+
+import pytest
 
 import encord.orm.storage as orm_storage
 from encord.beta.scene.builder import SceneBuilder
 from encord.beta.scene.internal.upload import InputEntityType
 from encord.beta.scene.layout import Scene3DViewerTile, SceneLayout
 from encord.beta.scene.settings import SceneSolidColouring, SceneViewSettings
+from encord.http.bundle import Bundle
+from encord.http.v2.api_client import ApiClient
 from encord.orm.dataset import LongPollingStatus
 from encord.storage import StorageFolder, StorageItem
 
@@ -374,3 +379,63 @@ def test_storage_item_update_patches_scene_layout() -> None:
             "timeline": [],
         }
     }
+
+
+@pytest.mark.parametrize("bundled", [False, True])
+@pytest.mark.parametrize(
+    "update, expected",
+    [
+        ({}, None),
+        ({"name": "renamed"}, {"name": "renamed"}),
+        ({"scene_layout": None}, {"sceneLayout": None}),
+        ({"scene_view_settings": None}, {"sceneViewSettings": None}),
+        ({"timeseries_settings": None}, {"timeseriesSettings": None}),
+        (
+            {"scene_view_settings": SceneViewSettings(point_radius=10)},
+            {"sceneViewSettings": {"pointRadius": 10.0}},
+        ),
+        (
+            {"timeseries_settings": orm_storage.TimeSeriesViewSettings(channels={})},
+            {"timeseriesSettings": {"channels": {}}},
+        ),
+        (
+            {"scene_layout": None, "scene_view_settings": None},
+            {"sceneLayout": None, "sceneViewSettings": None},
+        ),
+        (
+            {"scene_layout": SceneLayout(tiles={"camera": {"type": "image", "streamName": "front"}}, layout="camera")},
+            {
+                "sceneLayout": {
+                    "tiles": {"camera": {"type": "image", "streamName": "front"}},
+                    "layout": "camera",
+                    "timeline": [],
+                }
+            },
+        ),
+    ],
+)
+def test_storage_item_update_preserves_settings_patch_semantics(
+    bundled: bool, update: dict, expected: Optional[dict]
+) -> None:
+    item_uuid = UUID("00000000-0000-0000-0000-000000000005")
+    folder_uuid = UUID("00000000-0000-0000-0000-000000000006")
+    api_client = Mock(spec=ApiClient)
+    api_client.get_bound_operation.side_effect = lambda operation: partial(operation, api_client=api_client)
+    orm_item = cast(orm_storage.StorageItem, SimpleNamespace(uuid=item_uuid, parent=folder_uuid))
+    api_client.patch.return_value = SimpleNamespace(results=[orm_item]) if bundled else orm_item
+    item = StorageItem(api_client, orm_item)
+    bundle = Bundle() if bundled else None
+
+    item.update(**update, bundle=bundle)
+    if bundle is not None:
+        api_client.patch.assert_not_called()
+        bundle.execute()
+
+    if expected is None:
+        api_client.patch.assert_not_called()
+    else:
+        api_client.patch.assert_called_once()
+        payload = api_client.patch.call_args.kwargs["payload"]
+        assert ApiClient._serialise_payload(api_client, payload) == (
+            {"itemPatches": {str(item_uuid): expected}} if bundled else expected
+        )

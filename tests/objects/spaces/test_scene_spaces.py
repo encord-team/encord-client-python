@@ -642,10 +642,10 @@ def test_put_object_instance_rle_roundtrips_through_serde(ontology):
     assert [(r.start, r.end) for r in decoded_ranges] == [(r.start, r.end) for r in original_ranges]
 
 
-def test_point_cloud_segmentation_parses_object_id_through_full_round_trip(ontology):
+def test_point_cloud_segmentation_parses_object_number_through_full_round_trip(ontology):
     # PointCloudFileSpace defines its own `_parse_space_dict` override (it does not use
     # RangeSpace's generic one), so this is not covered by inheriting the RangeSpace-level fix alone.
-    # The per-frame labels blob for point-cloud segmentation objects never carries objectId (only
+    # The per-frame labels blob for point-cloud segmentation objects never carries objectNumber (only
     # object_answers does), so this must go through the real `object_answers` wiring end to end.
     label_row = LabelRowV2(SCENE_METADATA, Mock(), ontology)
     label_row.from_labels_dict(SCENE_NO_LABELS)
@@ -653,11 +653,11 @@ def test_point_cloud_segmentation_parses_object_id_through_full_round_trip(ontol
     segmentation_cls = label_row.ontology_structure.get_child_by_hash("segmentationFeatureNodeHash", type_=Object)
     space = label_row.get_space(id="path/to/file1.pcd", type_="point_cloud")
 
-    obj = ObjectInstance(segmentation_cls, object_id=13)
+    obj = ObjectInstance(segmentation_cls, object_number=13)
     space.put_object_instance(obj, ranges=[Range(0, 5)])
 
     label_dict = label_row.to_encord_dict()
-    assert label_dict["object_answers"][obj.object_hash]["objectId"] == 13
+    assert label_dict["object_answers"][obj.object_hash]["objectNumber"] == 13
 
     # Reload through a fresh label row, exactly as a real fetch would.
     label_row2 = LabelRowV2(SCENE_METADATA, Mock(), ontology)
@@ -666,4 +666,4 @@ def test_point_cloud_segmentation_parses_object_id_through_full_round_trip(ontol
 
     decoded_objects = space2.get_object_instances()
     assert len(decoded_objects) == 1
-    assert decoded_objects[0].object_id == 13
+    assert decoded_objects[0].object_number == 13

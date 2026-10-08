@@ -1251,6 +1251,15 @@ class PatchItemsBulkPayload(BaseDTO):
 
     item_patches: Dict[str, PatchItemPayload]
 
+    def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
+        # Preserve each patch's serialization, including subclass fields and explicit nulls.
+        return {
+            "itemPatches" if by_alias else "item_patches": {
+                item_uuid: patch.to_dict(by_alias=by_alias, exclude_none=exclude_none)
+                for item_uuid, patch in self.item_patches.items()
+            }
+        }
+
 
 @dataclass
 class BundledPatchItemPayload:

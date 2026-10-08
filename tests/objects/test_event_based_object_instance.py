@@ -741,21 +741,21 @@ def test_written_events_round_trip(event_based_label_row, all_types_ontology):
     assert reloaded.to_encord_dict()["data_units"] == exported["data_units"]
 
 
-def test_fetched_object_id_survives_a_fetch_then_save_cycle(all_types_ontology):
+def test_fetched_object_number_survives_a_fetch_then_save_cycle(all_types_ontology):
     fetched = deepcopy(event_based_scene.EVENT_BASED_SCENE_LABELS)
     object_hash = fetched["data_units"][event_based_scene.DATA_HASH]["labels"][str(event_based_scene.UPSERT_0)][
         "objects"
     ][0]["objectHash"]
-    fetched["object_answers"][object_hash]["objectId"] = 13
+    fetched["object_answers"][object_hash]["objectNumber"] = 13
 
     label_row = _scene_label_row(all_types_ontology, fetched)
-    assert _object(label_row).object_id == 13
+    assert _object(label_row).object_number == 13
 
     exported = label_row.to_encord_dict()
-    assert exported["object_answers"][object_hash]["objectId"] == 13
+    assert exported["object_answers"][object_hash]["objectNumber"] == 13
 
     reloaded = _scene_label_row(all_types_ontology, deepcopy(exported))
-    assert _object(reloaded).object_id == 13
+    assert _object(reloaded).object_number == 13
 
 
 def test_pruned_frames_leave_no_empty_entry(event_based_label_row, all_types_ontology):

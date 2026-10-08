@@ -101,11 +101,11 @@ class ObjectInstance:
         ontology_object: Object,
         *,
         object_hash: Optional[str] = None,
-        object_id: Optional[int] = None,
+        object_number: Optional[int] = None,
     ):
         self._ontology_object = ontology_object
         self._object_hash = object_hash or short_uuid_str()
-        self.object_id = object_id
+        self.object_number = object_number
         self._parent: Optional[LabelRowV2] = None
 
         self._static_answer_map: Dict[str, Answer] = _get_static_answer_map(self._ontology_object.attributes)
@@ -457,20 +457,20 @@ class ObjectInstance:
         return self._object_hash
 
     @property
-    def object_id(self) -> Optional[int]:
+    def object_number(self) -> Optional[int]:
         """The caller-assigned display number (the "N" in "ClassName N" shown in the
         editor) for this object instance.
 
         Returns:
-            The object ID if one has been set, otherwise None — meaning it will be auto-assigned on save.
+            The object number if one has been set, otherwise None — meaning it will be auto-assigned on save.
         """
-        return self._object_id
+        return self._object_number
 
-    @object_id.setter
-    def object_id(self, value: Optional[int]) -> None:
+    @object_number.setter
+    def object_number(self, value: Optional[int]) -> None:
         if value is not None and value < 0:
-            raise LabelRowError(f"object_id must be a non-negative integer, got {value}.")
-        self._object_id = value
+            raise LabelRowError(f"object_number must be a non-negative integer, got {value}.")
+        self._object_number = value
 
     @property
     def ontology_item(self) -> Object:

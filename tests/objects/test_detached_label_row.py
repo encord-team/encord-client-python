@@ -395,34 +395,34 @@ def test_empty_img_group_rejected(all_types_ontology):
         LabelRowV2.from_media_metadata(all_types_ontology, [])
 
 
-def test_object_instance_object_id_defaults_to_none(all_types_ontology):
+def test_object_instance_object_number_defaults_to_none(all_types_ontology):
     box_ontology = all_types_ontology.structure.get_child_by_title("Box", type_=Object)
     instance = box_ontology.create_instance()
-    assert instance.object_id is None
+    assert instance.object_number is None
 
 
-def test_object_instance_object_id_settable(all_types_ontology):
+def test_object_instance_object_number_settable(all_types_ontology):
     box_ontology = all_types_ontology.structure.get_child_by_title("Box", type_=Object)
     instance = box_ontology.create_instance()
-    instance.object_id = 5
-    assert instance.object_id == 5
+    instance.object_number = 5
+    assert instance.object_number == 5
 
 
-def test_object_instance_object_id_rejects_negative(all_types_ontology):
+def test_object_instance_object_number_rejects_negative(all_types_ontology):
     box_ontology = all_types_ontology.structure.get_child_by_title("Box", type_=Object)
     instance = box_ontology.create_instance()
     with pytest.raises(LabelRowError, match="non-negative"):
-        instance.object_id = -1
+        instance.object_number = -1
 
 
-def test_create_instance_accepts_object_id(all_types_ontology):
+def test_create_instance_accepts_object_number(all_types_ontology):
     box_ontology = all_types_ontology.structure.get_child_by_title("Box", type_=Object)
-    instance = box_ontology.create_instance(object_id=7)
-    assert instance.object_id == 7
+    instance = box_ontology.create_instance(object_number=7)
+    assert instance.object_number == 7
 
 
-def _box(ontology, x, object_id=None):
-    inst = ontology.create_instance(object_id=object_id)
+def _box(ontology, x, object_number=None):
+    inst = ontology.create_instance(object_number=object_number)
     inst.set_for_frames(BoundingBoxCoordinates(top_left_x=x, top_left_y=0.1, width=0.1, height=0.1), frames=0)
     return inst
 
@@ -435,15 +435,15 @@ def test_permutation_of_existing_ids_is_allowed(all_types_ontology):
     label_row = LabelRowV2.from_media_metadata(all_types_ontology, metadata)
     box = all_types_ontology.structure.get_child_by_title("Box", type_=Object)
 
-    a, b = _box(box, 0.1, object_id=0), _box(box, 0.2, object_id=1)
+    a, b = _box(box, 0.1, object_number=0), _box(box, 0.2, object_number=1)
     label_row.add_object_instance(a)
     label_row.add_object_instance(b)
 
-    a.object_id, b.object_id = b.object_id, a.object_id  # must not raise
+    a.object_number, b.object_number = b.object_number, a.object_number  # must not raise
 
-    assert a.object_id == 1
-    assert b.object_id == 0
-    label_row._validate_object_ids()  # still valid: a permutation has no duplicates
+    assert a.object_number == 1
+    assert b.object_number == 0
+    label_row._validate_object_numbers()  # still valid: a permutation has no duplicates
 
 
 def test_duplicate_object_ids_rejected_at_validation(all_types_ontology):
@@ -453,48 +453,48 @@ def test_duplicate_object_ids_rejected_at_validation(all_types_ontology):
     label_row = LabelRowV2.from_media_metadata(all_types_ontology, metadata)
     box = all_types_ontology.structure.get_child_by_title("Box", type_=Object)
 
-    a, b = _box(box, 0.1, object_id=5), _box(box, 0.2, object_id=5)
+    a, b = _box(box, 0.1, object_number=5), _box(box, 0.2, object_number=5)
     label_row.add_object_instance(a)
     label_row.add_object_instance(b)  # allowed — transient states are fine
 
-    with pytest.raises(LabelRowError, match="objectID=5"):
-        label_row._validate_object_ids()
+    with pytest.raises(LabelRowError, match="object_number=5"):
+        label_row._validate_object_numbers()
 
 
-def test_to_object_answers_includes_object_id_unconditionally(all_types_ontology):
+def test_to_object_answers_includes_object_number_unconditionally(all_types_ontology):
     metadata = CustomerProvidedVideoMetadata(
         fps=25.0, duration=4.0, width=1920, height=1080, file_size=0, mime_type="video/mp4"
     )
     label_row = LabelRowV2.from_media_metadata(all_types_ontology, metadata)
     box_ontology = all_types_ontology.structure.get_child_by_title("Box", type_=Object)
 
-    instance = box_ontology.create_instance(object_id=11)
+    instance = box_ontology.create_instance(object_number=11)
     instance.set_for_frames(BoundingBoxCoordinates(top_left_x=0.1, top_left_y=0.1, width=0.1, height=0.1), frames=0)
     label_row.add_object_instance(instance)
 
     label_dict = label_row.to_encord_dict()
-    assert label_dict["object_answers"][instance.object_hash]["objectId"] == 11
+    assert label_dict["object_answers"][instance.object_hash]["objectNumber"] == 11
 
 
-def test_from_labels_dict_reads_geometric_object_id_from_object_answer_and_ignores_frame_value(all_types_ontology):
+def test_from_labels_dict_reads_geometric_object_number_from_object_answer_and_ignores_frame_value(all_types_ontology):
     metadata = CustomerProvidedVideoMetadata(
         fps=25.0, duration=4.0, width=1920, height=1080, file_size=0, mime_type="video/mp4"
     )
     source_row = LabelRowV2.from_media_metadata(all_types_ontology, metadata)
     box_ontology = all_types_ontology.structure.get_child_by_title("Box", type_=Object)
-    source_row.add_object_instance(_box(box_ontology, 0.1, object_id=13))
+    source_row.add_object_instance(_box(box_ontology, 0.1, object_number=13))
     label_dict = source_row.to_encord_dict()
     data_unit = next(iter(label_dict["data_units"].values()))
-    data_unit["labels"]["0"]["objects"][0].update(objectId=99, objectID=99)
+    data_unit["labels"]["0"]["objects"][0].update(objectNumber=99, objectID=99)
     loaded_row = LabelRowV2.from_media_metadata(all_types_ontology, metadata)
 
     loaded_row.from_labels_dict(label_dict)
 
-    assert [instance.object_id for instance in loaded_row.get_object_instances()] == [13]
+    assert [instance.object_number for instance in loaded_row.get_object_instances()] == [13]
 
 
-def test_create_new_object_instance_with_ranges_parses_object_id_from_object_answer(all_types_ontology):
-    # object_answers spells the key `objectId`, unlike the per-frame labels blob.
+def test_create_new_object_instance_with_ranges_parses_object_number_from_object_answer(all_types_ontology):
+    # object_answers spells the key `objectNumber`, unlike the per-frame labels blob.
     metadata = CustomerProvidedAudioMetadata(
         duration=4.0, file_size=0, mime_type="audio/mpeg", sample_rate=44100, bit_depth=16, codec="mp3", num_channels=2
     )
@@ -505,51 +505,51 @@ def test_create_new_object_instance_with_ranges_parses_object_id_from_object_ans
         "objectHash": "obj-hash-2",
         "featureHash": audio_ontology.feature_node_hash,
         "classifications": [],
-        "objectId": 13,
+        "objectNumber": 13,
     }
 
     result = label_row._create_new_object_instance_with_ranges(object_answer, ranges=[Range(0, 100)])
 
-    assert result.object_id == 13
+    assert result.object_number == 13
 
 
-def test_save_with_renumber_object_ids_true_omits_object_id(all_types_ontology):
+def test_save_with_renumber_objects_true_omits_object_number(all_types_ontology):
     metadata = CustomerProvidedVideoMetadata(
         fps=25.0, duration=4.0, width=1920, height=1080, file_size=0, mime_type="video/mp4"
     )
     label_row = LabelRowV2.from_media_metadata(all_types_ontology, metadata)
     box_ontology = all_types_ontology.structure.get_child_by_title("Box", type_=Object)
 
-    instance = box_ontology.create_instance(object_id=9)
+    instance = box_ontology.create_instance(object_number=9)
     instance.set_for_frames(BoundingBoxCoordinates(top_left_x=0.1, top_left_y=0.1, width=0.1, height=0.1), frames=0)
     label_row.add_object_instance(instance)
 
     default_dict = label_row.to_encord_dict()
-    renumbered_dict = label_row.to_encord_dict(renumber_object_ids=True)
+    renumbered_dict = label_row.to_encord_dict(renumber_objects=True)
 
-    assert default_dict["object_answers"][instance.object_hash]["objectId"] == 9
-    assert "objectId" not in renumbered_dict["object_answers"][instance.object_hash]
-    assert instance.object_id == 9  # non-destructive
+    assert default_dict["object_answers"][instance.object_hash]["objectNumber"] == 9
+    assert "objectNumber" not in renumbered_dict["object_answers"][instance.object_hash]
+    assert instance.object_number == 9  # non-destructive
 
 
-def test_to_encord_dict_does_not_leak_renumber_object_ids_override_to_later_calls(all_types_ontology):
+def test_to_encord_dict_does_not_leak_renumber_objects_override_to_later_calls(all_types_ontology):
     metadata = CustomerProvidedVideoMetadata(
         fps=25.0, duration=4.0, width=1920, height=1080, file_size=0, mime_type="video/mp4"
     )
     label_row = LabelRowV2.from_media_metadata(all_types_ontology, metadata)
     box_ontology = all_types_ontology.structure.get_child_by_title("Box", type_=Object)
 
-    instance = box_ontology.create_instance(object_id=9)
+    instance = box_ontology.create_instance(object_number=9)
     instance.set_for_frames(BoundingBoxCoordinates(top_left_x=0.1, top_left_y=0.1, width=0.1, height=0.1), frames=0)
     label_row.add_object_instance(instance)
 
-    label_row.to_encord_dict(renumber_object_ids=True)
+    label_row.to_encord_dict(renumber_objects=True)
     later_dict = label_row.to_encord_dict()
 
-    assert later_dict["object_answers"][instance.object_hash]["objectId"] == 9
+    assert later_dict["object_answers"][instance.object_hash]["objectNumber"] == 9
 
 
-def _attach_with_object_ids(all_types_ontology, *object_ids):
+def _attach_with_object_numbers(all_types_ontology, *object_numbers):
     from unittest.mock import Mock
 
     detached = LabelRowV2.from_media_metadata(
@@ -559,7 +559,9 @@ def _attach_with_object_ids(all_types_ontology, *object_ids):
         ),
     )
     box_ontology = all_types_ontology.structure.get_child_by_title("Box", type_=Object)
-    instances = [_box(box_ontology, 0.1 * (i + 1), object_id=object_id) for i, object_id in enumerate(object_ids)]
+    instances = [
+        _box(box_ontology, 0.1 * (i + 1), object_number=object_number) for i, object_number in enumerate(object_numbers)
+    ]
     for instance in instances:
         detached.add_object_instance(instance)
 
@@ -585,28 +587,28 @@ def _attach_with_object_ids(all_types_ontology, *object_ids):
     return detached, mock_project, instances
 
 
-def test_save_forwards_renumber_object_ids_to_to_encord_dict(all_types_ontology):
-    label_row, mock_project, [instance] = _attach_with_object_ids(all_types_ontology, 9)
+def test_save_forwards_renumber_objects_to_to_encord_dict(all_types_ontology):
+    label_row, mock_project, [instance] = _attach_with_object_numbers(all_types_ontology, 9)
 
-    label_row.save(renumber_object_ids=True)
+    label_row.save(renumber_objects=True)
 
     kwargs = mock_project._client.save_label_rows.call_args.kwargs
     [saved] = kwargs["payload"]
     saved_objects_in_frame = saved["data_units"][list(saved["data_units"].keys())[0]]["labels"]["0"]["objects"]
-    assert "objectId" not in saved_objects_in_frame[0]
-    assert "objectId" not in saved["object_answers"][instance.object_hash]
+    assert "objectNumber" not in saved_objects_in_frame[0]
+    assert "objectNumber" not in saved["object_answers"][instance.object_hash]
 
 
-def test_save_with_renumber_object_ids_false_raises_on_duplicate_object_ids(all_types_ontology):
-    label_row, _mock_project, _instances = _attach_with_object_ids(all_types_ontology, 9, 9)
+def test_save_with_renumber_objects_false_raises_on_duplicate_object_numbers(all_types_ontology):
+    label_row, _mock_project, _instances = _attach_with_object_numbers(all_types_ontology, 9, 9)
 
     with pytest.raises(LabelRowError, match="both claim"):
         label_row.save()
 
 
-def test_save_with_renumber_object_ids_true_skips_duplicate_object_id_validation(all_types_ontology):
-    label_row, mock_project, _instances = _attach_with_object_ids(all_types_ontology, 9, 9)
+def test_save_with_renumber_objects_true_skips_duplicate_object_number_validation(all_types_ontology):
+    label_row, mock_project, _instances = _attach_with_object_numbers(all_types_ontology, 9, 9)
 
-    label_row.save(renumber_object_ids=True)
+    label_row.save(renumber_objects=True)
 
     mock_project._client.save_label_rows.assert_called_once()

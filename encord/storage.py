@@ -30,6 +30,7 @@ from encord.beta.scene.layout import SceneLayout
 from encord.beta.scene.settings import SceneViewSettings
 from encord.client import LONG_POLLING_RESPONSE_RETRY_N, LONG_POLLING_SLEEP_ON_FAILURE_SECONDS
 from encord.common.deprecated import deprecated
+from encord.common.utils import snake_to_camel
 from encord.exceptions import EncordException
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS
@@ -41,6 +42,7 @@ from encord.http.utils import (
 )
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
+from encord.orm.base_dto import pydantic_version
 from encord.orm.dataset import LongPollingStatus
 from encord.orm.group import AddStorageFolderGroupsPayload, RemoveGroupsParams, StorageFolderGroup
 from encord.orm.storage import (
@@ -81,9 +83,25 @@ logger = logging.getLogger(__name__)
 STORAGE_BUNDLE_CREATE_LIMIT = 1000
 
 
+class _NotProvided:
+    pass
+
+
+_NOT_PROVIDED = _NotProvided()
+
+
 class _ScenePatchItemPayload(PatchItemPayload):
     scene_view_settings: Optional[SceneViewSettings] = None
     scene_layout: Optional[SceneLayout] = None
+
+    def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
+        payload = super().to_dict(by_alias=by_alias, exclude_none=exclude_none)
+        fields_set = self.model_fields_set if pydantic_version >= 2 else self.__fields_set__
+        # Preserve explicit nulls for resettable settings without sending omitted fields.
+        for field_name in ("scene_layout", "scene_view_settings", "timeseries_settings"):
+            if field_name in fields_set and getattr(self, field_name) is None:
+                payload[snake_to_camel(field_name) if by_alias else field_name] = None
+        return payload
 
 
 class StorageFolder:
@@ -2164,10 +2182,10 @@ class StorageItem:
         name: Optional[str] = None,
         description: Optional[str] = None,
         client_metadata: Optional[Dict[str, Any]] = None,
-        timeseries_settings: Optional[TimeSeriesViewSettings] = None,
+        timeseries_settings: Union[TimeSeriesViewSettings, None, _NotProvided] = _NOT_PROVIDED,
         bundle: Optional[Bundle] = None,
-        scene_view_settings: Optional[SceneViewSettings] = None,
-        scene_layout: Optional[SceneLayout] = None,
+        scene_view_settings: Union[SceneViewSettings, None, _NotProvided] = _NOT_PROVIDED,
+        scene_layout: Union[SceneLayout, None, _NotProvided] = _NOT_PROVIDED,
     ) -> None:
         """Update modifiable properties of the item.
 
@@ -2175,10 +2193,13 @@ class StorageItem:
             name: New item name.
             description: New item description.
             client_metadata: New client metadata.
-            timeseries_settings: New time-series channel visualization settings.
+            timeseries_settings: New time-series channel visualization settings. Pass None to restore defaults;
+                omit to leave the existing settings unchanged.
             bundle: Optional :class:`encord.http.bundle.Bundle` to use for the operation. If provided, the operation
-            scene_view_settings: New scene visualization settings.
-            scene_layout: New scene tile and timeline layout.
+            scene_view_settings: New scene visualization settings. Pass None to restore defaults;
+                omit to leave the existing settings unchanged.
+            scene_layout: New scene tile and timeline layout. Pass None to remove the layout;
+                omit to leave the existing layout unchanged.
 
         Returns:
             None
@@ -2193,29 +2214,32 @@ class StorageItem:
             name is None
             and description is None
             and client_metadata is None
-            and timeseries_settings is None
-            and scene_view_settings is None
-            and scene_layout is None
+            and isinstance(timeseries_settings, _NotProvided)
+            and isinstance(scene_view_settings, _NotProvided)
+            and isinstance(scene_layout, _NotProvided)
         ):
             return
 
         if client_metadata is not None:
             self._parsed_metadata = None
+        payload = _ScenePatchItemPayload(
+            name=name,
+            description=description,
+            client_metadata=client_metadata,
+        )
+        if not isinstance(timeseries_settings, _NotProvided):
+            payload.timeseries_settings = timeseries_settings
+        if not isinstance(scene_view_settings, _NotProvided):
+            payload.scene_view_settings = scene_view_settings
+        if not isinstance(scene_layout, _NotProvided):
+            payload.scene_layout = scene_layout
+
         if bundle is not None:
             bundled_operation(
                 bundle,
                 operation=self._api_client.get_bound_operation(StorageItem._patch_multiple_items),
                 payload=orm_storage.BundledPatchItemPayload(
-                    item_patches={
-                        str(self.uuid): _ScenePatchItemPayload(
-                            name=name,
-                            description=description,
-                            client_metadata=client_metadata,
-                            timeseries_settings=timeseries_settings,
-                            scene_view_settings=scene_view_settings,
-                            scene_layout=scene_layout,
-                        ),
-                    },
+                    item_patches={str(self.uuid): payload},
                 ),
                 result_mapper=BundleResultMapper[orm_storage.StorageItem](
                     result_mapping_predicate=lambda r: str(r.uuid),
@@ -2227,14 +2251,7 @@ class StorageItem:
             self._orm_item = self._api_client.patch(
                 f"storage/folders/{self.parent_folder_uuid}/items/{self.uuid}",
                 params=None,
-                payload=_ScenePatchItemPayload(
-                    name=name,
-                    description=description,
-                    client_metadata=client_metadata,
-                    timeseries_settings=timeseries_settings,
-                    scene_view_settings=scene_view_settings,
-                    scene_layout=scene_layout,
-                ),
+                payload=payload,
                 result_type=orm_storage.StorageItem,
             )
 

@@ -108,7 +108,6 @@ from encord.objects.frames import (
     ranges_to_list,
 )
 from encord.objects.html_node import HtmlRange
-from encord.objects.label_utils import _read_object_id
 from encord.objects.metadata import DataGroupMetadata, DICOMSeriesMetadata, DICOMSliceMetadata
 from encord.objects.ontology_object import Object
 from encord.objects.ontology_object_instance import ObjectInstance
@@ -372,15 +371,15 @@ def _get_space_class_from_space_literal(space_literal: SpaceLiteral) -> Type[Spa
         exhaustive_guard(space_literal, message=f"Missing space class for space type {space_literal}")
 
 
-def _strip_object_ids(node: Any) -> None:
-    """Recursively delete every `objectId` key from an already-built `to_encord_dict()` export, in place."""
+def _strip_object_numbers(node: Any) -> None:
+    """Recursively delete every `objectNumber` key from an already-built `to_encord_dict()` export, in place."""
     if isinstance(node, dict):
-        node.pop("objectId", None)
+        node.pop("objectNumber", None)
         for value in node.values():
-            _strip_object_ids(value)
+            _strip_object_numbers(value)
     elif isinstance(node, list):
         for item in node:
-            _strip_object_ids(item)
+            _strip_object_numbers(item)
 
 
 class LabelRowV2:
@@ -1564,7 +1563,7 @@ class LabelRowV2:
         self,
         bundle: Optional[Bundle] = None,
         validate_before_saving: bool = False,
-        renumber_object_ids: bool = False,
+        renumber_objects: bool = False,
     ) -> None:
         """Upload the created labels to the Encord server.
 
@@ -1574,22 +1573,22 @@ class LabelRowV2:
             bundle: If not provided, save is executed immediately. If provided, save is executed
                 as part of the bundle.
             validate_before_saving: Enable stricter server-side integrity checks. Default is `False`.
-            renumber_object_ids: If `True`, recomputes every object's displayed ID on save, ignoring any
-                currently-set `object_id` values - including ones read back from the server, not just ones
-                you set yourself. Default `False` keeps existing IDs as-is.
+            renumber_objects: If `True`, recomputes every object's number on save, ignoring any
+                currently-set `object_number` values - including ones read back from the server, not just ones
+                you set yourself. Default `False` keeps existing numbers as-is.
         """
         self._check_not_detached("save")
         self._check_labelling_is_initalised()
         assert self.label_hash is not None  # Checked earlier, assert is just to silence mypy
-        if not renumber_object_ids:
-            self._validate_object_ids()
+        if not renumber_objects:
+            self._validate_object_numbers()
 
         bundled_operation(
             bundle,
             self._project_client.save_label_rows,
             payload=BundledSaveRowsPayload(
                 uids=[self.label_hash],
-                payload=[self.to_encord_dict(renumber_object_ids=renumber_object_ids)],
+                payload=[self.to_encord_dict(renumber_objects=renumber_objects)],
                 validate_before_saving=validate_before_saving,
             ),
         )
@@ -1839,25 +1838,25 @@ class LabelRowV2:
 
         return ret
 
-    def _validate_object_ids(self) -> None:
+    def _validate_object_numbers(self) -> None:
         """
-        Calculate IDs being claimed by each object, and ensure there are no collisions within
+        Calculate numbers being claimed by each object, and ensure there are no collisions within
         an ontology feature.
         """
 
         claimed: Dict[tuple, str] = {}
 
         def _check(object_hash: str, instance: ObjectInstance) -> None:
-            object_id = instance.object_id
-            if object_id is None:
+            object_number = instance.object_number
+            if object_number is None:
                 return
-            key = (instance.feature_hash, object_id)
+            key = (instance.feature_hash, object_number)
             claimant = claimed.get(key)
             if claimant is not None and claimant != object_hash:
                 raise LabelRowError(
                     f"Cannot save: objects '{claimant}' and '{object_hash}' both claim "
-                    f"objectID={object_id} for the same ontology feature ({instance.feature_hash}). "
-                    "Each objectID must be unique per ontology object within a label row."
+                    f"object_number={object_number} for the same ontology feature ({instance.feature_hash}). "
+                    "Each object_number must be unique per ontology object within a label row."
                 )
             claimed[key] = object_hash
 
@@ -2232,7 +2231,7 @@ class LabelRowV2:
             self._remove_from_frame_to_hashes_map(object_instance._stored_frames(), object_instance.object_hash)
         object_instance._parent = None
 
-    def to_encord_dict(self, renumber_object_ids: bool = False) -> Dict[str, Any]:
+    def to_encord_dict(self, renumber_objects: bool = False) -> Dict[str, Any]:
         """Convert the label row to a dictionary in Encord format.
 
         Classifications are serialized only in ``classification_answers``, with their ranges and metadata.
@@ -2242,7 +2241,7 @@ class LabelRowV2:
         :meth:`encord.objects.ontology_labels_impl.LabelRowV2.save` function.
 
         Args:
-            renumber_object_ids: If `True`, omits every object's `objectId` from the serialized
+            renumber_objects: If `True`, omits every object's `objectNumber` from the serialized
                 output, so the backend recomputes display numbers from scratch. Default `False`.
 
         Returns:
@@ -2279,8 +2278,8 @@ class LabelRowV2:
             if self._mcap_trust_mode:
                 self._mcap_spaces.prepare_export(ret)
 
-        if renumber_object_ids:
-            _strip_object_ids(ret)
+        if renumber_objects:
+            _strip_object_numbers(ret)
 
         return ret
 
@@ -2821,8 +2820,8 @@ class LabelRowV2:
                 "classifications": list(reversed(all_static_answers)),
                 "objectHash": obj.object_hash,
             }
-            if obj.object_id is not None:
-                object_answer_dict["objectId"] = obj.object_id
+            if obj.object_number is not None:
+                object_answer_dict["objectNumber"] = obj.object_number
 
             # At some point, we also want to add these to the other modalities
             if not is_geometric(self.data_type):
@@ -3817,7 +3816,7 @@ class LabelRowV2:
             # in some label rows we still have such "orphaned" answers.
             # To avoid parser errors, we're omitting attributes for the object that is not in label rows.
             if object_instance := self._objects_map.get(object_hash):
-                object_instance.object_id = _read_object_id(answer)
+                object_instance.object_number = answer.get("objectNumber")
                 answer_list = answer["classifications"]
                 object_instance.set_answer_from_list(answer_list)
 
@@ -3900,7 +3899,9 @@ class LabelRowV2:
             raise RuntimeError(f"Unexpected data type[{unknown_data_type}] for range based objects")
         if label_class.shape != expected_shape:
             raise LabelRowError("Unsupported object shape for data type")
-        object_instance = ObjectInstance(label_class, object_hash=object_hash, object_id=_read_object_id(object_answer))
+        object_instance = ObjectInstance(
+            label_class, object_hash=object_hash, object_number=object_answer.get("objectNumber")
+        )
 
         object_instance.set_for_frames(
             coordinates,
@@ -3936,7 +3937,9 @@ class LabelRowV2:
         frame_object_dict = cast(BaseFrameObject, frame_info_dict)
         object_frame_instance_info = _AnnotationMetadata.from_dict(frame_object_dict)
 
-        object_instance = ObjectInstance(label_class, object_hash=object_hash, object_id=_read_object_id(object_answer))
+        object_instance = ObjectInstance(
+            label_class, object_hash=object_hash, object_number=object_answer.get("objectNumber")
+        )
         object_instance.set_for_frames(
             HtmlCoordinates(range=[HtmlRange.from_dict(x) for x in range_html]),
             frames=0,
