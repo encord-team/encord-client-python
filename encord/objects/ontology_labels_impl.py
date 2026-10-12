@@ -3166,7 +3166,7 @@ class LabelRowV2:
         # already refused the contradictory case — a tag on a frame-based row — before reaching this.
         if object_._is_event_based():
             ret["event"] = object_._event_kind_at(frame)
-        # Reserved editor field: round-tripped verbatim where the label carried it, never emitted otherwise.
+        # Round-tripped verbatim where the entry carries it, never emitted otherwise.
         interpolate = object_._frames_to_instance_data[frame].annotation_metadata._interpolate
         if interpolate is not None:
             ret["interpolate"] = interpolate
@@ -3723,6 +3723,17 @@ class LabelRowV2:
         Half-built objects are free to dangle in between, but not to be saved: an object attached and never given
         an event has no labels to write, so saving it would drop it without a word.
         """
+        for object_ in self._objects_map.values():
+            if object_._is_event_based():
+                continue
+            interpolated_frames = object_._interpolated_frames()
+            if interpolated_frames:
+                raise LabelRowError(
+                    f"Object `{object_.object_hash}` carries `interpolate` on frame(s) "
+                    f"{interpolated_frames[:5]}{'...' if len(interpolated_frames) > 5 else ''}, but it is not an "
+                    f"event-based object. Interpolation is only defined between keyframes of a continuous scene."
+                )
+
         if self.is_event_based:
             for object_ in self._objects_map.values():
                 if object_._is_event_based():
@@ -3860,7 +3871,7 @@ class LabelRowV2:
             is_deleted=object_frame_instance_info.is_deleted,
             event_kind=object_frame_instance_info.event_kind,
         )
-        # Reserved editor field: `set_for_frames` copies only the fields it knows, so carry it over by hand.
+        # `set_for_frames` copies only the fields it knows, so carry `interpolate` over by hand.
         object_instance._frames_to_instance_data[
             frame
         ].annotation_metadata._interpolate = object_frame_instance_info._interpolate
@@ -3982,7 +3993,7 @@ class LabelRowV2:
             is_deleted=object_frame_instance_info.is_deleted,
             event_kind=object_frame_instance_info.event_kind,
         )
-        # Reserved editor field: `set_for_frames` copies only the fields it knows, so carry it over by hand.
+        # `set_for_frames` copies only the fields it knows, so carry `interpolate` over by hand.
         object_instance._frames_to_instance_data[
             frame
         ].annotation_metadata._interpolate = object_frame_instance_info._interpolate

@@ -31,7 +31,11 @@ from encord.client import EncordClient, EncordClientDataset, EncordClientProject
 from encord.client_metadata_schema import get_client_metadata_schema, set_client_metadata_schema_from_dict
 from encord.collection import Collection
 from encord.common.deprecated import deprecated
-from encord.common.organisation_tags import ORGANISATION_TAGS_PATH, resolve_organisation_tag_uuid
+from encord.common.organisation_tags import (
+    ORGANISATION_TAGS_PATH,
+    resolve_organisation_tag_names,
+    resolve_organisation_tag_uuid,
+)
 from encord.common.time_parser import parse_datetime, parse_datetime_optional
 from encord.configs import ENCORD_DOMAIN, BearerConfig, SshConfig, UserConfig, get_env_ssh_key
 from encord.constants.string_constants import TYPE_DATASET, TYPE_PROJECT
@@ -1534,6 +1538,7 @@ class EncordUserClient:
         search: Optional[str] = None,
         dataset_synced: Optional[bool] = None,
         org_access: Optional[bool] = None,
+        organisation_tags_allof: Optional[Union[List[str], List[OrganisationTag]]] = None,
         order: FoldersSortBy = FoldersSortBy.NAME,
         desc: bool = False,
         page_size: int = 100,
@@ -1547,12 +1552,22 @@ class EncordUserClient:
             org_access: If `True`, and if the caller is `ADMIN` of their organization, the results contain the
                 folders belonging to the organization, instead of those accessible to the user. If enabled
                 but the user is not an organization admin, the `AuthorisationError` is raised. Default value is `False`.
+            organisation_tags_allof (Optional[Union[List[str], List[OrganisationTag]]]): Optional organisation-tag filter; matches only folders tagged with *all* of
+                the given tags. Accepts either tag name strings or :class:`encord.orm.project.OrganisationTag`
+                instances (as returned by :meth:`list_organisation_tags`). Tag names are matched exactly and are
+                case-sensitive. The whole filter is a conjunction, so every name must resolve: if any string name
+                is unknown, no folders are listed and a :class:`~encord.exceptions.ResourceNotFoundError` naming
+                every unknown tag is raised before the folder is found.
             order: Sort order for the folders. See :class:`encord.orm.storage.FoldersSortBy` for available options.
             desc: If True, sort in descending order.
             page_size: Number of folders to return per page. Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable of :class:`encord.storage.StorageFolder` objects.
+
+        Raises:
+            ResourceNotFoundError: One or more ``organisation_tags_allof`` names do not match any organization
+                tag. The error lists every unknown name.
         """
         return StorageFolder._list_folders(
             self._api_client,
@@ -1561,6 +1576,7 @@ class EncordUserClient:
                 search=search,
                 dataset_synced=dataset_synced,
                 include_org_access=org_access,
+                organisation_tag_names_allof=resolve_organisation_tag_names(self._api_client, organisation_tags_allof),
                 order=order,
                 desc=desc,
                 page_size=page_size,
@@ -1573,6 +1589,7 @@ class EncordUserClient:
         search: Optional[str] = None,
         dataset_synced: Optional[bool] = None,
         org_access: Optional[bool] = None,
+        organisation_tags_allof: Optional[Union[List[str], List[OrganisationTag]]] = None,
         order: FoldersSortBy = FoldersSortBy.NAME,
         desc: bool = False,
         page_size: int = 100,
@@ -1586,12 +1603,22 @@ class EncordUserClient:
             org_access: If `True`, and if the caller is `ADMIN` of their organization, the results contain the
                 folders belonging to the organization, instead of those accessible to the user. If enabled
                but the user is not an organization admin, the `AuthorisationError` is raised. Default value is `False`.
+            organisation_tags_allof (Optional[Union[List[str], List[OrganisationTag]]]): Optional organisation-tag filter; matches only folders tagged with *all* of
+                the given tags. Accepts either tag name strings or :class:`encord.orm.project.OrganisationTag`
+                instances (as returned by :meth:`list_organisation_tags`). Tag names are matched exactly and are
+                case-sensitive. The whole filter is a conjunction, so every name must resolve: if any string name
+                is unknown, no folders are listed and a :class:`~encord.exceptions.ResourceNotFoundError` naming
+                every unknown tag is raised before the folder is found.
             order: Sort order for the folders. See :class:`encord.orm.storage.FoldersSortBy` for available options.
             desc: If True, sort in descending order.
             page_size: Number of folders to return per page. Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable of :class:`encord.storage.StorageFolder` objects.
+
+        Raises:
+            ResourceNotFoundError: One or more ``organisation_tags_allof`` names do not match any organization
+                tag. The error lists every unknown name.
         """
         return StorageFolder._list_folders(
             self._api_client,
@@ -1600,6 +1627,7 @@ class EncordUserClient:
                 search=search,
                 dataset_synced=dataset_synced,
                 include_org_access=org_access,
+                organisation_tag_names_allof=resolve_organisation_tag_names(self._api_client, organisation_tags_allof),
                 order=order,
                 desc=desc,
                 page_size=page_size,

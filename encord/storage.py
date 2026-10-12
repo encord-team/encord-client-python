@@ -30,6 +30,7 @@ from encord.beta.scene.layout import SceneLayout
 from encord.beta.scene.settings import SceneViewSettings
 from encord.client import LONG_POLLING_RESPONSE_RETRY_N, LONG_POLLING_SLEEP_ON_FAILURE_SECONDS
 from encord.common.deprecated import deprecated
+from encord.common.organisation_tags import resolve_organisation_tag_names
 from encord.common.utils import snake_to_camel
 from encord.exceptions import EncordException
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
@@ -45,6 +46,7 @@ from encord.http.v2.payloads import Page
 from encord.orm.base_dto import pydantic_version
 from encord.orm.dataset import LongPollingStatus
 from encord.orm.group import AddStorageFolderGroupsPayload, RemoveGroupsParams, StorageFolderGroup
+from encord.orm.project import OrganisationTag
 from encord.orm.storage import (
     CustomerProvidedAudioMetadata,
     CustomerProvidedVideoMetadata,
@@ -61,6 +63,7 @@ from encord.orm.storage import (
     ReencodeVideoItemsRequest,
     ReencodeVideoItemsResponse,
     StorageFolderSummary,
+    StorageFolderType,
     StorageItemSummary,
     StorageItemType,
     StorageLocationName,
@@ -70,6 +73,15 @@ from encord.orm.storage import (
     UploadSignedUrlsPayload,
     _StorageItemPrivateSummary,
     _to_storage_item_summary,
+)
+from encord.orm.storage import (
+    MetadataIngestionConfig as MetadataIngestionConfig,
+)
+from encord.orm.storage import (
+    SidecarMatcherSuffix as SidecarMatcherSuffix,
+)
+from encord.orm.storage import (
+    StorageFolderConfig as StorageFolderConfig,
 )
 from encord.orm.storage import (
     TimeSeriesLineChannelViewSettings as TimeSeriesLineChannelViewSettings,
@@ -178,6 +190,45 @@ class StorageFolder:
             List[PathElement]: A list of PathElement objects representing the path to the root.
         """
         return self._orm_folder.path_to_root
+
+    @property
+    def folder_type(self) -> StorageFolderType:
+        """Gets the type of the folder.
+
+        Returns:
+            StorageFolderType: ``CLOUD_LINKED`` for a cloud-synced folder, ``GENERIC`` for a regular
+                folder (see also :attr:`is_cloud_synced`).
+        """
+        return self._orm_folder.folder_type
+
+    @property
+    def is_cloud_synced(self) -> bool:
+        """Whether this folder is cloud-synced (mounted on an external bucket via an integration).
+
+        Returns:
+            bool: ``True`` if the folder is a cloud-synced (``CLOUD_LINKED``) folder, ``False`` for a
+                regular folder.
+        """
+        return self._orm_folder.folder_type == StorageFolderType.CLOUD_LINKED
+
+    @property
+    def integration_hash(self) -> Optional[UUID]:
+        """Gets the cloud integration backing this folder.
+
+        Returns:
+            Optional[UUID]: The UUID of the cloud integration for a cloud-synced folder, or ``None``
+                for a regular folder.
+        """
+        return self._orm_folder.integration_hash
+
+    @property
+    def remote_url(self) -> Optional[str]:
+        """Gets the remote bucket/prefix this folder is synced with.
+
+        Returns:
+            Optional[str]: The remote URL for a cloud-synced folder, or ``None`` for a regular folder.
+        """
+        return self._orm_folder.remote_url
 
     def list_items(
         self,
@@ -1231,6 +1282,58 @@ class StorageFolder:
 
                 time.sleep(LONG_POLLING_SLEEP_ON_FAILURE_SECONDS)
 
+    def get_folder_config(self) -> orm_storage.StorageFolderConfig:
+        """Get the configuration of this storage folder.
+
+        Exposes the optional cloud-synced-folder metadata ingestion configuration
+        (``metadata_ingestion``), which is ``None`` unless metadata ingestion has
+        been enabled on the folder.
+
+        Returns:
+            StorageFolderConfig: The current configuration of the folder.
+
+        See Also:
+            :class:`encord.orm.storage.StorageFolderConfig` for the exact set of
+            information provided.
+        """
+        return self._api_client.get(
+            f"storage/folders/{self.uuid}/folder-config",
+            params=None,
+            result_type=orm_storage.StorageFolderConfig,
+        )
+
+    def enable_metadata_ingestion(
+        self,
+        matcher: Optional[orm_storage.SidecarMatcherSuffix] = None,
+        *,
+        paused: bool = False,
+    ) -> None:
+        """Enable metadata sidecar ingestion on this cloud-synced folder.
+
+        Reads the current folder config, sets ``metadata_ingestion`` and writes it
+        back. Any configuration the SDK does not model is preserved.
+
+        Args:
+            matcher (Optional[SidecarMatcherSuffix]): How to identify metadata
+                sidecar files. Defaults to a ``.metadata.json`` suffix matcher.
+            paused (bool): When ``True``, matched files are claimed as sidecars but
+                not attached to data files. Defaults to ``False``.
+
+        Note:
+            Requires the API key's user to have the folder-admin role.
+        """
+        config = self.get_folder_config()
+        config.metadata_ingestion = orm_storage.MetadataIngestionConfig(
+            matcher=matcher if matcher is not None else orm_storage.SidecarMatcherSuffix(),
+            paused=paused,
+        )
+        self._api_client.post(
+            f"storage/folders/{self.uuid}/folder-config",
+            params=None,
+            payload=config,
+            result_type=None,
+        )
+
     def add_private_data_to_folder_get_result(
         self,
         upload_job_id: UUID,
@@ -1252,6 +1355,7 @@ class StorageFolder:
         *,
         search: Optional[str] = None,
         dataset_synced: Optional[bool] = None,
+        organisation_tags_allof: Optional[Union[List[str], List[OrganisationTag]]] = None,
         order: FoldersSortBy = FoldersSortBy.NAME,
         desc: bool = False,
         page_size: int = 100,
@@ -1262,12 +1366,24 @@ class StorageFolder:
             search (Optional[str]): Search string to filter folders by name.
             dataset_synced (Optional[bool]): Include or exclude folders that are mirrored by a dataset. If `None`,
                 no filtering is applied.
+            organisation_tags_allof (Optional[Union[List[str], List[OrganisationTag]]]): Optional organisation-tag filter;
+                matches only folders tagged with *all* of
+                the given tags. Accepts either tag name strings or :class:`encord.orm.project.OrganisationTag`
+                instances (as returned by :meth:`encord.user_client.EncordUserClient.list_organisation_tags`).
+                Tag names are matched exactly and are case-sensitive. The whole filter is a conjunction, so
+                every name must resolve: if any string name is unknown, no folders are listed and a
+                :class:`~encord.exceptions.ResourceNotFoundError` naming every unknown tag is raised before the
+                folders are listed.
             order (FoldersSortBy): Sort order for the folders. See :class:`encord.orm.storage.FoldersSortBy` for available options.
             desc (bool): If True, sort in descending order.
             page_size (int): Number of folders to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable[StorageFolder]: An iterable of :class:`encord.storage.StorageFolder` objects.
+
+        Raises:
+            ResourceNotFoundError: One or more ``organisation_tags_allof`` names do not match any organization
+                tag. The error lists every unknown name.
         """
         return StorageFolder._list_folders(
             self._api_client,
@@ -1275,6 +1391,7 @@ class StorageFolder:
             orm_storage.ListFoldersParams(
                 search=search,
                 dataset_synced=dataset_synced,
+                organisation_tag_names_allof=resolve_organisation_tag_names(self._api_client, organisation_tags_allof),
                 order=order,
                 desc=desc,
                 page_size=page_size,
@@ -1285,6 +1402,7 @@ class StorageFolder:
         self,
         search: Optional[str] = None,
         dataset_synced: Optional[bool] = None,
+        organisation_tags_allof: Optional[Union[List[str], List[OrganisationTag]]] = None,
         order: FoldersSortBy = FoldersSortBy.NAME,
         desc: bool = False,
         page_size: int = 100,
@@ -1295,12 +1413,24 @@ class StorageFolder:
             search (Optional[str]): Search string to filter folders by name.
             dataset_synced (Optional[bool]): Include or exclude folders that are mirrored by a dataset. If `None`,
                 no filtering is applied.
+            organisation_tags_allof (Optional[Union[List[str], List[OrganisationTag]]]): Optional organisation-tag filter;
+                matches only folders tagged with *all* of
+                the given tags. Accepts either tag name strings or :class:`encord.orm.project.OrganisationTag`
+                instances (as returned by :meth:`encord.user_client.EncordUserClient.list_organisation_tags`).
+                Tag names are matched exactly and are case-sensitive. The whole filter is a conjunction, so
+                every name must resolve: if any string name is unknown, no folders are listed and a
+                :class:`~encord.exceptions.ResourceNotFoundError` naming every unknown tag is raised before the
+                folders are listed.
             order (FoldersSortBy): Sort order for the folders. See :class:`encord.orm.storage.FoldersSortBy` for available options.
             desc (bool): If True, sort in descending order.
             page_size (int): Number of folders to return per page.  Default if not specified is 100. Maximum value is 1000.
 
         Returns:
             Iterable[StorageFolder]: An iterable of :class:`encord.storage.StorageFolder` objects.
+
+        Raises:
+            ResourceNotFoundError: One or more ``organisation_tags_allof`` names do not match any organization
+                tag. The error lists every unknown name.
         """
         return StorageFolder._list_folders(
             self._api_client,
@@ -1309,6 +1439,7 @@ class StorageFolder:
                 search=search,
                 is_recursive=True,
                 dataset_synced=dataset_synced,
+                organisation_tag_names_allof=resolve_organisation_tag_names(self._api_client, organisation_tags_allof),
                 order=order,
                 desc=desc,
                 page_size=page_size,

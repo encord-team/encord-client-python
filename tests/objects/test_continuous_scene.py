@@ -14,9 +14,10 @@ import pytest
 
 from encord.constants.enums import DataType
 from encord.exceptions import LabelRowError
-from encord.objects import Classification, ClassificationInstance, LabelRowV2
-from encord.objects.coordinates import BoundingBoxCoordinates
+from encord.objects import Classification, ClassificationInstance, LabelRowV2, ObjectInstance
+from encord.objects.coordinates import BoundingBoxCoordinates, CuboidCoordinates
 from encord.objects.frames import Range
+from encord.objects.interpolation import INTERPOLATED_CONFIDENCE
 from encord.orm.label_row import LabelRowMetadata
 from encord.orm.storage import CustomerProvidedVideoMetadata
 from tests.objects.common import BASE_LABEL_ROW_METADATA
@@ -311,9 +312,7 @@ def test_an_object_can_still_be_validated_and_removed(all_types_ontology):
     assert row.to_encord_dict()["data_units"][mcap_scene.DATA_HASH]["labels"] == {}
 
 
-# `interpolate` is a reserved per-keyframe field on continuous scenes. The SDK does not interpolate: it
-# reads every keyframe as holding until the next one. A label asking for anything else is refused at parse,
-# because answering it would mean reporting coordinates the platform does not show.
+# A mode the SDK cannot compute for the shape is refused at parse rather than read as a hold.
 
 
 def _with_interpolate(value) -> dict:
@@ -323,15 +322,14 @@ def _with_interpolate(value) -> dict:
     return labels
 
 
-@pytest.mark.parametrize("mode", ["linear", "bezier", "nearest", "cubic"])
+@pytest.mark.parametrize("mode", ["linear", "bezier", "nearest", "cubic"])  # linear: not for a bounding box
 def test_an_unsupported_mode_is_refused_at_parse(all_types_ontology, mode):
-    with pytest.raises(LabelRowError, match="does not support"):
+    with pytest.raises(LabelRowError, match="cannot read"):
         _mcap_row(all_types_ontology, _with_interpolate(mode))
 
 
 @pytest.mark.parametrize("value", ["hold", None])
 def test_a_supported_value_parses(all_types_ontology, value):
-    # Unset, `null` and `hold` all mean no interpolation, which is what the SDK already does.
     assert _mcap_row(all_types_ontology, _with_interpolate(value)).is_event_based is True
 
 
@@ -350,6 +348,88 @@ def test_it_is_never_invented(all_types_ontology, value):
 
     for objects in _frame_objects(exported).values():
         assert all("interpolate" not in entry for entry in objects)
+
+
+MIDPOINT_NS = (mcap_scene.KEYFRAME_NS + mcap_scene.DELETE_NS) // 2
+CUBOID_KEYFRAME = {"position": (0.2, 0.2, 0.2), "orientation": (0.1, 0.2, 0.3), "size": (0.1, 0.1, 0.1)}
+CUBOID_TARGET = {"position": (0.4, 0.4, 0.4), "orientation": (0.2, 0.3, 0.4), "size": (0.3, 0.3, 0.3)}
+
+
+def _row_with_linear_cuboid(all_types_ontology) -> LabelRowV2:
+    """The scene carrying a cuboid that runs linearly from `KEYFRAME_NS` into an upsert at `DELETE_NS`."""
+
+    def entry(cuboid, **fields):
+        return {
+            "name": "Cuboid object",
+            "color": "#4904a5",
+            "shape": "cuboid",
+            "value": "cuboid_object",
+            "createdAt": "Mon, 11 Jul 2022 17:10:51 UTC",
+            "createdBy": "annotator@encord.com",
+            "lastEditedAt": "Mon, 11 Jul 2022 17:10:51 UTC",
+            "lastEditedBy": "annotator@encord.com",
+            "confidence": 1,
+            "objectHash": "cubObj0001",
+            "featureHash": "cuboidFeatureNodeHash",
+            "manualAnnotation": True,
+            "cuboid": cuboid,
+            **fields,
+        }
+
+    labels = _labels_without_classifications()
+    labels["object_answers"] = {"cubObj0001": {"objectHash": "cubObj0001", "classifications": []}}
+    zero = {"position": (0, 0, 0), "orientation": (0, 0, 0), "size": (0, 0, 0)}
+    labels["data_units"][mcap_scene.DATA_HASH]["labels"] = {
+        str(mcap_scene.KEYFRAME_NS): {
+            "objects": [entry(CUBOID_KEYFRAME, event="upsert", interpolate="linear")],
+            "classifications": [],
+        },
+        str(mcap_scene.DELETE_NS): {"objects": [entry(CUBOID_TARGET, event="upsert")], "classifications": []},
+        str(mcap_scene.DELETE_NS + 1): {"objects": [entry(zero, event="delete")], "classifications": []},
+    }
+    return _mcap_row(all_types_ontology, labels)
+
+
+def _cuboid_view(row: LabelRowV2, offset: int) -> ObjectInstance.ResolvedAnnotation:
+    [cuboid] = row.get_object_instances()
+    view = cuboid.get_annotation(offset)
+    assert isinstance(view, ObjectInstance.ResolvedAnnotation)
+    return view
+
+
+@pytest.mark.parametrize("reload", [False, True])
+def test_a_linear_cuboid_reads_its_keyframe_and_the_offsets_in_between(all_types_ontology, reload):
+    row = _row_with_linear_cuboid(all_types_ontology)
+    if reload:
+        row = _mcap_row(all_types_ontology, row.to_encord_dict())
+
+    keyframe = _cuboid_view(row, mcap_scene.KEYFRAME_NS)
+    assert not keyframe.is_interpolated
+    assert keyframe.coordinates == CuboidCoordinates(**CUBOID_KEYFRAME)
+    assert keyframe.interpolation == "linear"
+
+    between = _cuboid_view(row, MIDPOINT_NS)
+    assert between.is_interpolated and between.keyframe == mcap_scene.KEYFRAME_NS
+    assert between.confidence == INTERPOLATED_CONFIDENCE
+    assert between.coordinates.position == pytest.approx((0.3, 0.3, 0.3))
+    assert between.coordinates.size == pytest.approx((0.2, 0.2, 0.2))
+    # three.js 0.183.2: slerp between `Euler(0.1, 0.2, 0.3, "XYZ")` and `Euler(0.2, 0.3, 0.4, "XYZ")` at 0.5.
+    assert between.coordinates.orientation == pytest.approx(
+        (0.15097194098593214, 0.24878862513196232, 0.3509719409859321), abs=1e-12
+    )
+
+    target = _cuboid_view(row, mcap_scene.DELETE_NS)
+    assert not target.is_interpolated and target.coordinates == CuboidCoordinates(**CUBOID_TARGET)
+
+
+def test_only_the_keyframes_are_saved(all_types_ontology):
+    exported = _row_with_linear_cuboid(all_types_ontology).to_encord_dict()
+
+    objects = _frame_objects(exported)
+    assert sorted(objects) == sorted(
+        str(o) for o in (mcap_scene.KEYFRAME_NS, mcap_scene.DELETE_NS, mcap_scene.DELETE_NS + 1)
+    )
+    assert objects[str(mcap_scene.KEYFRAME_NS)][0]["interpolate"] == "linear"
 
 
 def _row_with_dynamic_object(all_types_ontology) -> LabelRowV2:

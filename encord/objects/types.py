@@ -164,10 +164,9 @@ class BaseFrameObject(BaseFrameObjectRequired, total=False):
     event: Literal["upsert", "delete"]
     """Only present on event-based (continuous scene) label rows, where an entry is a sparse event on a
     continuous timeline rather than a label on a frame. Missing reads as ``"upsert"``."""
-    interpolate: Literal["hold"]
-    """Reserved per-keyframe field on continuous scenes, in practice unset. Unset, ``null`` and ``"hold"`` all
-    mean no interpolation; every other mode is refused, as the SDK would have to interpolate to read it
-    correctly."""
+    interpolate: Literal["hold", "linear"]
+    """Per-keyframe field on continuous scenes. ``"hold"`` means the geometry holds until the next event;
+    ``"linear"`` (point and cuboid only) that it slides into the next upsert's. Every other mode is refused."""
 
 
 class BoundingBoxFrameObject(BaseFrameObject, BoundingBoxFrameCoordinatesDict):

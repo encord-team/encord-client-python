@@ -10,7 +10,7 @@ from uuid import UUID
 from encord.common.deprecated import deprecated
 from encord.common.utils import HEX_COLOR_PATTERN
 from encord.orm.analytics import CamelStrEnum
-from encord.orm.base_dto import BaseDTO, Field, RootModelDTO, dto_validator
+from encord.orm.base_dto import BaseDTO, BaseDTOWithExtra, Field, RootModelDTO, dto_validator
 from encord.orm.dataset import DataUnitError, LongPollingStatus
 from encord.orm.group_layout import DataGroupLayout, DataGroupShortInfo, LayoutSettings
 
@@ -66,6 +66,35 @@ class StorageUserRole(CamelStrEnum):
 
     USER = auto()
     ADMIN = auto()
+
+
+class StorageFolderType(CamelStrEnum):
+    """How a storage folder is backed.
+
+    **Values:**
+
+    - **GENERIC:** A regular Encord-managed folder.
+    - **CLOUD_LINKED:** A cloud-synced folder mounted on an external bucket/prefix via a cloud
+      integration. ``integration_hash`` and ``remote_url`` on the folder are populated in this case.
+    - **SYNTHETIC:** An internally generated folder.
+    - **UNKNOWN:** A folder type this SDK version does not recognize (see below).
+    """
+
+    GENERIC = auto()
+    CLOUD_LINKED = auto()
+    SYNTHETIC = auto()
+
+    UNKNOWN = "_UNKNOWN_"
+    """
+    Returned when the Encord platform reports a folder type that this SDK version does not
+    recognize. This lets older SDK versions keep working when new folder types are introduced
+    server-side, instead of failing to parse the folder.
+    """
+
+    @classmethod
+    def _missing_(cls, value: Any) -> "StorageFolderType":
+        """Return UNKNOWN for any unrecognized storage folder type values."""
+        return cls.UNKNOWN
 
 
 class StorageLocationName(CamelStrEnum):
@@ -176,6 +205,12 @@ class StorageFolder(BaseDTO):
         synced_dataset_hash: UUID of the dataset synced with this folder, if any.
         path_to_root: Path from this folder to the root, represented as a list
             of :class:`PathElement` instances.
+        folder_type: Whether this is a regular (``GENERIC``) folder or a cloud-synced
+            (``CLOUD_LINKED``) one.
+        integration_hash: UUID of the cloud integration backing the folder. Populated only for
+            cloud-synced (``CLOUD_LINKED``) folders; ``None`` otherwise.
+        remote_url: Remote bucket/prefix the folder is synced with. Populated only for cloud-synced
+            (``CLOUD_LINKED``) folders; ``None`` otherwise.
     """
 
     uuid: UUID
@@ -189,6 +224,10 @@ class StorageFolder(BaseDTO):
     user_role: StorageUserRole
     synced_dataset_hash: Optional[UUID]
     path_to_root: List[PathElement]
+    # Defaulted for backwards compatibility with servers that predate these fields.
+    folder_type: StorageFolderType = StorageFolderType.GENERIC
+    integration_hash: Optional[UUID] = None
+    remote_url: Optional[str] = None
 
 
 class StorageItem(BaseDTO):
@@ -336,6 +375,47 @@ class CreateStorageFolderPayload(BaseDTO):
     parent: Optional[UUID]
     client_metadata: Optional[str]
     cloud_synced_folder_params: Optional[CloudSyncedFolderParams] = None
+
+
+class SidecarMatcherSuffix(BaseDTO):
+    """Identify metadata sidecar files by a shared filename suffix.
+
+    Every item whose path ends with ``suffix`` is treated as a metadata sidecar;
+    every other item is treated as a data file and paired with the sidecar that
+    shares its path once the suffix is stripped.
+    """
+
+    mode: Literal["suffix"] = "suffix"
+    suffix: str = Field(default=".metadata.json", min_length=1, max_length=128)
+
+
+class MetadataIngestionConfig(BaseDTO):
+    """Folder-level configuration for metadata sidecar ingestion.
+
+    When set on a cloud-synced folder, files identified by ``matcher`` are
+    treated as metadata sidecars and attached to their paired data items on sync.
+    """
+
+    matcher: SidecarMatcherSuffix = Field(default_factory=lambda: SidecarMatcherSuffix())
+    paused: bool = False
+    """When ``True``, matched files are still claimed as sidecars (excluded from
+    data ingestion) but their attachment to data files is skipped."""
+
+
+class StorageFolderConfig(BaseDTOWithExtra):
+    """Configuration of a storage folder.
+
+    Exposes the optional cloud-synced-folder metadata ingestion configuration.
+    ``metadata_ingestion`` is ``None`` unless metadata ingestion has been enabled
+    on the folder.
+
+    Extends :class:`BaseDTOWithExtra` so that configuration the SDK does not model
+    (such as the folder's Encord Index settings) is preserved verbatim through a
+    read/modify/write cycle rather than being dropped when the config is written
+    back.
+    """
+
+    metadata_ingestion: Optional[MetadataIngestionConfig] = None
 
 
 class DataGroupGrid(BaseDTO):
@@ -967,6 +1047,8 @@ class ListFoldersParams(BaseDTO):
             dataset.
         include_org_access: If ``True``, include folders accessible via organization-level
             access.
+        organisation_tag_names_allof: If set, only include folders tagged with *all* of the given
+            organisation tag names.
         order: Field to sort folders by.
         desc: If ``True``, sort in descending order.
         page_token: Token for fetching the next page of results.
@@ -977,6 +1059,7 @@ class ListFoldersParams(BaseDTO):
     is_recursive: Optional[bool] = False
     dataset_synced: Optional[bool] = None
     include_org_access: Optional[bool] = None
+    organisation_tag_names_allof: Optional[List[str]] = None
     order: FoldersSortBy = FoldersSortBy.NAME
     desc: bool = False
     page_token: Optional[str] = None

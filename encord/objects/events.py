@@ -5,8 +5,10 @@ from dataclasses import dataclass
 from typing import ClassVar, List, Literal, Optional, Sequence, Union
 
 from encord.exceptions import LabelRowError
+from encord.objects.common import Shape
 from encord.objects.coordinates import EventCoordinates
 from encord.objects.frames import Range, Ranges
+from encord.objects.interpolation import InterpolationMode, interpolate
 from encord.objects.spaces.annotation.base_annotation import _AnnotationMetadata
 
 EventKind = Literal["upsert", "delete"]
@@ -37,9 +39,14 @@ class _LabelEventBase:
 
 @dataclass(frozen=True)
 class LabelUpsertEvent(_LabelEventBase):
-    """The object exists with this geometry from ``frame`` until its next event."""
+    """The object exists from ``frame`` until its next event.
+
+    Unless ``interpolation`` is ``"hold"``, the geometry runs into the next event's if that event is an upsert.
+    If the next event is a ``delete``, or there is none, it holds.
+    """
 
     coordinates: EventCoordinates
+    interpolation: InterpolationMode = "hold"
 
     kind: ClassVar[Literal["upsert"]] = "upsert"
 
@@ -76,6 +83,53 @@ def resolve_event_at(events: Sequence[LabelEvent], frame: int) -> Optional[Label
     if preceding.kind == "delete":
         return None
     return preceding
+
+
+def _preceding_index(events: Sequence[LabelEvent], frame: int) -> int:
+    return bisect_right([event.frame for event in events], frame) - 1
+
+
+def interpolation_target(events: Sequence[LabelEvent], index: int) -> Optional[LabelUpsertEvent]:
+    """What an interpolating upsert at ``events[index]`` runs to: the next event, if it is an upsert.
+
+    None where the next event is a delete or there is none: the upsert then holds until that delete.
+    """
+    following = events[index + 1] if index + 1 < len(events) else None
+    return following if isinstance(following, LabelUpsertEvent) else None
+
+
+def interpolated_coordinates_at(
+    shape: Shape, start: LabelUpsertEvent, target: Optional[LabelUpsertEvent], frame: int
+) -> Optional[EventCoordinates]:
+    """What ``start`` shows at ``frame`` on its way to ``target``, or None where it holds.
+
+    The fraction is over time, so unevenly spaced keyframes move at a constant speed.
+    """
+    if target is None or start.interpolation == "hold" or not start.frame < frame < target.frame:
+        return None
+    fraction = (frame - start.frame) / (target.frame - start.frame)
+    return interpolate(start.interpolation, shape, start.coordinates, target.coordinates, fraction)
+
+
+def inherited_interpolation(events: Sequence[LabelEvent], frame: int) -> InterpolationMode:
+    """The mode a write at ``frame`` takes when none is given: that of the upsert it replaces or splits, so both
+    halves of a split stretch keep running. ``hold`` over a delete or where the object is absent."""
+    index = _preceding_index(events, frame)
+    if index < 0:
+        return "hold"
+    preceding = events[index]
+    return preceding.interpolation if isinstance(preceding, LabelUpsertEvent) else "hold"
+
+
+def stranded_interpolations(events: Sequence[LabelEvent]) -> List[int]:
+    """The frames of upserts that interpolate but have nothing to run to: no upsert directly follows them."""
+    return [
+        event.frame
+        for index, event in enumerate(events)
+        if isinstance(event, LabelUpsertEvent)
+        and event.interpolation != "hold"
+        and interpolation_target(events, index) is None
+    ]
 
 
 def check_events_terminated(events: Sequence[LabelEvent], *, object_hash: Optional[str] = None) -> None:

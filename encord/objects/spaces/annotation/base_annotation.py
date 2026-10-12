@@ -10,6 +10,7 @@ from encord.common.time_parser import parse_datetime
 from encord.exceptions import LabelRowError
 from encord.objects.constants import DEFAULT_CONFIDENCE, DEFAULT_MANUAL_ANNOTATION
 from encord.objects.coordinates import Coordinates
+from encord.objects.interpolation import INTERPOLATION_MODES, InterpolationMode, check_interpolation_supported
 from encord.objects.types import BaseFrameObject, ClassificationAnswer, FrameClassification
 from encord.objects.utils import check_email
 
@@ -19,27 +20,24 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-SUPPORTED_INTERPOLATION_MODES = {"hold"}
+SUPPORTED_INTERPOLATION_MODES = INTERPOLATION_MODES
 """The `interpolate` modes the SDK can read."""
 
 
-def _parse_interpolate(value: Any) -> Optional[Literal["hold"]]:
-    """Read a stored `interpolate` value, refusing any mode the SDK would misread.
-
-    Absent (the usual case), `null`, and `hold` all mean no interpolation: the keyframe's geometry stands until
-    the next keyframe, which is what the SDK already does. Any other mode means the platform draws something
-    between keyframes that the SDK does not compute, so reading a frame in between would report the keyframe's
-    coordinates — not what the label means. Refuse it rather than misreport it.
-    """
-    if value is None or value in SUPPORTED_INTERPOLATION_MODES:
-        return cast(Optional[Literal["hold"]], value)
-    supported_modes = ", ".join(sorted(SUPPORTED_INTERPOLATION_MODES))
-    raise LabelRowError(
-        f"This label carries `interpolate: {value!r}`, which this version of the SDK does not support: it reads "
-        f"only `{supported_modes}`, with the geometry standing unchanged until the next "
-        f"keyframe. Reading an interpolated label that way would report coordinates the platform does not show, "
-        f"so the label is refused rather than misread. Upgrade the SDK to work with this label row."
-    )
+def _parse_interpolate(value: Any, shape: Any = None) -> Optional[InterpolationMode]:
+    """Read a stored `interpolate` value, refusing one the SDK would misread (an unknown mode, or a mode the
+    shape does not support). Absent and `null` mean `hold`."""
+    if value is None:
+        return None
+    try:
+        check_interpolation_supported(value, shape)
+    except ValueError as e:
+        raise LabelRowError(
+            f"This label carries `interpolate: {value!r}`, which this version of the SDK cannot read: {e} Reading "
+            f"it any other way would report coordinates the platform does not show. Upgrade the SDK to work with "
+            f"this label row."
+        ) from e
+    return cast(InterpolationMode, value)
 
 
 @dataclass
@@ -60,11 +58,8 @@ class _AnnotationMetadata:
     reviews: Optional[List[dict[Any, Any]]] = None
     event_kind: Optional[Literal["upsert", "delete"]] = None
     """Only set on event-based label rows. None means the entry is untagged and reads as an upsert."""
-    _interpolate: Optional[Literal["hold"]] = None
-    """Reserved: a per-keyframe `interpolate` value the editor may write on continuous scenes. In practice it is
-    unset; unset, `null` and `hold` all mean no interpolation, which is what the SDK does. Any other mode is
-    refused at parse time rather than misread. Round-tripped verbatim where a label carries it, never exposed on
-    any public object, never invented, and not emitted when absent."""
+    _interpolate: Optional[InterpolationMode] = None
+    """The stored `interpolate` value of an event-based keyframe; None when absent. Round-tripped verbatim."""
 
     @staticmethod
     def from_dict(d: BaseFrameObject | FrameClassification | ClassificationAnswer) -> "_AnnotationMetadata":
@@ -94,7 +89,7 @@ class _AnnotationMetadata:
                 Optional[bool], d.get("isDeleted", None)
             ),  # Only here for backwards compatibility, do not use this
             event_kind=cast(Optional[Literal["upsert", "delete"]], d.get("event", None)),
-            _interpolate=_parse_interpolate(d.get("interpolate", None)),
+            _interpolate=_parse_interpolate(d.get("interpolate", None), d.get("shape", None)),
         )
 
     def update_from_optional_fields(

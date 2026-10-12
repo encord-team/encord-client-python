@@ -59,8 +59,12 @@ from encord.objects.events import (
     check_events_terminated,
     event_ranges,
     events_intersect,
+    inherited_interpolation,
+    interpolated_coordinates_at,
+    interpolation_target,
     prune_dangling_deletes,
     resolve_event_at,
+    stranded_interpolations,
 )
 from encord.objects.frames import (
     Frames,
@@ -75,6 +79,11 @@ from encord.objects.html_node import HtmlRanges
 from encord.objects.internal_helpers import (
     _infer_attribute_from_answer,
     _search_child_attributes,
+)
+from encord.objects.interpolation import (
+    INTERPOLATED_CONFIDENCE,
+    InterpolationMode,
+    check_interpolation_supported,
 )
 from encord.objects.ontology_object import Object
 from encord.objects.options import Option
@@ -179,6 +188,7 @@ class ObjectInstance:
                         frame=frame,
                         metadata=metadata,
                         coordinates=cast(EventCoordinates, cast(_GeometricAnnotationData, data).coordinates),
+                        interpolation=metadata._interpolate or "hold",
                     )
                 )
         return events
@@ -194,6 +204,14 @@ class ObjectInstance:
     def _has_event_tags(self) -> bool:
         """Whether any stored entry carries an `event` tag. Cheap: stored entries are sparse."""
         return any(data.annotation_metadata.event_kind is not None for data in self._frames_to_instance_data.values())
+
+    def _interpolated_frames(self) -> List[int]:
+        """Frames whose stored entry interpolates (anything but unset or `hold`), sorted ascending."""
+        return [
+            frame
+            for frame in sorted(self._frames_to_instance_data)
+            if self._frames_to_instance_data[frame].annotation_metadata._interpolate not in (None, "hold")
+        ]
 
     def _event_tagged_frames(self) -> List[int]:
         """Frames whose stored entry carries an `event` tag, sorted ascending."""
@@ -305,6 +323,15 @@ class ObjectInstance:
         if self._frames_to_instance_data:
             self._drop_event_frames(prune_dangling_deletes(self._sorted_events()))
 
+    def _prune_after_removal(self) -> None:
+        """Drop dangling deletes, and clear the interpolation of upserts left with no upsert directly after them.
+
+        Not applied after an upsert, so a keyframe can be marked before its target is written.
+        """
+        self._prune_dangling_deletes()
+        for frame in stranded_interpolations(self._sorted_events()):
+            self._frames_to_instance_data[frame].annotation_metadata._interpolate = None
+
     def upsert_event(
         self,
         coordinates: UpsertEventCoordinates,
@@ -317,10 +344,13 @@ class ObjectInstance:
         last_edited_by: Optional[str] = None,
         confidence: Optional[float] = None,
         manual_annotation: Optional[bool] = None,
+        interpolation: Optional[InterpolationMode] = None,
     ) -> None:
         """Write a keyframe on an event-based label row: from `frame` on, the object has these coordinates.
 
-        The keyframe holds until the object's next event, or indefinitely if there is none. A `delete` marker
+        The keyframe holds until the object's next event, or indefinitely if there is none, unless `interpolation`
+        makes it run into the object's next event, which it does only if that event is an upsert: before a delete it
+        holds. A `delete` marker
         stored on `frame` is replaced.
 
         Args:
@@ -334,10 +364,14 @@ class ObjectInstance:
             last_edited_by: Optionally the last editor. Defaults to the SDK user.
             confidence: Optionally the confidence. Defaults to `1.0`.
             manual_annotation: Optionally whether this was a manual annotation. Defaults to `True`.
+            interpolation: How the keyframe reaches the next upsert; the shapes each mode supports are in
+                `encord.objects.interpolation.INTERPOLATION_SHAPES`. Defaults to the mode of the upsert replaced
+                or split, else `"hold"`.
 
         Raises:
             LabelRowError: If the row is not event-based, the coordinates do not match the ontology shape,
-                `frame` is negative, or an upsert exists on `frame` and `overwrite` is False.
+                `frame` is negative, an upsert exists on `frame` and `overwrite` is False, or `interpolation` is
+                not supported for the shape.
         """
         self._check_event_based("upsert_event")
         self._operation_not_allowed_for_objects_on_space()
@@ -355,6 +389,20 @@ class ObjectInstance:
                 f"An upsert already exists at frame `{frame}`. Set `overwrite=True` to replace it, "
                 "or call `remove_event(frame)` first."
             )
+        if interpolation is not None:
+            try:
+                check_interpolation_supported(interpolation, self._ontology_object.shape)
+            except ValueError as e:
+                raise LabelRowError(str(e)) from e
+
+        events = self._sorted_events()
+        mode = inherited_interpolation(events, frame) if interpolation is None else interpolation
+        stored = self._frames_to_instance_data.get(frame)
+        unchanged = (
+            stored is not None
+            and self._event_kind_at(frame) == "upsert"
+            and (stored.annotation_metadata._interpolate or "hold") == mode
+        )
 
         self._store_event(
             frame,
@@ -367,6 +415,8 @@ class ObjectInstance:
             confidence=confidence,
             manual_annotation=manual_annotation,
         )
+        if not unchanged:
+            self._frames_to_instance_data[frame].annotation_metadata._interpolate = None if mode == "hold" else mode
         self._prune_dangling_deletes()
 
     def delete_event(self, frame: int) -> None:
@@ -395,7 +445,7 @@ class ObjectInstance:
         opens_a_stretch = resolved.frame == frame and (frame == 0 or resolve_event_at(events, frame - 1) is None)
         if opens_a_stretch:
             self._drop_event_frames([frame])
-            self._prune_dangling_deletes()
+            self._prune_after_removal()
             return
 
         self._store_event(
@@ -409,7 +459,7 @@ class ObjectInstance:
             confidence=resolved.metadata.confidence,
             manual_annotation=resolved.metadata.manual_annotation,
         )
-        self._prune_dangling_deletes()
+        self._prune_after_removal()
 
     def remove_event(self, frame: int) -> None:
         """Erase the event stored on `frame` on an event-based label row, as if it were never written.
@@ -428,7 +478,7 @@ class ObjectInstance:
         if frame not in self._frames_to_instance_data:
             raise LabelRowError(f"No event is stored at frame `{frame}`. See `get_events()` for the stored frames.")
         self._drop_event_frames([frame])
-        self._prune_dangling_deletes()
+        self._prune_after_removal()
 
     def _add_to_space(self, space: Space) -> None:
         self._spaces[space.space_id] = space
@@ -999,8 +1049,8 @@ class ObjectInstance:
         """Get the annotation for the object instance on the specified frame.
 
         On an event-based label row this returns a read-only `ObjectInstance.ResolvedAnnotation` (see its
-        `is_virtual` and `keyframe`) resolved from the keyframe holding over the frame; it raises where the
-        object does not exist.
+        `is_virtual`, `keyframe` and `is_interpolated`) resolved from the keyframe holding over the frame; it
+        raises where the object does not exist.
 
         Args:
             frame: Either the frame number or the image hash if the data type is an image or image group.
@@ -1244,8 +1294,9 @@ class ObjectInstance:
         """A read-only view of an object at a frame on an event-based label row.
 
         The view reads from the upsert keyframe holding over `frame`. `is_virtual` is `False` when an upsert is
-        stored on exactly this frame and `True` when the frame inherits an earlier keyframe. Writes must go
-        through `ObjectInstance.upsert_event`, `delete_event` and `remove_event`; every setter here raises.
+        stored on exactly this frame and `True` when the frame inherits an earlier keyframe. Where the keyframe
+        interpolates towards a later upsert, `coordinates` are derived and `is_interpolated` is `True`. Writes must
+        go through `ObjectInstance.upsert_event`, `delete_event` and `remove_event`; every setter here raises.
         """
 
         _READ_ONLY_MESSAGE = (
@@ -1267,6 +1318,29 @@ class ObjectInstance:
             """True when no upsert is stored on exactly this frame and the view inherits an earlier keyframe."""
             return self._frame != self._keyframe
 
+        @property
+        def interpolation(self) -> InterpolationMode:
+            """The interpolation mode of the keyframe."""
+            self._check_if_annotation_is_valid()
+            return self._get_annotation_data().annotation_metadata._interpolate or "hold"
+
+        @property
+        def is_interpolated(self) -> bool:
+            """True when the coordinates are derived rather than stored."""
+            return self._interpolated_coordinates() is not None
+
+        def _interpolated_coordinates(self) -> Optional[EventCoordinates]:
+            self._check_if_annotation_is_valid()
+            if not self.is_virtual or self.interpolation == "hold":
+                return None
+            events = self._object_instance._sorted_events()
+            index = next(i for i, event in enumerate(events) if event.frame == self._keyframe)
+            keyframe = events[index]
+            if not isinstance(keyframe, LabelUpsertEvent):
+                return None
+            shape = self._object_instance._ontology_object.shape
+            return interpolated_coordinates_at(shape, keyframe, interpolation_target(events, index), self._frame)
+
         def _get_annotation_data(self) -> _AnnotationData:
             return self._object_instance._frames_to_instance_data[self._keyframe]
 
@@ -1276,7 +1350,9 @@ class ObjectInstance:
 
         @property
         def coordinates(self) -> Coordinates:
-            self._check_if_annotation_is_valid()
+            interpolated = self._interpolated_coordinates()
+            if interpolated is not None:
+                return interpolated
             return cast(_GeometricAnnotationData, self._get_annotation_data()).coordinates
 
         @coordinates.setter
@@ -1317,6 +1393,8 @@ class ObjectInstance:
 
         @property
         def confidence(self) -> float:
+            if self.is_interpolated:
+                return INTERPOLATED_CONFIDENCE
             return super().confidence
 
         @confidence.setter

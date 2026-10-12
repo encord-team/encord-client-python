@@ -1268,9 +1268,7 @@ def test_explicit_flag_overrides_detection(all_types_ontology):
     assert label_row.is_event_based is True
 
 
-# ---- `interpolate` passthrough
-# `interpolate` is a reserved per-keyframe field the editor may write. The SDK reads only `hold`, which is
-# what it already does; it round-trips that verbatim, never invents it, and never surfaces it publicly.
+# ---- `interpolate` round-trip
 
 
 def _labels_with_interpolate(mode="hold") -> dict:
@@ -1335,12 +1333,10 @@ def test_overwriting_a_keyframe_keeps_interpolate(all_types_ontology):
     assert _frame_objects(label_row.to_encord_dict())[event_based_scene.UPSERT_0][0]["interpolate"] == "hold"
 
 
-def test_interpolate_not_exposed_on_public_objects(all_types_ontology):
+def test_interpolate_is_exposed_as_interpolation(all_types_ontology):
     obj = _object(_interpolate_row(all_types_ontology))
-    event = obj.get_events()[0]
-    view = obj.get_annotation(event_based_scene.UPSERT_0)
-    assert not hasattr(event, "interpolate") and not hasattr(view, "interpolate")
-    assert "interpolate" not in {f for f in dir(event) if not f.startswith("_")}
+    assert obj.get_events()[0].interpolation == "hold"
+    assert obj.get_annotation(event_based_scene.UPSERT_0).interpolation == "hold"
 
 
 @pytest.mark.parametrize("mode", ["hold", None], ids=["hold", "null"])
@@ -1351,7 +1347,7 @@ def test_no_interpolation_forms_are_accepted(all_types_ontology, mode):
     assert exported[event_based_scene.UPSERT_0][0].get("interpolate") == mode
 
 
-@pytest.mark.parametrize("mode", ["linear", "flat", "cubic", "HOLD", ""])
+@pytest.mark.parametrize("mode", ["flat", "cubic", "HOLD", ""])
 def test_unsupported_interpolate_mode_is_refused(all_types_ontology, mode):
     """Reading an interpolated label as if it held constant would report coordinates the platform never
     shows, so the SDK refuses the row instead of quietly misreading it."""
@@ -1362,11 +1358,15 @@ def test_unsupported_interpolate_mode_is_refused(all_types_ontology, mode):
     metadata_dict["frames_per_second"] = None
     metadata_dict["duration"] = None
     label_row = LabelRowV2(LabelRowMetadata(**metadata_dict), Mock(), all_types_ontology)
-    with pytest.raises(LabelRowError, match="does not support"):
+    with pytest.raises(LabelRowError, match="cannot read"):
         label_row.from_labels_dict(_labels_with_interpolate(mode))
 
 
 def test_interpolate_refusal_does_not_depend_on_the_row_being_event_based(all_types_ontology):
-    """`interpolate` is read off the stored entry, so a dense row must refuse it just the same."""
-    with pytest.raises(LabelRowError, match="does not support"):
-        _scene_label_row(all_types_ontology, _labels_with_interpolate("linear"))
+    with pytest.raises(LabelRowError, match="cannot read"):
+        _scene_label_row(all_types_ontology, dense_scene_labels(_labels_with_interpolate("cubic")))
+
+
+def test_linear_on_a_dense_row_is_refused(all_types_ontology):
+    with pytest.raises(LabelRowError, match="not an event-based object"):
+        _scene_label_row(all_types_ontology, dense_scene_labels(_labels_with_interpolate("linear")))
