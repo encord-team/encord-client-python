@@ -24,7 +24,6 @@ from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.issues.issue_client import GetIssueTagsParams, IssueTag
-from encord.label_set import LabelSet
 from encord.objects import LabelRowV2, OntologyStructure
 from encord.objects.classification_expansion import expand_classification_answers_into_frame_labels
 from encord.ontology import Ontology
@@ -53,7 +52,6 @@ from encord.orm.label_row import (
     LabelRowMetadata,
     ShadowDataState,
 )
-from encord.orm.label_set import LabelSelectionMode
 from encord.orm.project import (
     AddProjectIssueTagsPayload,
     BulkClassificationsPayload,
@@ -1342,73 +1340,6 @@ class Project:
             self._client._api_client, self._project_instance.project_hash, name, description, collection_type
         )
         return self.get_collection(new_uuid)
-
-    def get_label_set(self, label_set_uuid: Union[str, UUID]) -> LabelSet:
-        """Get a label set by its unique identifier (UUID).
-
-        Args:
-            label_set_uuid: The unique identifier of the label set to retrieve.
-
-        Returns:
-            The label set. See :class:`encord.label_set.LabelSet` for details.
-
-        Raises:
-            ValueError: If `label_set_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorisationError` : If the label set with the given UUID does not exist
-                or the user does not have access to it.
-        """
-        if isinstance(label_set_uuid, str):
-            label_set_uuid = UUID(label_set_uuid)
-        return LabelSet._get_label_set(self._client._api_client, label_set_uuid)
-
-    def list_label_sets(self, page_size: Optional[int] = None) -> Iterator[LabelSet]:
-        """List the label sets fed by this project, newest first.
-
-        Args:
-            page_size (int): Number of label sets to return per page. Default if not specified is 100.
-                Maximum value is 100.
-
-        Returns:
-            The label sets fed by this project.
-
-        Raises:
-            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to the project.
-        """
-        return LabelSet._list_label_sets(
-            self._client._api_client,
-            project_hash=self._project_instance.project_hash,
-            page_size=page_size,
-        )
-
-    def create_label_set(
-        self,
-        name: str,
-        description: str = "",
-        label_selection_mode: Optional[LabelSelectionMode] = None,
-    ) -> LabelSet:
-        """Create a label set fed by this project's main branch.
-
-        Args:
-            name: The name of the label set.
-            description: The description of the label set.
-            label_selection_mode: Which labels each cut captures. ``None`` captures every label on the
-                project's main branch. See :class:`encord.orm.label_set.SelectiveLabelSelection` and
-                :class:`encord.orm.label_set.FilteredLabelSelection`.
-
-        Returns:
-            LabelSet: Newly created label set.
-
-        Raises:
-            :class:`encord.exceptions.AuthorisationError` : If the user is not an admin or team manager
-                on the project.
-        """
-        return LabelSet._create_label_set(
-            self._client._api_client,
-            project_hash=self._project_instance.project_hash,
-            name=name,
-            description=description,
-            label_selection_mode=label_selection_mode,
-        )
 
     def active_sync(self) -> None:
         """Sync the associated Project with Project Explorer"""
