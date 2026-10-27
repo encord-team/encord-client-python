@@ -15,10 +15,11 @@ import mimetypes
 import os
 import time
 import warnings
+from dataclasses import dataclass
 from datetime import datetime
 from math import ceil
 from pathlib import Path
-from typing import Any, Collection, Dict, Iterable, List, Optional, Sequence, TextIO, Union
+from typing import Any, Collection, Dict, Iterable, List, Mapping, Optional, Sequence, TextIO, Union
 from uuid import UUID
 
 import requests
@@ -32,7 +33,12 @@ from encord.client import LONG_POLLING_RESPONSE_RETRY_N, LONG_POLLING_SLEEP_ON_F
 from encord.common.deprecated import deprecated
 from encord.common.organisation_tags import resolve_organisation_tag_names
 from encord.common.utils import snake_to_camel
-from encord.exceptions import EncordException
+from encord.exceptions import (
+    ClientMetadataPatchPartiallyStartedError,
+    ClientMetadataPatchTimeoutError,
+    ClientMetadataPatchWaitError,
+    EncordException,
+)
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS
 from encord.http.utils import (
@@ -43,7 +49,7 @@ from encord.http.utils import (
 )
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
-from encord.orm.base_dto import pydantic_version
+from encord.orm.base_dto import RootModelDTO, pydantic_version
 from encord.orm.dataset import LongPollingStatus
 from encord.orm.group import AddStorageFolderGroupsPayload, RemoveGroupsParams, StorageFolderGroup
 from encord.orm.project import OrganisationTag
@@ -93,6 +99,15 @@ from encord.orm.storage import (
 logger = logging.getLogger(__name__)
 
 STORAGE_BUNDLE_CREATE_LIMIT = 1000
+# Polling a client metadata patch job for its result backs off from the first interval to the last.
+_CLIENT_METADATA_PATCH_JOB_INITIAL_POLL_SECONDS = 1.0
+_CLIENT_METADATA_PATCH_JOB_MAX_POLL_SECONDS = 5.0
+# The server rejects a client metadata patch job request whose body is larger than this.
+_CLIENT_METADATA_PATCH_JOB_MAX_PAYLOAD_BYTES = 8 * 1024 * 1024
+_CLIENT_METADATA_PATCH_JOB_FAILED_MESSAGE = (
+    "The job applying this patch failed, or reported a status this SDK version does not recognize; the patch may "
+    "have been applied in part."
+)
 
 
 class _NotProvided:
@@ -894,6 +909,7 @@ class StorageFolder:
                 time_series=[
                     DataUploadTimeSeries(
                         object_url=upload_url_info[0].object_key,
+                        placeholder_item_uuid=upload_url_info[0].item_uuid,
                         title=title,
                         client_metadata=client_metadata or {},
                         settings=settings,
@@ -2089,6 +2105,249 @@ class StorageItemInaccessible:
         return self._orm_item.uuid
 
 
+# A dataclass, not a DTO: the SDK builds it from the jobs it started; it is not parsed from a response.
+@dataclass(frozen=True)
+class ClientMetadataPatchJobs:
+    """The background jobs applying a set of client metadata patches."""
+
+    item_uuids_by_job_uuid: Mapping[UUID, Sequence[UUID]]
+    """The items each job patches; check a job with
+    :meth:`encord.user_client.EncordUserClient.get_client_metadata_patch_job`."""
+
+
+def _start_client_metadata_patch_jobs(
+    api_client: ApiClient, patches: Dict[UUID, Dict[str, Any]]
+) -> Dict[UUID, List[UUID]]:
+    """Start jobs for the patches, each within the server's limits on patches and size; returns the items each
+    job patches.
+
+    Raises:
+        ValueError: A patch is too large to send; no job is started.
+        ClientMetadataPatchPartiallyStartedError: Some jobs started, then one could not be. When the first job
+            can't be started, its error is raised instead, as nothing is running.
+    """
+    item_uuids = list(patches)
+    # Every group is formed, so a patch too large to send fails, before any job starts.
+    groups = [
+        group
+        for start in range(0, len(item_uuids), STORAGE_BUNDLE_CREATE_LIMIT)
+        for group in _split_client_metadata_patches_by_size(
+            {item_uuid: patches[item_uuid] for item_uuid in item_uuids[start : start + STORAGE_BUNDLE_CREATE_LIMIT]}
+        )
+    ]
+    item_uuids_by_job_uuid: Dict[UUID, List[UUID]] = {}
+    for index, group in enumerate(groups):
+        try:
+            job_uuid = _create_client_metadata_patch_job(api_client, group)
+        except Exception as e:
+            if not item_uuids_by_job_uuid:
+                raise
+            raise ClientMetadataPatchPartiallyStartedError(
+                f"Started {len(item_uuids_by_job_uuid)} of {len(groups)} client metadata patch jobs, then could "
+                f"not start the next: {e}",
+                started=ClientMetadataPatchJobs(item_uuids_by_job_uuid=item_uuids_by_job_uuid),
+                not_started_item_uuids=[item_uuid for rest in groups[index:] for item_uuid in rest],
+            ) from e
+        item_uuids_by_job_uuid[job_uuid] = list(group)
+    return item_uuids_by_job_uuid
+
+
+def _wait_for_client_metadata_patch_jobs(
+    api_client: ApiClient, started: ClientMetadataPatchJobs, timeout_seconds: float
+) -> List[orm_storage.ClientMetadataPatchResult]:
+    """Wait for the jobs until one deadline; returns the patches that could not be confirmed as applied.
+
+    Every item of a job that failed as a whole, or whose status this SDK version does not recognize, is included.
+
+    Raises:
+        ClientMetadataPatchTimeoutError: Some jobs are not done when the timeout runs out.
+        ClientMetadataPatchWaitError: Checking a job failed before all the jobs were checked.
+    """
+    deadline = time.monotonic() + timeout_seconds
+    failures: List[orm_storage.ClientMetadataPatchResult] = []
+    pending_job_uuids: List[UUID] = []
+    jobs = list(started.item_uuids_by_job_uuid.items())
+    for index, (job_uuid, item_uuids) in enumerate(jobs):
+        try:
+            job = _poll_client_metadata_patch_job(api_client, job_uuid, deadline)
+        except Exception as e:
+            unchecked_job_uuids = pending_job_uuids + [rest for rest, _ in jobs[index:]]
+            raise ClientMetadataPatchWaitError(
+                f"Stopped waiting for {len(unchecked_job_uuids)} of {len(jobs)} client metadata patch jobs: {e}. "
+                f"They were not cancelled; check them with EncordUserClient.get_client_metadata_patch_job: "
+                f"{unchecked_job_uuids}.",
+                pending_job_uuids=unchecked_job_uuids,
+                failures=failures,
+                started=started,
+            ) from e
+        if job is None:
+            pending_job_uuids.append(job_uuid)
+        elif job.status != orm_storage.ClientMetadataPatchJobStatus.DONE:
+            failures.extend(
+                orm_storage.ClientMetadataPatchResult(
+                    item_uuid=item_uuid,
+                    status=orm_storage.ClientMetadataPatchStatus.FAILED,
+                    error=_CLIENT_METADATA_PATCH_JOB_FAILED_MESSAGE,
+                )
+                for item_uuid in item_uuids
+            )
+        else:
+            failures.extend(job.failures)
+    if pending_job_uuids:
+        raise ClientMetadataPatchTimeoutError(
+            f"{len(pending_job_uuids)} of {len(jobs)} client metadata patch jobs had not finished "
+            f"after {timeout_seconds} seconds: {pending_job_uuids}. They were not cancelled; check them with "
+            "EncordUserClient.get_client_metadata_patch_job.",
+            pending_job_uuids=pending_job_uuids,
+            failures=failures,
+            started=started,
+        )
+    return failures
+
+
+def _split_client_metadata_patches_by_size(
+    patches: Dict[UUID, Dict[str, Any]],
+) -> List[Dict[UUID, Dict[str, Any]]]:
+    """Group the patches so that each group's job request body stays within the server's size limit.
+
+    Sizes are measured as the request is sent: ``requests`` serializes the body with ``json.dumps``.
+
+    Raises:
+        ValueError: A single patch is too large to send.
+    """
+    envelope_bytes = len(json.dumps(orm_storage.CreateClientMetadataPatchJobPayload(patches=[]).to_dict()))
+    groups: List[Dict[UUID, Dict[str, Any]]] = []
+    group: Dict[UUID, Dict[str, Any]] = {}
+    group_bytes = envelope_bytes
+    for item_uuid, patch in patches.items():
+        entry = orm_storage.ClientMetadataPatch(item_uuid=item_uuid, merge_patch=patch).to_dict()
+        # Entries are joined with ", ".
+        entry_bytes = len(json.dumps(entry)) + 2
+        if envelope_bytes + entry_bytes > _CLIENT_METADATA_PATCH_JOB_MAX_PAYLOAD_BYTES:
+            raise ValueError(f"The client metadata patch for item {item_uuid} is too large to send.")
+        if group and group_bytes + entry_bytes > _CLIENT_METADATA_PATCH_JOB_MAX_PAYLOAD_BYTES:
+            groups.append(group)
+            group, group_bytes = {}, envelope_bytes
+        group[item_uuid] = patch
+        group_bytes += entry_bytes
+    if group:
+        groups.append(group)
+    return groups
+
+
+def _create_client_metadata_patch_job(api_client: ApiClient, patches: Dict[UUID, Dict[str, Any]]) -> UUID:
+    return api_client.post(
+        "storage/items/client-metadata/patch-jobs",
+        params=None,
+        payload=orm_storage.CreateClientMetadataPatchJobPayload(
+            patches=[
+                orm_storage.ClientMetadataPatch(item_uuid=item_uuid, merge_patch=patch)
+                for item_uuid, patch in patches.items()
+            ]
+        ),
+        result_type=orm_storage.CreateClientMetadataPatchJobResponse,
+        # A retry after the job was started would start a second job for the same patches.
+        allow_retries=False,
+    ).job_uuid
+
+
+def _poll_client_metadata_patch_job(
+    api_client: ApiClient, job_uuid: UUID, deadline: float
+) -> Optional[orm_storage.ClientMetadataPatchJobResult]:
+    """Poll the job until it is done or has failed, or the deadline passes; None if it is still running then.
+
+    The job is checked at least once, even when the deadline has already passed.
+    """
+    interval = _CLIENT_METADATA_PATCH_JOB_INITIAL_POLL_SECONDS
+    while True:
+        job = api_client.get(
+            f"storage/items/client-metadata/patch-jobs/{job_uuid}",
+            params=None,
+            result_type=orm_storage.ClientMetadataPatchJobResult,
+        )
+        if job.status != orm_storage.ClientMetadataPatchJobStatus.PENDING:
+            return job
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return None
+        time.sleep(min(interval, remaining))
+        interval = min(interval * 2, _CLIENT_METADATA_PATCH_JOB_MAX_POLL_SECONDS)
+
+
+@dataclass(frozen=True)
+class ClientMetadataPatchJobsByUrl(ClientMetadataPatchJobs):
+    """The background jobs applying client metadata patches by object URL, and the items found for each URL."""
+
+    item_uuids_by_url: Dict[str, List[UUID]]
+    """The items found for each object URL; empty for a URL that matches no item."""
+
+
+@dataclass(frozen=True)
+class ClientMetadataPatchByUrlResult:
+    """The items found for each object URL, and the patches that could not be confirmed as applied to them."""
+
+    item_uuids_by_url: Dict[str, List[UUID]]
+    """The items found for each object URL; empty for a URL that matches no item."""
+    failures: List[orm_storage.ClientMetadataPatchResult]
+    """The patches that could not be confirmed as applied, with the reason where available."""
+
+
+def _lookup_items_by_url(
+    api_client: ApiClient, object_urls: List[str], folder_uuids: Optional[List[UUID]]
+) -> Dict[str, List[UUID]]:
+    """The items with each object URL, directly in the folders or anywhere in the organization, leaving out those
+    in cloud synced folders; an empty list for a URL that matches no such item."""
+    item_uuids_by_url: Dict[str, List[UUID]] = {url: [] for url in object_urls}
+    for start in range(0, len(object_urls), STORAGE_BUNDLE_CREATE_LIMIT):
+        payload = orm_storage.LookupItemsByUrlPayload(
+            object_urls=object_urls[start : start + STORAGE_BUNDLE_CREATE_LIMIT],
+            folder_uuids=folder_uuids,
+            # Their client metadata can't be patched, and a job with any of them is rejected.
+            include_cloud_synced=False,
+        )
+        params = orm_storage.LookupItemsByUrlParams()
+        while True:
+            page = api_client.post(
+                "storage/items/lookup-by-url",
+                params=params,
+                payload=payload,
+                result_type=Page[orm_storage.ItemUrlMatch],
+            )
+            for match in page.results:
+                item_uuids_by_url[match.object_url].append(match.item_uuid)
+            if page.next_page_token is None:
+                break
+            params = orm_storage.LookupItemsByUrlParams(page_token=page.next_page_token)
+    return item_uuids_by_url
+
+
+def _start_client_metadata_patch_jobs_by_url(
+    api_client: ApiClient, patches: Dict[str, Dict[str, Any]], folder_uuids: Optional[List[UUID]]
+) -> ClientMetadataPatchJobsByUrl:
+    if folder_uuids is not None and not folder_uuids:
+        raise ValueError("`folders` is empty; omit it to look in the whole organisation.")
+    if "" in patches:
+        raise ValueError("An object URL in `patches` is empty.")
+    item_uuids_by_url = _lookup_items_by_url(api_client, list(patches), folder_uuids)
+    patch_by_item_uuid = {
+        item_uuid: patches[url] for url, item_uuids in item_uuids_by_url.items() for item_uuid in item_uuids
+    }
+    try:
+        item_uuids_by_job_uuid = _start_client_metadata_patch_jobs(api_client, patch_by_item_uuid)
+    except ClientMetadataPatchPartiallyStartedError as e:
+        # The same error, with the items found for each URL too.
+        raise ClientMetadataPatchPartiallyStartedError(
+            e.message,
+            started=ClientMetadataPatchJobsByUrl(
+                item_uuids_by_job_uuid=e.started.item_uuids_by_job_uuid, item_uuids_by_url=item_uuids_by_url
+            ),
+            not_started_item_uuids=e.not_started_item_uuids,
+        ) from e.__cause__
+    return ClientMetadataPatchJobsByUrl(
+        item_uuids_by_job_uuid=item_uuids_by_job_uuid, item_uuids_by_url=item_uuids_by_url
+    )
+
+
 class StorageItem:
     def __init__(self, api_client: ApiClient, orm_item: orm_storage.StorageItem):
         self._api_client = api_client
@@ -2386,6 +2645,48 @@ class StorageItem:
                 result_type=orm_storage.StorageItem,
             )
 
+    def patch_client_metadata(self, patch: Dict[str, Any]) -> None:
+        """Change some of the item's client metadata keys, leaving all other keys as they are.
+
+        ``patch`` is applied as an `RFC 7396 <https://www.rfc-editor.org/rfc/rfc7396>`_ JSON merge patch:
+
+        - A key with a value adds the key, or replaces its current value.
+        - A key with ``None`` removes the key.
+        - A dict value is merged into the current dict value by the same rules.
+        - Any other value, including a list, replaces the current value as a whole.
+
+        Keys not included in ``patch`` are left unchanged.
+        After the call, :attr:`client_metadata` holds the merged metadata; a patch refused with one of the errors
+        below changes nothing. To replace the whole client metadata, use :meth:`update` instead.
+
+        Example:
+            ``item.patch_client_metadata({"reviewed": True, "camera": {"fps": 60}, "draft": None})``
+            sets ``reviewed``, sets ``camera.fps`` while keeping the other ``camera`` keys, and removes ``draft``.
+
+        Args:
+            patch: The keys to add, change or remove.
+
+        Returns:
+            None
+
+        Raises:
+            :class:`encord.exceptions.AuthorisationError`: The item does not exist or you cannot edit it.
+            :class:`encord.exceptions.InvalidArgumentsError`: The patch can't be applied, for example because the item
+                is in a cloud synced folder or the merged metadata would be too large.
+            :class:`encord.exceptions.ResourceExistsError`: Other changes to the item's client metadata kept
+                conflicting with the patch (retry), or its current client metadata can't be read (replace it with
+                :meth:`update`).
+        """
+        merged = self._api_client.patch(
+            f"storage/items/{self.uuid}/client-metadata",
+            params=None,
+            payload=RootModelDTO[Dict[str, Any]](patch),  # type: ignore[arg-type]
+            result_type=RootModelDTO[Dict[str, Any]],
+            content_type="application/merge-patch+json",
+        )
+        self._orm_item.client_metadata = json.dumps(merged.root)
+        self._parsed_metadata = None
+
     def delete(self, remove_unused_frames=True) -> None:
         """Delete the item from the storage.
 
@@ -2494,3 +2795,4 @@ class StorageItem:
 
     def _set_orm_item(self, orm_item: orm_storage.StorageItem) -> None:
         self._orm_item = orm_item
+        self._parsed_metadata = None

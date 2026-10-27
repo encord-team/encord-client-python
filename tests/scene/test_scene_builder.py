@@ -301,6 +301,7 @@ def test_build_scene_with_frame_of_reference_inline_camera_and_config() -> None:
         "type": "image",
         "camera": "front/camera",
         "events": [{"timestamp": 0, "uri": "gs://bucket/front-0.jpg"}],
+        "rotation": 0,
     }
 
 
@@ -513,3 +514,29 @@ def test_scene_from_internal_rejects_self_contained_scenes_with_clear_error() ->
 
     with pytest.raises(ValueError, match="Single-file scenes are not supported in the SDK yet"):
         scene_from_internal(cast(InternalScene, response.root))
+
+
+@pytest.mark.parametrize("rotation", [0, 90, 180, 270])
+def test_image_rotation_is_serialized_per_stream(rotation: int) -> None:
+    builder = SceneBuilder()
+    stream = builder.add_image_stream(
+        "front",
+        width=640,
+        height=480,
+        intrinsics=intrinsics_pinhole(fx=500, fy=500, ox=320, oy=240),
+        timestamp=0,
+        rotation=rotation,  # type: ignore[arg-type]
+    )
+    stream.add_image(uri="gs://bucket/front-0.jpg", timestamp=0)
+    stream.add_image(uri="gs://bucket/front-1.jpg", timestamp=1)
+    scene = builder._build()
+    assert scene["front"]["rotation"] == rotation
+    assert all("rotation" not in event for event in scene["front"]["events"])
+    assert scene["front/camera"]["events"][0]["width_px"] == 640
+    assert scene["front/camera"]["events"][0]["height_px"] == 480
+
+
+@pytest.mark.parametrize("rotation", [-90, 45, 360, True, "180", None])
+def test_invalid_image_rotation_is_rejected(rotation: object) -> None:
+    with pytest.raises(EncordException, match="Image rotation"):
+        SceneBuilder().add_image_stream("front", camera="camera", rotation=rotation)  # type: ignore[arg-type]

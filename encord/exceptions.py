@@ -11,7 +11,12 @@ category: "64e481b57b6027003f20aaa0"
 
 from dataclasses import dataclass, field, fields
 from datetime import datetime, timezone
-from typing import Optional
+from typing import TYPE_CHECKING, List, Optional
+from uuid import UUID
+
+if TYPE_CHECKING:
+    from encord.orm.storage import ClientMetadataPatchResult
+    from encord.storage import ClientMetadataPatchJobs
 
 
 @dataclass
@@ -114,6 +119,32 @@ class UnknownException(EncordException):
     """Unknown error."""
 
     pass
+
+
+class ServiceUnavailableError(EncordException):
+    """Exception raised when the Encord platform cannot be reached or is temporarily unavailable.
+
+    Raised for the gateway / availability statuses (HTTP 502, 503 and 504) that the infrastructure in
+    front of the API answers with while the service is down, restarting or overloaded. These are
+    transient: retrying later is the expected remedy.
+    """
+
+    def __init__(
+        self,
+        message: Optional[str] = None,
+        *,
+        status_code: Optional[int] = None,
+        context: Optional[ExceptionContext] = None,
+    ) -> None:
+        if not message:
+            status = f" (HTTP {status_code})" if status_code else ""
+            message = (
+                f"The Encord platform is temporarily unavailable{status}. "
+                "This is usually transient - please retry in a few minutes. "
+                "If the problem persists, contact Encord support."
+            )
+        super().__init__(message, context)
+        self.status_code = status_code
 
 
 class InvalidDateFormatError(EncordException):
@@ -275,7 +306,7 @@ class OntologyError(EncordException):
 
 class WrongProjectTypeError(CordException):
     """An error thrown when project type does not match the operation
-    E.g. when TMS2 specific operations are attempted on non-TMS2 project
+    E.g. when Workflow-specific operations are attempted on a non-Workflow project
     """
 
 
@@ -283,3 +314,63 @@ class BundledMoveWorkflowTasksPayloadError(EncordException):
     """An error thrown when an invalid item is added to the bundle to move workflow tasks"""
 
     pass
+
+
+class ClientMetadataPatchTimeoutError(TimeOutError):
+    """The wait for client metadata patch jobs ended before all of them finished.
+
+    The SDK stopped waiting; it did not cancel the jobs, which may still finish. ``pending_job_uuids`` are the jobs
+    that had not finished; check them with :meth:`encord.user_client.EncordUserClient.get_client_metadata_patch_job`.
+    ``failures`` are the patches that could not be confirmed as applied by the jobs that had finished. ``started`` are
+    all the jobs waited for, with the items each one patches.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        pending_job_uuids: List[UUID],
+        failures: List["ClientMetadataPatchResult"],
+        started: "ClientMetadataPatchJobs",
+    ) -> None:
+        super().__init__(message)
+        self.pending_job_uuids = pending_job_uuids
+        self.failures = failures
+        self.started = started
+
+
+class ClientMetadataPatchWaitError(EncordException):
+    """The wait for client metadata patch jobs stopped on an error before all of them were checked.
+
+    The SDK stopped waiting; it did not cancel the jobs, which may still finish. ``pending_job_uuids`` are the jobs
+    whose result was not received; check them with
+    :meth:`encord.user_client.EncordUserClient.get_client_metadata_patch_job`. ``failures`` are the patches that could
+    not be confirmed as applied by the jobs that had finished. ``started`` are all the jobs waited for, with the items
+    each one patches. The error that stopped the wait is the cause (``__cause__``).
+    """
+
+    def __init__(
+        self,
+        message: str,
+        pending_job_uuids: List[UUID],
+        failures: List["ClientMetadataPatchResult"],
+        started: "ClientMetadataPatchJobs",
+    ) -> None:
+        super().__init__(message)
+        self.pending_job_uuids = pending_job_uuids
+        self.failures = failures
+        self.started = started
+
+
+class ClientMetadataPatchPartiallyStartedError(EncordException):
+    """Starting the client metadata patch jobs stopped part-way, so only some of the patches were sent.
+
+    The jobs in ``started`` are running and were not cancelled; check them with
+    :meth:`encord.user_client.EncordUserClient.get_client_metadata_patch_job`. The patches of the items in
+    ``not_started_item_uuids`` were not sent, and can be sent again. The error that stopped the start is the cause
+    (``__cause__``).
+    """
+
+    def __init__(self, message: str, started: "ClientMetadataPatchJobs", not_started_item_uuids: List[UUID]) -> None:
+        super().__init__(message)
+        self.started = started
+        self.not_started_item_uuids = not_started_item_uuids

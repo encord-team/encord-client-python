@@ -8,9 +8,11 @@ from pydantic import BaseModel
 from requests import Session
 
 from encord.configs import SshConfig
+from encord.exceptions import UnknownException
 from encord.http.v2.api_client import ApiClient
 from encord.orm.base_dto import BaseDTO, RootModelDTO
 from tests.conftest import PRIVATE_KEY
+from tests.http.conftest import MockResponse
 
 
 class TestPayload(BaseDTO):
@@ -140,3 +142,19 @@ def test_payload_body_serialisation(
     assert (
         send.call_args_list[0].args[0].body == b'{"text": "test", "number": 0.01, "time": "2024-02-01T01:02:03+01:00"}'
     )
+
+
+@pytest.mark.parametrize("status_code", [200, 201, 202])
+def test_any_2xx_with_body_is_a_success(status_code: int, api_client: ApiClient, mock_http_client) -> None:
+    mock_http_client.respond_with(MockResponse(status_code=status_code, json_body={"payload": "hello world"}))
+
+    res = api_client.post("/", params=None, payload=None, result_type=TestPayload)
+
+    assert res.payload == "hello world"
+
+
+def test_status_just_past_2xx_is_an_error(api_client: ApiClient, mock_http_client) -> None:
+    mock_http_client.respond_with(MockResponse(status_code=300, json_body={"payload": "hello world"}))
+
+    with pytest.raises(UnknownException):
+        api_client.post("/", params=None, payload=None, result_type=TestPayload)

@@ -90,7 +90,7 @@ scene.add_camera_stream("cam_front", frame_of_reference="ego").add_camera_params
     timestamp=0,
 )
 
-scene.add_image_stream("img_front", camera="cam_front").add_image(
+scene.add_image_stream("img_front", camera="cam_front", rotation=180).add_image(
     uri="s3://bucket/img0.jpg",
     timestamp=0,
 )
@@ -144,3 +144,5 @@ if lidar.frame_of_reference_id is not None:
 ``None`` for the same lookups, and ``get_images_at_timestamp`` skips streams without a matching
 event. Frame-of-reference streams are also available in `scene.frame_of_reference_streams`.
 For image streams, `frame_of_reference_id` is resolved from the associated camera-parameters stream.
+
+Image rotation is a display setting on each image stream. Keep camera dimensions, intrinsics, distortion, and poses in the original image coordinates; the platform rotates images and projected overlays together. Image streams read with `SceneReader` expose `rotation`, which is preserved when converting a scene back to an upload payload.

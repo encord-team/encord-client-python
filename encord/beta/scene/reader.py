@@ -100,6 +100,8 @@ class ImageStream:
     events: list[SceneEvent]
     frame_of_reference_id: str | None = None
     """Frame of reference associated with the image stream's camera."""
+    rotation: Literal[0, 90, 180, 270] = 0
+    """Clockwise display rotation; calibration uses original image coordinates."""
 
     @property
     def num_events(self) -> int:
@@ -426,6 +428,7 @@ def scene_from_internal(internal: _Scene) -> Scene:
                         )
                         for index, e in enumerate(inner.events)
                     ],
+                    rotation=inner.rotation,
                     frame_of_reference_id=camera.frame_of_reference_id if camera is not None else None,
                 )
             )

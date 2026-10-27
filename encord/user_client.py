@@ -108,9 +108,26 @@ from encord.orm.project import (
 )
 from encord.orm.project import Project as OrmProject
 from encord.orm.project_with_user_role import ProjectWithUserRole
-from encord.orm.storage import CloudSyncedFolderParams, ListFoldersParams, ListItemsParams, StorageItemType
+from encord.orm.storage import (
+    ClientMetadataPatchJobResult,
+    ClientMetadataPatchResult,
+    CloudSyncedFolderParams,
+    ListFoldersParams,
+    ListItemsParams,
+    StorageItemType,
+)
 from encord.project import Project
-from encord.storage import FoldersSortBy, StorageFolder, StorageItem
+from encord.storage import (
+    ClientMetadataPatchByUrlResult,
+    ClientMetadataPatchJobs,
+    ClientMetadataPatchJobsByUrl,
+    FoldersSortBy,
+    StorageFolder,
+    StorageItem,
+    _start_client_metadata_patch_jobs,
+    _start_client_metadata_patch_jobs_by_url,
+    _wait_for_client_metadata_patch_jobs,
+)
 from encord.utilities.client_utilities import (
     CvatImporterError,
     CvatImporterSuccess,
@@ -1633,6 +1650,177 @@ class EncordUserClient:
                 page_size=page_size,
             ),
         )
+
+    def patch_storage_items_client_metadata(
+        self, patches: Dict[UUID, Dict[str, Any]], *, timeout_seconds: float = 600
+    ) -> List[ClientMetadataPatchResult]:
+        """Change some client metadata keys of each storage item, leaving all other keys as they are, and wait for
+        the patches to be applied.
+
+        Each patch is applied as with :meth:`encord.storage.StorageItem.patch_client_metadata`, by background jobs
+        started as with :meth:`start_client_metadata_patch_jobs`.
+
+        Example:
+            ``failures = user_client.patch_storage_items_client_metadata({item_uuid: {"reviewed": True}})``
+
+        Args:
+            patches: Mapping from item UUID to the keys to add, change or remove for that item.
+            timeout_seconds: How long to wait for all the patches to be applied.
+
+        Returns:
+            The patches that could not be confirmed as applied, with the reason where available.
+
+        Raises:
+            ValueError: A patch is too large to send; nothing is sent.
+            :class:`encord.exceptions.AuthorisationError`: The first job has an item you cannot edit; nothing is started.
+            :class:`encord.exceptions.ClientMetadataPatchPartiallyStartedError`: Some jobs started, then the next could
+                not be (for example, it has an item you cannot edit). Raised without waiting for the started jobs,
+                which keep running; the error lists them, and the items whose patches were not sent.
+            :class:`encord.exceptions.ClientMetadataPatchTimeoutError`: Some jobs had not finished after
+                ``timeout_seconds``. They were not cancelled; the error lists them, and the failures reported so far.
+            :class:`encord.exceptions.ClientMetadataPatchWaitError`: Waiting for the jobs failed with another error.
+                They were not cancelled; the error lists those not yet checked, and the failures reported so far.
+        """
+        return _wait_for_client_metadata_patch_jobs(
+            self._api_client,
+            ClientMetadataPatchJobs(
+                item_uuids_by_job_uuid=_start_client_metadata_patch_jobs(self._api_client, patches)
+            ),
+            timeout_seconds,
+        )
+
+    def start_client_metadata_patch_jobs(self, patches: Dict[UUID, Dict[str, Any]]) -> ClientMetadataPatchJobs:
+        """Start background jobs that change some client metadata keys of each storage item, leaving all other keys
+        as they are, and return without waiting for them.
+
+        Each patch is applied as with :meth:`encord.storage.StorageItem.patch_client_metadata`. Large requests may be
+        split across several jobs. Check each job with :meth:`get_client_metadata_patch_job`, or use
+        :meth:`patch_storage_items_client_metadata` to wait for the patches instead.
+
+        Example:
+            ``jobs = user_client.start_client_metadata_patch_jobs({item_uuid: {"reviewed": True, "draft": None}})``
+
+        Args:
+            patches: Mapping from item UUID to the keys to add, change or remove for that item.
+
+        Returns:
+            The jobs applying the patches, and the items each one patches.
+
+        Raises:
+            ValueError: A patch is too large to send; nothing is sent.
+            :class:`encord.exceptions.AuthorisationError`: The first job has an item you cannot edit; nothing is started.
+            :class:`encord.exceptions.ClientMetadataPatchPartiallyStartedError`: Some jobs started, then the next could
+                not be (for example, it has an item you cannot edit). The error lists the started jobs, which keep
+                running, and the items whose patches were not sent.
+        """
+        return ClientMetadataPatchJobs(
+            item_uuids_by_job_uuid=_start_client_metadata_patch_jobs(self._api_client, patches)
+        )
+
+    def get_client_metadata_patch_job(self, job_uuid: UUID) -> ClientMetadataPatchJobResult:
+        """Get the status of a background client metadata patch job, and once it is done, its failed patches.
+
+        Args:
+            job_uuid: The job, as returned by :meth:`start_client_metadata_patch_jobs`.
+
+        Returns:
+            The job's status and, once it is done, the patches that could not be confirmed as applied, with the reason
+            where available.
+        """
+        return self._api_client.get(
+            f"storage/items/client-metadata/patch-jobs/{job_uuid}",
+            params=None,
+            result_type=ClientMetadataPatchJobResult,
+        )
+
+    def patch_storage_items_client_metadata_by_url(
+        self,
+        patches: Dict[str, Dict[str, Any]],
+        *,
+        folders: Optional[Sequence[Union[UUID, StorageFolder]]] = None,
+        timeout_seconds: float = 600,
+    ) -> ClientMetadataPatchByUrlResult:
+        """Change some client metadata keys of the storage items with each object URL, and wait for the patches to
+        be applied.
+
+        Items are found and patched as with :meth:`start_client_metadata_patch_jobs_by_url`, and waited for as with
+        :meth:`patch_storage_items_client_metadata`.
+
+        Example:
+            ``result = user_client.patch_storage_items_client_metadata_by_url({"gs://bucket/a.jpg": {"reviewed": True}})``
+
+        Args:
+            patches: Mapping from object URL to the keys to add, change or remove for the items with that URL.
+            folders: The folders to look in. Look in the whole organisation if omitted.
+            timeout_seconds: How long to wait for all the patches to be applied.
+
+        Returns:
+            The items found for each object URL (a URL that matches no item maps to an empty list), and the patches
+            that could not be confirmed as applied, with the reason where available.
+
+        Raises:
+            ValueError: ``folders`` or an object URL is empty, or a patch is too large to send; nothing is sent.
+            :class:`encord.exceptions.AuthorisationError`: You do not have access to one of the given ``folders``, or
+                the first job has an item you cannot edit, or one deleted since it was found; nothing is started.
+            :class:`encord.exceptions.ClientMetadataPatchPartiallyStartedError`: Some jobs started, then the next could
+                not be (for example, it has an item you cannot edit). Raised without waiting for the started jobs,
+                which keep running; the error lists them, with the items found for each URL, and the items whose
+                patches were not sent.
+            :class:`encord.exceptions.ClientMetadataPatchTimeoutError`: Some jobs had not finished after
+                ``timeout_seconds``. They were not cancelled; the error lists them, with the items found for each URL,
+                and the failures reported so far.
+            :class:`encord.exceptions.ClientMetadataPatchWaitError`: Waiting for the jobs failed with another error.
+                They were not cancelled; the error lists those not yet checked, with the items found for each URL, and
+                the failures reported so far.
+        """
+        jobs = _start_client_metadata_patch_jobs_by_url(self._api_client, patches, self._storage_folder_uuids(folders))
+        return ClientMetadataPatchByUrlResult(
+            item_uuids_by_url=jobs.item_uuids_by_url,
+            failures=_wait_for_client_metadata_patch_jobs(self._api_client, jobs, timeout_seconds),
+        )
+
+    def start_client_metadata_patch_jobs_by_url(
+        self,
+        patches: Dict[str, Dict[str, Any]],
+        *,
+        folders: Optional[Sequence[Union[UUID, StorageFolder]]] = None,
+    ) -> ClientMetadataPatchJobsByUrl:
+        """Start background jobs that change some client metadata keys of the storage items with each object URL,
+        and return without waiting for them.
+
+        Each patch is applied as with :meth:`encord.storage.StorageItem.patch_client_metadata` to every item with that
+        URL, as the same file can be in storage several times. You need to be able to edit every item found.
+        Items are looked up directly in ``folders`` (not their subfolders) or, without ``folders``, anywhere in your
+        organisation; items in cloud synced folders are left out, as their client metadata can't be patched. The
+        patches are split into jobs as with :meth:`start_client_metadata_patch_jobs`; check each job with
+        :meth:`get_client_metadata_patch_job`.
+
+        Example:
+            ``jobs = user_client.start_client_metadata_patch_jobs_by_url({"gs://bucket/a.jpg": {"reviewed": True}})``
+
+        Args:
+            patches: Mapping from object URL to the keys to add, change or remove for the items with that URL.
+            folders: The folders to look in. Look in the whole organisation if omitted.
+
+        Returns:
+            The items found for each object URL (a URL that matches no item maps to an empty list), and the jobs
+            applying the patches.
+
+        Raises:
+            ValueError: ``folders`` or an object URL is empty, or a patch is too large to send; nothing is sent.
+            :class:`encord.exceptions.AuthorisationError`: You do not have access to one of the given ``folders``, or
+                the first job has an item you cannot edit, or one deleted since it was found; nothing is started.
+            :class:`encord.exceptions.ClientMetadataPatchPartiallyStartedError`: Some jobs started, then the next could
+                not be (for example, it has an item you cannot edit). The started jobs keep running; the error lists
+                them, with the items found for each URL, and the items whose patches were not sent.
+        """
+        return _start_client_metadata_patch_jobs_by_url(self._api_client, patches, self._storage_folder_uuids(folders))
+
+    @staticmethod
+    def _storage_folder_uuids(folders: Optional[Sequence[Union[UUID, StorageFolder]]]) -> Optional[List[UUID]]:
+        if folders is None:
+            return None
+        return [folder.uuid if isinstance(folder, StorageFolder) else folder for folder in folders]
 
     @deprecated("0.1.180", alternative="EncordUserClient.get_storage_items")
     def find_storage_items(

@@ -1,3 +1,9 @@
+"""Tile and timeline layouts for Scenes in the label editor.
+
+Assign a :class:`SceneLayout` to ``SceneBuilder.layout`` before upload, or update a registered
+Scene with ``StorageItem.update(scene_layout=...)``.
+"""
+
 from __future__ import annotations
 
 from enum import Enum
@@ -16,6 +22,8 @@ MAX_SPLIT_PERCENTAGE = 95
 
 
 class Scene3DViewerTile(_SceneLayoutModel):
+    """A tile that shows the 3D viewer. A layout can contain at most one."""
+
     type: Literal["3d"] = "3d"
     has_side_view: Annotated[
         bool,
@@ -28,6 +36,8 @@ class Scene3DViewerTile(_SceneLayoutModel):
 
 
 class SceneImageTile(_SceneLayoutModel):
+    """A tile that shows an image stream, referenced by its stream name."""
+
     type: Literal["image"] = "image"
     stream_name: Annotated[
         str,
@@ -36,6 +46,8 @@ class SceneImageTile(_SceneLayoutModel):
 
 
 class SceneTimeSeriesTile(_SceneLayoutModel):
+    """A tile that shows a time series stream as a chart, referenced by its stream name."""
+
     type: Literal["timeseries"] = "timeseries"
     stream_name: Annotated[
         str,
@@ -54,11 +66,15 @@ SceneTile = Annotated[
 
 
 class SceneTileLayoutDirection(str, Enum):
+    """How a :class:`SceneTileLayout` splits its space: ``ROW`` side by side, ``COLUMN`` stacked."""
+
     ROW = "row"
     COLUMN = "column"
 
 
 class SceneTileLayout(_SceneLayoutModel):
+    """A split of the space into two panes, each holding a tile ID or another split."""
+
     direction: Annotated[
         SceneTileLayoutDirection,
         Field(description="Direction in which the two child panes are split."),
@@ -82,6 +98,12 @@ class SceneTileLayout(_SceneLayoutModel):
 
 
 class SceneLayout(_SceneLayoutModel):
+    """The tiles of a Scene and how they are arranged.
+
+    Every tile in ``tiles`` must be used in ``layout`` or ``timeline``, and ``timeline`` can only
+    list time series tiles.
+    """
+
     tiles: Annotated[
         Dict[str, SceneTile],
         Field(

@@ -378,6 +378,9 @@ class InputCameraStream(BaseModel):
 
 
 class InputImageStream(BaseModel):
+    rotation: Literal[0, 90, 180, 270] = Field(
+        default=0, description="Clockwise display rotation in degrees. Calibration uses original image coordinates."
+    )
     model_config = ConfigDict(extra="forbid")
     type: Literal["image"] = "image"
     camera: Annotated[CameraId, Field(description="ID or params of the camera associated with the image")]
@@ -465,13 +468,6 @@ class SceneWithConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     content: Annotated[SceneContent, Field(description="Content in the scene")]
-    default_ground_height: Annotated[
-        Optional[float],
-        Field(
-            description="The default ground height of the scene, value in the UP axis",
-            validation_alias=AliasChoices("defaultGroundHeight", "defaultGround", "default_ground_height"),
-        ),
-    ] = None
     view_settings: Annotated[
         Optional[SceneViewSettings],
         Field(description="Initial rendering settings for the scene."),

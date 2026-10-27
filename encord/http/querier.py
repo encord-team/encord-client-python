@@ -18,6 +18,7 @@ from encord.exceptions import (
     RateLimitExceededError,
     RequestException,
     ResourceNotFoundError,
+    ServiceUnavailableError,
 )
 from encord.http.common import (
     HEADER_CLOUD_TRACE_CONTEXT,
@@ -27,6 +28,7 @@ from encord.http.common import (
 from encord.http.error_utils import check_error_response
 from encord.http.query_methods import QueryMethods
 from encord.http.request import Request, UIDType
+from encord.http.v2.error_utils import SERVICE_UNAVAILABLE_STATUSES
 from encord.orm.base_dto import BaseDTO
 from encord.orm.formatter import Formatter
 
@@ -268,6 +270,11 @@ class Querier:
                     or "Request payload is too large and exceeds the maximum allowed size.",
                     context=context,
                 )
+
+            if res.status_code in SERVICE_UNAVAILABLE_STATUSES:
+                # The platform is down or restarting: the load balancer answers on its behalf, with
+                # an HTML page rather than an envelope. Say so, instead of failing to parse it.
+                raise ServiceUnavailableError(status_code=res.status_code, context=context)
 
             try:
                 res_json = orjson.loads(res.content)

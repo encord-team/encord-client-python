@@ -11,6 +11,7 @@ from encord.exceptions import (
     RateLimitExceededError,
     ResourceExistsError,
     ResourceNotFoundError,
+    ServiceUnavailableError,
     UnknownException,
 )
 from encord.http.common import RequestContext, parse_retry_after
@@ -24,6 +25,13 @@ HTTP_CONFLICT = 409
 HTTP_PAYLOAD_TOO_LARGE = 413
 HTTP_TOO_MANY_REQUESTS = 429
 HTTP_GENERAL_ERROR = 500
+HTTP_BAD_GATEWAY = 502
+HTTP_SERVICE_UNAVAILABLE = 503
+HTTP_GATEWAY_TIMEOUT = 504
+
+# Statuses the infrastructure in front of the API answers with when the service itself is down,
+# restarting or overloaded - none of them comes from an API handler.
+SERVICE_UNAVAILABLE_STATUSES = (HTTP_BAD_GATEWAY, HTTP_SERVICE_UNAVAILABLE, HTTP_GATEWAY_TIMEOUT)
 
 
 def handle_error_response(
@@ -67,5 +75,8 @@ def handle_error_response(
 
     if status_code == HTTP_TOO_MANY_REQUESTS:
         raise RateLimitExceededError(retry_after=parse_retry_after(response_headers), context=context)
+
+    if status_code in SERVICE_UNAVAILABLE_STATUSES:
+        raise ServiceUnavailableError(status_code=status_code, context=context)
 
     raise UnknownException(message or "An unknown error occurred.", context=context)

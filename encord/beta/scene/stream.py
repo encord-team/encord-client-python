@@ -7,7 +7,7 @@ Each stream type has a dedicated builder returned by the corresponding
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from encord.beta.scene.builder import SceneBuilder
@@ -372,10 +372,12 @@ class ImageStreamBuilder(_StreamBuilderBase):
         scene: SceneBuilder,
         *,
         camera: str,
+        rotation: Literal[0, 90, 180, 270] = 0,
     ) -> None:
         super().__init__(name, scene)
         self._events: list[_URIEvent] = []
         self._camera = camera
+        self._rotation = rotation
 
     @property
     def _event_count(self) -> int:
@@ -397,5 +399,6 @@ class ImageStreamBuilder(_StreamBuilderBase):
         return _InputImageStream.model_construct(
             type=_InputEntityType.IMAGE,
             camera=self._camera,
+            rotation=self._rotation,
             events=[_InputURIEvent.model_construct(uri=e.uri, timestamp=e.timestamp) for e in self._events],
         )

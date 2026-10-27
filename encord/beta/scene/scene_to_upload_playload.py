@@ -69,7 +69,6 @@ def scene_to_upload_payload(
 def _scene_with_config(internal: _SelfContainedScene | _CompositeScene, content: dict[str, Any]) -> dict[str, Any]:
     return {
         "content": content,
-        "default_ground_height": internal.default_ground_height,
         "world_convention": _dump_model(internal.world_convention),
         "camera_convention": _dump_model(internal.camera_convention),
     }
@@ -100,6 +99,7 @@ def _stream_to_upload(
         return {
             "type": "image",
             "camera": inner.camera_id,
+            "rotation": inner.rotation,
             "events": [_uri_event_to_upload(event, uri_mapper) for event in inner.events],
         }
     if isinstance(inner, _CameraStream):

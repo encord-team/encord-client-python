@@ -322,12 +322,12 @@ assert text_classification_instance.get_answer() == "This is a text classificati
 # Checklist attributes
 # """"""""""""""""""""
 #
-# Assume we have a checklist with "all colours in the picture" which defines a bunch of colours that we can
+# Assume we have a checklist with "all colors in the picture" which defines a bunch of colors that we can
 # see in the image. You will need to get all the options from the checklist ontology that you would like to
 # select as answers.
 
 checklist_ontology_classification: Classification = ontology_structure.get_child_by_title(
-    title="All colours in the picture",
+    title="All colors in the picture",
     # Do not forget to specify the type here
     type_=Classification,
 )

@@ -241,8 +241,9 @@ def test_time_series_upload_serializes_with_dev_wire_type() -> None:
     )
 
 
-def test_upload_time_series_passes_settings_to_cord_upload() -> None:
+def test_upload_time_series_passes_placeholder_and_settings_to_cord_upload() -> None:
     item_uuid = UUID("00000000-0000-0000-0000-000000000003")
+    placeholder_uuid = UUID("00000000-0000-0000-0000-000000000002")
     captured: dict = {}
     settings = orm_storage.TimeSeriesViewSettings(
         channels={
@@ -276,7 +277,7 @@ def test_upload_time_series_passes_settings_to_cord_upload() -> None:
             "_get_upload_signed_urls",
             return_value=[
                 orm_storage.UploadSignedUrl(
-                    item_uuid=item_uuid,
+                    item_uuid=placeholder_uuid,
                     object_key="uploads/pump.csv",
                     signed_url="https://upload.example/pump.csv",
                 )
@@ -294,6 +295,8 @@ def test_upload_time_series_passes_settings_to_cord_upload() -> None:
         )
     upload = captured["private_files"].time_series[0]
     assert upload.settings == settings
+    assert upload.placeholder_item_uuid == placeholder_uuid
+    assert captured["private_files"].to_dict()["timeSeries"][0]["placeholderItemUuid"] == str(placeholder_uuid)
 
 
 def test_time_series_settings_parse_from_storage_item_and_serialize_for_patch() -> None:

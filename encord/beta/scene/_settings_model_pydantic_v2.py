@@ -6,7 +6,7 @@ from encord.common.utils import HEX_COLOR_PATTERN, snake_to_camel
 
 
 def hex_color_field() -> Any:
-    return Field(description="Colour used to render the radius indicator.", pattern=HEX_COLOR_PATTERN)
+    return Field(description="Color used to render the radius indicator.", pattern=HEX_COLOR_PATTERN)
 
 
 class SceneSettingsModel(BaseModel):

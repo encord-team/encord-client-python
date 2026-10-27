@@ -873,6 +873,8 @@ class DataUploadTimeSeries(BaseDTO):
     client_metadata: Dict = Field(default_factory=dict)
     settings: Optional[TimeSeriesViewSettings] = None
     external_file_type: Literal["TIMESERIES"] = "TIMESERIES"
+    placeholder_item_uuid: Optional[UUID] = None
+    """For system use only."""
 
 
 class DataUploadScene(BaseDTO):
@@ -1358,6 +1360,93 @@ class BundledPatchItemPayload:
     def add(self, other: BundledPatchItemPayload) -> BundledPatchItemPayload:
         self.item_patches.update(other.item_patches)
         return self
+
+
+class ClientMetadataPatch(BaseDTO):
+    item_uuid: UUID
+    # An RFC 7396 JSON merge patch for the item's client metadata.
+    merge_patch: Dict[str, Any]
+
+
+class CreateClientMetadataPatchJobPayload(BaseDTO):
+    patches: List[ClientMetadataPatch]
+
+
+class CreateClientMetadataPatchJobResponse(BaseDTO):
+    job_uuid: UUID
+
+
+class ClientMetadataPatchStatus(CamelStrEnum):
+    """Outcome of one client metadata patch of a bulk request.
+
+    **Values:**
+
+    - **NOT_FOUND:** The item was not found or is not editable by you.
+    - **FAILED:** The patch could not be confirmed as applied; the result's ``error`` says why.
+    - **UNKNOWN:** An outcome this SDK version does not recognize; the patch may or may not have been applied.
+    """
+
+    NOT_FOUND = auto()
+    FAILED = auto()
+
+    UNKNOWN = "_UNKNOWN_"
+
+    @classmethod
+    def _missing_(cls, value: Any) -> ClientMetadataPatchStatus:
+        """Return UNKNOWN for any outcome added to the platform after this SDK version."""
+        return cls.UNKNOWN
+
+
+class ClientMetadataPatchResult(BaseDTO):
+    item_uuid: UUID
+    status: ClientMetadataPatchStatus
+    error: Optional[str] = None
+
+
+class ClientMetadataPatchJobStatus(CamelStrEnum):
+    """Status of a client metadata patch job.
+
+    **Values:**
+
+    - **PENDING:** The job is still running.
+    - **DONE:** Every patch was attempted; ``failures`` lists those that could not be confirmed as applied.
+    - **FAILED:** The job itself failed; its patches may have been applied in part.
+    - **UNKNOWN:** A status this SDK version does not recognize; the job's patches may have been applied in part.
+    """
+
+    PENDING = auto()
+    DONE = auto()
+    FAILED = auto()
+
+    UNKNOWN = "_UNKNOWN_"
+
+    @classmethod
+    def _missing_(cls, value: Any) -> ClientMetadataPatchJobStatus:
+        """Return UNKNOWN for any status added to the platform after this SDK version."""
+        return cls.UNKNOWN
+
+
+class ClientMetadataPatchJobResult(BaseDTO):
+    status: ClientMetadataPatchJobStatus
+    # Once the job is done: the patches that could not be confirmed as applied, with the reason where available.
+    failures: List[ClientMetadataPatchResult]
+
+
+class LookupItemsByUrlPayload(BaseDTO):
+    object_urls: List[str]
+    folder_uuids: Optional[List[UUID]] = None
+    include_cloud_synced: bool = True
+
+
+class LookupItemsByUrlParams(BaseDTO):
+    page_token: Optional[str] = None
+    page_size: int = 1000
+
+
+class ItemUrlMatch(BaseDTO):
+    object_url: str
+    item_uuid: UUID
+    folder_uuid: UUID
 
 
 @dataclass

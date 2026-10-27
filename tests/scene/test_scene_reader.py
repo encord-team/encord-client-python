@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any
 
 import pytest
@@ -21,6 +23,7 @@ from encord.beta.scene import (
 from encord.beta.scene.internal.scene import Scene as InternalScene
 from encord.beta.scene.internal.scene import SceneResponse
 from encord.beta.scene.reader import scene_from_internal
+from encord.beta.scene.scene_to_upload_playload import scene_to_upload_payload
 from encord.orm.storage import StorageItemType
 from encord.storage import StorageItem
 
@@ -74,6 +77,7 @@ def test_scene_reader_converts_internal_streams() -> None:
                     "stream": {
                         "entityType": "image",
                         "cameraId": "front-camera",
+                        "rotation": 180,
                         "events": [
                             {
                                 "timestamp": 0,
@@ -222,6 +226,7 @@ def test_scene_reader_converts_internal_streams() -> None:
                         "stream": {
                             "entityType": "image",
                             "cameraId": "front/camera",
+                            "rotation": 180,
                             "events": [
                                 {
                                     "timestamp": 0,
@@ -294,6 +299,7 @@ def test_scene_reader_converts_internal_streams() -> None:
                         "front": {
                             "type": "image",
                             "camera": "front/camera",
+                            "rotation": 180,
                             "events": [{"timestamp": 0.0, "uri": "s3://target/front-0.jpg"}],
                         },
                         "ego": {
@@ -315,7 +321,6 @@ def test_scene_reader_converts_internal_streams() -> None:
                             "uri": "s3://target/telemetry.csv",
                         },
                     },
-                    "default_ground_height": None,
                     "world_convention": {"x": "right", "y": "forward", "z": "up"},
                     "camera_convention": {"x": "right", "y": "down", "z": "forward"},
                 },
@@ -336,7 +341,6 @@ def test_scene_reader_converts_internal_streams() -> None:
                 "title": "source-scene",
                 "scene": {
                     "content": {"url": "s3://target/scene-object", "format": "pcd"},
-                    "default_ground_height": 2.5,
                     "world_convention": {"x": "forward", "y": "left", "z": "up"},
                     "camera_convention": {"x": "forward", "y": "left", "z": "up"},
                 },
@@ -491,3 +495,35 @@ def test_get_images_at_timestamp_skips_streams_without_matching_event() -> None:
     images = scene.get_images_at_timestamp(0)
 
     assert [(stream_id, event.url) for stream_id, event in images] == [("front", "gs://bucket/front-0.jpg")]
+
+
+@pytest.mark.parametrize("rotation", [None, 0, 90, 180, 270])
+def test_scene_reader_preserves_image_rotation(rotation: int | None) -> None:
+    scene = SceneResponse.model_validate(
+        {
+            "type": "composite",
+            "streams": {
+                "front": {
+                    "type": "event",
+                    "id": "front",
+                    "stream": {
+                        "entityType": "image",
+                        "cameraId": "camera",
+                        **({"rotation": rotation} if rotation is not None else {}),
+                        "events": [
+                            {
+                                "url": "gs://bucket/image.jpg",
+                                "signedUrl": "https://signed.example/image.jpg",
+                                "timestamp": 0,
+                            }
+                        ],
+                    },
+                }
+            },
+        }
+    ).root
+    public = scene_from_internal(scene)
+    assert isinstance(public, CompositeScene)
+    assert public.image_streams[0].rotation == (rotation or 0)
+    payload = scene_to_upload_payload(scene)
+    assert payload["content"]["front"]["rotation"] == (rotation or 0)

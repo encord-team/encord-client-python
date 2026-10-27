@@ -155,6 +155,7 @@ class ApiClient:
         payload: Optional[BaseDTO],
         result_type: Optional[Type[T]],
         allow_retries: bool = True,
+        content_type: Optional[str] = None,
     ) -> T:
         return self._request_with_payload(
             "PATCH",
@@ -163,6 +164,7 @@ class ApiClient:
             payload=payload,
             result_type=result_type,
             allow_retries=allow_retries,
+            content_type=content_type,
         )
 
     def _serialise_payload(self, payload: Union[BaseDTO, Sequence[BaseDTO], None]) -> Union[List[Dict], Dict, None]:
@@ -191,6 +193,7 @@ class ApiClient:
         result_type: Optional[Type[T]],
         allow_none: bool = False,
         allow_retries: bool = True,
+        content_type: Optional[str] = None,
     ) -> T:
         params_dict = params.to_dict() if params is not None else None
         payload_serialised = self._serialise_payload(payload)
@@ -201,6 +204,9 @@ class ApiClient:
             params=params_dict,
             json=payload_serialised,
         ).prepare()
+        if content_type is not None:
+            # The body is still JSON; this only overrides the default `application/json` media type.
+            req.headers["Content-Type"] = content_type
 
         return self._request(
             req,
@@ -258,10 +264,10 @@ class ApiClient:
             except Exception as e:
                 raise RequestException(f"Request session.send failed {req.method=} {req.url=}", context=context) from e
 
-            if res.status_code not in [
-                HTTPStatus.OK,
-                HTTPStatus.NO_CONTENT,  # 204 status code will raise error for sdk versions <= 0.1.147
-            ]:
+            # Any 2xx is a success, so endpoints can answer with the status they declare (e.g. 201, 202).
+            # Deployed SDK clients may not accept other 2xx codes, so an existing endpoint must not
+            # switch to a new 2xx status code.
+            if not HTTPStatus.OK <= res.status_code < HTTPStatus.MULTIPLE_CHOICES:
                 self._handle_error(res, context)
 
             if res.status_code == HTTPStatus.NO_CONTENT:

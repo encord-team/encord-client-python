@@ -1,7 +1,8 @@
 """Builder API for constructing Encord scene payloads.
 
 Provides a multi-stage builder pattern for assembling scene data. Each stream
-type has its own nested builder, and event timestamps are assigned sequentially.
+type has its own nested builder. Every event needs an explicit ``timestamp``,
+which must be a whole number. Use frame indices that start at 0.
 
 **Stages:**
 
@@ -14,15 +15,17 @@ type has its own nested builder, and event timestamps are assigned sequentially.
 4. Pass the builder to SDK upload/create methods, which validates and
    serializes internally.
 
-Every mutator returns ``self``, so stream-local calls can be chained fluently::
+Every mutator returns ``self``, so stream-local calls can be chained fluently:
 
-    scene = SceneBuilder()
-    scene.add_pcd_stream("lidar").add_pcd(uri="s3://bucket/frame0.pcd")
+```python
+scene = SceneBuilder()
+scene.add_pcd_stream("lidar").add_pcd(uri="s3://bucket/frame0.pcd", timestamp=0)
+```
 """
 
 from __future__ import annotations
 
-from typing import Any, overload
+from typing import Any, Literal, overload
 
 from encord.beta.scene.internal.upload import (
     Convention as _Convention,
@@ -195,6 +198,7 @@ class SceneBuilder:
         name: str,
         *,
         camera: str,
+        rotation: Literal[0, 90, 180, 270] = 0,
     ) -> ImageStreamBuilder: ...
 
     @overload
@@ -208,6 +212,7 @@ class SceneBuilder:
         timestamp: float,
         frame_of_reference: str | FoRStreamBuilder | None = ...,
         pose: Pose | None = ...,
+        rotation: Literal[0, 90, 180, 270] = 0,
     ) -> ImageStreamBuilder: ...
 
     def add_image_stream(
@@ -221,6 +226,7 @@ class SceneBuilder:
         timestamp: float | None = None,
         frame_of_reference: str | FoRStreamBuilder | None = None,
         pose: Pose | None = None,
+        rotation: Literal[0, 90, 180, 270] = 0,
     ) -> ImageStreamBuilder:
         """Add an image stream.
 
@@ -233,6 +239,7 @@ class SceneBuilder:
 
         Args:
             name: Unique stream name.
+            rotation: Clockwise display rotation in degrees; calibration uses original image coordinates.
             camera: The **stream name** of a camera-parameters stream.
                 Mutually exclusive with ``width``/``height``/``intrinsics``.
             width: Image width in pixels (inline camera mode).
@@ -244,6 +251,9 @@ class SceneBuilder:
             pose: Optional static pose for the auto-created camera stream
                 (only used in inline camera mode).
         """
+        if isinstance(rotation, bool) or rotation not in (0, 90, 180, 270):
+            raise EncordException(f"Image rotation must be 0, 90, 180, or 270 degrees, got {rotation!r}")
+
         has_inline = width is not None or height is not None or intrinsics is not None
         has_camera = camera is not None
 
@@ -279,7 +289,7 @@ class SceneBuilder:
             camera = camera_name
 
         assert camera is not None
-        sb = ImageStreamBuilder(name, self, camera=camera)
+        sb = ImageStreamBuilder(name, self, camera=camera, rotation=rotation)
         if name in self._streams:
             raise RuntimeError(f"stream {name} is already defined")
         self._streams[name] = sb

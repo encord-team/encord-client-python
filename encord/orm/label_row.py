@@ -289,9 +289,9 @@ class LabelRowMetadata(Formatter):
     data_link: Optional[str]
     """Can be `None` for label rows of image groups or DICOM series."""
     label_status: LabelStatus
-    """Can be `None` for TMS2 projects"""
+    """Can be `None` for Workflow projects"""
     annotation_task_status: Optional[AnnotationTaskStatus]
-    """Only available for TMS2 project"""
+    """Only available for Workflow projects"""
     workflow_graph_node: Optional[WorkflowGraphNode]
     is_shadow_data: bool
 
@@ -478,9 +478,9 @@ class LabelRowMetadataDTO(BaseDTO):
 
     """Can be `None` for label rows of image groups or DICOM series."""
     label_status: LabelStatus
-    """Can be `None` for TMS2 projects"""
+    """Can be `None` for Workflow projects"""
     annotation_task_status: Optional[AnnotationTaskStatus] = None
-    """Only available for TMS2 project"""
+    """Only available for Workflow projects"""
     workflow_graph_node: Optional[WorkflowGraphNode] = None
     is_shadow_data: bool = False
 

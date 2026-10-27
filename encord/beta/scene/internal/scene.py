@@ -108,6 +108,7 @@ class PCDStream(CamelModelApi):
 
 
 class ImageStream(CamelModelApi):
+    rotation: Literal[0, 90, 180, 270] = 0
     entity_type: Literal["image"] = "image"
     camera_id: Optional[str] = None
     events: List[URIEvent]
