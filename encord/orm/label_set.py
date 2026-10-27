@@ -58,10 +58,18 @@ class LabelSetOrigin(str, Enum):
 
     - **WORKFLOW:** Created from a project's workflow.
     - **IMPORT:** Created from an import.
+    - **UNKNOWN:** An unrecognised origin from a newer API version. Please update your SDK.
     """
 
     WORKFLOW = "WORKFLOW"
     IMPORT = "IMPORT"
+
+    UNKNOWN = "_unknown_"
+
+    @classmethod
+    def _missing_(cls, value: Any) -> "LabelSetOrigin":
+        """Return UNKNOWN for any unrecognised origin values."""
+        return cls.UNKNOWN
 
 
 class LabelSetVersionStatus(str, Enum):
@@ -72,11 +80,19 @@ class LabelSetVersionStatus(str, Enum):
     - **BUILDING:** The version is still being captured.
     - **READY:** The capture finished and the members are final.
     - **FAILED:** The capture failed. The version has no members.
+    - **UNKNOWN:** An unrecognised status from a newer API version. Please update your SDK.
     """
 
     BUILDING = "BUILDING"
     READY = "READY"
     FAILED = "FAILED"
+
+    UNKNOWN = "_unknown_"
+
+    @classmethod
+    def _missing_(cls, value: Any) -> "LabelSetVersionStatus":
+        """Return UNKNOWN for any unrecognised status values."""
+        return cls.UNKNOWN
 
 
 class ListLabelSetsParams(BaseDTO):

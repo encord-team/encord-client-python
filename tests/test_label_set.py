@@ -172,6 +172,15 @@ def test_building_version_has_no_finish_time_or_count():
     assert orm.label_count is None
 
 
+def test_unknown_enum_values_parse_as_unknown():
+    """A newer backend may add origins and statuses. Clients ignore unknown enum values rather than failing."""
+    label_set = OrmLabelSet.from_dict(label_set_response(origin="MERGED"))
+    version = LabelSetVersion.from_dict(version_response(status="CANCELLED"))
+
+    assert label_set.origin is LabelSetOrigin.UNKNOWN
+    assert version.status is LabelSetVersionStatus.UNKNOWN
+
+
 def test_member_response_parses_camel_case():
     orm = LabelSetVersionMember.from_dict(
         {
