@@ -50,6 +50,7 @@ from encord.http.utils import (
 )
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
+from encord.label_set import LabelSet
 from encord.metadata_schema import MetadataSchema
 from encord.ml_models_client import MlModelsClient
 from encord.objects import OntologyStructure
@@ -81,6 +82,7 @@ from encord.orm.deidentification import (
     DicomDeIdSaveConditionType,
     DicomDeIdStartPayload,
 )
+from encord.orm.label_set import LabelSelectionMode
 from encord.orm.ontology import CreateOrUpdateOntologyPayload
 from encord.orm.organisation_user import (
     AddOrganisationUserPayload,
@@ -1788,6 +1790,82 @@ class EncordUserClient:
             top_level_folder_uuid = UUID(top_level_folder_uuid)
         new_uuid = Collection._create_collection(self._api_client, top_level_folder_uuid, name, description)
         return self.get_collection(new_uuid)
+
+    def get_label_set(self, label_set_uuid: Union[str, UUID]) -> LabelSet:
+        """Get a label set by its unique identifier (UUID).
+
+        Args:
+            label_set_uuid: The unique identifier of the label set to retrieve.
+
+        Returns:
+            The label set. See :class:`encord.label_set.LabelSet` for details.
+
+        Raises:
+            ValueError: If `label_set_uuid` is a badly formed UUID.
+            :class:`encord.exceptions.AuthorisationError` : If the label set with the given UUID does not exist
+                or the user does not have access to it.
+        """
+        if isinstance(label_set_uuid, str):
+            label_set_uuid = UUID(label_set_uuid)
+        return LabelSet._get_label_set(self._api_client, label_set_uuid)
+
+    def list_label_sets(
+        self,
+        project_hash: Union[str, UUID, None] = None,
+        page_size: Optional[int] = None,
+    ) -> Iterator[LabelSet]:
+        """List the label sets the user can see, newest first.
+
+        Args:
+            project_hash: Restrict the list to the label sets fed by this project.
+            page_size (int): Number of label sets to return per page. Default if not specified is 100.
+                Maximum value is 100.
+
+        Returns:
+            The label sets which match the given criteria.
+
+        Raises:
+            ValueError: If `project_hash` is a badly formed UUID.
+            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to the project.
+        """
+        if isinstance(project_hash, str):
+            project_hash = UUID(project_hash)
+        return LabelSet._list_label_sets(self._api_client, project_hash=project_hash, page_size=page_size)
+
+    def create_label_set(
+        self,
+        project_hash: Union[str, UUID],
+        name: str,
+        description: str = "",
+        label_selection_mode: Optional[LabelSelectionMode] = None,
+    ) -> LabelSet:
+        """Create a label set fed by a project's main branch.
+
+        Args:
+            project_hash: The unique identifier (UUID) of the project whose labels the label set captures.
+            name: The name of the label set.
+            description: The description of the label set.
+            label_selection_mode: Which labels each cut captures. ``None`` captures every label on the
+                project's main branch. See :class:`encord.orm.label_set.SelectiveLabelSelection` and
+                :class:`encord.orm.label_set.FilteredLabelSelection`.
+
+        Returns:
+            LabelSet: Newly created label set.
+
+        Raises:
+            ValueError: If `project_hash` is a badly formed UUID.
+            :class:`encord.exceptions.AuthorisationError` : If the user is not an admin or team manager
+                on the project.
+        """
+        if isinstance(project_hash, str):
+            project_hash = UUID(project_hash)
+        return LabelSet._create_label_set(
+            self._api_client,
+            project_hash=project_hash,
+            name=name,
+            description=description,
+            label_selection_mode=label_selection_mode,
+        )
 
     def get_filter_preset(self, preset_uuid: Union[str, UUID]) -> FilterPreset:
         """Get a preset by its unique identifier (UUID).

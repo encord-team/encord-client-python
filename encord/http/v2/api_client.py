@@ -18,7 +18,7 @@ from encord.http.common import (
 from encord.http.constants import RequestsSettings
 from encord.http.utils import create_new_session
 from encord.http.v2.error_utils import handle_error_response
-from encord.http.v2.payloads import Page
+from encord.http.v2.payloads import ItemsPage, Page
 from encord.orm.base_dto import BaseDTO, BaseDTOInterface
 
 T = TypeVar("T", bound=Union[Sequence[BaseDTOInterface], BaseDTOInterface, uuid.UUID, int, str])
@@ -104,6 +104,32 @@ class ApiClient:
             else:
                 break
 
+    def get_items_paged_iterator(
+        self,
+        path: str,
+        params: BaseDTO,
+        result_type: Type[T],
+        allow_none: bool = False,
+    ) -> Iterator[T]:
+        """Same as :meth:`get_paged_iterator` for endpoints that return each page under ``items``."""
+        if not hasattr(params, "page_token"):
+            raise ValueError("params must have a page_token attribute for paging to work")
+
+        while True:
+            page = self.get(
+                path,
+                params=params,
+                result_type=ItemsPage[result_type],  # type: ignore[valid-type]
+                allow_none=allow_none,
+            )
+
+            yield from page.items
+
+            if page.next_page_token is not None:
+                params.page_token = page.next_page_token
+            else:
+                break
+
     def delete(
         self, path: str, params: Optional[BaseDTO], result_type: Optional[Type[T]] = None, allow_none: bool = False
     ) -> T:
@@ -135,15 +161,16 @@ class ApiClient:
         *,
         params: Optional[BaseDTO],
         payload: Union[BaseDTO, Sequence[BaseDTO], None],
+        result_type: Optional[Type[T]] = None,
         allow_retries: bool = True,
-    ) -> None:
-        self._request_with_payload(
+    ) -> T:
+        return self._request_with_payload(
             "PUT",
             path,
             params=params,
             payload=payload,
-            result_type=None,
-            allow_none=True,
+            result_type=result_type,
+            allow_none=result_type is None,
             allow_retries=allow_retries,
         )
 
