@@ -73,19 +73,19 @@ class AnnotationStage(WorkflowStageBase):
         data_title: Optional[str] = None,
         status: Union[AnnotationTaskStatus, List[AnnotationTaskStatus], None] = None,
     ) -> Iterable[AnnotationTask]:
-        """Retrieves tasks for the AnnotationStage.
+        """Returns the tasks in this Annotate stage that match the given filters.
 
-        **Parameters**
+        All filters are optional. If you pass several, only tasks that match all of them are returned.
 
-        - `assignee` (Union[List[str], str, None]): A list of user emails or a single user email to filter tasks by assignee.
-        - `data_hash` (Union[List[UUID], UUID, List[str], str, None]): A list of data unit UUIDs or a single data unit UUID to filter tasks by data hash.
-        - `dataset_hash` (Union[List[UUID], UUID, List[str], str, None]): A list of dataset UUIDs or a single dataset UUID to filter tasks by dataset hash.
-        - `data_title` (Optional[str]): A string to filter tasks by data title.
-        - `status` (Optional[AnnotationTaskStatus | List[AnnotationTaskStatus]]): A status or a list of statuses to filter tasks by their status.
+        Args:
+            assignee: Only return tasks assigned to this user, or to any of these users. Pass user emails.
+            data_hash: Only return tasks for this data unit, or for any of these data units.
+            dataset_hash: Only return tasks for data units in this dataset, or in any of these datasets.
+            data_title: Only return tasks whose data unit title contains this text.
+            status: Only return tasks with this status, or with any of these statuses.
 
-        **Returns**
-
-        An iterable of `AnnotationTask` instances from both non-Consensus and Consensus Projects.
+        Returns:
+            Iterable[AnnotationTask]: The matching tasks. Tasks are fetched page by page as you iterate.
         """
         params = _AnnotationTasksQueryParams(
             user_emails=ensure_list(assignee),
@@ -154,13 +154,17 @@ class AnnotationTask(WorkflowTask):
         retain_assignee: bool = False,
         bundle: Optional[Bundle] = None,
     ) -> None:
-        """Submits the task for review.
+        """Submits the task, which moves it to the next stage in the Workflow.
 
-        **Parameters**
+        Submitting doesn't upload labels. Save the data unit's label row with `LabelRowV2.save()` before you submit the
+        task. Any rejected label reviews on the task are marked as resolved.
 
-        - `assignee` (Optional[str]): User email to be assigned to the task whilst submitting the task.
-        - `retain_assignee` (bool): Retains the current assignee of the task. This is ignored if `assignee` is provided. An Error will occur if the task does not already have an assignee and `retain_assignee` is True.
-        - `bundle` (Optional[Bundle]): Optional bundle to be included with the submission.
+        Args:
+            assignee: The email of the user to assign the task to while submitting it.
+            retain_assignee: If `True`, keep the task's current assignee while submitting it. Ignored if `assignee` is
+                provided. Raises an error if the task has no assignee.
+            bundle: If not provided, the action is performed immediately. If provided, the action is deferred and
+                performed together with the other operations in the bundle.
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -172,10 +176,10 @@ class AnnotationTask(WorkflowTask):
     def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
         """Assigns the task to a user.
 
-        **Parameters**
-
-        - `assignee` (str): The email of the user to assign the task to.
-        - `bundle` (Optional[Bundle]): Optional bundle to be included with the assignment.
+        Args:
+            assignee: The email of the user to assign the task to.
+            bundle: If not provided, the action is performed immediately. If provided, the action is deferred and
+                performed together with the other operations in the bundle.
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -185,11 +189,11 @@ class AnnotationTask(WorkflowTask):
         )
 
     def release(self, *, bundle: Optional[Bundle] = None) -> None:
-        """Releases the task from the current user.
+        """Releases the task from its current assignee, so that another user can pick it up.
 
-        **Parameters**
-
-        - `bundle` (Optional[Bundle]): Optional bundle to be included with the release.
+        Args:
+            bundle: If not provided, the action is performed immediately. If provided, the action is deferred and
+                performed together with the other operations in the bundle.
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -199,16 +203,15 @@ class AnnotationTask(WorkflowTask):
         )
 
     def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
-        """Moves the task from its current stage to another stage.
+        """Moves the task directly to another stage in the Workflow.
 
-        **Parameters**
+        The task skips any stages in between. Webhooks don't fire for moved tasks, and labels are approved automatically
+        when a task is moved to a Complete stage.
 
-        - `destination_stage_uuid` (UUID): Unique identifier of the stage to move the task to.
-        - `bundle` (Optional[Bundle]): Optional bundle to be included with the move.
-
-        **Returns**
-
-        None
+        Args:
+            destination_stage_uuid: The UUID of the stage to move the task to.
+            bundle: If not provided, the action is performed immediately. If provided, the action is deferred and
+                performed together with the other operations in the bundle.
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.move(

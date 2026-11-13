@@ -1,5 +1,4 @@
 import inspect
-import json
 import uuid
 from http import HTTPStatus
 from typing import Callable, Dict, Iterator, List, Optional, Sequence, Type, TypeVar, Union
@@ -21,7 +20,7 @@ from encord.http.v2.error_utils import handle_error_response
 from encord.http.v2.payloads import Page
 from encord.orm.base_dto import BaseDTO, BaseDTOInterface
 
-T = TypeVar("T", bound=Union[Sequence[BaseDTOInterface], BaseDTOInterface, uuid.UUID, int, str])
+T = TypeVar("T", bound=Union[Sequence[BaseDTOInterface], BaseDTOInterface, BaseModel, uuid.UUID, int, str])
 
 
 class ApiClient:
@@ -173,11 +172,7 @@ class ApiClient:
         elif isinstance(payload, BaseDTO):
             return payload.to_dict()
         elif isinstance(payload, BaseModel):
-            # use new pydantic v2 function if it exists, otherwise use fallback
-            if hasattr(payload, "model_dump"):
-                return payload.model_dump(mode="json")
-            else:
-                return json.loads(payload.json())
+            return payload.model_dump(mode="json")
         elif payload is None:
             return None
         else:
@@ -295,11 +290,7 @@ class ApiClient:
             elif issubclass(result_type, BaseDTOInterface):
                 return result_type.from_dict(res_json)  # type: ignore[return-value,unused-ignore]
             elif issubclass(result_type, BaseModel):
-                # use new pydantic v2 function if it exists, otherwise use fallback
-                if hasattr(result_type, "model_validate"):
-                    return result_type.model_validate(res_json)
-                else:
-                    return result_type.validate(res_json)
+                return result_type.model_validate(res_json)
             else:
                 raise ValueError(f"Unsupported result type {result_type}")
 

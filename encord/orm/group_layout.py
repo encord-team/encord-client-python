@@ -16,7 +16,8 @@ class TileSettings(BaseDTO):
 
     Args:
         title: Optional title displayed in the toolbar for this tile.
-        is_read_only: If True, the tile is read-only and no annotations can be added to it.
+        is_read_only: If True, the tile is read-only and no annotations can be added to it. At least one tile
+            in a data group must not be read-only.
     """
 
     title: Optional[str] = None
@@ -26,10 +27,14 @@ class TileSettings(BaseDTO):
 class LayoutSettings(BaseDTO):
     """Settings for a group layout.
 
+    In the SDK, only :class:`encord.orm.storage.DataGroupCustom` accepts settings. You can't change a data
+    group's settings after you create it.
+
     Args:
         fixed_layout: If True, the layout is fixed and panes cannot be added/removed or changed.
         tile_settings: Optional mapping from tile keys to their settings.
-        has_multilayer_labels: If true, the labels apply to all items in the data group. Only applicable for images of the same aspect ratios.
+        has_multilayer_labels: If True, the labels apply to all items in the data group. All items must be
+            images with the same aspect ratio.
     """
 
     fixed_layout: bool = False

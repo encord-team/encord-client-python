@@ -1,6 +1,6 @@
 [project]
 name = "encord"
-version = "0.1.212"
+version = "0.2.0"
 description = "Encord Python SDK Client"
 authors = [
     { name = "Cord Technologies Limited", email = "hello@encord.com" },
@@ -26,7 +26,7 @@ dependencies = [
     "requests>=2.25.0,<3.0.0",
     "cryptography>=43.0.0",
     "tqdm>=4.32.1,<5.0.0",
-    "pydantic>=1.10.14",
+    "pydantic>=2.5",
     "orjson>=2",
     "typing_extensions>=4.0.0",
 ]

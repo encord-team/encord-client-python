@@ -70,17 +70,18 @@ class AgentTask(WorkflowTask):
         *,
         bundle: Optional[Bundle] = None,
     ) -> None:
-        """Advances the task along a pathway from the current stage.
+        """Moves the task along one of the Agent stage's pathways.
 
-        Exactly one of `pathway_name` or `pathway_uuid` must be provided to
-        specify the pathway to take.
+        Pass `pathway_name` or `pathway_uuid` to choose the pathway. The stage's pathways are listed in
+        `AgentStage.pathways`.
 
-        **Parameters**
-            pathway_name (Optional[str]): Name of the pathway to follow.
-            pathway_uuid (Optional[Union[UUID, str]]): Unique identifier of the pathway to follow.
-            bundle (Optional[Bundle]): Optional bundle to associate with the action.
+        Args:
+            pathway_name: The name of the pathway to follow.
+            pathway_uuid: The UUID of the pathway to follow.
+            bundle: If not provided, the action is performed immediately. If provided, the action is deferred and
+                performed together with the other operations in the bundle.
 
-        **Raises**
+        Raises:
             ValueError: If neither `pathway_name` nor `pathway_uuid` is provided.
         """
         if not pathway_name and not pathway_uuid:
@@ -98,15 +99,15 @@ class AgentTask(WorkflowTask):
         )
 
     def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
-        """Moves the task from its current stage to another stage.
+        """Moves the Agent task directly to another stage in the Workflow.
 
-        **Parameters**
-            destination_stage_uuid (UUID): Unique identifier of the stage to move the task to.
-            bundle (Optional[Bundle]): Optional bundle to associate with the move action.
+        The task skips any stages in between. Webhooks don't fire for moved tasks, and labels are approved automatically
+        when a task is moved to a Complete stage.
 
-        **Returns**
-
-        None
+        Args:
+            destination_stage_uuid: The UUID of the stage to move the task to.
+            bundle: If not provided, the action is performed immediately. If provided, the action is deferred and
+                performed together with the other operations in the bundle.
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.move(
@@ -157,19 +158,19 @@ class AgentStage(WorkflowStageBase):
         data_title: Optional[str] = None,
         status: Optional[Union[AgentTaskStatus, List[AgentTaskStatus]]] = None,
     ) -> Iterable[AgentTask]:
-        """Retrieves tasks for the AgentStage.
+        """Returns the tasks in this Agent stage that match the given filters.
 
-        **Parameters**
+        All filters are optional. If you pass several, only tasks that match all of them are returned.
 
-        - `assignee` (Union[List[str], str, None]): A list of user emails or a single user email to filter tasks by assignee.
-        - `data_hash` (Union[List[UUID], UUID, List[str], str, None]): A list of data unit UUIDs or a single data unit UUID to filter tasks by data hash.
-        - `dataset_hash` (Union[List[UUID], UUID, List[str], str, None]): A list of dataset UUIDs or a single dataset UUID to filter tasks by dataset hash.
-        - `data_title` (Optional[str]): A string to filter tasks by data title.
-        - `status` (Optional[AnnotationTaskStatus | List[AnnotationTaskStatus]]): A status or a list of statuses to filter tasks by their status.
+        Args:
+            assignee: Only return tasks assigned to this user, or to any of these users. Pass user emails.
+            data_hash: Only return tasks for this data unit, or for any of these data units.
+            dataset_hash: Only return tasks for data units in this dataset, or in any of these datasets.
+            data_title: Only return tasks whose data unit title contains this text.
+            status: Only return tasks with this status, or with any of these statuses.
 
-        **Returns**
-
-        An iterable of `AnnotationTask` instances from both non-Consensus and Consensus Projects.
+        Returns:
+            Iterable[AgentTask]: The matching tasks. Tasks are fetched page by page as you iterate.
         """
         params = _AgentTasksQueryParams(
             user_emails=ensure_list(assignee),

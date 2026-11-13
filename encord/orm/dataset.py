@@ -125,8 +125,8 @@ class DataClientMetadata:
 
 class ImageData:
     """Information about individual images within a single :class:`encord.orm.dataset.DataRow` of type
-    :meth:`DataType.IMG_GROUP encord.constants.enums.DataType.IMG_GROUP`. Get this information
-    using the :meth:`DataRow.images encord.orm.dataset.DataRow.images_data` property.
+    :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`. Get this information
+    using the :meth:`DataRow.images_data <encord.orm.dataset.DataRow.images_data>` property.
     """
 
     def __init__(
@@ -369,7 +369,7 @@ class DataRow(dict, Formatter):
         :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>` where
         :meth:`is_image_sequence <encord.orm.dataset.DataRow.is_image_sequence>` is `False`, because
         each image in this group can have a different dimension. Inspect the
-        :meth:`images <encord.orm.dataset.DataRow.height>` to get the height of individual images.
+        :meth:`images_data <encord.orm.dataset.DataRow.images_data>` to get the width of individual images.
         """
         return self["width"]
 
@@ -379,7 +379,7 @@ class DataRow(dict, Formatter):
         :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>` where
         :meth:`is_image_sequence <encord.orm.dataset.DataRow.is_image_sequence>` is `False`, because
         each image in this group can have a different dimension. Inspect the
-        :meth:`images <encord.orm.dataset.DataRow.width>` to get the width of individual images.
+        :meth:`images_data <encord.orm.dataset.DataRow.images_data>` to get the height of individual images.
         """
         return self["height"]
 
@@ -430,7 +430,7 @@ class DataRow(dict, Formatter):
     @property
     @deprecated("0.1.98", ".is_image_sequence")
     def is_optimised_image_group(self) -> Optional[bool]:
-        """If the data type is an :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
+        """If the data type is a :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
         returns whether this is a performance optimized image group. Returns `None` for other data types.
 
         DEPRECATED: This method is deprecated and will be removed in the upcoming library version.
@@ -440,7 +440,7 @@ class DataRow(dict, Formatter):
 
     @property
     def is_image_sequence(self) -> Optional[bool]:
-        """If the data type is an :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
+        """If the data type is a :meth:`DataType.IMG_GROUP <encord.constants.enums.DataType.IMG_GROUP>`,
         returns whether this is an image sequence. Returns `None` for other data types.
 
         For more details refer to the

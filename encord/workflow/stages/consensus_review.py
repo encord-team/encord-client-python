@@ -66,26 +66,21 @@ class ConsensusReviewStage(WorkflowStageBase):
         data_title: Optional[str] = None,
         status: Union[ConsensusReviewTaskStatus, List[ConsensusReviewTaskStatus], None] = None,
     ) -> Iterable[ConsensusReviewTask]:
-        """Retrieves tasks for the ConsensusReviewStage.
+        """Returns the tasks in this Consensus Review stage that match the given filters.
 
-        **Parameters**
+        All filters are optional. If you pass several, only tasks that match all of them are returned.
 
-        - `assignee` (Union[List[str], str, None]): A list of user emails or a single user email to filter tasks by assignee.
-        - `data_hash` (Union[List[UUID], UUID, List[str], str, None]): A list of data unit UUIDs or a single data unit UUID to filter tasks by data hash.
-        - `dataset_hash` (Union[List[UUID], UUID, List[str], str, None]): A list of dataset UUIDs or a single dataset UUID to filter tasks by dataset hash.
-        - `data_title` (Optional[str]): A string to filter tasks by data title.
-        - `status` (Union[ConsensusReviewTaskStatus, List[ConsensusReviewTaskStatus], None]): A list of task statuses or a single task status to filter tasks by their status.
+        Args:
+            assignee: Only return tasks assigned to this user, or to any of these users. Pass user emails.
+            data_hash: Only return tasks for this data unit, or for any of these data units.
+            dataset_hash: Only return tasks for data units in this dataset, or in any of these datasets.
+            data_title: Only return tasks whose data unit title contains this text.
+            status: Only return tasks with this status, or with any of these statuses.
 
-        **Returns**
-
-        An iterable of `ConsensusReviewTask` instances with the following information:
-        - `uuid`: Unique identifier for the task.
-        - `created_at`: Time and date the task was created.
-        - `updated_at`: Time and date the task was last edited.
-        - `assignee`: The user currently assigned to the task. The value is None if no one is assigned to the task.
-        - `data_hash`: Unique identifier for the data unit.
-        - `data_title`: Name/title of the data unit.
-        - `options`: List of ConsensusReviewOptions. ConsensusReviewOptions are the labels available for each subtask, including information such as annotator, label_branch_name, and label_hash.
+        Returns:
+            Iterable[ConsensusReviewTask]: The matching tasks. Tasks are fetched page by page as you iterate. Each
+                task's `options` are the label branches of its annotators, with the annotator, branch name, and label
+                hash.
         """
         params = _ReviewTasksQueryParams(
             user_emails=ensure_list(assignee),
@@ -166,17 +161,16 @@ class ConsensusReviewTask(WorkflowTask):
         retain_assignee: bool = False,
         bundle: Optional[Bundle] = None,
     ) -> None:
-        """Approve the current task.
+        """Approves the task and moves it along the stage's approval pathway.
 
-        **Parameters**
+        Before you approve the task, save the labels you chose to the data unit's `main` label row.
 
-        - `assignee` (Optional[str]): User email to be assigned to the review task whilst approving the task.
-        - `retain_assignee` (bool): Retains the current assignee whilst approving the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
-        - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the approval.
-
-        **Returns**
-
-        None
+        Args:
+            assignee: The email of the user to assign the task to while approving it.
+            retain_assignee: If `True`, keep the task's current assignee while approving it. Ignored if `assignee` is
+                provided. Raises an error if the task has no assignee.
+            bundle: If not provided, the action is performed immediately. If provided, the action is deferred and
+                performed together with the other operations in the bundle.
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -192,17 +186,14 @@ class ConsensusReviewTask(WorkflowTask):
         retain_assignee: bool = False,
         bundle: Optional[Bundle] = None,
     ) -> None:
-        """Reject the current task.
+        """Rejects the task and moves it along the stage's rejection pathway.
 
-        **Parameters**
-
-        - `assignee` (Optional[str]): User email to be assigned to the review task whilst rejecting the task.
-        - `retain_assignee` (bool): Retains the current assignee whilst rejecting the task. This is ignored if `assignee` is provided. An error will occur if the task does not already have an assignee and `retain_assignee` is True.
-        - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the rejection.
-
-        **Returns**
-
-        None
+        Args:
+            assignee: The email of the user to assign the task to while rejecting it.
+            retain_assignee: If `True`, keep the task's current assignee while rejecting it. Ignored if `assignee` is
+                provided. Raises an error if the task has no assignee.
+            bundle: If not provided, the action is performed immediately. If provided, the action is deferred and
+                performed together with the other operations in the bundle.
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -212,16 +203,12 @@ class ConsensusReviewTask(WorkflowTask):
         )
 
     def assign(self, assignee: str, *, bundle: Optional[Bundle] = None) -> None:
-        """Assign the current task to a user.
+        """Assigns the task to a user.
 
-        **Parameters**
-
-        - `assignee` (str): The user to assign the task to.
-        - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the assignment.
-
-        **Returns**
-
-        None
+        Args:
+            assignee: The email of the user to assign the task to.
+            bundle: If not provided, the action is performed immediately. If provided, the action is deferred and
+                performed together with the other operations in the bundle.
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -231,15 +218,11 @@ class ConsensusReviewTask(WorkflowTask):
         )
 
     def release(self, *, bundle: Optional[Bundle] = None) -> None:
-        """Release the current task from the current user.
+        """Releases the task from its current assignee, so that another user can pick it up.
 
-        **Parameters**
-
-        - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the release.
-
-        **Returns**
-
-        None
+        Args:
+            bundle: If not provided, the action is performed immediately. If provided, the action is deferred and
+                performed together with the other operations in the bundle.
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.action(
@@ -249,16 +232,15 @@ class ConsensusReviewTask(WorkflowTask):
         )
 
     def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
-        """Moves the review task from its current stage to another stage.
+        """Moves the Consensus Review task directly to another stage in the Workflow.
 
-        **Parameters**
+        The task skips any stages in between. Webhooks don't fire for moved tasks, and labels are approved automatically
+        when a task is moved to a Complete stage.
 
-        - `destination_stage_uuid` (UUID): Unique identifier of the stage to move the task to.
-        - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the move.
-
-        **Returns**
-
-        None
+        Args:
+            destination_stage_uuid: The UUID of the stage to move the task to.
+            bundle: If not provided, the action is performed immediately. If provided, the action is deferred and
+                performed together with the other operations in the bundle.
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.move(

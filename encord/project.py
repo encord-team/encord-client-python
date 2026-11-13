@@ -14,11 +14,13 @@ import warnings
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Union
 from uuid import UUID
 
+from encord.beta.workflow_v3 import Workflow as WorkflowV3
 from encord.client import EncordClientProject
 from encord.collection import ProjectCollection
 from encord.common.deprecated import deprecated
 from encord.common.organisation_tags import resolve_organisation_tag_uuid
 from encord.common.utils import ensure_list, ensure_uuid_list
+from encord.exceptions import EncordException, WrongProjectTypeError
 from encord.filter_preset import ProjectFilterPreset
 from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
@@ -105,8 +107,16 @@ class Project:
         self._api_client = api_client
         self._tags: Optional[List[OrganisationTag]] = None
 
-        if project_instance.workflow:
-            self._workflow = Workflow(api_client, project_instance.project_hash, project_instance.workflow)
+        self._workflow = (
+            Workflow(api_client, project_instance.project_hash, project_instance.workflow)
+            if project_instance.workflow is not None
+            else None
+        )
+        self._workflow_v3 = (
+            WorkflowV3(api_client, project_instance.project_hash, project_instance.workflow_v3)
+            if project_instance.workflow_v3 is not None
+            else None
+        )
 
     @property
     def project_hash(self) -> str:
@@ -213,7 +223,20 @@ class Project:
         """The Project class will only fetch its properties once. Use this function if you suspect the state of those
         properties to be dirty.
         """
-        self._project_instance = self._client.get_project_v2()
+        project_instance = self._client.get_project_v2()
+        workflow = (
+            Workflow(self._api_client, project_instance.project_hash, project_instance.workflow)
+            if project_instance.workflow is not None
+            else None
+        )
+        workflow_v3 = (
+            WorkflowV3(self._api_client, project_instance.project_hash, project_instance.workflow_v3)
+            if project_instance.workflow_v3 is not None
+            else None
+        )
+        self._project_instance = project_instance
+        self._workflow = workflow
+        self._workflow_v3 = workflow_v3
 
     def refetch_ontology(self) -> None:
         """Update the ontology for the project to reflect changes on the backend."""
@@ -224,15 +247,37 @@ class Project:
         return self._client.get_project()
 
     @property
-    def workflow(self) -> Workflow:
-        """Get the workflow of the project.
+    def has_workflow(self) -> bool:
+        """Whether the loaded project response includes the legacy workflow contract."""
+        return self._workflow is not None
 
-        Available only for workflow projects.
-        """
-        assert self.project_type == ProjectType.WORKFLOW, (
-            "project.workflow property only available for workflow projects"
-        )
+    @property
+    def has_workflow_v3(self) -> bool:
+        """Whether the loaded project response includes the workflow_v3 contract."""
+        return self._workflow_v3 is not None
+
+    @property
+    def workflow(self) -> Workflow:
+        """Get the legacy workflow when its contract is included in the project response."""
+        if self._workflow is None:
+            raise WrongProjectTypeError(
+                f"The backend did not return the legacy workflow for project '{self.project_hash}'; "
+                "use project.workflow_v3 if available."
+            )
         return self._workflow
+
+    @property
+    def workflow_v3(self) -> WorkflowV3:
+        """Read-only workflow graph snapshot; refreshed by ``refetch_data()``.
+
+        Raises:
+            EncordException: The backend did not return the workflow_v3 contract.
+        """
+        if self._workflow_v3 is None:
+            raise EncordException(
+                f"The backend did not return the workflow_v3 contract for project '{self.project_hash}'."
+            )
+        return self._workflow_v3
 
     @property
     def _ontology(self) -> Ontology:
@@ -534,7 +579,7 @@ class Project:
 
     @deprecated("0.1.102", alternative="encord.ontology.Ontology class")
     def add_object(self, name: str, shape: ObjectShape) -> bool:
-        """DEPRECATED: Prefer using :class:`Ontology [encord.ontology.Ontology]` to manipulate ontology.
+        """DEPRECATED: Prefer using :class:`Ontology <encord.ontology.Ontology>` to manipulate ontology.
 
         Add an object to an ontology.
 
@@ -566,7 +611,7 @@ class Project:
         required: bool,
         options: Optional[Iterable[str]] = None,
     ):
-        """DEPRECATED: Prefer using :class:`Ontology encord.ontology.Ontology` to manipulate ontology.
+        """DEPRECATED: Prefer using :class:`Ontology <encord.ontology.Ontology>` to manipulate ontology.
 
         Add a classification to an ontology.
 
@@ -1287,7 +1332,7 @@ class Project:
 
         Raises:
             ValueError: If any of the collection uuids is a badly formed UUID.
-            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to it.
+            :class:`encord.exceptions.AuthorisationError`: If the user does not have access to it.
         """
         collections = (
             [UUID(collection) if isinstance(collection, str) else collection for collection in collection_uuids]
@@ -1312,7 +1357,7 @@ class Project:
             None
         Raises:
             ValueError: If `collection_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to it.
+            :class:`encord.exceptions.AuthorisationError`: If the user does not have access to it.
         """
         if isinstance(collection_uuid, str):
             collection_uuid = UUID(collection_uuid)
@@ -1334,7 +1379,7 @@ class Project:
             ProjectCollection: Newly created collection.
 
         Raises:
-            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to the folder.
+            :class:`encord.exceptions.AuthorisationError`: If the user does not have access to the folder.
         """
         new_uuid = ProjectCollection._create_collection(
             self._client._api_client, self._project_instance.project_hash, name, description, collection_type
@@ -1371,7 +1416,7 @@ class Project:
 
         Raises:
             ValueError: If any of the filter preset uuids is a badly formed UUID.
-            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to it.
+            :class:`encord.exceptions.AuthorisationError`: If the user does not have access to it.
         """
         filter_presets = (
             [

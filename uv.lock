@@ -542,7 +542,7 @@ wheels = [
 
 [[package]]
 name = "encord"
-version = "0.1.212"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "cryptography", version = "47.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version <= '3.9'" },
@@ -596,7 +596,7 @@ requires-dist = [
     { name = "opencv-python", marker = "extra == 'coco'", specifier = ">=4.11.0.86,<5.0.0.0" },
     { name = "orjson", specifier = ">=2" },
     { name = "pycocotools", marker = "extra == 'coco'", specifier = ">=2.0.7,<3.0.0" },
-    { name = "pydantic", specifier = ">=1.10.14" },
+    { name = "pydantic", specifier = ">=2.5" },
     { name = "python-dateutil", specifier = ">=2.8.2,<3.0.0" },
     { name = "requests", specifier = ">=2.25.0,<3.0.0" },
     { name = "shapely", marker = "extra == 'coco'", specifier = ">=2.0.4,<3.0.0" },

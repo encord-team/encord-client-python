@@ -50,6 +50,7 @@ from encord.http.utils import (
 )
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
+from encord.label_set import LabelSet
 from encord.metadata_schema import MetadataSchema
 from encord.ml_models_client import MlModelsClient
 from encord.objects import OntologyStructure
@@ -81,6 +82,7 @@ from encord.orm.deidentification import (
     DicomDeIdSaveConditionType,
     DicomDeIdStartPayload,
 )
+from encord.orm.label_set import LabelSetOrigin, ProjectSource
 from encord.orm.ontology import CreateOrUpdateOntologyPayload
 from encord.orm.organisation_user import (
     AddOrganisationUserPayload,
@@ -149,17 +151,16 @@ log = logging.getLogger(__name__)
 
 
 class EncordUserClient:
-    """
-    High–level entrypoint to the Encord SDK for an authenticated user.
+    """High-level entry point to the Encord SDK for an authenticated user.
 
-    `EncordUserClient`` is the primary interface for interacting with
-    Encord resources such as Projects, Datasets, Collections, Workflows, and
-    Storage Items. It manages authentication, request signing, and low-level
+    `EncordUserClient` is the primary interface for interacting with Encord resources such as Projects, Datasets,
+    Collections, Workflows, and Storage Items. It manages authentication, request signing, and low-level
     communication on behalf of the user.
 
-    Typical usage involves creating a client using constructors
-    (for example, ``EncordUserClient.create_with_ssh_private_key`` or
-    ``EncordUserClient.create_with_service_account``), then calling methods:
+    Create a client with one of the `create_*` methods, for example
+    :meth:`encord.user_client.EncordUserClient.create_with_ssh_private_key` or
+    :meth:`encord.user_client.EncordUserClient.create_with_bearer_token`, rather than calling the constructor
+    directly. Then use its methods for:
 
     - Listing or retrieving projects and datasets
     - Accessing project configuration, ontology, and workflows
@@ -168,16 +169,9 @@ class EncordUserClient:
     - Interacting with collections and Curate
 
     Args:
-    config : UserConfig The user configuration containing authentication credentials
-        and client options.
-    querier : Querier Internal HTTP/query executor used to communicate with the Encord API.
-        Users do not normally construct this directly.
-
-    **Notes**
-
-    Instances of this class should generally be created using the provided
-    ``create_*`` methods rather than by calling the constructor
-    directly.
+        config: The user configuration containing authentication credentials and client options.
+        querier: Internal HTTP/query executor used to communicate with the Encord API. Users do not normally
+            construct this directly.
     """
 
     def __init__(self, config: UserConfig, querier: Querier):
@@ -203,6 +197,15 @@ class EncordUserClient:
         return self._config
 
     def get_bearer_token(self) -> str:
+        """Get a bearer token for the authenticated user.
+
+        Use the token with :meth:`encord.user_client.EncordUserClient.create_with_bearer_token`, for example to
+        give a short-lived credential to another process instead of your SSH key. The token is valid for one day,
+        or until the credential it was created from expires, if that is sooner.
+
+        Returns:
+            str: The bearer token.
+        """
         client = EncordClient(querier=self.querier, config=self._config.config, api_client=self._api_client)
         return client.get_bearer_token().token
 
@@ -214,11 +217,11 @@ class EncordUserClient:
     ) -> Dataset:
         """Get the Dataset class to access dataset fields and manipulate a dataset.
 
-        You only have access to this project if you are one of the following
+        You can access a dataset if you are one of the following:
 
-            * Dataset admin
-
-            * Organization admin of the project
+        - A Dataset Admin or User
+        - An Admin of a project that uses the dataset
+        - An Organization admin, or a user with a custom organization role that can manage all datasets
 
         Args:
             dataset_hash: The Dataset ID
@@ -247,16 +250,15 @@ class EncordUserClient:
     def get_project(self, project_hash: Union[str, UUID]) -> Project:
         """Get the Project class to access project fields and manipulate a project.
 
-        You will only have access to this project if you are one of the following
-
-            * Project admin
-
-            * Project team manager
-
-            * Organization admin of the project
+        You can access a project if you have any role on it (Admin, Team Manager, Annotator, Reviewer, Annotator &
+        Reviewer, or Viewer). Organization admins, and users with a custom organization role that can manage all
+        projects, can also access any project in their organization.
 
         Args:
             project_hash: The Project ID
+
+        Returns:
+            Project: The project. See :class:`encord.project.Project` for details.
         """
         # Querying ontology using project querier to avoid permission error,
         # as there might be only read-only ontology structure access in scope of the project,
@@ -270,6 +272,14 @@ class EncordUserClient:
         return Project(client, project_orm, project_ontology, self._api_client)
 
     def get_ontology(self, ontology_hash: str) -> Ontology:
+        """Get the Ontology class to access and edit an ontology.
+
+        Args:
+            ontology_hash: The ontology ID.
+
+        Returns:
+            Ontology: The ontology, including its structure. See :class:`encord.ontology.Ontology` for details.
+        """
         ontology_with_user_role = self._api_client.get(
             f"ontologies/{ontology_hash}", params=None, result_type=OntologyWithUserRole
         )
@@ -327,7 +337,8 @@ class EncordUserClient:
         dataset_description: Optional[str] = None,
         create_backing_folder: bool = True,
     ) -> CreateDatasetResponse:
-        """
+        """Create a new dataset.
+
         Args:
             dataset_title (str): Title of the dataset.
             dataset_type (StorageLocation): Type of storage location where the data will be stored.
@@ -337,8 +348,8 @@ class EncordUserClient:
                 or large-scale projects.
 
         Returns:
-            CreateDatasetResponse:
-
+            CreateDatasetResponse: The title, storage location, and ID (`dataset_hash`) of the new dataset, and the
+                UUID of its backing folder if one was created.
         """
         return self.__create_dataset(
             title=dataset_title,
@@ -363,14 +374,20 @@ class EncordUserClient:
         """List either all (if called with no arguments) or matching datasets the user has access to.
 
         Args:
-            title_eq: optional exact title filter
-            title_like: optional fuzzy title filter; SQL syntax
-            desc_eq: optional exact description filter
-            desc_like: optional fuzzy description filter; SQL syntax
-            created_before: optional creation date filter, 'less'
-            created_after: optional creation date filter, 'greater'
-            edited_before: optional last modification date filter, 'less'
-            edited_after: optional last modification date filter, 'greater'
+            title_eq: Optional exact title filter.
+            title_like: Optional title pattern in SQL `LIKE` syntax, where `%` matches any characters. Matching is
+                case-sensitive. For example, `"%cars%"` matches titles that contain "cars".
+            desc_eq: Optional exact description filter.
+            desc_like: Optional description pattern in SQL `LIKE` syntax, where `%` matches any characters. Matching
+                is case-sensitive.
+            created_before: Optional filter to only include results created on or before this date. Accepts a
+                `datetime` or a date string.
+            created_after: Optional filter to only include results created on or after this date. Accepts a
+                `datetime` or a date string.
+            edited_before: Optional filter to only include results last edited on or before this date. Accepts a
+                `datetime` or a date string.
+            edited_after: Optional filter to only include results last edited on or after this date. Accepts a
+                `datetime` or a date string.
             include_org_access: if set to true and the calling user is the organization admin, the
               method returns all datasets in the organization.
 
@@ -432,7 +449,10 @@ class EncordUserClient:
             password: private key password
             requests_settings: Request settings. Useful default provided
             ssh_private_key_path: the path to the private key file
-            domain: The underlying Encord domain to connect too. Need only be changed for US or Private Clouds
+            domain: The underlying Encord domain to connect to. Only needs to be changed for US or Private Clouds.
+
+        Returns:
+            EncordUserClient: A client authenticated with the SSH key.
         """
         if ssh_private_key_path is not None:
             if isinstance(ssh_private_key_path, str):
@@ -461,6 +481,19 @@ class EncordUserClient:
         domain: str = ENCORD_DOMAIN,
         **kwargs,
     ) -> EncordUserClient:
+        """Creates an instance of EncordUserClient authenticated with a bearer token.
+
+        Get a bearer token with :meth:`encord.user_client.EncordUserClient.get_bearer_token` from a client that is
+        already authenticated, for example with an SSH key.
+
+        Args:
+            token: The bearer token.
+            requests_settings: Request settings. Useful default provided.
+            domain: The underlying Encord domain to connect to. Only needs to be changed for US or Private Clouds.
+
+        Returns:
+            EncordUserClient: A client authenticated with the bearer token.
+        """
         config = BearerConfig.from_bearer_token(
             token=token, requests_settings=requests_settings, domain=domain, **kwargs
         )
@@ -483,14 +516,20 @@ class EncordUserClient:
         """List either all (if called with no arguments) or matching projects the user has access to.
 
         Args:
-            title_eq: optional exact title filter
-            title_like: optional fuzzy title filter; SQL syntax
-            desc_eq: optional exact description filter
-            desc_like: optional fuzzy description filter; SQL syntax
-            created_before: optional creation date filter, 'less'
-            created_after: optional creation date filter, 'greater'
-            edited_before: optional last modification date filter, 'less'
-            edited_after: optional last modification date filter, 'greater'
+            title_eq: Optional exact title filter.
+            title_like: Optional title pattern in SQL `LIKE` syntax, where `%` matches any characters. Matching is
+                case-sensitive. For example, `"%cars%"` matches titles that contain "cars".
+            desc_eq: Optional exact description filter.
+            desc_like: Optional description pattern in SQL `LIKE` syntax, where `%` matches any characters. Matching
+                is case-sensitive.
+            created_before: Optional filter to only include results created on or before this date. Accepts a
+                `datetime` or a date string.
+            created_after: Optional filter to only include results created on or after this date. Accepts a
+                `datetime` or a date string.
+            edited_before: Optional filter to only include results last edited on or before this date. Accepts a
+                `datetime` or a date string.
+            edited_after: Optional filter to only include results last edited on or after this date. Accepts a
+                `datetime` or a date string.
 
         Returns:
             list of Projects matching filter conditions, with the roles that the current user has on them. Each item
@@ -517,21 +556,28 @@ class EncordUserClient:
         """List either all (if called with no arguments) or matching projects the user has access to.
 
         Args:
-            title_eq: optional exact title filter
-            title_like: optional fuzzy title filter; SQL syntax
-            desc_eq: optional exact description filter
-            desc_like: optional fuzzy description filter; SQL syntax
-            created_before: optional creation date filter, 'less'
-            created_after: optional creation date filter, 'greater'
-            edited_before: optional last modification date filter, 'less'
-            edited_after: optional last modification date filter, 'greater'
+            title_eq: Optional exact title filter.
+            title_like: Optional title pattern in SQL `LIKE` syntax, where `%` matches any characters. Matching is
+                case-sensitive. For example, `"%cars%"` matches titles that contain "cars".
+            desc_eq: Optional exact description filter.
+            desc_like: Optional description pattern in SQL `LIKE` syntax, where `%` matches any characters. Matching
+                is case-sensitive.
+            created_before: Optional filter to only include results created on or before this date. Accepts a
+                `datetime` or a date string.
+            created_after: Optional filter to only include results created on or after this date. Accepts a
+                `datetime` or a date string.
+            edited_before: Optional filter to only include results last edited on or before this date. Accepts a
+                `datetime` or a date string.
+            edited_after: Optional filter to only include results last edited on or after this date. Accepts a
+                `datetime` or a date string.
             include_org_access: if set to true and the calling user is the organization admin, the
               method will return all projects in the organization.
             tags_anyof: optional tag names filter; matches projects having at least one of the tag
                 names. Accepts either tag name strings or :class:`encord.orm.project.OrganisationTag` instances.
 
         Returns:
-            list of Projects matching filter conditions, as :class:`encord.project.Project` instances.
+            Iterable[Project]: The projects that match the filters, as :class:`encord.project.Project` instances.
+                Projects are fetched page by page as you iterate.
         """
         tag_names = (
             [t.name if isinstance(t, OrganisationTag) else t for t in tags_anyof] if tags_anyof is not None else None
@@ -729,8 +775,7 @@ class EncordUserClient:
             UUID: A unique identifier for tracking the import process.
 
         Raises:
-            ValueError:
-                If the CVAT directory has an invalid format or if a non-LocalImport method is used.
+            ValueError: If the CVAT directory has an invalid format or if a non-LocalImport method is used.
         """
         if not isinstance(import_method, LocalImport):
             raise ValueError("Only local imports are currently supported ")
@@ -934,7 +979,7 @@ class EncordUserClient:
             - CvatImporterError: Contains any issues if the import failed.
 
         Raises:
-            ValueError:If the CVAT directory has an invalid format, if a non-LocalImport method is used, or if the server returns an unexpected status.
+            ValueError: If the CVAT directory has an invalid format, if a non-LocalImport method is used, or if the server returns an unexpected status.
         """
         return self.create_project_from_cvat_get_result(
             cvat_import_uuid=self.create_project_from_cvat_start(
@@ -991,14 +1036,14 @@ class EncordUserClient:
     ) -> List[CloudIntegration]:
         """List either all (if called with no arguments) or matching cloud integrations the user has access to.
 
+        If `filter_integration_uuids` and `filter_integration_titles` are both provided, the method returns
+        the integrations that match both of the filters.
+
         Args:
             filter_integration_uuids: optional list of integration UUIDs to include.
             filter_integration_titles: optional list of integration titles to include (exact match).
             include_org_access: if set to true and the calling user is the organization admin, the
               method will return all cloud integrations in the organization.
-
-        If `filter_integration_uuids` and `filter_integration_titles` are both provided, the method will return
-        the integrations that match both of the filters.
         """
         if filter_integration_uuids is not None:
             filter_integration_uuids = [UUID(x) if isinstance(x, str) else x for x in filter_integration_uuids]
@@ -1033,14 +1078,20 @@ class EncordUserClient:
         """List either all (if called with no arguments) or matching ontologies the user has access to.
 
         Args:
-            title_eq: optional exact title filter
-            title_like: optional fuzzy title filter; SQL syntax
-            desc_eq: optional exact description filter
-            desc_like: optional fuzzy description filter; SQL syntax
-            created_before: optional creation date filter, 'less'
-            created_after: optional creation date filter, 'greater'
-            edited_before: optional last modification date filter, 'less'
-            edited_after: optional last modification date filter, 'greater'
+            title_eq: Optional exact title filter.
+            title_like: Optional title pattern in SQL `LIKE` syntax, where `%` matches any characters. Matching is
+                case-sensitive. For example, `"%cars%"` matches titles that contain "cars".
+            desc_eq: Optional exact description filter.
+            desc_like: Optional description pattern in SQL `LIKE` syntax, where `%` matches any characters. Matching
+                is case-sensitive.
+            created_before: Optional filter to only include results created on or before this date. Accepts a
+                `datetime` or a date string.
+            created_after: Optional filter to only include results created on or after this date. Accepts a
+                `datetime` or a date string.
+            edited_before: Optional filter to only include results last edited on or before this date. Accepts a
+                `datetime` or a date string.
+            edited_after: Optional filter to only include results last edited on or after this date. Accepts a
+                `datetime` or a date string.
             include_org_access: if set to true and the calling user is the organization admin, the
               method will return all ontologies in the organization.
 
@@ -1431,7 +1482,6 @@ class EncordUserClient:
         * x00520014 ALinePixelSpacing
 
         Args:
-            self: Encord client object.
             dicom_urls: a list of urls to DICOM files, for example: `[ "https://s3.region-code.amazonaws.com/bucket-name/dicom-file-input.dcm" ]`
             integration_hash: integration_hash parameter of Encord platform external storage integration
             redact_dicom_tags: Specifies if DICOM tags redaction should be enabled.
@@ -1500,7 +1550,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `folder_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorisationError` : If the folder with the given UUID does not exist or
+            :class:`encord.exceptions.AuthorisationError`: If the folder with the given UUID does not exist or
                 the user does not have access to it.
         """
         if isinstance(folder_uuid, str):
@@ -1519,7 +1569,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `item_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorisationError` : If the item with the given UUID does not exist or
+            :class:`encord.exceptions.AuthorisationError`: If the item with the given UUID does not exist or
                 the user does not have access to it.
         """
         if isinstance(item_uuid, str):
@@ -1543,7 +1593,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If any of the item uuids is a badly formed UUID.
-            :class:`encord.exceptions.AuthorisationError` : If some of the items with the given UUIDs do not exist or
+            :class:`encord.exceptions.AuthorisationError`: If some of the items with the given UUIDs do not exist or
                 the user does not have access to them.
         """
         internal_item_uuids: List[UUID] = [UUID(item) if isinstance(item, str) else item for item in item_uuids]
@@ -1661,7 +1711,7 @@ class EncordUserClient:
         started as with :meth:`start_client_metadata_patch_jobs`.
 
         Example:
-            ``failures = user_client.patch_storage_items_client_metadata({item_uuid: {"reviewed": True}})``
+            >>> failures = user_client.patch_storage_items_client_metadata({item_uuid: {"reviewed": True}})
 
         Args:
             patches: Mapping from item UUID to the keys to add, change or remove for that item.
@@ -1698,7 +1748,7 @@ class EncordUserClient:
         :meth:`patch_storage_items_client_metadata` to wait for the patches instead.
 
         Example:
-            ``jobs = user_client.start_client_metadata_patch_jobs({item_uuid: {"reviewed": True, "draft": None}})``
+            >>> jobs = user_client.start_client_metadata_patch_jobs({item_uuid: {"reviewed": True, "draft": None}})
 
         Args:
             patches: Mapping from item UUID to the keys to add, change or remove for that item.
@@ -1747,11 +1797,11 @@ class EncordUserClient:
         :meth:`patch_storage_items_client_metadata`.
 
         Example:
-            ``result = user_client.patch_storage_items_client_metadata_by_url({"gs://bucket/a.jpg": {"reviewed": True}})``
+            >>> result = user_client.patch_storage_items_client_metadata_by_url({"gs://bucket/a.jpg": {"reviewed": True}})
 
         Args:
             patches: Mapping from object URL to the keys to add, change or remove for the items with that URL.
-            folders: The folders to look in. Look in the whole organisation if omitted.
+            folders: The folders to look in. Look in the whole organization if omitted.
             timeout_seconds: How long to wait for all the patches to be applied.
 
         Returns:
@@ -1791,16 +1841,16 @@ class EncordUserClient:
         Each patch is applied as with :meth:`encord.storage.StorageItem.patch_client_metadata` to every item with that
         URL, as the same file can be in storage several times. You need to be able to edit every item found.
         Items are looked up directly in ``folders`` (not their subfolders) or, without ``folders``, anywhere in your
-        organisation; items in cloud synced folders are left out, as their client metadata can't be patched. The
+        organization; items in cloud synced folders are left out, as their client metadata can't be patched. The
         patches are split into jobs as with :meth:`start_client_metadata_patch_jobs`; check each job with
         :meth:`get_client_metadata_patch_job`.
 
         Example:
-            ``jobs = user_client.start_client_metadata_patch_jobs_by_url({"gs://bucket/a.jpg": {"reviewed": True}})``
+            >>> jobs = user_client.start_client_metadata_patch_jobs_by_url({"gs://bucket/a.jpg": {"reviewed": True}})
 
         Args:
             patches: Mapping from object URL to the keys to add, change or remove for the items with that URL.
-            folders: The folders to look in. Look in the whole organisation if omitted.
+            folders: The folders to look in. Look in the whole organization if omitted.
 
         Returns:
             The items found for each object URL (a URL that matches no item maps to an empty list), and the jobs
@@ -1822,7 +1872,7 @@ class EncordUserClient:
             return None
         return [folder.uuid if isinstance(folder, StorageFolder) else folder for folder in folders]
 
-    @deprecated("0.1.180", alternative="EncordUserClient.get_storage_items")
+    @deprecated("0.1.180", alternative="StorageFolder.find_items")
     def find_storage_items(
         self,
         *,
@@ -1837,7 +1887,11 @@ class EncordUserClient:
     ) -> Iterable[StorageItem]:
         """Recursively search for storage items, starting from the root level.
 
-        **Warning:** This method is slow. We recommend using `storage_folder.list_items` instead.
+        **Warning:** This method is slow. Use :meth:`encord.storage.StorageFolder.find_items` to search a folder and
+        its subfolders, :meth:`encord.storage.StorageFolder.list_items` to list a single folder, or
+        :meth:`encord.user_client.EncordUserClient.get_storage_items` if you already know the item UUIDs.
+
+        At least one of `search` or `item_types` must be provided.
 
         Args:
             search: Search string to filter items by name.
@@ -1852,8 +1906,6 @@ class EncordUserClient:
             desc: Sort in descending order.
             get_signed_urls: If True, return signed URLs for the items.
             page_size: Number of items to return per page. Default if not specified is 100. Maximum value is 1000.
-
-        At least one of `search` or `item_types` must be provided.
 
         Returns:
             Iterable of items in the folder.
@@ -1881,6 +1933,12 @@ class EncordUserClient:
         set_client_metadata_schema_from_dict(self._api_client, json_dict)
 
     def metadata_schema(self) -> MetadataSchema:
+        """Get the client metadata schema of your organization, to view and edit it.
+
+        Returns:
+            MetadataSchema: The organization's metadata schema. See :class:`encord.metadata_schema.MetadataSchema`
+                for details.
+        """
         return MetadataSchema(self._api_client)
 
     def get_collection(self, collection_uuid: Union[str, UUID]) -> Collection:
@@ -1894,7 +1952,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `collection_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorisationError` : If the item with the given UUID does not exist or
+            :class:`encord.exceptions.AuthorisationError`: If the item with the given UUID does not exist or
                 the user does not have access to it.
         """
         if isinstance(collection_uuid, str):
@@ -1909,8 +1967,8 @@ class EncordUserClient:
         page_size: Optional[int] = None,
     ) -> Iterator[Collection]:
         """Get collections by top level folder or list of collection IDs.
-        If both top_level_folder_uuid and collection_uuid_list are preset
-        then the intersection of the two conditions is returned.
+        If both `top_level_folder_uuid` and `collection_uuids` are provided, only collections that match both
+        are returned.
 
         Args:
             top_level_folder_uuid: The unique identifier of the top level folder.
@@ -1922,7 +1980,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `top_level_folder_uuid` or any of the collection uuids is a badly formed UUID.
-            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to it.
+            :class:`encord.exceptions.AuthorisationError`: If the user does not have access to it.
         """
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
@@ -1949,7 +2007,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `collection_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to it.
+            :class:`encord.exceptions.AuthorisationError`: If the user does not have access to it.
         """
         if isinstance(collection_uuid, str):
             collection_uuid = UUID(collection_uuid)
@@ -1970,12 +2028,106 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `top_level_folder_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to the folder.
+            :class:`encord.exceptions.AuthorisationError`: If the user does not have access to the folder.
         """
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
         new_uuid = Collection._create_collection(self._api_client, top_level_folder_uuid, name, description)
         return self.get_collection(new_uuid)
+
+    def create_label_set(
+        self,
+        name: str,
+        *,
+        sources: Sequence[ProjectSource],
+        description: str = "",
+        origin: LabelSetOrigin = LabelSetOrigin.WORKFLOW,
+    ) -> LabelSet:
+        """Create a label set fed by a project branch.
+
+        Creating a version captures the branch's labels into a frozen record. See :class:`encord.label_set.LabelSet`.
+
+        Example:
+            >>> label_set = user_client.create_label_set(
+            ...     "Model 7",
+            ...     sources=[ProjectSource(project_id=project_id, branch_name="preds/model-7")],
+            ...     origin=LabelSetOrigin.IMPORT,
+            ... )
+            >>> job_id = label_set.create_version_job()
+
+        Args:
+            name: Name of the label set.
+            sources: The project branches a version captures. The platform accepts one source today and refuses
+                more. ``main`` holds the labels made in the project; any other branch holds labels written from
+                outside, such as model predictions. Each source carries its own ``label_selection``:
+                :class:`encord.orm.label_set.AllSelection`, the default, is every label on the branch, and a
+                :class:`encord.orm.label_set.WorkflowStageSelection` captures the tasks at the given stages and
+                applies to the ``main`` branch only.
+            description: Description of the label set.
+            origin: Where the branch's labels come from. ``IMPORT`` for predictions and other labels written to the
+                branch from outside; such a set has no scheduled versions.
+
+        Returns:
+            LabelSet: The new label set.
+
+        Raises:
+            ValueError: ``origin`` is ``LabelSetOrigin.UNKNOWN``, which only appears on a set read from a platform
+                newer than this SDK and cannot be sent.
+            :class:`encord.exceptions.ResourceNotFoundError`: Label sets are not enabled for your organisation.
+            :class:`encord.exceptions.AuthorisationError`: You are not an admin or team manager on a source project.
+            :class:`encord.exceptions.EncordException`: More sources were given than the platform supports, or a
+                stage selection was given for a branch other than ``main``.
+        """
+        if origin == LabelSetOrigin.UNKNOWN:
+            raise ValueError(
+                "LabelSetOrigin.UNKNOWN cannot be sent. It stands for an origin this SDK version does not recognize; "
+                "pass LabelSetOrigin.WORKFLOW or LabelSetOrigin.IMPORT."
+            )
+        return LabelSet._create_label_set(self._api_client, name, sources, description, origin)
+
+    def get_label_set(self, label_set_id: Union[str, UUID]) -> LabelSet:
+        """Get a label set.
+
+        Args:
+            label_set_id: The label set.
+
+        Returns:
+            LabelSet: The label set. See :class:`encord.label_set.LabelSet`.
+
+        Raises:
+            ValueError: ``label_set_id`` is a badly formed UUID.
+            :class:`encord.exceptions.ResourceNotFoundError`: The label set does not exist, label sets are not enabled
+                for your organisation, or you have no role on the project that feeds it.
+        """
+        if isinstance(label_set_id, str):
+            label_set_id = UUID(label_set_id)
+        return LabelSet._get_label_set(self._api_client, label_set_id)
+
+    def list_label_sets(
+        self, *, project_id: Union[str, UUID, None] = None, page_size: Optional[int] = None
+    ) -> Iterator[LabelSet]:
+        """List the label sets you can see, newest first.
+
+        That is the sets fed by projects you have a role on, or every set in the organization if you manage all of
+        its projects.
+
+        Args:
+            project_id: Only the sets this project feeds.
+            page_size: Number of sets per page. Default 100, maximum 100.
+
+        Returns:
+            Iterator[LabelSet]: The label sets with their source IDs, projects and branches. Call
+            :meth:`encord.label_set.LabelSet.refetch_data` on a listed set and read its sources again before
+            accessing a source's ``label_selection``.
+
+        Raises:
+            ValueError: ``project_id`` is a badly formed UUID.
+            :class:`encord.exceptions.ResourceNotFoundError`: Label sets are not enabled for your organisation.
+            :class:`encord.exceptions.AuthorisationError`: You have no role on ``project_id``.
+        """
+        if isinstance(project_id, str):
+            project_id = UUID(project_id)
+        return LabelSet._list_label_sets(self._api_client, project_id=project_id, page_size=page_size)
 
     def get_filter_preset(self, preset_uuid: Union[str, UUID]) -> FilterPreset:
         """Get a preset by its unique identifier (UUID).
@@ -1988,7 +2140,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `preset_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorisationError` : If the item with the given UUID does not exist or
+            :class:`encord.exceptions.AuthorisationError`: If the item with the given UUID does not exist or
                 the user does not have access to it.
         """
         if isinstance(preset_uuid, str):
@@ -2009,7 +2161,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If any of the preset uuids is a badly formed UUID.
-            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to it.
+            :class:`encord.exceptions.AuthorisationError`: If the user does not have access to it.
         """
         internal_preset_uuids: List[UUID] = [
             UUID(collection) if isinstance(collection, str) else collection for collection in preset_uuids
@@ -2030,7 +2182,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `top_level_folder_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to it.
+            :class:`encord.exceptions.AuthorisationError`: If the user does not have access to it.
         """
         if isinstance(top_level_folder_uuid, str):
             top_level_folder_uuid = UUID(top_level_folder_uuid)
@@ -2045,7 +2197,7 @@ class EncordUserClient:
             filter_preset_json: The filters for the preset in their raw json format.
 
         Returns:
-            FilterPreset: Newly created collection.
+            FilterPreset: The newly created preset.
         """
         new_uuid = FilterPreset._create_preset(
             self._api_client, name, description=description, filter_preset_json=filter_preset_json
@@ -2063,7 +2215,7 @@ class EncordUserClient:
 
         Raises:
             ValueError: If `preset_uuid` is a badly formed UUID.
-            :class:`encord.exceptions.AuthorisationError` : If the user does not have access to it.
+            :class:`encord.exceptions.AuthorisationError`: If the user does not have access to it.
         """
         if isinstance(preset_uuid, str):
             preset_uuid = UUID(preset_uuid)
@@ -2073,7 +2225,7 @@ class EncordUserClient:
 class ListingFilter(Enum):
     """Available properties_filter keys for get_projects() and get_datasets().
 
-    The values for *_before* and *_after* should be datetime objects.
+    The values for `*_before` and `*_after` should be datetime objects.
     """
 
     TITLE_EQ = "title_eq"

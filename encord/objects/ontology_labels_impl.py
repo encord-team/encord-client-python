@@ -451,20 +451,21 @@ class LabelRowV2:
 
     @property
     def is_event_based(self) -> bool:
-        """Whether this label row sits on a continuous timeline rather than a frame grid.
+        """Whether this label row is on a continuous timeline instead of a frame grid.
 
-        True when the enriched label-row response marks the scene as continuous, which is the case for a
-        self-contained (MCAP) recording. Such a row has no frame grid: positions are nanosecond offsets, so
-        classifications are held as ranges rather than as an entry per frame. ``DataType.SCENE`` is otherwise
-        bucketed with the geometric (frame-based) types, and the generic parse path would treat those
-        classifications as frame labels and fail validation. Legacy initialized rows carrying no scene metadata
-        are not event-based.
+        This is `True` for scenes from self-contained (MCAP) recordings, and `False` for all other label rows. On an
+        event-based label row, frame numbers are nanosecond offsets from the start of the recording, and classifications
+        are stored as ranges instead of one entry per frame.
 
-        Root geometric objects on such a row are stored as sparse upsert/delete events: frame-based reads on
-        :class:`~encord.objects.ObjectInstance` resolve to read-only views and frame-based writes raise; use
-        `ObjectInstance.upsert_event` and friends.
+        Geometric objects on an event-based label row are stored as keyframe events. Per-frame reads on an
+        :class:`encord.objects.ontology_object_instance.ObjectInstance` return read-only views, and per-frame writes
+        raise an error. Use `ObjectInstance.upsert_event` and `ObjectInstance.delete_event` to write them instead.
 
-        Labels must be initialized before reading this property.
+        Returns:
+            bool: `True` if the label row is event-based, `False` otherwise.
+
+        Raises:
+            LabelRowError: If labels have not been initialized.
         """
         if self._event_based is not None:
             return self._event_based
@@ -709,12 +710,12 @@ class LabelRowV2:
 
     @property
     def group_hash(self) -> Optional[str]:
-        """Returns the group hash of the data row.
+        """Returns the hash of the data group that this data unit belongs to.
 
-        Only present if this label row is a child of a data group
+        Only set if this label row is a child of a data group.
 
         Returns:
-            Optional[str]: The data group hash.
+            Optional[str]: The data group hash, or `None` if the data unit is not part of a data group.
         """
         return self._label_row_read_only_data.group_hash
 
@@ -756,34 +757,44 @@ class LabelRowV2:
 
     @property
     def file_type(self) -> Optional[str]:
-        """Returns the file type of the data row.
+        """Returns the MIME type of the file, for example `image/jpeg`, `video/mp4`, or `text/html`.
+
+        This is `None` for image groups once labels are initialized, because an image group has no single underlying
+        file. Use :meth:`encord.objects.ontology_labels_impl.LabelRowV2.get_frames_metadata` to get the file type of
+        each image.
 
         Returns:
-            str | None: The file type or None if not set.
+            Optional[str]: The MIME type, or `None` if not set.
         """
         return self._label_row_read_only_data.file_type
 
     @property
     def client_metadata(self) -> Optional[dict]:
-        """Returns the client metadata associated with the label row.
+        """Returns the client metadata of the data unit.
+
+        This is only populated if the label row was listed with `include_client_metadata=True`, for example
+        `project.list_label_rows_v2(include_client_metadata=True)`. Otherwise, it is `None`.
 
         Returns:
-            dict | None: The client metadata or None if not set.
+            Optional[dict]: The client metadata, or `None` if it was not requested or is not set.
         """
         return self._label_row_read_only_data.client_metadata
 
     @property
     def label_status(self) -> LabelStatus:
-        """Returns the current labeling status for the label row.
+        """Returns the current labeling status of the label row.
 
-        **Note**: This method is not supported for workflow-based projects. Please see our
-        :ref:`workflow documentation <tutorials/workflows:Workflows>` for more details.
+        Only supported for projects that don't use workflows. For workflow projects, use
+        :class:`encord.objects.ontology_labels_impl.LabelRowV2.workflow_graph_node` instead.
+
+        For more details, see the
+        [workflow documentation](https://docs.encord.com/sdk-documentation/projects-sdk/sdk-workflows-stages).
 
         Returns:
             LabelStatus: The current labeling status.
 
         Raises:
-            WrongProjectTypeError: If used with workflow-based projects.
+            WrongProjectTypeError: If used with a workflow project.
         """
         if self.__is_tms2_project:
             raise WrongProjectTypeError(
@@ -795,16 +806,19 @@ class LabelRowV2:
 
     @property
     def annotation_task_status(self) -> AnnotationTaskStatus:
-        """Returns the current annotation task status for the label row.
+        """Returns the current annotation task status of the label row.
 
-        **Note**: This method is not supported for workflow-based projects. Please see our
-        :ref:`workflow documentation <tutorials/workflows:Workflows>` for more details.
+        Only supported for projects that don't use workflows. For workflow projects, use
+        :class:`encord.objects.ontology_labels_impl.LabelRowV2.workflow_graph_node` instead.
+
+        For more details, see the
+        [workflow documentation](https://docs.encord.com/sdk-documentation/projects-sdk/sdk-workflows-stages).
 
         Returns:
             AnnotationTaskStatus: The current annotation task status.
 
         Raises:
-            WrongProjectTypeError: If used with workflow-based projects.
+            WrongProjectTypeError: If used with a workflow project.
         """
         if self.__is_tms2_project:
             raise WrongProjectTypeError(
@@ -827,10 +841,13 @@ class LabelRowV2:
 
     @property
     def is_shadow_data(self) -> bool:
-        """Indicates if the label row is shadow data.
+        """Indicates whether the data unit is shadow data.
+
+        Shadow data is a per-user copy of a data unit. Encord creates shadow data when a project is linked to a source
+        project for Benchmark QA or annotator training.
 
         Returns:
-            bool: True if the label row is shadow data, False otherwise.
+            bool: `True` if the data unit is shadow data, `False` otherwise.
         """
         return self._label_row_read_only_data.is_shadow_data
 
@@ -974,15 +991,15 @@ class LabelRowV2:
 
     @property
     def task_uuid(self) -> Optional[UUID]:
-        """Returns the workflow task uuids for the task associated with the data unit.
+        """Returns the UUID of the workflow task for this data unit.
 
-        This property only works for workflow-based projects.
+        Only works for workflow projects.
 
         Returns:
-            Optional[UUID]: The workflow task uuid or None if not applicable.
+            Optional[UUID]: The workflow task UUID, or `None` if not applicable.
 
         Raises:
-            WrongProjectTypeError: If used with non-workflow-based projects.
+            WrongProjectTypeError: If used with a project that doesn't use workflows.
         """
         if not self.__is_tms2_project:
             raise WrongProjectTypeError('"task_uuid" property only works with workflow-based projects.')
@@ -991,17 +1008,15 @@ class LabelRowV2:
 
     @property
     def priority(self) -> Optional[float]:
-        """Returns the workflow priority for the task associated with the data unit.
+        """Returns the priority of the workflow task for this data unit.
 
-        This property only works for workflow-based projects.
-
-        It is None for label rows in the "complete" state.
+        Only works for workflow projects. This is `None` for label rows in the Complete stage.
 
         Returns:
-            Optional[float]: The workflow priority or None if not applicable.
+            Optional[float]: The task priority, from 0.0 to 1.0, or `None` if not applicable.
 
         Raises:
-            WrongProjectTypeError: If used with non-workflow-based projects.
+            WrongProjectTypeError: If used with a project that doesn't use workflows.
         """
         if not self.__is_tms2_project:
             raise WrongProjectTypeError('"priority" property only works with workflow-based projects.')
@@ -1027,27 +1042,38 @@ class LabelRowV2:
 
     @property
     def ontology_structure(self) -> OntologyStructure:
-        """Get the corresponding ontology structure."""
+        """Returns the ontology structure of the project that this label row belongs to.
+
+        Use it to find the ontology objects and classifications that you need to create object and classification
+        instances, for example with `label_row.ontology_structure.get_child_by_title("Car", type_=Object)`.
+
+        Returns:
+            OntologyStructure: The ontology structure.
+        """
         return self._ontology.structure
 
     @property
     def is_labelling_initialised(self) -> bool:
-        """Check if labelling is initialized.
+        """Checks whether labels have been initialized.
+
+        If this is `False`, call :meth:`encord.objects.ontology_labels_impl.LabelRowV2.initialise_labels` before you
+        read or write object or classification instances.
 
         Returns:
-            bool: `True` if labelling is initialized, `False` otherwise.
-
-        If this is `False`, call the :meth:`encord.objects.ontology_labels_impl.LabelRowV2.initialise_labels` method to read or write specific
-        ObjectInstances or ClassificationInstances.
+            bool: `True` if labels are initialized, `False` otherwise.
         """
         return self._is_labelling_initialised
 
     @property
     def is_detached(self) -> bool:
-        """Check if this label row is detached (not connected to the Encord platform).
+        """Checks whether this label row is detached (not connected to Encord).
 
-        Detached label rows are created via :meth:`from_media_metadata` and cannot
-        perform server operations until attached via :meth:`attach_to_project`.
+        Detached label rows are created with :meth:`encord.objects.ontology_labels_impl.LabelRowV2.from_media_metadata`
+        and can't perform server operations until you attach them to a project with
+        :meth:`encord.objects.ontology_labels_impl.LabelRowV2.attach_to_project`.
+
+        Returns:
+            bool: `True` if the label row is detached, `False` otherwise.
         """
         return self._is_detached
 
@@ -1057,27 +1083,43 @@ class LabelRowV2:
 
     @property
     def assigned_user_email(self) -> Optional[str]:
-        """Email of the user assigned to annotation or review task for a workflow-based project.
-        In case of completed task, it is None.
+        """Returns the email of the user assigned to the current annotation or review task.
+
+        Only applies to workflow projects. This is `None` when the task is complete or nobody is assigned.
 
         Returns:
-            str | None: The email of the user assigned to the data.
-
+            Optional[str]: The email of the assigned user, or `None`.
         """
         return self._label_row_read_only_data.assigned_user_email
 
     @property
     def last_actioned_by_user_email(self) -> Optional[str]:
-        """Email of the user who last actioned the data.
+        """Returns the email of the user who last acted on the task for this data unit.
 
         Returns:
-            str | None: The email of the user who last actioned the data.
+            Optional[str]: The email of the user who last acted on the task, or `None`.
         """
         return self._label_row_read_only_data.last_actioned_by_user_email
 
     def get_storage_item(self, get_signed_urls: bool = False) -> StorageItem:
-        """Returns the storage item associated with the label row.
-        This function can be used to get storage item details like storage folder, signed url, created at, item type, client metadata, etc.
+        """Returns the storage item that backs this label row.
+
+        Use the storage item to get details such as the storage folder, signed URL, creation date, item type, and client
+        metadata.
+
+        The storage item is fetched on the first call (or by
+        :meth:`encord.objects.ontology_labels_impl.LabelRowV2.initialise_storage_item`) and then cached, so
+        `get_signed_urls` only takes effect if the item has not been fetched yet. `StorageItem.get_signed_url()` fetches
+        a signed URL on demand if the cached item doesn't have one.
+
+        Args:
+            get_signed_urls: If `True`, request a signed URL when fetching the storage item.
+
+        Returns:
+            StorageItem: The storage item.
+
+        Raises:
+            LabelRowError: If the label row is detached or has no backing storage item.
         """
         self._check_not_detached("get_storage_item")
         if self._label_row_read_only_data.backing_item_uuid is None:
@@ -1093,15 +1135,19 @@ class LabelRowV2:
         return self._storage_item
 
     def initialise_storage_item(self, get_signed_url: bool = False, bundle: Optional[Bundle] = None) -> None:
-        """Initialize the storage item associated with the label row.
+        """Fetches the storage item that backs this label row from Encord and caches it.
 
-        This function will download the storage item details from the Encord server.
-        if you want to get the signed url, you can set the get_signed_url to True.
+        After this call, :meth:`encord.objects.ontology_labels_impl.LabelRowV2.get_storage_item` returns the cached item
+        without making another request. Pass a bundle to fetch the storage items of many label rows in fewer requests.
 
         Args:
-            get_signed_url: If `True`,is set true, you can get the signed url from LabelRowV2.get_storage_item().get_signed_url()
-            bundle: If not provided, initialization is performed independently. If provided,
-                initialization is delayed and performed along with other objects in the same bundle.
+            get_signed_url: If `True`, request a signed URL for the item. You can then read it with
+                `label_row.get_storage_item().get_signed_url()`.
+            bundle: If not provided, the storage item is fetched immediately. If provided, the fetch is deferred and
+                performed together with the other operations in the bundle.
+
+        Raises:
+            LabelRowError: If the label row is detached or has no backing storage item.
         """
         self._check_not_detached("initialise_storage_item")
 
@@ -1138,32 +1184,42 @@ class LabelRowV2:
         *,
         include_signed_url: bool = False,
     ) -> None:
-        """Initialize labels from the Encord server.
+        """Downloads the labels for this label row from Encord so that you can read and edit them.
 
-        This function downloads or exports labels stored on the Encord server and performs
-        any other reading or writing operations. If you only want to inspect a subset of labels,
-        you can filter them. Note that filtering and later uploading will delete all previously
-        filtered labels.
+        Call this method (or :meth:`encord.objects.ontology_labels_impl.LabelRowV2.from_labels_dict`) before you read or
+        write object and classification instances. If the label row doesn't exist on Encord yet (`label_hash` is
+        `None`), this method creates it.
 
-        If the label is not in progress, this sets the label status to `LabelStatus.LABEL_IN_PROGRESS`.
+        To download only some labels, filter by feature hash. Only use filters to read labels. If you save a label row
+        that was initialized with a filter, the labels that were filtered out are deleted from Encord.
+
+        Pass a bundle to initialize many label rows in fewer requests.
 
         Args:
-            include_object_feature_hashes: If `None`, all objects will be included. Otherwise,
-                only objects with the specified feature hashes will be included.
-                WARNING: Use this filter only for reading labels. Saving a filtered subset will
-                delete all other object instances stored in the Encord platform.
-            include_classification_feature_hashes: If `None`, all classifications will be included.
-                Otherwise, only classifications with the specified feature hashes will be included.
-                WARNING: Use this filter only for reading labels. Saving a filtered subset will
-                delete all other classification instances stored in the Encord platform.
-            include_reviews: Whether to request read-only information about the reviews of the label row.
-            include_archived: Whether to include labels whose ontology features are archived
-            overwrite: If `True`, overwrite current labels with those stored in the Encord server.
-                If `False` and the label row is already initialized, this function will raise an error.
-            bundle: If not provided, initialization is performed independently. If provided,
-                initialization is delayed and performed along with other objects in the same bundle.
-            include_signed_url: If `True`, the :attr:`.data_link` property will contain a signed URL.
-                See documentation for :attr:`.data_link` for more details.
+            include_object_feature_hashes: If `None`, all objects are included. Otherwise, only objects with these
+                feature hashes are included. Saving a label row initialized with this filter deletes all other objects
+                from Encord.
+            include_classification_feature_hashes: If `None`, all classifications are included. Otherwise, only
+                classifications with these feature hashes are included. Saving a label row initialized with this filter
+                deletes all other classifications from Encord.
+            include_reviews: If `True`, also download read-only information about the reviews of the label row.
+            include_archived: If `True`, also include labels whose ontology features are archived.
+            overwrite: If `True`, replace any labels already held in this object with the labels stored on Encord. If
+                `False` and labels are already initialized, an error is raised.
+            bundle: If not provided, labels are downloaded immediately. If provided, the download is deferred and
+                performed together with the other operations in the bundle.
+            include_signed_url: If `True`, :class:`encord.objects.ontology_labels_impl.LabelRowV2.data_link` contains a
+                signed URL.
+
+        Raises:
+            LabelRowError: If labels are already initialized and `overwrite` is `False`, or if the label row is
+                detached.
+
+        Example:
+            >>> label_row = project.list_label_rows_v2(data_title_eq="my_image.jpg")[0]
+            >>> label_row.initialise_labels()
+            >>> for object_instance in label_row.get_object_instances():
+            ...     print(object_instance.object_name)
         """
         self._check_not_detached("initialise_labels")
         if self.is_labelling_initialised and not overwrite:
@@ -1267,7 +1323,7 @@ class LabelRowV2:
             self._apply_identity(**saved_identity)
 
     def get_image_hash(self, frame_number: int) -> Optional[str]:
-        """Get the corresponding image hash for the frame number.
+        """Returns the image hash for a frame number.
 
         Args:
             frame_number: The frame number.
@@ -1276,7 +1332,7 @@ class LabelRowV2:
             Optional[str]: The image hash if the frame number is within bounds, `None` otherwise.
 
         Raises:
-            LabelRowError: If this function is used for non-image data types.
+            LabelRowError: If labels have not been initialized, or if the data type is not an image or image group.
         """
         self._check_labelling_is_initalised()
 
@@ -1314,16 +1370,17 @@ class LabelRowV2:
         return ret
 
     def get_frame_number(self, image_hash: str) -> Optional[int]:
-        """Get the corresponding frame number for the image hash.
+        """Returns the frame number for an image hash.
 
         Args:
             image_hash: The image hash.
 
         Returns:
-            Optional[int]: The frame number if the image hash is found, `None` otherwise.
+            Optional[int]: The frame number of the image.
 
         Raises:
-            LabelRowError: If this function is used for non-image data types.
+            LabelRowError: If labels have not been initialized, or if the data type is not an image or image group.
+            KeyError: If the image hash is not in the label row.
         """
         self._check_labelling_is_initalised()
 
@@ -1332,18 +1389,18 @@ class LabelRowV2:
         return self._label_row_read_only_data.image_hash_to_frame[image_hash]
 
     def get_spaces(self) -> list[Space]:
-        """Retrieves all spaces in the data unit.
+        """Returns all spaces in the label row.
 
-        Use this to view the available spaces. To work on a specific space, we
-        recommend using `LabelRowV2.get_space()`.
+        Use this to see which spaces are available. To work with a specific space, use
+        :meth:`encord.objects.ontology_labels_impl.LabelRowV2.get_space`.
+
+        On a scene from a self-contained (MCAP) recording, the label row has no space metadata, so this method only
+        lists the spaces it can infer. These are point clouds that have labels stored under a `stream@timestamp_ns` key,
+        time series channels referenced by labels, and spaces that you already requested by ID. The list can be empty
+        and is not a full inventory of the recording. Use `get_space(id=..., type_=...)` to get the space you want.
 
         Returns:
-            A list of all Space objects.
-
-        On a self-contained (MCAP) scene the row carries no space metadata, so this lists only spaces taken on
-        trust: point clouds with labels stored under a `stream@timestamp_ns` key, time-series channels referenced
-        by annotations, and spaces already asked for by id. It may be empty and is not a complete inventory of the
-        recording; use `get_space(id=..., type_=...)` for the space you want.
+            list[Space]: All spaces in the label row.
         """
         return list(self._space_map.values())
 
@@ -1454,27 +1511,32 @@ class LabelRowV2:
         start_frame: Optional[int] = None,
         file_name: Optional[str] = None,
     ) -> Space:
-        """Retrieves a single space which matches the specified id and type.
+        """Returns the space that matches the given identifier and type.
 
-        Throws an exception if more than one or no space with the specified id and type is found.
+        Identify the space with one of `id`, `layout_key`, `stream_id`, or `file_name`. You can't pass both `id` and
+        `layout_key`.
 
-        On a self-contained (MCAP) scene, asking for `type_="point_cloud"` by an `id` of the form
-        `stream@timestamp_ns` that the row has no labels for creates that space, empty, so segmentations can be
-        written to it. Asking for `type_="time_series"` by a non-empty channel id does the same for time-range
-        annotations. The row has no metadata for such spaces and takes the id and requested type on trust.
+        On a scene from a self-contained (MCAP) recording, requesting `type_="point_cloud"` with an `id` of the form
+        `stream@timestamp_ns` that has no labels yet creates an empty space, so that you can add segmentations to it.
+        Requesting `type_="time_series"` with a non-empty channel ID does the same for time range labels. The label row
+        has no metadata for these spaces, so the ID and type that you pass are used as given.
 
         Args:
-            id: The id of the space to find.
+            id: The ID of the space.
             layout_key: The layout key of the data unit within its data group layout.
-            type_: Type to check the type of the space.
-            stream_id: For scenes - the name of the stream to find.
-            event_index: For scenes - the event index within `stream_id`. Defaults to 0.
-            start_frame: For scene images - the frame where the image event starts.
-            file_name: The name of the file associated to the space
+            type_: The expected space type, for example `"image"`, `"video"`, or `"point_cloud"`. The space that is
+                found must be of this type.
+            stream_id: For scenes, the name of the stream.
+            event_index: For scenes, the event index within `stream_id`. Defaults to 0.
+            start_frame: For scene images, the frame where the image event starts. Used instead of `event_index` if set.
+            file_name: The name of the file associated with the space.
+
         Returns:
-            The child node with the specified title and type.
+            Space: The matching space, as the space class that matches `type_`.
+
         Raises:
-            OntologyError: If more than one or no matching child is found.
+            LabelRowError: If both `id` and `layout_key` are passed, if no matching space is found, or if the matching
+                space is not of the type given in `type_`.
         """
         if id is not None and layout_key is not None:
             raise LabelRowError("Only one of id and layout_key can be specified.")
@@ -1565,17 +1627,31 @@ class LabelRowV2:
         validate_before_saving: bool = False,
         renumber_objects: bool = False,
     ) -> None:
-        """Upload the created labels to the Encord server.
+        """Uploads the labels in this label row to Encord.
 
-        This will overwrite any labels that someone else has created on the platform in the meantime.
+        This overwrites the labels stored on Encord, including any changes that someone else made after you called
+        :meth:`encord.objects.ontology_labels_impl.LabelRowV2.initialise_labels`.
 
         Args:
-            bundle: If not provided, save is executed immediately. If provided, save is executed
-                as part of the bundle.
-            validate_before_saving: Enable stricter server-side integrity checks. Default is `False`.
-            renumber_objects: If `True`, recomputes every object's number on save, ignoring any
-                currently-set `object_number` values - including ones read back from the server, not just ones
-                you set yourself. Default `False` keeps existing numbers as-is.
+            bundle: If not provided, labels are saved immediately. If provided, the save is deferred and performed
+                together with the other operations in the bundle.
+            validate_before_saving: If `True`, Encord validates the labels against the project ontology and rejects the
+                save if they are invalid. If `False` (default), the labels are saved without this check. You can check
+                them afterwards with :class:`encord.objects.ontology_labels_impl.LabelRowV2.is_valid` and
+                :meth:`encord.objects.ontology_labels_impl.LabelRowV2.get_validation_errors`.
+            renumber_objects: If `True`, recompute the number of every object when saving, ignoring any `object_number`
+                values that are set, including values read from Encord. If `False` (default), existing numbers are kept.
+
+        Raises:
+            LabelRowError: If labels have not been initialized, if the label row is detached, or if two objects of the
+                same ontology object have the same `object_number`. Object numbers are only checked when
+                `renumber_objects` is `False`.
+            CorruptedLabelError: If `validate_before_saving` is `True` and the labels are invalid.
+
+        Example:
+            >>> label_row.initialise_labels()
+            >>> # Add, change, or remove labels here.
+            >>> label_row.save()
         """
         self._check_not_detached("save")
         self._check_labelling_is_initalised()
@@ -1595,31 +1671,34 @@ class LabelRowV2:
 
     @property
     def metadata(self) -> Optional[Union[DICOMSeriesMetadata, DataGroupMetadata]]:
-        """Get metadata for the given data type.
+        """Returns the metadata of DICOM series and data groups.
 
         Returns:
-            Optional[DICOMSeriesMetadata]: Metadata for the data type, or `None` if not supported.
+            Optional[Union[DICOMSeriesMetadata, DataGroupMetadata]]: `DICOMSeriesMetadata` for DICOM data,
+                `DataGroupMetadata` for data groups, or `None` for other data types.
 
-        Currently only supported for DICOM. Returns `None` for other formats.
-
-        Label row needs to be initialized before using this property.
+        Raises:
+            LabelRowError: If labels have not been initialized.
         """
         self._check_labelling_is_initalised()
         return self._metadata
 
     def get_frame_view(self, frame: Union[int, str] = 0) -> FrameView:
-        """Get a view of the specified frame.
+        """Returns a view of a single frame, which you can use to read and write the labels on that frame.
+
+        On an event-based label row, `frame` is a nanosecond offset. Object reads on the view return every object whose
+        range covers that offset, not only the objects with a keyframe at that offset. Adding objects through the view
+        raises an error.
 
         Args:
-            frame: Either the frame number or the image hash if the data type is an image or image group.
-                Defaults to the first frame.
+            frame: The frame number, or the image hash for image and image group data. Defaults to the first frame.
 
         Returns:
-            FrameView: A view of the specified frame.
+            FrameView: A view of the frame.
 
-        On an event-based label row `frame` is a nanosecond offset. The view resolves: its object reads return
-        every object whose range covers that offset, not only the ones with a keyframe exactly on it. Writing
-        through the view is refused by `FrameView.add_object_instance`.
+        Raises:
+            LabelRowError: If labels have not been initialized, or if the data type is audio or time series.
+            KeyError: If `frame` is an image hash that is not in the label row.
         """
         self._method_not_supported_for_range_data_type()
 
@@ -1652,16 +1731,20 @@ class LabelRowV2:
         return images_data
 
     def get_frame_metadata(self, frame: Union[int, str] = 0) -> FrameViewMetadata:
-        """Get metadata for a specific frame or image hash.
+        """Returns metadata for a single frame, such as its title, file type, and dimensions.
+
+        Works for images, videos, and image groups, and doesn't require labels to be initialized. For image groups, the
+        label row must have been listed with `include_images_data=True`.
 
         Args:
             frame: The frame number or the image hash. Defaults to the first frame.
 
         Returns:
-            FrameViewMetadata: Metadata for the specified frame or image hash.
+            FrameViewMetadata: Metadata for the frame.
 
         Raises:
-            LabelRowError: If the specified frame or image hash is not found in the label row.
+            LabelRowError: If the frame or image hash is not found, if the data type is not supported, or if image data
+                is missing for an image group.
         """
         self._method_not_supported_for_range_data_type()
 
@@ -1686,10 +1769,16 @@ class LabelRowV2:
         return self.FrameViewMetadata(data_meta)
 
     def get_frames_metadata(self) -> List[FrameViewMetadata]:
-        """Get metadata for all frames in the image group.
+        """Returns metadata for all frames, such as their titles, file types, and dimensions.
+
+        Works for images, videos, and image groups, and doesn't require labels to be initialized. For images and videos,
+        the list has one entry. For image groups, the label row must have been listed with `include_images_data=True`.
 
         Returns:
-            List[FrameViewMetadata]: A list of metadata for each frame.
+            List[FrameViewMetadata]: Metadata for each frame.
+
+        Raises:
+            LabelRowError: If the data type is not supported, or if image data is missing for an image group.
         """
         views = []
 
@@ -1700,13 +1789,13 @@ class LabelRowV2:
         return views
 
     def get_frame_views(self) -> List[FrameView]:
-        """Get views for all frames.
+        """Returns views of all frames.
 
         Returns:
-            List[FrameView]: A list of frame views in order of available frames.
+            List[FrameView]: A list of frame views, in frame order.
 
         Raises:
-            LabelRowError: If the label row is event-based.
+            LabelRowError: If labels have not been initialized, or if the label row is event-based.
         """
         self._check_labelling_is_initalised()
         self._check_not_event_based(
@@ -1722,14 +1811,27 @@ class LabelRowV2:
     def get_object_instances(
         self, filter_ontology_object: Optional[Object] = None, filter_frames: Optional[Frames] = None
     ) -> List[ObjectInstance]:
-        """Get all object instances that match the given filters.
+        """Returns all object instances on the label row that match the given filters.
+
+        Only objects on the label row itself are returned. Objects placed on a space, for example in a data group, are
+        not included. To get those, use :meth:`encord.objects.ontology_labels_impl.LabelRowV2.get_space` and the space's
+        `get_object_instances()` method.
 
         Args:
-            filter_ontology_object: Optionally filter by a specific ontology object.
-            filter_frames: Optionally filter by specific frames.
+            filter_ontology_object: Optionally, only return instances of this ontology object.
+            filter_frames: Optionally, only return objects that appear on these frames.
 
         Returns:
-            List[ObjectInstance]: A list of `ObjectInstance`s that match the filters.
+            List[ObjectInstance]: The object instances that match the filters.
+
+        Raises:
+            LabelRowError: If labels have not been initialized.
+
+        Example:
+            >>> from encord.objects import Object
+            >>> label_row.initialise_labels()
+            >>> car = label_row.ontology_structure.get_child_by_title("Car", type_=Object)
+            >>> cars = label_row.get_object_instances(filter_ontology_object=car)
         """
         self._check_labelling_is_initalised()
 
@@ -1868,17 +1970,38 @@ class LabelRowV2:
                 _check(object_hash, instance)
 
     def add_object_instance(self, object_instance: ObjectInstance, force: bool = True) -> None:
-        """Add an object instance to the label row. If the object instance already exists, it overwrites the current instance.
+        """Adds an object instance to the label row.
 
-        On an event-based row, an empty geometric object can be attached before its first `upsert_event`.
-        Saving the row raises until that first event is written, or the object is removed.
+        Create the object instance from an ontology object, set its coordinates on one or more frames, and then add it
+        to the label row. Call :meth:`encord.objects.ontology_labels_impl.LabelRowV2.save` to upload it.
+
+        On an event-based label row, you can add an empty geometric object and then write its keyframes with
+        `ObjectInstance.upsert_event`. Saving the label row raises an error until the object has at least one event, or
+        until you remove the object.
 
         Args:
             object_instance: The object instance to add.
-            force: If `True`, overwrites the current objects; otherwise, it will replace the current object.
+            force: If `True` (default), an object instance with the same object hash that is already on the label row is
+                replaced. If `False`, an error is raised instead.
 
         Raises:
-            LabelRowError: If the object instance is already part of another LabelRowV2.
+            LabelRowError: If labels have not been initialized, if the object instance is already on a label row or a
+                space, if an object instance with the same object hash exists and `force` is `False`, if the object
+                instance is not on any frames, or if the object instance doesn't fit the data type. For example, audio
+                and time series data need range-only objects, and HTML files need objects with HTML coordinates.
+
+        Example:
+            >>> from encord.objects import Object
+            >>> from encord.objects.coordinates import BoundingBoxCoordinates
+            >>> label_row.initialise_labels()
+            >>> car = label_row.ontology_structure.get_child_by_title("Car", type_=Object)
+            >>> car_instance = car.create_instance()
+            >>> car_instance.set_for_frames(
+            ...     coordinates=BoundingBoxCoordinates(height=0.2, width=0.3, top_left_x=0.1, top_left_y=0.1),
+            ...     frames=0,
+            ... )
+            >>> label_row.add_object_instance(car_instance)
+            >>> label_row.save()
         """
         self._method_not_supported_for_range_data_type(range_only=object_instance.is_range_only())
 
@@ -1949,14 +2072,33 @@ class LabelRowV2:
         self._add_to_frame_to_hashes_map(object_instance, object_instance._stored_frames())
 
     def add_classification_instance(self, classification_instance: ClassificationInstance, force: bool = False) -> None:
-        """Add a classification instance to the label row.
+        """Adds a classification instance to the label row.
+
+        For images, videos, image groups, DICOM, NIfTI, PDF, and data groups, set the frames of the classification
+        instance with `ClassificationInstance.set_for_frames` before you add it. For audio, text, and time series data,
+        and for event-based label rows, create the classification instance with `range_only=True`.
 
         Args:
             classification_instance: The classification instance to add.
-            force: If `True`, overwrites the current objects; otherwise, it will replace the current object.
+            force: If `False` (default), an error is raised if the label row already has a classification instance with
+                the same classification hash, or an instance of the same classification on any of the same frames. If
+                `True`, the instance is added anyway. An instance with the same classification hash is replaced, and for
+                a global classification, all other instances of the same classification are removed.
 
         Raises:
-            LabelRowError: If the classification instance is already part of another LabelRowV2 or has overlapping frames.
+            LabelRowError: If labels have not been initialized, if the classification instance is already on a label row
+                or a space, if it conflicts with an existing instance and `force` is `False`, if it is not on any
+                frames, or if it was not created with `range_only=True` on data that requires it.
+
+        Example:
+            >>> from encord.objects import Classification
+            >>> label_row.initialise_labels()
+            >>> notes = label_row.ontology_structure.get_child_by_title("Notes", type_=Classification)
+            >>> notes_instance = notes.create_instance()
+            >>> notes_instance.set_answer("Taken at night")
+            >>> notes_instance.set_for_frames(frames=0)
+            >>> label_row.add_classification_instance(notes_instance)
+            >>> label_row.save()
         """
         self._check_labelling_is_initalised()
 
@@ -1968,7 +2110,6 @@ class LabelRowV2:
         classification_instance.is_valid()
         classification_hash = classification_instance.classification_hash
 
-        # TODO: Need to update the docstring for this method, talk to Laverne.
         if not classification_instance.is_range_only() and not is_geometric(self.data_type):
             raise LabelRowError(
                 f"To add a ClassificationInstance object to a label row where data_type = {self.data_type},"
@@ -2060,10 +2201,15 @@ class LabelRowV2:
         self._classifications_to_ranges[classification_instance.ontology_item].add_ranges(ranges_to_add)
 
     def remove_classification(self, classification_instance: ClassificationInstance):
-        """Remove a classification instance from a label row.
+        """Removes a classification instance from the label row.
 
         Args:
             classification_instance: The classification instance to remove.
+
+        Raises:
+            LabelRowError: If labels have not been initialized, or if the classification instance is on a space. Use the
+                space's own methods to remove it.
+            KeyError: If the classification instance is not on the label row.
         """
         self._check_labelling_is_initalised()
 
@@ -2108,14 +2254,21 @@ class LabelRowV2:
     def get_classification_instances(
         self, filter_ontology_classification: Optional[Classification] = None, filter_frames: Optional[Frames] = None
     ) -> List[ClassificationInstance]:
-        """Get all classification instances that match the given filters.
+        """Returns all classification instances on the label row that match the given filters.
+
+        Only classifications on the label row itself are returned. Classifications placed on a space, for example in a
+        data group, are not included. To get those, use :meth:`encord.objects.ontology_labels_impl.LabelRowV2.get_space`
+        and the space's `get_classification_instances()` method.
 
         Args:
-            filter_ontology_classification: Optionally filter by a specific ontology classification.
-            filter_frames: Optionally filter by specific frames.
+            filter_ontology_classification: Optionally, only return instances of this ontology classification.
+            filter_frames: Optionally, only return classifications that appear on these frames.
 
         Returns:
-            List[ClassificationInstance]: All the `ClassificationInstance`s that match the filter.
+            List[ClassificationInstance]: The classification instances that match the filters.
+
+        Raises:
+            LabelRowError: If labels have not been initialized.
         """
         self._check_labelling_is_initalised()
 
@@ -2213,10 +2366,16 @@ class LabelRowV2:
         return ret
 
     def remove_object(self, object_instance: ObjectInstance):
-        """Remove an object instance from a label row.
+        """Removes an object instance from the label row.
+
+        Does nothing if the object instance is not on the label row.
 
         Args:
             object_instance: The object instance to remove.
+
+        Raises:
+            LabelRowError: If labels have not been initialized, or if the object instance is on a space. Use the space's
+                own methods to remove it.
         """
         self._check_labelling_is_initalised()
 
@@ -2232,20 +2391,22 @@ class LabelRowV2:
         object_instance._parent = None
 
     def to_encord_dict(self, renumber_objects: bool = False) -> Dict[str, Any]:
-        """Convert the label row to a dictionary in Encord format.
+        """Returns the labels in this label row as a dictionary in the Encord label format.
 
-        Classifications are serialized only in ``classification_answers``, with their ranges and metadata.
-        Per-frame classification access remains available through the label row's frame and annotation APIs.
+        Use this to export labels, for example to write them to a JSON file. To upload labels to Encord, use
+        :meth:`encord.objects.ontology_labels_impl.LabelRowV2.save` instead.
 
-        This is an internal helper function. Likely this should not be used by a user. To upload labels use the
-        :meth:`encord.objects.ontology_labels_impl.LabelRowV2.save` function.
+        Classifications are written only to `classification_answers`, with their ranges and metadata.
 
         Args:
-            renumber_objects: If `True`, omits every object's `objectNumber` from the serialized
-                output, so the backend recomputes display numbers from scratch. Default `False`.
+            renumber_objects: If `True`, leave out the `objectNumber` of every object so that Encord recomputes the
+                numbers when the labels are uploaded. Defaults to `False`.
 
         Returns:
-            Dict[str, Any]: A dictionary representing the label row in Encord format.
+            Dict[str, Any]: The label row in the Encord label format.
+
+        Raises:
+            LabelRowError: If labels have not been initialized.
         """
         self._check_labelling_is_initalised()
         self._check_event_labels_consistent()
@@ -2304,13 +2465,25 @@ class LabelRowV2:
             space_info["labels"] = {"objects": [], "classifications": []}
 
     def workflow_reopen(self, bundle: Optional[Bundle] = None) -> None:
-        """Return a label row to the first annotation stage for re-labeling.
+        """Returns the task for this label row to the first annotation stage of the workflow.
 
-        No data will be lost during this call. This method is only relevant for the projects that use the
-        :ref:`Workflow <tutorials/workflows:Workflows>` feature, and will raise an error for pre-workflow projects.
+        No labels are lost. Only works for workflow projects. If the label row has no `label_hash` yet, this method does
+        nothing.
+
+        This method acts on the `main` branch and doesn't update this object. To see the new workflow stage, list the
+        label row again with `project.list_label_rows_v2()`.
+
+        For more details, see the
+        [workflow documentation](https://docs.encord.com/sdk-documentation/projects-sdk/sdk-workflows-stages).
 
         Args:
-            bundle: Optional parameter. If passed, the method will be executed in a deferred way as part of the bundle.
+            bundle: If not provided, the task is moved immediately. If provided, the operation is deferred and performed
+                together with the other operations in the bundle.
+
+        Raises:
+            LabelRowError: If the label row is detached.
+            WrongProjectTypeError: If the project doesn't use workflows.
+            InvalidArgumentsError: If the first annotation stage of the workflow is a consensus stage.
         """
         self._check_not_detached("workflow_reopen")
         if self.label_hash is None:
@@ -2324,20 +2497,26 @@ class LabelRowV2:
         )
 
     def workflow_complete(self, bundle: Optional[Bundle] = None) -> None:
-        """Move a label row to the final workflow node, marking it as 'Complete'.
+        """Moves the task for this label row to the Complete stage of the workflow.
 
-        This method can be called only for labels for which :meth:`encord.objects.ontology_labels_impl.LabelRowV2.initialise_labels` was called at least once, and
-        consequentially the "label_hash" field is not `None`. Labels need not be initialized every time the
-        workflow_complete() method is called.
+        The task skips any remaining annotation and review stages. Only works for workflow projects.
 
-        This method is only relevant for the projects that use the :ref:`Workflow <tutorials/workflows:Workflows>`
-        feature, and raises an error for projects that do not use Workflows.
+        Labels must have been initialized at least once, so that `label_hash` is set. You don't need to initialize them
+        each time you call this method.
+
+        This method acts on the `main` branch and doesn't update this object. To see the new workflow stage, list the
+        label row again with `project.list_label_rows_v2()`.
+
+        For more details, see the
+        [workflow documentation](https://docs.encord.com/sdk-documentation/projects-sdk/sdk-workflows-stages).
 
         Args:
-            bundle: Optional parameter. If passed, the method will be executed in a deferred way as part of the bundle.
+            bundle: If not provided, the task is moved immediately. If provided, the operation is deferred and performed
+                together with the other operations in the bundle.
 
         Raises:
-            LabelRowError: If the label hash is None.
+            LabelRowError: If `label_hash` is `None`, or if the label row is detached.
+            WrongProjectTypeError: If the project doesn't use workflows.
         """
         self._check_not_detached("workflow_complete")
         if self.label_hash is None:
@@ -2353,14 +2532,19 @@ class LabelRowV2:
         )
 
     def set_priority(self, priority: float, bundle: Optional[Bundle] = None) -> None:
-        """Set priority for a task in a workflow project.
+        """Sets the priority of the task for this label row in a workflow project.
+
+        You need the Admin or Team Manager role on the project.
 
         Args:
-            priority: Float value from 0.0 to 1.0, where 1.0 is the highest priority.
-            bundle: Optional parameter. If passed, the method will be executed in a deferred way as part of the bundle.
+            priority: A value from 0.0 to 1.0, where 1.0 is the highest priority. Encord rejects values outside this
+                range.
+            bundle: If not provided, the priority is set immediately. If provided, the operation is deferred and
+                performed together with the other operations in the bundle.
 
         Raises:
-            WrongProjectTypeError: If the project is not a workflow-based project.
+            LabelRowError: If the label row is detached.
+            WrongProjectTypeError: If the project doesn't use workflows.
         """
         self._check_not_detached("set_priority")
         if not self.__is_tms2_project:
@@ -2373,16 +2557,53 @@ class LabelRowV2:
         )
 
     def get_validation_errors(self) -> Optional[List[str]]:
-        """Get validation errors for the label row.
+        """Returns the validation errors for the label row.
 
         Returns:
-            List[str] | None: A list of error messages if the label row is invalid, otherwise `None`.
+            Optional[List[str]]: The error messages if the labels are invalid, or `None` if the labels are valid or the
+                label row has no `label_hash` yet.
+
+        Raises:
+            LabelRowError: If the label row is detached.
         """
         self._check_not_detached("get_validation_errors")
         if not self.label_hash or self.is_valid:
             return None
 
         return self._project_client.get_label_validation_errors(self.label_hash)
+
+    def attach_to_project(self, project: "Project", data_hash: str) -> None:
+        """Attach a detached label row to a data unit in a project.
+
+        Fetches the identity of the data unit's label row (such as `label_hash`, `data_hash`, and `dataset_hash`) from
+        the project and applies it to this label row, keeping its labels. If the label row doesn't exist on Encord yet,
+        it is created. After this call, you can upload the labels with
+        :meth:`encord.objects.ontology_labels_impl.LabelRowV2.save`.
+
+        The ontology used to create the detached label row must match the project's ontology (the same feature hashes),
+        or Encord rejects the save. Labels on frames beyond the data unit's frame count may also be rejected.
+
+        Args:
+            project: The project to attach to.
+            data_hash: The data hash of the data unit in the project.
+
+        Raises:
+            LabelRowError: If the project has no label row for `data_hash`.
+        """
+        matching_rows = project.list_label_rows_v2(
+            data_hashes=[data_hash],
+            include_images_data=True,
+        )
+        if not matching_rows:
+            raise LabelRowError(f"No label row found in project for data_hash={data_hash}")
+        real_row = matching_rows[0]
+
+        if real_row.label_hash is None:
+            real_row.initialise_labels()
+
+        self._apply_identity(**real_row._extract_identity())
+        self._project_client = project._client  # type: ignore[assignment]
+        self._is_detached = False
 
     class FrameViewMetadata:
         """Class to inspect metadata for a frame view."""
@@ -2392,26 +2613,56 @@ class LabelRowV2:
 
         @property
         def title(self) -> str:
+            """Returns the title of the image or data unit.
+
+            Returns:
+                str: The title.
+            """
             return self._image_data.title
 
         @property
         def file_type(self) -> str:
+            """Returns the MIME type of the image, for example `image/jpeg`.
+
+            Returns:
+                str: The MIME type, or an empty string if it is not known.
+            """
             return self._image_data.file_type
 
         @property
         def width(self) -> int:
+            """Returns the width of the image in pixels.
+
+            Returns:
+                int: The width, or 0 if it is not known.
+            """
             return self._image_data.width
 
         @property
         def height(self) -> int:
+            """Returns the height of the image in pixels.
+
+            Returns:
+                int: The height, or 0 if it is not known.
+            """
             return self._image_data.height
 
         @property
         def image_hash(self) -> str:
+            """Returns the image hash. For images and videos, this is the data hash.
+
+            Returns:
+                str: The image hash.
+            """
             return self._image_data.image_hash
 
         @property
         def frame_number(self) -> int:
+            """Returns the position of the image in the image group. This is 0 for images and videos.
+
+            Returns:
+                int: The frame number.
+            """
             return self._image_data.index
 
     class FrameView:
@@ -2479,10 +2730,13 @@ class LabelRowV2:
 
         @property
         def width(self) -> int:
-            """Get the width of the frame.
+            """Returns the width of the frame in pixels.
+
+            Returns:
+                int: The width.
 
             Raises:
-                LabelRowError: If the width is not set for the data type.
+                LabelRowError: If the width is not set for this data type.
             """
             if self._label_row.data_type == DataType.IMG_GROUP:
                 return self._frame_level_data().width
@@ -2501,10 +2755,13 @@ class LabelRowV2:
 
         @property
         def height(self) -> int:
-            """Get the height of the frame.
+            """Returns the height of the frame in pixels.
+
+            Returns:
+                int: The height.
 
             Raises:
-                LabelRowError: If the height is not set for the data type.
+                LabelRowError: If the height is not set for this data type.
             """
             if self._label_row.data_type == DataType.IMG_GROUP:
                 return self._frame_level_data().height
@@ -2537,13 +2794,10 @@ class LabelRowV2:
 
         @property
         def metadata(self) -> Optional[DICOMSliceMetadata]:
-            """Get annotation metadata for the current frame.
+            """Returns the DICOM metadata of the current slice.
 
             Returns:
-                Optional[DICOMSliceMetadata]: The metadata for the frame, or `None` if not applicable.
-
-            Note:
-                Currently only supported for DICOM, and will return `None` for other formats.
+                Optional[DICOMSliceMetadata]: The slice metadata, or `None` for data types other than DICOM.
             """
             return self._label_row._frame_metadata[self._frame]
 
@@ -2623,8 +2877,8 @@ class LabelRowV2:
                 overwrite: Whether to overwrite existing instance data (default is False).
                 created_at: Optional creation timestamp.
                 created_by: Optional creator identifier.
-                confidence: Confidence score (default is DEFAULT_CONFIDENCE).
-                manual_annotation: Flag indicating manual annotation (default is DEFAULT_MANUAL_ANNOTATION).
+                confidence: Confidence score. Defaults to 1.0.
+                manual_annotation: Whether the classification was created manually. Defaults to `True`.
                 last_edited_at: Optional last edited timestamp.
                 last_edited_by: Optional last editor identifier.
 
@@ -2699,11 +2953,11 @@ class LabelRowV2:
         Attributes:
             image_hash: Hash of the image.
             image_title: Title of the image.
-            file_type: Type of the file (e.g., JPEG, PNG).
+            file_type: MIME type of the image, for example `image/jpeg`.
             frame_number: The number of the frame in the sequence.
             width: Width of the image.
             height: Height of the image.
-            data_link: Optional link to additional data related to the image.
+            data_link: Optional URL of the image.
         """
 
         image_hash: str
@@ -2721,7 +2975,7 @@ class LabelRowV2:
         Attributes:
             index: Index of the image.
             title: Title of the image.
-            file_type: Type of the file (e.g., JPEG, PNG).
+            file_type: MIME type of the image, for example `image/jpeg`.
             height: Height of the image.
             width: Width of the image.
             image_hash: Hash of the image.
@@ -2743,27 +2997,29 @@ class LabelRowV2:
             created_at: Optional creation timestamp. `None` if not initialized for labeling.
             last_edited_at: Optional last edited timestamp. `None` if not initialized for labeling.
             data_hash: Hash of the data.
+            group_hash: Optional hash of the data group that the data belongs to.
             data_type: Type of the data (e.g., IMAGE, VIDEO).
             label_status: Status of the label.
             annotation_task_status: Optional status of the annotation task.
             workflow_graph_node: Optional workflow graph node related to the data.
-            is_shadow_data: Boolean indicating if the data is shadow data.
+            is_shadow_data: Boolean indicating if the data is a per-user shadow copy for Benchmark QA or training.
             number_of_frames: Number of frames in the data.
             duration: Optional duration of the video or sequence.
             fps: Optional frames per second for video.
             dataset_hash: Hash of the dataset.
             dataset_title: Title of the dataset.
             data_title: Title of the data.
+            backing_item_uuid: Optional UUID of the storage item that backs the data.
             audio_codec: Codec for audio data.
             audio_bit_depth: Bit depth for audio data.
             audio_sample_rate: Sample Rate for audio data.
             audio_num_channels: Number of channels for audio data.
             width: Optional width of the data.
             height: Optional height of the data.
-            data_link: Optional link to additional data.
+            data_link: Optional URL of the underlying file.
             task_uuid: Optional task uuid of the data.
             priority: Optional priority of the data.
-            file_type: Optional file type of the data.
+            file_type: Optional MIME type of the file.
             client_metadata: Optional metadata provided by the client.
             images_data: Optional list of image data entries.
             branch_name: Name of the branch associated with the data.
@@ -4120,44 +4376,6 @@ class LabelRowV2:
     def _check_labelling_is_initalised(self):
         if not self.is_labelling_initialised:
             raise LabelRowError(LABELLING_NOT_INITIALISED_ERROR_MESSAGE)
-
-    def attach_to_project(self, project: "Project", data_hash: str) -> None:
-        """Attach a detached label row to a real project data unit.
-
-        Fetches the real identity (label_hash, data_hash, dataset_hash, etc.) from the
-        project and rewrites this row's identity fields. If the server-side label row has
-        not been initialized yet, it is initialized automatically. After this call, the
-        label row can be saved to the server via :meth:`save`.
-
-        .. note::
-            The ontology used to create this detached label row must match the project's
-            ontology (same feature hashes). Mismatched feature hashes will cause the server
-            to reject the save.
-
-            Frame counts should be compatible with the server-side data unit. Annotations
-            on frame numbers beyond the server's frame count may be rejected.
-
-        Args:
-            project: The Encord project to attach to.
-            data_hash: The data hash of the target data unit in the project.
-
-        Raises:
-            LabelRowError: If no matching label row is found in the project.
-        """
-        matching_rows = project.list_label_rows_v2(
-            data_hashes=[data_hash],
-            include_images_data=True,
-        )
-        if not matching_rows:
-            raise LabelRowError(f"No label row found in project for data_hash={data_hash}")
-        real_row = matching_rows[0]
-
-        if real_row.label_hash is None:
-            real_row.initialise_labels()
-
-        self._apply_identity(**real_row._extract_identity())
-        self._project_client = project._client  # type: ignore[assignment]
-        self._is_detached = False
 
     def _extract_identity(self) -> Dict[str, Any]:
         """Capture the current identity fields for later restoration."""

@@ -12,6 +12,7 @@ from encord.orm import base_orm
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO
 from encord.orm.workflow import WorkflowDTO
+from encord.orm.workflow_v3 import WorkflowV3DTO
 from encord.utilities.project_user import ProjectUserRole
 
 
@@ -464,6 +465,7 @@ class ProjectDTO(BaseDTO):
         workflow_manager_uuid: UUID of the workflow manager associated with this project,
             if the project uses the workflow system.
         workflow: Workflow definition for the project, if available.
+        workflow_v3: Workflow graph exposed through the workflow_v3 interface, if available.
     """
 
     project_hash: UUID
@@ -480,6 +482,7 @@ class ProjectDTO(BaseDTO):
     source_projects: Optional[List[str]] = None
     workflow_manager_uuid: Optional[UUID] = None
     workflow: Optional[WorkflowDTO] = None
+    workflow_v3: Optional[WorkflowV3DTO] = None
 
 
 class CvatReviewMode(CamelStrEnum):

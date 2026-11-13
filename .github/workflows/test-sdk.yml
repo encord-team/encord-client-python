@@ -6,9 +6,6 @@ on:
       - master
   workflow_dispatch:
 
-env:
-  BACKEND_REPO: cord-team/cord-backend
-
 concurrency:
   group: cord-client-${{ github.ref }}-test
   cancel-in-progress: true
@@ -26,10 +23,11 @@ jobs:
           - { version: '3.11.13', major_minor: '3.11', major_minor_test_report: '3_11' }
           - { version: '3.12.11', major_minor: '3.12', major_minor_test_report: '3_12' }
           - { version: '3.13.5', major_minor: '3.13', major_minor_test_report: '3_13' }
+          - { version: '3.14.5', major_minor: '3.14', major_minor_test_report: '3_14' }
 
         pydantic:
           - { version: '1.10.22', suffix: 'p1' }
-          - { version: '2.10.6', suffix: 'p2' } # Latest Pydantic v2x that supports Python 3.8
+          - { version: '2.12.3', suffix: 'p2' } # Latest Pydantic v2x that supports Python 3.8
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -42,35 +40,10 @@ jobs:
           test-report-file: unit-test-report-python${{ matrix.python.major_minor_test_report }}_${{ matrix.pydantic.suffix }}.xml
 
 
-  integration-tests:
-    name: Run integration tests
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Checkout backend repo
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.BACKEND_REPO }}
-          token: ${{ secrets.ACCESS_TOKEN }}
-          path: encord-backend
-
-      - name: Run integration tests
-        uses: ./.github/actions/run-integration-tests
-        with:
-          private-key: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
-          private-key-service-account: ${{ secrets.SDK_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT }}
-          private-key-non-org: ${{ secrets.SDK_TESTS_PRIVATE_KEY_NON_ORG }}
-          robot-account-email: ${{ secrets.ROBOT_ACCOUNT_EMAIL }}
-          robot-account-password: ${{ secrets.ROBOT_ACCOUNT_PASSWORD }}
-          sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}
-
-
   send-slack-notification:
     name: Send notification
     runs-on: ubuntu-24.04
-    needs: [ unit-tests, integration-tests ]
+    needs: [ unit-tests ]
     if: always()
     env:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

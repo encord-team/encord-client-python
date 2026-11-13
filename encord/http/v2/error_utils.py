@@ -23,6 +23,7 @@ HTTP_NOT_FOUND = 404
 HTTP_METHOD_NOT_ALLOWED = 405
 HTTP_CONFLICT = 409
 HTTP_PAYLOAD_TOO_LARGE = 413
+HTTP_UNPROCESSABLE_ENTITY = 422
 HTTP_TOO_MANY_REQUESTS = 429
 HTTP_GENERAL_ERROR = 500
 HTTP_BAD_GATEWAY = 502
@@ -67,6 +68,11 @@ def handle_error_response(
 
     if status_code == HTTP_BAD_REQUEST:
         raise InvalidArgumentsError(message or "Provided payload is invalid and can't be processed.", context=context)
+
+    if status_code == HTTP_UNPROCESSABLE_ENTITY:
+        raise InvalidArgumentsError(
+            str(message) if message else "Provided payload is invalid and can't be processed.", context=context
+        )
 
     if status_code == HTTP_PAYLOAD_TOO_LARGE:
         raise PayloadTooLargeError(

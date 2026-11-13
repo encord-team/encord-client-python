@@ -97,15 +97,22 @@ class Workflow:
         uuid: Optional[Union[UUID, str]] = None,
         type_: Optional[Type[WorkflowStageT]] = None,
     ) -> WorkflowStageT:
-        """**Params**
+        """Returns a stage of the Workflow by its name or UUID.
 
-        - name: Name of the stage.
-        - uuid: Unique identifier for the stage.
-        - type_: The type of stage.
+        Pass `type_` to check the stage's type and to get the matching stage class (for example `AnnotationStage`), so
+        that your editor knows which methods the stage has.
 
-        **Returns**
+        Args:
+            name: The name of the stage, as shown in the Workflow.
+            uuid: The UUID of the stage.
+            type_: The expected stage class, for example `AnnotationStage` or `ReviewStage`.
 
-        Returns a Workflow stage (`type_`) from non-Consensus and Consensus Projects.
+        Returns:
+            The matching stage, as an instance of its stage class.
+
+        Raises:
+            ValueError: If no stage has the given name or UUID.
+            AssertionError: If the stage is not of the class given in `type_`.
         """
         for stage in self.stages:
             if (uuid is not None and stage.uuid == _ensure_uuid(uuid)) or (name is not None and stage.title == name):

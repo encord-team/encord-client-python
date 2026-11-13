@@ -34,7 +34,7 @@ class StorageItemType(CamelStrEnum):
     - **DICOM_SERIES:** A DICOM series composed of multiple DICOM files.
     - **AUDIO:** An audio file.
     - **TIMESERIES:** A time series file.
-    - NIFTI:** A NIFTI volume.
+    - **NIFTI:** A NIFTI volume.
     - **PLAIN_TEXT:** A text file (for example TXT, HTML, JSON).
     - **PDF:** A PDF document.
     - **SCENE:** A scene. For example, a single point cloud data file or a composition of multiple assets like videos and point cloud data files.
@@ -348,10 +348,12 @@ class CloudSyncedFolderParams(BaseDTO):
     URL or path to the cloud storage location to sync with.
 
     The format depends on the cloud storage provider:
-    - Amazon S3: "s3://bucket-name/path/"
-    - Google Cloud Storage: "gs://bucket-name/path/"
-    - Azure Blob Storage: "https://account.blob.core.windows.net/container/path/"
-    - S3-compatible services: "https://endpoint/bucket-name/path/"
+    - Amazon S3: ``s3://<bucket-name>/<path>/``
+    - Google Cloud Storage: ``gs://<bucket-name>/<path>/``
+    - Azure Blob Storage: ``https://<account>.blob.core.windows.net/<container>/<path>/``
+    - CoreWeave AI Object Storage: ``https://<bucket-name>.cwobject.com/<path>/``
+    - S3-compatible services: ``https://<endpoint>/<bucket-name>/<path>/`` (path-style). Not all
+      providers accept path-style URLs. Use the address style your provider supports.
 
     The folder will be synced recursively, and all supported file types
     will be imported into Encord.
@@ -421,6 +423,12 @@ class StorageFolderConfig(BaseDTOWithExtra):
 class DataGroupGrid(BaseDTO):
     """Grid-based layout for a data group.
 
+    Encord arranges the items in a near-square grid, in the order you list them. A grid needs 2 to 50 items.
+
+    This layout has no ``settings`` field, so it can't have read-only tiles, a fixed layout or multi-layer labels.
+    A ``settings`` argument passed to this class is ignored without an error. To use settings, create the grid
+    with :class:`encord.orm.storage.DataGroupCustom` instead.
+
     Args:
         layout_contents: Ordered list of item UUIDs to display in the grid.
         name: Optional name of the data group.
@@ -435,6 +443,13 @@ class DataGroupGrid(BaseDTO):
 
 class DataGroupCarousel(BaseDTO):
     """Carousel layout for a data group.
+
+    A carousel needs 2 to 50 items.
+
+    This layout has no ``settings`` field, so it can't have read-only tiles, a fixed layout or multi-layer labels.
+    A ``settings`` argument passed to this class is ignored without an error. To use settings, use
+    :class:`encord.orm.storage.DataGroupCustom` with a single :class:`encord.orm.group_layout.DataUnitCarouselTile`
+    as the layout. A carousel tile on the left at size 20 matches the layout Encord builds for this class.
 
     Args:
         layout_contents: Ordered list of item UUIDs to display in the carousel.
@@ -458,12 +473,17 @@ class DataGroupList(DataGroupCarousel):
 class DataGroupCustom(BaseDTO):
     """Custom layout for a data group.
 
+    The layout can show up to 50 tiles. Every key in ``layout_contents`` must appear in ``layout`` once, unless
+    the key is in ``timeline``. This is the only data group layout that accepts ``settings``.
+
     Args:
         name: Optional name of the data group.
         layout_contents: Mapping from arbitrary keys to item UUIDs.
         layout: Optional arbitrary layout configuration structure. May be omitted for timeline-only groups.
-        timeline: Layout content keys to display in the timeline.
-        settings: Optional extra settings for the layout.
+        timeline: Layout content keys to display in the timeline. Only audio and time series items can be in the
+            timeline.
+        settings: Optional settings for the layout, such as read-only tiles or multi-layer labels. See
+            :class:`encord.orm.group_layout.LayoutSettings`.
         client_metadata: Optional custom metadata to associate with the data group.
     """
 
@@ -1050,7 +1070,7 @@ class ListFoldersParams(BaseDTO):
         include_org_access: If ``True``, include folders accessible via organization-level
             access.
         organisation_tag_names_allof: If set, only include folders tagged with *all* of the given
-            organisation tag names.
+            organization tag names.
         order: Field to sort folders by.
         desc: If ``True``, sort in descending order.
         page_token: Token for fetching the next page of results.

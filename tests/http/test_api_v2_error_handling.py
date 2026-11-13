@@ -8,6 +8,7 @@ from encord.exceptions import (
     AuthenticationError,
     AuthorisationError,
     EncordException,
+    InvalidArgumentsError,
     ResourceExistsError,
     ResourceNotFoundError,
     UnknownException,
@@ -82,6 +83,22 @@ def test_response_mapping_status_code_409_surfaces_server_message(send: MagicMoc
     with pytest.raises(ResourceExistsError) as e_info:
         api_client.get("/", params=None, result_type=CollaboratorTimer)
     assert "already members of this organisation: user@example.com" in str(e_info.value)
+
+
+@patch.object(Session, "send")
+def test_request_validation_errors_preserve_backend_details_as_invalid_arguments(
+    send: MagicMock, api_client: ApiClient
+):
+    res = Response()
+    res.status_code = 422
+    res._content = b'{"detail":[{"loc":["body","comment"],"msg":"String should have at most 50000 characters"}]}'
+    send.return_value = res
+
+    with pytest.raises(InvalidArgumentsError, match="at most 50000 characters") as raised:
+        api_client.post("/", params=None, payload=None, result_type=None)
+
+    assert isinstance(raised.value.message, str)
+    assert "comment" in raised.value.message
 
 
 @patch.object(Session, "send")

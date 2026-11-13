@@ -1,12 +1,12 @@
 import uuid
 from datetime import datetime, timezone
-from typing import List
+from typing import Generic, List, Literal, TypeVar
 
 import pytest
 
 from encord.common.time_parser import format_datetime_to_long_string
 from encord.exceptions import EncordException
-from encord.orm.base_dto import BaseDTO, BaseDTOWithExtra, dto_validator
+from encord.orm.base_dto import BaseDTO, BaseDTOWithExtra, GenericBaseDTO, dto_validator
 from encord.orm.dataset import DatasetDataLongPolling, LongPollingStatus
 
 
@@ -24,6 +24,27 @@ class TestModelWithLists(BaseDTO):
 
 class TestModelWithExtra(BaseDTOWithExtra):
     text_value: str
+
+
+class TestModelWithLiteral(BaseDTO):
+    kind: Literal["example"]
+
+
+ValueT = TypeVar("ValueT")
+
+
+class TestGenericModelWithLiteral(GenericBaseDTO, Generic[ValueT]):
+    kind: Literal["example"]
+    value: ValueT
+
+
+def test_literal_string_fields_are_not_interpreted_as_datetimes() -> None:
+    model = TestModelWithLiteral.from_dict({"kind": "example"})
+    generic_model = TestGenericModelWithLiteral[int].from_dict({"kind": "example", "value": 3})
+
+    assert model.kind == "example"
+    assert generic_model.kind == "example"
+    assert generic_model.value == 3
 
 
 def test_deserialize_model_with_extra():

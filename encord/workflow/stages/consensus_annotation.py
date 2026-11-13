@@ -44,24 +44,19 @@ class ConsensusAnnotationStage(WorkflowStageBase):
         dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         data_title: Optional[str] = None,
     ) -> Iterable[ConsensusAnnotationTask]:
-        """Retrieves tasks for the ConsensusAnnotationStage.
+        """Returns the tasks in this Consensus Annotate stage that match the given filters.
 
-        **Parameters**
+        All filters are optional. If you pass several, only tasks that match all of them are returned.
 
-        - `assignee` (Union[List[str], str, None]): A list of user emails or a single user email to filter tasks by assignee.
-        - `data_hash` (Union[List[UUID], UUID, List[str], str, None]): A list of data unit UUIDs or a single data unit UUID to filter tasks by data hash.
-        - `dataset_hash` (Union[List[UUID], UUID, List[str], str, None]): A list of dataset UUIDs or a single dataset UUID to filter tasks by dataset hash.
-        - `data_title` (Optional[str]): A string to filter tasks by data title.
+        Args:
+            assignee: Only return tasks assigned to this user, or to any of these users. Pass user emails.
+            data_hash: Only return tasks for this data unit, or for any of these data units.
+            dataset_hash: Only return tasks for data units in this dataset, or in any of these datasets.
+            data_title: Only return tasks whose data unit title contains this text.
 
-        **Returns**
-
-        An iterable of `ConsensusAnnotationTask` instances with the following information:
-        - `uuid`: Unique identifier for the task.
-        - `created_at`: Time and date the task was created.
-        - `updated_at`: Time and date the task was last edited.
-        - `data_hash`: Unique identifier for the data unit.
-        - `data_title`: Name/title of the data unit.
-        - `subtasks`: A list of subtasks that follow the task format for `AnnotationTask`.
+        Returns:
+            Iterable[ConsensusAnnotationTask]: The matching tasks. Tasks are fetched page by page as you iterate. Each
+                task's `subtasks` are the `AnnotationTask` instances of its annotators.
         """
         params = _AnnotationTasksQueryParams(
             user_emails=ensure_list(assignee),
@@ -99,16 +94,15 @@ class ConsensusAnnotationTask(WorkflowTask):
     subtasks: List[AnnotationTask] = Field(default_factory=list)
 
     def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
-        """Moves the consensus annotation task from its current stage to another stage.
+        """Moves the Consensus Annotate task directly to another stage in the Workflow.
 
-        **Parameters**
+        The task skips any stages in between. Webhooks don't fire for moved tasks, and labels are approved automatically
+        when a task is moved to a Complete stage.
 
-        - `destination_stage_uuid` (UUID): Unique identifier of the stage to move the task to.
-        - `bundle` (Optional[Bundle]): Optional bundle to be included with the move.
-
-        **Returns**
-
-        None
+        Args:
+            destination_stage_uuid: The UUID of the stage to move the task to.
+            bundle: If not provided, the action is performed immediately. If provided, the action is deferred and
+                performed together with the other operations in the bundle.
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.move(

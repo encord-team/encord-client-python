@@ -214,13 +214,13 @@ class MetadataSchema:
 
     def __init__(self, api_client: ApiClient) -> None:
         self._api_client = api_client
-        schema_opt: _ClientMetadataSchema = api_client.get(  # type: ignore[type-var]
+        schema_opt: _ClientMetadataSchema = api_client.get(
             "organisation/client-metadata-schema-v2",
             params=None,
-            result_type=_ClientMetadataSchema,  # type: ignore[arg-type]
+            result_type=_ClientMetadataSchema,
             allow_none=True,
         )
-        self._schema = schema_opt.root if schema_opt is not None else {}  # type: ignore[assignment]
+        self._schema = schema_opt.root if schema_opt is not None else {}
         self._dirty = False
 
     def save(self) -> None:

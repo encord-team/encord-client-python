@@ -1,12 +1,20 @@
-import importlib.metadata as importlib_metadata
+from typing import Any, Dict
 
-pydantic_version = int(importlib_metadata.version("pydantic").split(".")[0])
+from pydantic import BaseModel, ConfigDict, Field
 
-if pydantic_version < 2:
-    from encord.beta.scene._settings_model_pydantic_v1 import SceneSettingsModel as SceneSettingsModel
-    from encord.beta.scene._settings_model_pydantic_v1 import hex_color_field as hex_color_field
-else:
-    from encord.beta.scene._settings_model_pydantic_v2 import (  # type: ignore[assignment]
-        SceneSettingsModel as SceneSettingsModel,
+from encord.common.utils import HEX_COLOR_PATTERN, snake_to_camel
+
+
+def hex_color_field() -> Any:
+    return Field(description="Color used to render the radius indicator.", pattern=HEX_COLOR_PATTERN)
+
+
+class SceneSettingsModel(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=snake_to_camel,
+        populate_by_name=True,
+        extra="forbid",
     )
-    from encord.beta.scene._settings_model_pydantic_v2 import hex_color_field as hex_color_field
+
+    def to_dict(self, by_alias: bool = True, exclude_none: bool = True) -> Dict[str, Any]:
+        return self.model_dump(by_alias=by_alias, exclude_none=exclude_none, mode="json")

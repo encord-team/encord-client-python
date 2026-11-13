@@ -32,6 +32,7 @@ from encord.beta.scene.settings import SceneViewSettings
 from encord.client import LONG_POLLING_RESPONSE_RETRY_N, LONG_POLLING_SLEEP_ON_FAILURE_SECONDS
 from encord.common.deprecated import deprecated
 from encord.common.organisation_tags import resolve_organisation_tag_names
+from encord.common.polling import poll_job
 from encord.common.utils import snake_to_camel
 from encord.exceptions import (
     ClientMetadataPatchPartiallyStartedError,
@@ -49,7 +50,7 @@ from encord.http.utils import (
 )
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
-from encord.orm.base_dto import RootModelDTO, pydantic_version
+from encord.orm.base_dto import RootModelDTO
 from encord.orm.dataset import LongPollingStatus
 from encord.orm.group import AddStorageFolderGroupsPayload, RemoveGroupsParams, StorageFolderGroup
 from encord.orm.project import OrganisationTag
@@ -99,9 +100,6 @@ from encord.orm.storage import (
 logger = logging.getLogger(__name__)
 
 STORAGE_BUNDLE_CREATE_LIMIT = 1000
-# Polling a client metadata patch job for its result backs off from the first interval to the last.
-_CLIENT_METADATA_PATCH_JOB_INITIAL_POLL_SECONDS = 1.0
-_CLIENT_METADATA_PATCH_JOB_MAX_POLL_SECONDS = 5.0
 # The server rejects a client metadata patch job request whose body is larger than this.
 _CLIENT_METADATA_PATCH_JOB_MAX_PAYLOAD_BYTES = 8 * 1024 * 1024
 _CLIENT_METADATA_PATCH_JOB_FAILED_MESSAGE = (
@@ -123,7 +121,7 @@ class _ScenePatchItemPayload(PatchItemPayload):
 
     def to_dict(self, by_alias=True, exclude_none=True) -> Dict[str, Any]:
         payload = super().to_dict(by_alias=by_alias, exclude_none=exclude_none)
-        fields_set = self.model_fields_set if pydantic_version >= 2 else self.__fields_set__
+        fields_set = self.model_fields_set
         # Preserve explicit nulls for resettable settings without sending omitted fields.
         for field_name in ("scene_layout", "scene_view_settings", "timeseries_settings"):
             if field_name in fields_set and getattr(self, field_name) is None:
@@ -1628,6 +1626,9 @@ class StorageFolder:
     def create_data_group(self, params: Union[DataGroupInput, List[UUID]]) -> UUID:
         """Creates a data group storage item in this folder.
 
+        You need Admin access to this folder, and the folder can't be a cloud-synced folder. You can't change a
+        data group's items, layout or settings after you create it. To make a change, create a new data group.
+
         Args:
             params: Parameters for the data group. Can be:
                 - DataGroupInput (DataGroupGrid, DataGroupCarousel, DataGroupCustom): Layout with optional client_metadata
@@ -1640,6 +1641,10 @@ class StorageFolder:
 
     def create_data_groups(self, params: List[Union[DataGroupInput, List[UUID]]]) -> List[UUID]:
         """Creates multiple data group storage items in this folder.
+
+        You need Admin access to this folder, and the folder can't be a cloud-synced folder. All the data groups
+        are created in one request, up to 1,500 per call. If any data group is invalid, none of them are created.
+        You can't change a data group's items, layout or settings after you create it.
 
         Args:
             params: List of parameters for each data group. Each item can be:
@@ -2254,24 +2259,16 @@ def _create_client_metadata_patch_job(api_client: ApiClient, patches: Dict[UUID,
 def _poll_client_metadata_patch_job(
     api_client: ApiClient, job_uuid: UUID, deadline: float
 ) -> Optional[orm_storage.ClientMetadataPatchJobResult]:
-    """Poll the job until it is done or has failed, or the deadline passes; None if it is still running then.
-
-    The job is checked at least once, even when the deadline has already passed.
-    """
-    interval = _CLIENT_METADATA_PATCH_JOB_INITIAL_POLL_SECONDS
-    while True:
-        job = api_client.get(
+    """Poll the job until it is done or has failed, or the deadline passes; None if it is still running then."""
+    return poll_job(
+        lambda: api_client.get(
             f"storage/items/client-metadata/patch-jobs/{job_uuid}",
             params=None,
             result_type=orm_storage.ClientMetadataPatchJobResult,
-        )
-        if job.status != orm_storage.ClientMetadataPatchJobStatus.PENDING:
-            return job
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            return None
-        time.sleep(min(interval, remaining))
-        interval = min(interval * 2, _CLIENT_METADATA_PATCH_JOB_MAX_POLL_SECONDS)
+        ),
+        lambda job: job.status == orm_storage.ClientMetadataPatchJobStatus.PENDING,
+        deadline,
+    )
 
 
 @dataclass(frozen=True)
@@ -2648,7 +2645,7 @@ class StorageItem:
     def patch_client_metadata(self, patch: Dict[str, Any]) -> None:
         """Change some of the item's client metadata keys, leaving all other keys as they are.
 
-        ``patch`` is applied as an `RFC 7396 <https://www.rfc-editor.org/rfc/rfc7396>`_ JSON merge patch:
+        ``patch`` is applied as an [RFC 7396](https://www.rfc-editor.org/rfc/rfc7396) JSON merge patch:
 
         - A key with a value adds the key, or replaces its current value.
         - A key with ``None`` removes the key.
@@ -2656,12 +2653,14 @@ class StorageItem:
         - Any other value, including a list, replaces the current value as a whole.
 
         Keys not included in ``patch`` are left unchanged.
-        After the call, :attr:`client_metadata` holds the merged metadata; a patch refused with one of the errors
+        After the call, ``client_metadata`` holds the merged metadata; a patch refused with one of the errors
         below changes nothing. To replace the whole client metadata, use :meth:`update` instead.
 
+        For example, the patch below sets ``reviewed``, sets ``camera.fps`` while keeping the other ``camera`` keys,
+        and removes ``draft``.
+
         Example:
-            ``item.patch_client_metadata({"reviewed": True, "camera": {"fps": 60}, "draft": None})``
-            sets ``reviewed``, sets ``camera.fps`` while keeping the other ``camera`` keys, and removes ``draft``.
+            >>> item.patch_client_metadata({"reviewed": True, "camera": {"fps": 60}, "draft": None})
 
         Args:
             patch: The keys to add, change or remove.
@@ -2670,10 +2669,10 @@ class StorageItem:
             None
 
         Raises:
-            :class:`encord.exceptions.AuthorisationError`: The item does not exist or you cannot edit it.
-            :class:`encord.exceptions.InvalidArgumentsError`: The patch can't be applied, for example because the item
+            AuthorisationError: The item does not exist or you cannot edit it.
+            InvalidArgumentsError: The patch can't be applied, for example because the item
                 is in a cloud synced folder or the merged metadata would be too large.
-            :class:`encord.exceptions.ResourceExistsError`: Other changes to the item's client metadata kept
+            ResourceExistsError: Other changes to the item's client metadata kept
                 conflicting with the patch (retry), or its current client metadata can't be read (replace it with
                 :meth:`update`).
         """

@@ -39,22 +39,17 @@ class FinalStage(WorkflowStageBase):
         dataset_hash: Union[List[UUID], UUID, List[str], str, None] = None,
         data_title: Optional[str] = None,
     ) -> Iterable[FinalStageTask]:
-        """Retrieves tasks for the FinalStage.
+        """Returns the tasks in this Complete or Archive stage that match the given filters.
 
-        **Parameters**
+        All filters are optional. If you pass several, only tasks that match all of them are returned.
 
-        - `data_hash` (Union[List[UUID], UUID, List[str], str, None]): Unique ID(s) for the data unit(s).
-        - `dataset_hash` (Union[List[UUID], UUID, List[str], str, None]): Unique ID(s) for the dataset(s) that the data unit(s) belongs to.
-        - `data_title` (Optional[str]): A string to filter tasks by the data unit's name.
+        Args:
+            data_hash: Only return tasks for this data unit, or for any of these data units.
+            dataset_hash: Only return tasks for data units in this dataset, or in any of these datasets.
+            data_title: Only return tasks whose data unit title contains this text.
 
-        **Returns**
-
-        An iterable of `FinalStageTask` instances with the following information:
-        - `uuid`: Unique identifier for the task.
-        - `created_at`: Time and date the task was created.
-        - `updated_at`: Time and date the task was last edited.
-        - `data_hash`: Unique identifier for the data unit.
-        - `data_title`: Name/title of the data unit.
+        Returns:
+            Iterable[FinalStageTask]: The matching tasks. Tasks are fetched page by page as you iterate.
         """
         params = _FinalTasksQueryParams(
             data_hashes=ensure_uuid_list(data_hash),
@@ -86,16 +81,15 @@ class FinalStageTask(WorkflowTask):
     data_title: str
 
     def move(self, *, destination_stage_uuid: UUID, bundle: Optional[Bundle] = None) -> None:
-        """Moves the final stage task from its current stage to another stage.
+        """Moves the task directly to another stage in the Workflow.
 
-        **Parameters**
+        The task skips any stages in between. Webhooks don't fire for moved tasks, and labels are approved automatically
+        when a task is moved to a Complete stage.
 
-        - `destination_stage_uuid` (UUID): Unique identifier of the stage to move the task to.
-        - `bundle` (Optional[Bundle]): Optional bundle of actions to execute with the move.
-
-        **Returns**
-
-        None
+        Args:
+            destination_stage_uuid: The UUID of the stage to move the task to.
+            bundle: If not provided, the action is performed immediately. If provided, the action is deferred and
+                performed together with the other operations in the bundle.
         """
         workflow_client, stage_uuid = self._get_client_data()
         workflow_client.move(

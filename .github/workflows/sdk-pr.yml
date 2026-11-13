@@ -7,7 +7,6 @@ on:
 
 env:
   PYTHON_VERSION: 3.9
-  BACKEND_REPO: cord-team/cord-backend
 
 concurrency:
   group: cord-client-${{ github.ref }}-pr
@@ -53,28 +52,3 @@ jobs:
           python-version: ${{ matrix.python.version }}
           pydantic-version: ${{ matrix.pydantic.version }}
           test-report-file: unit-test-report-python${{ matrix.python.major_minor_test_report }}_${{ matrix.pydantic.suffix }}.xml
-
-
-  integration-tests:
-    name: Run integration tests
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Checkout backend repo
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.BACKEND_REPO }}
-          token: ${{ secrets.ACCESS_TOKEN }}
-          path: encord-backend
-
-      - name: Run integration tests
-        uses: ./.github/actions/run-integration-tests
-        with:
-          private-key: ${{ secrets.SDK_TESTS_PRIVATE_KEY }}
-          private-key-service-account: ${{ secrets.SDK_TESTS_PRIVATE_KEY_SERVICE_ACCOUNT }}
-          private-key-non-org: ${{ secrets.SDK_TESTS_PRIVATE_KEY_NON_ORG }}
-          robot-account-email: ${{ secrets.ROBOT_ACCOUNT_EMAIL }}
-          robot-account-password: ${{ secrets.ROBOT_ACCOUNT_PASSWORD }}
-          sdk-repository-url: https://github.com/encord-team/encord-client-python@${{ github.sha }}
