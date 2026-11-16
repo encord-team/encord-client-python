@@ -32,61 +32,50 @@ class Settings:
 
 @dataclass(frozen=True)
 class StageSettings(Settings):
-    """Read-only public configuration for a workflow stage."""
+    """Read-only stage configuration containing only fields exposed by this SDK.
+
+    An empty settings object does not mean the stage has no configuration.
+    """
 
 
 @dataclass(frozen=True)
 class StartStageSettingsV1(StageSettings):
-    """Start has no public configuration fields."""
-
     version: Literal[1] = field(default=1, init=False)
 
 
 @dataclass(frozen=True)
 class AnnotationStageSettingsV1(StageSettings):
-    """Annotation stages have no public configuration fields."""
-
     version: Literal[1] = field(default=1, init=False)
 
 
 @dataclass(frozen=True)
 class ReviewStageSettingsV1(StageSettings):
-    """Review stages have no public configuration fields."""
-
     version: Literal[1] = field(default=1, init=False)
 
 
 @dataclass(frozen=True)
 class ExternalStageSettingsV1(StageSettings):
-    """External stages have no public configuration fields."""
-
     version: Literal[1] = field(default=1, init=False)
 
 
 @dataclass(frozen=True)
 class CompleteStageSettingsV1(StageSettings):
-    """Complete terminals have no public configuration fields."""
-
     version: Literal[1] = field(default=1, init=False)
 
 
 @dataclass(frozen=True)
 class ArchiveStageSettingsV1(StageSettings):
-    """Archive terminals have no public configuration fields."""
-
     version: Literal[1] = field(default=1, init=False)
 
 
 @dataclass(frozen=True)
 class SkipStageSettingsV1(StageSettings):
-    """Skip terminals have no public configuration fields."""
-
     version: Literal[1] = field(default=1, init=False)
 
 
 @dataclass(frozen=True)
 class UnknownStageSettings(StageSettings):
-    """Unfamiliar settings; to_dict returns a detached copy with original keys."""
+    """Settings for a stage type or settings version this SDK does not recognize."""
 
     _values: Dict[str, Any] = field(repr=False)
 
@@ -98,13 +87,13 @@ class UnknownStageSettings(StageSettings):
 
     @property
     def version(self) -> Optional[int]:
-        """Settings contract version, if supplied by an unfamiliar stage."""
+        """Settings version supplied by the response, if present."""
         return self._values.get("version")
 
 
 @dataclass(frozen=True, init=False)
 class PercentageRouterStageSettingsV1(StageSettings):
-    """Probabilities by pathway UUID, expressed as fractions summing to one."""
+    """Routing probabilities for a Percentage Router stage."""
 
     version: Literal[1] = field(default=1, init=False)
     _probabilities: Dict[UUID, float] = field(repr=False)
@@ -114,7 +103,7 @@ class PercentageRouterStageSettingsV1(StageSettings):
 
     @property
     def pathway_probabilities(self) -> Mapping[UUID, float]:
-        """Read-only probabilities for this router's outgoing pathways."""
+        """Read-only probabilities keyed by pathway UUID, as fractions summing to one."""
         return MappingProxyType(self._probabilities)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -123,6 +112,4 @@ class PercentageRouterStageSettingsV1(StageSettings):
 
 @dataclass(frozen=True)
 class CollaboratorRouterStageSettingsV1(StageSettings):
-    """Collaborator routers have no public configuration fields."""
-
     version: Literal[1] = field(default=1, init=False)

@@ -3,10 +3,10 @@
 from typing import Sequence
 from uuid import UUID
 
-from encord.beta.workflow_v3._client import WorkflowClient
-from encord.beta.workflow_v3.exceptions import StaleTaskError
 from encord.exceptions import ResourceExistsError
 from encord.orm import tasks_v3 as dto
+from encord.workflow_v3._client import WorkflowClient
+from encord.workflow_v3.exceptions import StaleTaskError
 
 
 def assign_task(
@@ -49,8 +49,8 @@ def release_task(client: WorkflowClient, task_id: UUID) -> None:
 
 
 def release_tasks(client: WorkflowClient, task_ids: Sequence[UUID]) -> None:
-    if not 1 <= len(task_ids) <= 1_000:
-        raise ValueError("Release between 1 and 1000 tasks.")
+    if not task_ids:
+        raise ValueError("Release at least one task.")
     try:
         client.api_client.post(
             f"projects/{client.project_id}/workflow-v3/tasks/release",

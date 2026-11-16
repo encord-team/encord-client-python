@@ -4,10 +4,12 @@ from dataclasses import dataclass, field
 from typing import ClassVar, Generic, Iterator, Literal, Optional, Sequence, Tuple, TypeVar, Union, cast
 from uuid import UUID
 
-from encord.beta.workflow_v3 import _submission_actions, _task_reads
-from encord.beta.workflow_v3._client import WorkflowClient
-from encord.beta.workflow_v3.pathways import Pathway
-from encord.beta.workflow_v3.settings import (
+from encord.orm.tasks_v3 import TaskSort, TaskStatus
+from encord.orm.workflow_v3 import StageType
+from encord.workflow_v3 import _submission_actions, _task_reads
+from encord.workflow_v3._client import WorkflowClient
+from encord.workflow_v3.pathways import Pathway
+from encord.workflow_v3.settings import (
     AnnotationStageSettingsV1,
     ArchiveStageSettingsV1,
     CollaboratorRouterStageSettingsV1,
@@ -20,9 +22,7 @@ from encord.beta.workflow_v3.settings import (
     StartStageSettingsV1,
     UnknownStageSettings,
 )
-from encord.beta.workflow_v3.tasks import AnnotationTask, ExternalTask, ReviewTask, Task
-from encord.orm.tasks_v3 import TaskSort, TaskStatus
-from encord.orm.workflow_v3 import StageType
+from encord.workflow_v3.tasks import AnnotationTask, ExternalTask, ReviewTask, Task
 
 SettingsT = TypeVar("SettingsT", bound=Settings)
 TaskT = TypeVar("TaskT", bound=Task, covariant=True)
@@ -45,11 +45,12 @@ class Stage(Generic[SettingsT, TaskT]):
     def get_tasks(
         self, *, statuses: Optional[Sequence[TaskStatus]] = None, sort: Optional[TaskSort] = None
     ) -> Iterator[TaskT]:
-        """Iterate permitted current tasks, fetching pages lazily without claiming work.
+        """Iterate permitted current tasks, fetching pages lazily without assigning work.
 
-        Arguments are validated immediately; request errors may arise during iteration.
-        This is a changing queue, not a snapshot.
-        Terminal stages use newest-arrival ordering and do not accept filters.
+        Invalid status and sort values are rejected immediately. Backend validation
+        and request errors occur during iteration. This is a changing queue, not
+        a snapshot. Terminal stages use newest-arrival ordering and reject both
+        statuses and sort arguments.
         """
         return cast(
             Iterator[TaskT],
@@ -72,13 +73,19 @@ class AnnotationStage(Stage[Union[AnnotationStageSettingsV1, UnknownStageSetting
 
     def submit_tasks(
         self,
-        tasks: Sequence[Task],
+        tasks: Sequence[AnnotationTask],
         *,
         pathway_id: Optional[Union[UUID, str]] = None,
         pathway_name: Optional[str] = None,
         comment: Optional[str] = None,
     ) -> None:
-        """Submit up to 100 tasks atomically through one pathway with an optional comment, without replaying sent requests."""
+        """Submit Annotation tasks at this stage atomically; save labels separately first.
+
+        Pathway selection, comments and permissions follow AnnotationTask.submit().
+        One pathway and optional comment apply to every task. Empty batches raise
+        ValueError; the backend enforces batch limits. Leaves snapshots unchanged;
+        sent requests are not automatically retried.
+        """
         _submission_actions.submit_tasks(
             self._client,
             self.id,
@@ -97,15 +104,18 @@ class ReviewStage(Stage[Union[ReviewStageSettingsV1, UnknownStageSettings], Revi
 
     def submit_tasks(
         self,
-        tasks: Sequence[Task],
+        tasks: Sequence[ReviewTask],
         *,
         pathway_id: Optional[Union[UUID, str]] = None,
         pathway_name: Optional[str] = None,
         comment: Optional[str] = None,
     ) -> None:
-        """Submit up to 100 tasks atomically without changing individual label decisions.
+        """Submit tasks atomically without changing individual label decisions.
 
-        One pathway and optional comment apply to every task. Sent requests are not replayed.
+        Tasks must be at this stage. Pathway selection, comments and permissions
+        follow ReviewTask.submit(). One pathway and optional comment apply to every
+        task. Empty batches raise ValueError; the backend enforces batch limits.
+        Leaves snapshots unchanged; sent requests are not automatically retried.
         """
         _submission_actions.submit_tasks(
             self._client,
@@ -125,12 +135,17 @@ class ExternalStage(Stage[Union[ExternalStageSettingsV1, UnknownStageSettings], 
 
     def submit_tasks(
         self,
-        tasks: Sequence[Task],
+        tasks: Sequence[ExternalTask],
         *,
         pathway_id: Optional[Union[UUID, str]] = None,
         pathway_name: Optional[str] = None,
     ) -> None:
-        """Submit up to 100 tasks atomically through one pathway, without replaying sent requests."""
+        """Submit External tasks at this stage atomically through one pathway.
+
+        Pathway selection and permissions follow ExternalTask.submit(). Empty
+        batches raise ValueError; the backend enforces batch limits.
+        Leaves snapshots unchanged; sent requests are not automatically retried.
+        """
         _submission_actions.submit_tasks(
             self._client,
             self.id,

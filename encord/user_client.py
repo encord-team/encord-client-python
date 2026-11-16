@@ -2073,8 +2073,9 @@ class EncordUserClient:
         Raises:
             ValueError: ``origin`` is ``LabelSetOrigin.UNKNOWN``, which only appears on a set read from a platform
                 newer than this SDK and cannot be sent.
-            :class:`encord.exceptions.ResourceNotFoundError`: Label sets are not enabled for your organisation.
-            :class:`encord.exceptions.AuthorisationError`: You are not an admin or team manager on a source project.
+            :class:`encord.exceptions.AuthorisationError`: Label sets are not enabled for your organization.
+            :class:`encord.exceptions.AuthorisationError`: A source project does not exist in your organization, or
+                you are not an admin or team manager on it.
             :class:`encord.exceptions.EncordException`: More sources were given than the platform supports, or a
                 stage selection was given for a branch other than ``main``.
         """
@@ -2096,8 +2097,9 @@ class EncordUserClient:
 
         Raises:
             ValueError: ``label_set_id`` is a badly formed UUID.
-            :class:`encord.exceptions.ResourceNotFoundError`: The label set does not exist, label sets are not enabled
-                for your organisation, or you have no role on the project that feeds it.
+            :class:`encord.exceptions.AuthorisationError`: Label sets are not enabled for your organization.
+            :class:`encord.exceptions.ResourceNotFoundError`: The label set does not exist, or you have no role on
+                the project that feeds it.
         """
         if isinstance(label_set_id, str):
             label_set_id = UUID(label_set_id)
@@ -2122,8 +2124,9 @@ class EncordUserClient:
 
         Raises:
             ValueError: ``project_id`` is a badly formed UUID.
-            :class:`encord.exceptions.ResourceNotFoundError`: Label sets are not enabled for your organisation.
-            :class:`encord.exceptions.AuthorisationError`: You have no role on ``project_id``.
+            :class:`encord.exceptions.AuthorisationError`: Label sets are not enabled for your organization.
+            :class:`encord.exceptions.AuthorisationError`: ``project_id`` does not exist in your organization, or
+                you have no role on it.
         """
         if isinstance(project_id, str):
             project_id = UUID(project_id)

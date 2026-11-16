@@ -5,7 +5,18 @@ from uuid import UUID
 
 import pytest
 
-from encord.beta.workflow_v3 import (
+from encord.configs import BearerConfig
+from encord.exceptions import (
+    AuthorisationError,
+    InvalidArgumentsError,
+    RateLimitExceededError,
+    ServiceUnavailableError,
+    UnknownException,
+)
+from encord.http.constants import RequestsSettings
+from encord.http.v2.api_client import ApiClient
+from encord.orm.workflow_v3 import WorkflowV3DTO
+from encord.workflow_v3 import (
     AnnotationStage,
     AnnotationTask,
     Assignment,
@@ -20,19 +31,8 @@ from encord.beta.workflow_v3 import (
     TaskStatus,
     Workflow,
 )
-from encord.beta.workflow_v3._client import WorkflowClient
-from encord.beta.workflow_v3.settings import AnnotationStageSettingsV1, ExternalStageSettingsV1, ReviewStageSettingsV1
-from encord.configs import BearerConfig
-from encord.exceptions import (
-    AuthorisationError,
-    InvalidArgumentsError,
-    RateLimitExceededError,
-    ServiceUnavailableError,
-    UnknownException,
-)
-from encord.http.constants import RequestsSettings
-from encord.http.v2.api_client import ApiClient
-from encord.orm.workflow_v3 import WorkflowV3DTO
+from encord.workflow_v3._client import WorkflowClient
+from encord.workflow_v3.settings import AnnotationStageSettingsV1, ExternalStageSettingsV1, ReviewStageSettingsV1
 from tests.http.conftest import MockResponse
 
 
@@ -95,7 +95,8 @@ def test_task_actions_never_replay_a_sent_mutation_on_retryable_http_errors(
             stage.submit_tasks([task])
         elif operation == "annotation_bulk":
             stage = AnnotationStage(client, task.stage_id, "Annotate", AnnotationStageSettingsV1(), ())
-            stage.submit_tasks([task])
+            manual = AnnotationTask(**{**vars(task), "stage_type": StageType.ANNOTATION})
+            stage.submit_tasks([manual])
         elif operation in ("review", "review_bulk"):
             manual = ReviewTask(**{**vars(task), "stage_type": StageType.REVIEW})
             if operation == "review":
@@ -104,7 +105,7 @@ def test_task_actions_never_replay_a_sent_mutation_on_retryable_http_errors(
                 stage = ReviewStage(client, task.stage_id, "Review", ReviewStageSettingsV1(), ())
                 stage.submit_tasks([manual])
         elif operation == "release_bulk":
-            from encord.beta.workflow_v3._assignment_actions import release_tasks
+            from encord.workflow_v3._assignment_actions import release_tasks
 
             release_tasks(client, [task.id])
         else:
@@ -200,12 +201,11 @@ def test_review_submission_preserves_backend_errors(mock_http_client, review_tas
     assert len(mock_http_client.sent_requests) == 1
 
 
-@pytest.mark.parametrize("count", [0, 101])
-def test_review_stage_rejects_empty_or_oversized_batches_without_sending(mock_http_client, review_task, count):
+def test_review_stage_rejects_empty_batches_without_sending(mock_http_client, review_task):
     stage = ReviewStage(review_task._client, review_task.stage_id, "Review", ReviewStageSettingsV1(), ())
 
-    with pytest.raises(ValueError, match="between 1 and 100"):
-        stage.submit_tasks([review_task] * count)
+    with pytest.raises(ValueError, match="at least one task"):
+        stage.submit_tasks([])
 
     assert mock_http_client.sent_requests == []
 
@@ -254,12 +254,11 @@ def test_annotation_stage_submits_exact_visits_with_one_shared_selector_and_comm
     assert manual_task.status is second.status is TaskStatus.ENTERED
 
 
-@pytest.mark.parametrize("count", [0, 101])
-def test_annotation_stage_rejects_empty_or_oversized_batches_without_sending(mock_http_client, manual_task, count):
+def test_annotation_stage_rejects_empty_batches_without_sending(mock_http_client, manual_task):
     stage = AnnotationStage(manual_task._client, manual_task.stage_id, "Annotate", AnnotationStageSettingsV1(), ())
 
-    with pytest.raises(ValueError, match="between 1 and 100"):
-        stage.submit_tasks([manual_task] * count)
+    with pytest.raises(ValueError, match="at least one task"):
+        stage.submit_tasks([])
 
     assert mock_http_client.sent_requests == []
 
@@ -410,7 +409,8 @@ def test_only_annotation_review_and_external_tasks_expose_submission():
     assert hasattr(ExternalTask, "submit")
 
 
-def test_bulk_release_returns_none_and_sends_task_ids_without_changing_snapshots(mock_http_client, manual_task):
+@pytest.mark.parametrize("count", [1, 1001])
+def test_bulk_release_returns_none_and_sends_task_ids_without_changing_snapshots(mock_http_client, manual_task, count):
     workflow = Workflow(
         manual_task._client.api_client,
         manual_task._client.project_id,
@@ -418,19 +418,62 @@ def test_bulk_release_returns_none_and_sends_task_ids_without_changing_snapshots
     )
     mock_http_client.respond_with(MockResponse(status_code=204))
     assignment = manual_task.assignment
+    tasks = [replace(manual_task, id=UUID(int=index + 1)) for index in range(count)]
 
-    result = workflow.release_tasks([manual_task])
+    result = workflow.release_tasks(tasks)
 
     assert result is None
     assert manual_task.assignment == assignment
     [request] = mock_http_client.sent_requests
     assert request.method == "POST"
     assert request.url.endswith("/workflow-v3/tasks/release")
-    assert json.loads(request.body) == {"taskIds": [str(manual_task.id)]}
+    assert json.loads(request.body) == {"taskIds": [str(task.id) for task in tasks]}
+
+
+def test_bulk_release_rejects_empty_batches_without_sending(mock_http_client, manual_task):
+    workflow = Workflow(
+        manual_task._client.api_client,
+        manual_task._client.project_id,
+        WorkflowV3DTO(id=UUID(int=8), stages=(), pathways=()),
+    )
+
+    with pytest.raises(ValueError, match="at least one task"):
+        workflow.release_tasks([])
+
+    assert mock_http_client.sent_requests == []
 
 
 @pytest.mark.parametrize(
-    "status_code,error_type", [(409, StaleTaskError), (403, AuthorisationError), (400, InvalidArgumentsError)]
+    "task_class,stage_class,settings_class",
+    [
+        (AnnotationTask, AnnotationStage, AnnotationStageSettingsV1),
+        (ReviewTask, ReviewStage, ReviewStageSettingsV1),
+        (ExternalTask, ExternalStage, ExternalStageSettingsV1),
+    ],
+)
+@pytest.mark.parametrize("status_code", [204, 422])
+def test_submission_batch_size_is_enforced_by_the_backend_without_splitting_requests(
+    mock_http_client, manual_task, task_class, stage_class, settings_class, status_code
+):
+    task = task_class(**{**vars(manual_task), "stage_type": stage_class.stage_type})
+    tasks = [replace(task, id=UUID(int=index + 1)) for index in range(101)]
+    stage = stage_class(task._client, task.stage_id, "Work", settings_class(), ())
+    mock_http_client.respond_with(MockResponse(status_code=status_code, json_body={"message": "Batch too large"}))
+
+    if status_code == 422:
+        with pytest.raises(InvalidArgumentsError, match="Batch too large"):
+            stage.submit_tasks(tasks)
+    else:
+        assert stage.submit_tasks(tasks) is None
+
+    [request] = mock_http_client.sent_requests
+    assert request.url.endswith(f"/stages/{stage.id}/tasks/submit")
+    assert json.loads(request.body) == {"taskIds": [str(task.id) for task in tasks]}
+
+
+@pytest.mark.parametrize(
+    "status_code,error_type",
+    [(409, StaleTaskError), (403, AuthorisationError), (400, InvalidArgumentsError), (422, InvalidArgumentsError)],
 )
 def test_bulk_release_preserves_permission_and_validation_errors_and_maps_stale_tasks(
     mock_http_client, manual_task, status_code, error_type
@@ -443,6 +486,6 @@ def test_bulk_release_preserves_permission_and_validation_errors_and_maps_stale_
     mock_http_client.respond_with(MockResponse(status_code=status_code, json_body={"message": "Cannot release"}))
 
     with pytest.raises(error_type, match="Cannot release"):
-        workflow.release_tasks([manual_task])
+        workflow.release_tasks([replace(manual_task, id=UUID(int=index + 1)) for index in range(1001)])
 
     assert len(mock_http_client.sent_requests) == 1

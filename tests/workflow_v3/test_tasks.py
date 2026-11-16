@@ -11,7 +11,13 @@ from requests import PreparedRequest, Response
 from requests.adapters import HTTPAdapter
 from typing_extensions import assert_type
 
-from encord.beta.workflow_v3 import (
+from encord.configs import BearerConfig
+from encord.exceptions import EncordException
+from encord.http.v2.api_client import ApiClient
+from encord.http.v2.payloads import Page
+from encord.orm import tasks_v3 as dto
+from encord.orm.workflow_v3 import WorkflowV3DTO
+from encord.workflow_v3 import (
     AnnotationStage,
     AnnotationTask,
     DataGroupSubsetTarget,
@@ -25,18 +31,13 @@ from encord.beta.workflow_v3 import (
     ReviewTask,
     StageType,
     StartStage,
+    TargetType,
     Task,
     TaskSort,
     TaskStatus,
     UnknownTarget,
     Workflow,
 )
-from encord.configs import BearerConfig
-from encord.exceptions import EncordException
-from encord.http.v2.api_client import ApiClient
-from encord.http.v2.payloads import Page
-from encord.orm import tasks_v3 as dto
-from encord.orm.workflow_v3 import WorkflowV3DTO
 from tests.workflow_v3.helpers import _workflow
 
 
@@ -113,6 +114,8 @@ def test_singular_reads_construct_typed_targets_without_requiring_membership(
     task = workflow.get_task(id=task_payload["id"])
 
     assert isinstance(task.target, target_class)
+    assert task.target.target_type is TargetType(target_type)
+    assert api.get.return_value.to_dict()["target"]["targetType"] == target_type
     assert task.target.id == UUID(task_payload["target"]["id"])
     assert task.target.project_id == UUID(task_payload["target"]["projectId"])
     assert task.target.dataset_hash == task_payload["target"]["datasetId"]
@@ -121,6 +124,10 @@ def test_singular_reads_construct_typed_targets_without_requiring_membership(
         assert not hasattr(task.target, "data_hash")
     if target_type == "future_target":
         assert task.target.raw_target_type == "future_target"
+        assert task.target.target_type is TargetType.UNKNOWN
+    else:
+        assert task.target.target_type == target_type
+        assert json.loads(json.dumps(task.target.target_type)) == target_type
     assert api.get.call_count == 1
     assert api.get.call_args.args[0].endswith(f"tasks/{task.id}")
     with pytest.raises(FrozenInstanceError):

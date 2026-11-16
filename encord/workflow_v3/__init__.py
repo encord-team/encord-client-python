@@ -1,8 +1,10 @@
 """Native workflow graphs, tasks and actions."""
 
-from encord.beta.workflow_v3.exceptions import StaleTaskError
-from encord.beta.workflow_v3.pathways import Pathway
-from encord.beta.workflow_v3.stages import (
+from encord.orm.tasks_v3 import TargetType, TaskSort, TaskStatus
+from encord.orm.workflow_v3 import PathwayVerdict, StageType
+from encord.workflow_v3.exceptions import StaleTaskError
+from encord.workflow_v3.pathways import Pathway
+from encord.workflow_v3.stages import (
     AnnotationStage,
     ArchiveStage,
     CollaboratorRouterStage,
@@ -16,7 +18,7 @@ from encord.beta.workflow_v3.stages import (
     UnknownStage,
     WorkflowStage,
 )
-from encord.beta.workflow_v3.tasks import (
+from encord.workflow_v3.tasks import (
     AnnotationTask,
     Assignment,
     DataGroupSubsetTarget,
@@ -31,9 +33,7 @@ from encord.beta.workflow_v3.tasks import (
     Task,
     UnknownTarget,
 )
-from encord.beta.workflow_v3.workflow import Workflow
-from encord.orm.tasks_v3 import TaskSort, TaskStatus
-from encord.orm.workflow_v3 import PathwayVerdict, StageType
+from encord.workflow_v3.workflow import Workflow
 
 __all__ = [
     "AnnotationStage",
@@ -61,6 +61,7 @@ __all__ = [
     "StaleTaskError",
     "StartStage",
     "Target",
+    "TargetType",
     "Task",
     "TaskSort",
     "TaskStatus",

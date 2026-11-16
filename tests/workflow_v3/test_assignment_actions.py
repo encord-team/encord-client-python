@@ -1,17 +1,17 @@
 import pytest
 
-from encord.beta.workflow_v3 import (
+from encord.exceptions import (
+    EncordException,
+    ResourceExistsError,
+)
+from encord.orm import tasks_v3 as dto
+from encord.workflow_v3 import (
     AnnotationTask,
     ManualTask,
     ReviewTask,
     StaleTaskError,
     TaskStatus,
 )
-from encord.exceptions import (
-    EncordException,
-    ResourceExistsError,
-)
-from encord.orm import tasks_v3 as dto
 from tests.workflow_v3.helpers import _workflow
 
 

@@ -23,6 +23,8 @@ class ReadEnum(str, Enum):
 
 
 class StageType(ReadEnum):
+    """Kind of workflow stage; unfamiliar kinds are represented by UNKNOWN."""
+
     START = "START"
     ANNOTATION = "ANNOTATION"
     REVIEW = "REVIEW"
@@ -36,6 +38,8 @@ class StageType(ReadEnum):
 
 
 class PathwayVerdict(ReadEnum):
+    """Outcome associated with a pathway; following it does not change individual label decisions."""
+
     ACCEPT = "accept"
     REJECT = "reject"
     NEUTRAL = "neutral"

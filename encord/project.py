@@ -14,13 +14,12 @@ import warnings
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Union
 from uuid import UUID
 
-from encord.beta.workflow_v3 import Workflow as WorkflowV3
 from encord.client import EncordClientProject
 from encord.collection import ProjectCollection
 from encord.common.deprecated import deprecated
 from encord.common.organisation_tags import resolve_organisation_tag_uuid
 from encord.common.utils import ensure_list, ensure_uuid_list
-from encord.exceptions import EncordException, WrongProjectTypeError
+from encord.exceptions import WrongProjectTypeError
 from encord.filter_preset import ProjectFilterPreset
 from encord.http.bundle import Bundle
 from encord.http.v2.api_client import ApiClient
@@ -77,6 +76,7 @@ from encord.utilities.coco.datastructure import CategoryID, FrameIndex, ImageID
 from encord.utilities.hash_utilities import convert_to_uuid
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 from encord.workflow import Workflow
+from encord.workflow_v3 import Workflow as WorkflowV3
 
 
 class _CopyBranchRequest(BaseDTO):
@@ -271,10 +271,10 @@ class Project:
         """Read-only workflow graph snapshot; refreshed by ``refetch_data()``.
 
         Raises:
-            EncordException: The backend did not return the workflow_v3 contract.
+            WrongProjectTypeError: The backend did not return the workflow_v3 contract.
         """
         if self._workflow_v3 is None:
-            raise EncordException(
+            raise WrongProjectTypeError(
                 f"The backend did not return the workflow_v3 contract for project '{self.project_hash}'."
             )
         return self._workflow_v3

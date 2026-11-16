@@ -5,8 +5,8 @@ from uuid import UUID
 
 import pytest
 
-from encord.beta.workflow_v3 import settings
 from encord.orm.base_dto import BaseDTO
+from encord.workflow_v3 import settings
 
 
 @pytest.mark.parametrize(

@@ -3,11 +3,11 @@
 from typing import Optional, Sequence, Union
 from uuid import UUID
 
-from encord.beta.workflow_v3._client import WorkflowClient
-from encord.beta.workflow_v3._pathway_selector import build_pathway_selector
-from encord.beta.workflow_v3.exceptions import StaleTaskError
 from encord.exceptions import ResourceExistsError, ResourceNotFoundError
 from encord.orm.tasks_v3 import SubmitTaskPayload, SubmitTasksPayload
+from encord.workflow_v3._client import WorkflowClient
+from encord.workflow_v3._pathway_selector import build_pathway_selector
+from encord.workflow_v3.exceptions import StaleTaskError
 
 
 def submit_task(
@@ -44,8 +44,8 @@ def submit_tasks(
     pathway_name: Optional[str],
     comment: Optional[str] = None,
 ) -> None:
-    if not 1 <= len(task_ids) <= 100:
-        raise ValueError("Submit between 1 and 100 tasks.")
+    if not task_ids:
+        raise ValueError("Submit at least one task.")
     payload = SubmitTasksPayload(
         task_ids=list(task_ids),
         pathway=build_pathway_selector(pathway_id, pathway_name),

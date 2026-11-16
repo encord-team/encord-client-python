@@ -29,6 +29,17 @@ class TaskSort(str, Enum):
     CREATED_AT = "createdAt"
 
 
+class TargetType(ReadEnum):
+    """Target scope; unfamiliar types use UNKNOWN."""
+
+    DATA_UNIT = "data_unit"
+    DATA_UNIT_SLICE = "data_unit_slice"
+    DATASET = "dataset"
+    DATA_GROUP_SUBSET = "data_group_subset"
+    DATASET_SUBSET = "dataset_subset"
+    UNKNOWN = "_UNKNOWN_"
+
+
 class TargetDTO(BaseDTO):
     id: UUID
     project_id: UUID
@@ -38,28 +49,28 @@ class TargetDTO(BaseDTO):
 
 
 class DataUnitTargetDTO(TargetDTO):
-    target_type: Literal["data_unit"]
+    target_type: Literal[TargetType.DATA_UNIT]
     data_hash: str = Field(alias="dataId")
 
 
 class DataUnitSliceTargetDTO(TargetDTO):
-    target_type: Literal["data_unit_slice"]
+    target_type: Literal[TargetType.DATA_UNIT_SLICE]
     data_hash: str = Field(alias="dataId")
     qualifier_name: str
 
 
 class DatasetTargetDTO(TargetDTO):
-    target_type: Literal["dataset"]
+    target_type: Literal[TargetType.DATASET]
 
 
 class DataGroupSubsetTargetDTO(TargetDTO):
-    target_type: Literal["data_group_subset"]
+    target_type: Literal[TargetType.DATA_GROUP_SUBSET]
     data_hash: str = Field(alias="dataId")
     qualifier_name: str
 
 
 class DatasetSubsetTargetDTO(TargetDTO):
-    target_type: Literal["dataset_subset"]
+    target_type: Literal[TargetType.DATASET_SUBSET]
     qualifier_name: str
 
 
@@ -72,13 +83,7 @@ class UnknownTargetDTO(TargetDTO, BaseDTOWithExtra):
         if isinstance(values, cls):
             return values
         target_type = values.get("targetType", values.get("target_type")) if isinstance(values, dict) else None
-        if not isinstance(target_type, str) or target_type in {
-            "data_unit",
-            "data_unit_slice",
-            "dataset",
-            "data_group_subset",
-            "dataset_subset",
-        }:
+        if not isinstance(target_type, str) or TargetType(target_type) is not TargetType.UNKNOWN:
             raise ValueError("Expected an unfamiliar target type.")
         return values
 

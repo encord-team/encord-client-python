@@ -6,7 +6,10 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from encord.beta.workflow_v3 import (
+from encord.exceptions import EncordException
+from encord.orm.base_dto import BaseDTO
+from encord.orm.workflow_v3 import PercentageRouterStageDTO, WorkflowV3DTO
+from encord.workflow_v3 import (
     AnnotationStage,
     ArchiveStage,
     CollaboratorRouterStage,
@@ -21,10 +24,7 @@ from encord.beta.workflow_v3 import (
     UnknownStage,
     Workflow,
 )
-from encord.beta.workflow_v3.settings import PercentageRouterStageSettingsV1, UnknownStageSettings
-from encord.exceptions import EncordException
-from encord.orm.base_dto import BaseDTO
-from encord.orm.workflow_v3 import PercentageRouterStageDTO, WorkflowV3DTO
+from encord.workflow_v3.settings import PercentageRouterStageSettingsV1, UnknownStageSettings
 
 
 def _load_workflow(payload: Dict[str, Any]) -> Workflow:

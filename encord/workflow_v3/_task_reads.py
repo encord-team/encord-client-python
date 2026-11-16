@@ -4,11 +4,11 @@ from datetime import datetime
 from typing import Dict, Iterator, Optional, Sequence, Type, TypedDict, Union
 from uuid import UUID
 
-from encord.beta.workflow_v3 import tasks
-from encord.beta.workflow_v3._client import WorkflowClient
 from encord.orm import tasks_v3 as dto
 from encord.orm.tasks_v3 import TaskSort, TaskStatus
 from encord.orm.workflow_v3 import StageType
+from encord.workflow_v3 import tasks
+from encord.workflow_v3._client import WorkflowClient
 
 _TASK_CLASS_BY_STAGE_TYPE: Dict[StageType, Type[tasks.Task]] = {
     StageType.EXTERNAL: tasks.ExternalTask,

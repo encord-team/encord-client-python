@@ -5,15 +5,15 @@ from uuid import UUID
 
 import pytest
 
-from encord.beta.workflow_v3 import ExternalStage, UnknownStage
 from encord.client import EncordClientProject
-from encord.exceptions import EncordException, WrongProjectTypeError
+from encord.exceptions import WrongProjectTypeError
 from encord.http.v2.api_client import ApiClient
 from encord.orm.project import ProjectDTO
 from encord.orm.workflow import WorkflowDTO
 from encord.project import Project
 from encord.user_client import EncordUserClient
 from encord.workflow.stages.agent import AgentStage
+from encord.workflow_v3 import ExternalStage, UnknownStage
 
 
 def _project_from_payload(payload: Dict[str, Any]) -> Project:
@@ -128,7 +128,7 @@ def test_project_preserves_legacy_agent_and_final_discovery_regardless_of_engine
 
     assert isinstance(project.workflow.get_stage(name="Agent"), AgentStage)
     assert project.workflow.get_stage(name="Complete").title == "Complete"
-    with pytest.raises(EncordException, match="did not return the workflow_v3 contract"):
+    with pytest.raises(WrongProjectTypeError, match="did not return the workflow_v3 contract"):
         _ = project.workflow_v3
 
 
@@ -142,7 +142,7 @@ def test_old_manual_qa_response_loads_metadata_without_either_workflow_contract(
     project = _project_from_payload(tms3_project_payload)
 
     assert project.title == tms3_project_payload["title"]
-    with pytest.raises(EncordException, match="did not return the workflow_v3 contract"):
+    with pytest.raises(WrongProjectTypeError, match="did not return the workflow_v3 contract"):
         _ = project.workflow_v3
     with pytest.raises(WrongProjectTypeError, match="did not return the legacy workflow"):
         _ = project.workflow
@@ -162,7 +162,7 @@ def test_project_without_workflow_v3_loads_metadata_and_reports_the_missing_cont
 
     assert project.title == tms3_project_payload["title"]
     assert not project.has_workflow_v3
-    with pytest.raises(EncordException, match=f"workflow_v3 contract for project '{project.project_hash}'"):
+    with pytest.raises(WrongProjectTypeError, match=f"workflow_v3 contract for project '{project.project_hash}'"):
         _ = project.workflow_v3
 
 
@@ -223,7 +223,7 @@ def test_project_refresh_exposes_newly_returned_contracts_and_removes_omitted_co
     assert project.has_workflow
     assert not project.has_workflow_v3
     assert isinstance(project.workflow.get_stage(name="Agent"), AgentStage)
-    with pytest.raises(EncordException, match="did not return the workflow_v3 contract"):
+    with pytest.raises(WrongProjectTypeError, match="did not return the workflow_v3 contract"):
         _ = project.workflow_v3
     assert original_workflow.get_stage(name="EXTERNAL").id == UUID(int=4)
 

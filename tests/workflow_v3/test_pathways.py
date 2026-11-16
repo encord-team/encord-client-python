@@ -7,10 +7,10 @@ from uuid import UUID
 
 import pytest
 
-from encord.beta.workflow_v3 import Pathway, PathwayVerdict, Workflow
 from encord.exceptions import EncordException
 from encord.orm.base_dto import BaseDTO
 from encord.orm.workflow_v3 import WorkflowV3DTO
+from encord.workflow_v3 import Pathway, PathwayVerdict, Workflow
 
 
 def test_public_pathways_are_frozen_dataclasses_shared_by_workflow_and_stage_views(

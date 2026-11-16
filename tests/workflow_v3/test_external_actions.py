@@ -9,7 +9,12 @@ import requests
 from requests import Response
 from requests.adapters import HTTPAdapter
 
-from encord.beta.workflow_v3 import (
+from encord.configs import BearerConfig
+from encord.exceptions import AuthorisationError, InvalidArgumentsError, RequestException, ResourceNotFoundError
+from encord.http.v2.api_client import ApiClient
+from encord.orm import tasks_v3 as dto
+from encord.orm.workflow_v3 import WorkflowV3DTO
+from encord.workflow_v3 import (
     ExternalStage,
     ExternalTask,
     StaleTaskError,
@@ -17,11 +22,6 @@ from encord.beta.workflow_v3 import (
     TaskStatus,
     Workflow,
 )
-from encord.configs import BearerConfig
-from encord.exceptions import AuthorisationError, InvalidArgumentsError, RequestException, ResourceNotFoundError
-from encord.http.v2.api_client import ApiClient
-from encord.orm import tasks_v3 as dto
-from encord.orm.workflow_v3 import WorkflowV3DTO
 from tests.workflow_v3.helpers import _workflow
 
 
@@ -245,17 +245,16 @@ def test_stage_submission_sends_one_shared_pathway_and_returns_none(
     assert task.status is TaskStatus.ENTERED
 
 
-@pytest.mark.parametrize("count", [0, 101])
-def test_stage_submission_rejects_empty_or_oversized_batches_without_sending(
-    workflow_v3_payload: Dict[str, Any], task_payload: Dict[str, Any], count: int
+def test_stage_submission_rejects_empty_batches_without_sending(
+    workflow_v3_payload: Dict[str, Any], task_payload: Dict[str, Any]
 ) -> None:
     workflow, api = _workflow(workflow_v3_payload)
     api.get.return_value = dto.TaskDTO.from_dict(task_payload)
     task = workflow.get_task(id=task_payload["id"])
     stage = workflow.get_stage(id=task.stage_id, type_=ExternalStage)
 
-    with pytest.raises(ValueError, match="between 1 and 100"):
-        stage.submit_tasks([task] * count)
+    with pytest.raises(ValueError, match="at least one task"):
+        stage.submit_tasks([])
 
     api.post.assert_not_called()
 

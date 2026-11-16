@@ -6,10 +6,11 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple, Type, TypeVar, Union, cast, overload
 from uuid import UUID
 
-from encord.beta.workflow_v3 import _assignment_actions, _task_reads, settings
-from encord.beta.workflow_v3._client import WorkflowClient
-from encord.beta.workflow_v3.pathways import Pathway
-from encord.beta.workflow_v3.stages import (
+from encord.orm import workflow_v3 as dto
+from encord.workflow_v3 import _assignment_actions, _task_reads, settings
+from encord.workflow_v3._client import WorkflowClient
+from encord.workflow_v3.pathways import Pathway
+from encord.workflow_v3.stages import (
     AnnotationStage,
     ArchiveStage,
     CollaboratorRouterStage,
@@ -23,8 +24,7 @@ from encord.beta.workflow_v3.stages import (
     UnknownStage,
     WorkflowStage,
 )
-from encord.beta.workflow_v3.tasks import Task
-from encord.orm import workflow_v3 as dto
+from encord.workflow_v3.tasks import ManualTask, Task
 
 if TYPE_CHECKING:
     from encord.http.v2.api_client import ApiClient
@@ -146,10 +146,13 @@ class Workflow:
         """Fetch one current or historical task, subject to backend read permissions."""
         return _task_reads.get_task(self._client, id)
 
-    def release_tasks(self, tasks: Sequence[Task]) -> None:
-        """Release up to 1000 assignments and claims atomically; unavailable tasks raise StaleTaskError.
+    def release_tasks(self, tasks: Sequence[ManualTask]) -> None:
+        """Release manual tasks' current assignments atomically without moving them.
 
-        Already-unassigned tasks succeed. Sent requests are not replayed automatically.
+        Requires project management access. Tasks may span stages in this project;
+        already-unassigned tasks succeed. Empty batches raise ValueError; the backend
+        enforces batch limits. Unavailable tasks raise StaleTaskError.
+        Leaves snapshots unchanged; sent requests are not automatically retried.
         """
         _assignment_actions.release_tasks(self._client, [task.id for task in tasks])
 
