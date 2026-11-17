@@ -1,5 +1,7 @@
 import numpy as np
+import pytest
 
+from encord.common.bitmask_operations import bitmask_operations as python_impl
 from encord.common.bitmask_operations.bitmask_operations_numpy import (
     _mask_to_rle,
     _rle_to_mask,
@@ -117,3 +119,25 @@ def test_serialise_bitmask_empty():
     mask_decoded = BitmaskCoordinates(mask_encoded).to_numpy_array()
 
     assert np.array_equal(mask, mask_decoded)  # Mask is inverted and the test fails.
+
+
+def test_rle_to_mask_matches_python_implementation():
+    rng = np.random.default_rng(0)
+    for _ in range(50):
+        size = int(rng.integers(0, 2000))
+        mask = (rng.random(size) < rng.random()).astype(np.uint8).tobytes()
+        rle = python_impl._mask_to_rle(mask)
+        assert _rle_to_mask(rle, size=size) == python_impl._rle_to_mask(rle, size=size) == mask
+
+
+def test_rle_to_mask_edge_cases():
+    # Leading ones are encoded with a zero-length first run
+    assert _rle_to_mask([0, 2, 1], size=3) == b"\01\01\00"
+    # A short RLE leaves the rest of the mask empty
+    assert _rle_to_mask([1, 1], size=4) == b"\00\01\00\00"
+    assert _rle_to_mask([], size=3) == b"\00\00\00"
+
+
+def test_rle_to_mask_longer_than_size_raises():
+    with pytest.raises(IndexError):
+        _rle_to_mask([2, 3], size=4)

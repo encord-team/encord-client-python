@@ -4,10 +4,25 @@ import numpy as np
 
 # Importing python implementations of functions that not have numpy implementation
 from .bitmask_operations import (
-    _rle_to_mask,
     _rle_to_string,
     _string_to_rle,
 )
+
+
+def _rle_to_mask(rle: List[int], size: int) -> bytes:
+    """Encord-compatible RLE to bitmask"""
+    counts = np.asarray(rle, dtype=np.int64)
+    if np.any(counts < 0):
+        # The pure Python version treats a negative run as empty
+        counts = np.maximum(counts, 0)
+    total = int(counts.sum())
+    if total > size:
+        raise IndexError(f"RLE covers {total} values but the mask size is {size}")
+    # Even runs are zeros, odd runs are ones
+    values = np.arange(len(counts), dtype=np.uint8) % 2
+    mask = np.zeros(size, dtype=np.uint8)
+    mask[:total] = np.repeat(values, counts)
+    return mask.tobytes()
 
 
 def _mask_to_rle(mask: bytes) -> List[int]:
