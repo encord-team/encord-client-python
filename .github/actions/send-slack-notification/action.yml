@@ -27,9 +27,12 @@ runs:
 
   steps:
     - id: commit-message
+      env:
+        COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
       run: |
-        echo "${{ github.event.head_commit.message }}" > message.txt
-        sed -z 's/\n/\\n/g' message.txt > newmessage.txt
+        printf '%s\n' "$COMMIT_MESSAGE" > message.txt
+        # Escape backslashes, double quotes and newlines so the message is safe inside the JSON payload below
+        sed -z 's/\\/\\\\/g; s/"/\\"/g; s/\n/\\n/g' message.txt > newmessage.txt
         echo "message=$(cat newmessage.txt)" >> $GITHUB_OUTPUT
       shell: bash
 
