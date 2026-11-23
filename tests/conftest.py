@@ -8,6 +8,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from encord import EncordUserClient, Project
 from encord.client import EncordClientProject
+from encord.http.v2.api_client import ApiClient
 from encord.ontology import Ontology
 from encord.orm.ontology import Ontology as OrmOntology
 from encord.orm.project import ProjectDTO, ProjectStatus, ProjectType
@@ -51,9 +52,11 @@ def user_client() -> EncordUserClient:
 
 @pytest.fixture
 @patch.object(EncordClientProject, "get_project_v2")
-@patch.object(EncordUserClient, "get_ontology")
+@patch.object(ApiClient, "get")
+@patch.object(Ontology, "_from_api_payload")
 def project(
     client_ontology_mock: MagicMock,
+    api_get_mock: MagicMock,
     client_project_mock: MagicMock,
     user_client: EncordUserClient,
     ontology: Ontology,

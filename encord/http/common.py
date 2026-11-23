@@ -5,6 +5,9 @@ from encord.exceptions import ExceptionContext
 
 HEADER_USER_AGENT = "User-Agent"
 HEADER_CLOUD_TRACE_CONTEXT = "X-Cloud-Trace-Context"
+# Carries the agent run token Encord sent an agent, back to Encord on the agent's own calls. Not Authorization:
+# requests already use that for the SSH signature or the bearer token that identifies the caller.
+HEADER_AGENT_RUN_TOKEN = "X-Encord-Agent-Run-Token"
 
 
 @dataclass

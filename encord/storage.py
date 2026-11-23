@@ -39,6 +39,9 @@ from encord.exceptions import (
     ClientMetadataPatchTimeoutError,
     ClientMetadataPatchWaitError,
     EncordException,
+    GenericServerError,
+    ResourceNotFoundError,
+    TimeOutError,
 )
 from encord.http.bundle import Bundle, BundleResultHandler, BundleResultMapper, bundled_operation
 from encord.http.constants import DEFAULT_REQUESTS_SETTINGS
@@ -100,6 +103,9 @@ from encord.orm.storage import (
 logger = logging.getLogger(__name__)
 
 STORAGE_BUNDLE_CREATE_LIMIT = 1000
+# Polling a grouping manifest job for its result backs off from the first interval to the last.
+_GROUPING_MANIFEST_JOB_INITIAL_POLL_SECONDS = 1.0
+_GROUPING_MANIFEST_JOB_MAX_POLL_SECONDS = 30.0
 # The server rejects a client metadata patch job request whose body is larger than this.
 _CLIENT_METADATA_PATCH_JOB_MAX_PAYLOAD_BYTES = 8 * 1024 * 1024
 _CLIENT_METADATA_PATCH_JOB_FAILED_MESSAGE = (
@@ -1656,6 +1662,136 @@ class StorageFolder:
         """
 
         return self._create_data_groups(params)
+
+    def get_grouping_manifest(self) -> Optional[orm_storage.GroupingManifest]:
+        """Get the grouping manifest saved on this folder.
+
+        Use this to read the manifest before you change it and save it again with
+        :meth:`save_grouping_manifest`.
+
+        Returns:
+            GroupingManifest: The saved manifest, or `None` if the folder has no manifest.
+        """
+        try:
+            return self._api_client.get(
+                f"storage/folders/{self.uuid}/grouping-manifest",
+                params=None,
+                result_type=orm_storage.GroupingManifest,
+            )
+        except ResourceNotFoundError:
+            return None
+
+    def save_grouping_manifest(self, manifest: orm_storage.GroupingManifest) -> None:
+        """Save a grouping manifest on this folder. This replaces any manifest that the folder already has.
+
+        Saving a manifest does not group anything. Call :meth:`apply_grouping_manifest` to group the folder
+        with it. Cloud-synced folders group on their own after each sync.
+
+        Args:
+            manifest: The grouping manifest to save.
+
+        Raises:
+            AuthorisationError: If you are not a folder admin.
+            InvalidArgumentsError: If the server rejects the manifest, for example because a regular expression
+                is not valid.
+        """
+        self._api_client.put(
+            f"storage/folders/{self.uuid}/grouping-manifest",
+            params=None,
+            payload=manifest,
+        )
+
+    def apply_grouping_manifest_start(self) -> UUID:
+        """Start a grouping run that uses this folder's saved manifest.
+
+        The run happens in the background. This method returns at once with a job UUID.
+        Each call creates a new job. A job stays pending while another grouping run holds
+        the folder.
+
+        Returns:
+            UUID: The job UUID. Pass it to `apply_grouping_manifest_get_result` to wait for the result.
+
+        Raises:
+            InvalidArgumentsError: If the folder has no saved grouping manifest.
+            AuthorisationError: If you are not a folder admin with permission to upload data.
+        """
+        job_uuid = self._api_client.post(
+            f"storage/folders/{self.uuid}/grouping-manifest/jobs",
+            params=None,
+            payload=None,
+            result_type=orm_storage.ApplyGroupingManifestJobStarted,
+            allow_retries=False,
+        ).job_uuid
+
+        logger.info(f"apply_grouping_manifest job started with {job_uuid=}.")
+
+        return job_uuid
+
+    def apply_grouping_manifest_get_result(
+        self, job_uuid: UUID, timeout_seconds: int = 60 * 60
+    ) -> orm_storage.ApplyGroupingManifestResult:
+        """Get the result of a grouping run started with `apply_grouping_manifest_start()`.
+
+        Args:
+            job_uuid (UUID): The job UUID that `apply_grouping_manifest_start()` returned.
+            timeout_seconds (int): Maximum time in seconds to wait for the job to finish. Default is 1 hour.
+
+        Returns:
+            ApplyGroupingManifestResult: The folder that holds the new groups, and how many groups the run
+            created or skipped.
+
+        Raises:
+            GenericServerError: If the job failed. The message holds the reason the server gave.
+            TimeOutError: If the job did not finish within `timeout_seconds`. The job is not cancelled.
+        """
+        deadline = time.monotonic() + timeout_seconds
+        interval = _GROUPING_MANIFEST_JOB_INITIAL_POLL_SECONDS
+        while True:
+            job = self._api_client.get(
+                f"storage/folders/{self.uuid}/grouping-manifest/jobs/{job_uuid}",
+                params=None,
+                result_type=orm_storage.ApplyGroupingManifestJob,
+            ).root
+
+            if isinstance(job, orm_storage.ApplyGroupingManifestJobFailed):
+                raise GenericServerError(f"Grouping manifest job {job_uuid} failed: {job.error}")
+            if isinstance(job, orm_storage.ApplyGroupingManifestResult):
+                return job
+
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeOutError(
+                    f"Grouping manifest job {job_uuid} did not finish within {timeout_seconds} seconds. "
+                    "The job was not cancelled. "
+                    f"Continue waiting with apply_grouping_manifest_get_result({job_uuid})."
+                )
+            time.sleep(min(interval, remaining))
+            interval = min(interval * 2, _GROUPING_MANIFEST_JOB_MAX_POLL_SECONDS)
+
+    def apply_grouping_manifest(self, timeout_seconds: int = 60 * 60) -> orm_storage.ApplyGroupingManifestResult:
+        """Group this folder's items using its saved manifest, and wait for the run to finish.
+
+        This is the "I have finished uploading, group these files now" trigger, for folders that get no automatic
+        grouping after an upload. Cloud-synced folders already group after each sync. A folder with no saved
+        manifest is rejected. A run can wait while another grouping run holds the folder. Each call creates a new
+        job and waits for that job only.
+
+        Args:
+            timeout_seconds (int): Maximum time in seconds to wait for the run to finish. Default is 1 hour.
+
+        Returns:
+            ApplyGroupingManifestResult: The folder that holds the new groups, and how many groups the run
+            created or skipped.
+
+        Raises:
+            InvalidArgumentsError: If the folder has no saved grouping manifest.
+            AuthorisationError: If you are not a folder admin with permission to upload data.
+            GenericServerError: If the run failed. The message holds the reason the server gave.
+            TimeOutError: If the run did not finish within `timeout_seconds`. The run is not cancelled. Continue
+                waiting with `apply_grouping_manifest_get_result`.
+        """
+        job_uuid = self.apply_grouping_manifest_start()
+        return self.apply_grouping_manifest_get_result(job_uuid, timeout_seconds)
 
     def move_items_to_folder(
         self,

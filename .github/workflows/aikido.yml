@@ -9,6 +9,10 @@ jobs:
     container:
       image: aikidosecurity/local-scanner:v1.0.52
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.4.0
       - name: Run scan
-        run: aikido-local-scanner scan ./ --apikey ${{ secrets.AIKIDO_API_Key }} --repositoryname ${{ github.event.repository.name }} --branchname ${{ github.event.repository.default_branch }}
+        env:
+          AIKIDO_API_KEY: ${{ secrets.AIKIDO_API_Key }}
+          REPOSITORY_NAME: ${{ github.event.repository.name }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: aikido-local-scanner scan ./ --apikey "$AIKIDO_API_KEY" --repositoryname "$REPOSITORY_NAME" --branchname "$DEFAULT_BRANCH"

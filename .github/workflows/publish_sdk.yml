@@ -18,10 +18,10 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.4.0
 
       - name: Setup uv environment
-        uses: ./.github/actions/setup-uv-environment
+        uses: $/.github/actions/setup-uv-environment
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -51,13 +51,13 @@ jobs:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.4.0
 
       - name: Get workflow status
-        uses: technote-space/workflow-conclusion-action@v2
+        uses: technote-space/workflow-conclusion-action@v2.2.2
 
       - name: Send Slack notification
-        uses: ./.github/actions/send-slack-notification
+        uses: $/.github/actions/send-slack-notification
         with:
           success-parameter: ${{ env.WORKFLOW_CONCLUSION }}
           success-channel: ${{ secrets.SLACK_DEPLOYMENT_PROD_CHANNEL_ID }}

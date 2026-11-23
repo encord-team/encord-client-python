@@ -12,7 +12,12 @@ from encord.common.utils import HEX_COLOR_PATTERN
 from encord.orm.analytics import CamelStrEnum
 from encord.orm.base_dto import BaseDTO, BaseDTOWithExtra, Field, RootModelDTO, dto_validator
 from encord.orm.dataset import DataUnitError, LongPollingStatus
-from encord.orm.group_layout import DataGroupLayout, DataGroupShortInfo, LayoutSettings
+from encord.orm.group_layout import (
+    DataGroupLayout,
+    DataGroupShortInfo,
+    DataUnitTile,
+    LayoutSettings,
+)
 
 try:
     from typing import Literal
@@ -404,6 +409,127 @@ class MetadataIngestionConfig(BaseDTO):
     data ingestion) but their attachment to data files is skipped."""
 
 
+class MemberRule(BaseDTO):
+    """A rule that selects the files that join a data group.
+
+    Set exactly one of `path`, `regex` and `simple_pattern`. Build a rule with :meth:`from_path`,
+    :meth:`from_regex` or :meth:`from_simple_pattern`.
+    """
+
+    path: Optional[str] = None
+    """An exact path or a glob pattern, relative to the folder root. Supports `*`, `?` and `[abc]`. Does not
+    support recursive `**`."""
+    regex: Optional[str] = None
+    """A Python regular expression. Named groups, as in `(?P<name>...)`, make a rule for dynamic groups."""
+    simple_pattern: Optional[str] = None
+    """A pattern with placeholders, such as `data/{session}/frame{n:int}.png`. The supported types are
+    `{name}`, `{name:int}`, `{name:str}` and `{name:path}`."""
+    exclude: Optional[List[str]] = None
+    """Glob patterns for files to remove from the matches."""
+
+    @dto_validator("after")
+    def validate_exactly_one_matcher(self) -> "MemberRule":
+        if sum(matcher is not None for matcher in (self.path, self.regex, self.simple_pattern)) != 1:
+            raise ValueError("A member rule must set exactly one of 'path', 'regex' or 'simple_pattern'")
+        return self
+
+    @classmethod
+    def from_path(cls, path: str, exclude: Optional[List[str]] = None) -> "MemberRule":
+        """Make a rule that matches an exact path or a glob pattern."""
+        return cls(path=path, exclude=exclude)
+
+    @classmethod
+    def from_regex(cls, regex: str, exclude: Optional[List[str]] = None) -> "MemberRule":
+        """Make a rule that matches a regular expression."""
+        return cls(regex=regex, exclude=exclude)
+
+    @classmethod
+    def from_simple_pattern(cls, simple_pattern: str, exclude: Optional[List[str]] = None) -> "MemberRule":
+        """Make a rule that matches a pattern with placeholders."""
+        return cls(simple_pattern=simple_pattern, exclude=exclude)
+
+
+class ManifestCarouselTile(BaseDTO):
+    """A carousel tile in a manifest layout.
+
+    Unlike :class:`encord.orm.group_layout.DataUnitCarouselTile`, the position and size are optional. The backend
+    fills in a position and a size when a manifest leaves them out.
+    """
+
+    type: Literal["data_unit_list"] = "data_unit_list"
+    keys: List[str]
+    """The member keys that the carousel shows."""
+    carousel_position: Optional[Literal["left", "right", "top", "bottom"]] = None
+    carousel_size: Optional[float] = None
+    """The starting percentage of the width or height that the carousel takes (10 to 70)."""
+
+
+class ManifestGridLayout(BaseDTO):
+    """A split in a manifest layout.
+
+    Unlike :class:`encord.orm.group_layout.LayoutGrid`, `split_percentage` is optional. The backend uses 50 when a
+    manifest leaves it out.
+    """
+
+    direction: Literal["row", "column"]
+    first: Union["ManifestGridLayout", DataUnitTile, ManifestCarouselTile]
+    second: Union["ManifestGridLayout", DataUnitTile, ManifestCarouselTile]
+    split_percentage: Optional[float] = None
+    """The percentage of space for `first` (5 to 95)."""
+
+
+ManifestLayout = Union[ManifestGridLayout, DataUnitTile, ManifestCarouselTile]
+
+
+class GroupConditions(BaseDTO):
+    """Conditions that a generated data group must meet to be created."""
+
+    min_group_size: int = 2
+    """The least number of matched files that a group needs. The backend rejects a value below 2."""
+    required_members: Optional[List[str]] = None
+    """Member keys that each need at least one matched file. Valid only when `members` is a dict."""
+    allow_undersized_groups: bool = False
+    """If `True`, and your organisation has undersized groups enabled, groups below `min_group_size` are still
+    created. A data group never changes after it is created, so a later sync never regroups its members."""
+
+
+class DataGroupRule(BaseDTO):
+    """A rule in a grouping manifest that creates data groups from the files in a folder.
+
+    If `id` has placeholders such as `{session}`, the rule makes one data group for each value that the
+    `regex` or `simple_pattern` patterns capture.
+    """
+
+    id: str
+    """A stable identifier for the rule. It can hold `{placeholder}` names for dynamic groups."""
+    name: str
+    """The display name of each data group. It can hold `{placeholder}` names for dynamic groups."""
+    layout_type: Literal["default-grid", "default-list", "custom"] = "default-grid"
+    """The layout of each data group. `custom` needs `members` as a dict."""
+    members: Union[List[MemberRule], Dict[str, MemberRule]]
+    """The member rules, as a list or as a dict that maps a layout key to a rule."""
+    conditions: Optional[GroupConditions] = None
+    """The conditions for creating a group. If `None`, the backend uses its defaults."""
+    layout: Optional[ManifestLayout] = None
+    """The arrangement of the members on screen. Used when `layout_type` is `custom`."""
+    settings: Optional[LayoutSettings] = None
+    """Settings for the layout, such as read-only tiles or multi-layer labels."""
+    client_metadata: Optional[Dict[str, Any]] = None
+    """Custom metadata for each data group. String values can hold `{placeholder}` names."""
+    group_by: Optional[List[str]] = None
+    """The names of the captured groups that make up the data group's identity. Valid only for dynamic groups.
+    By default, every captured group counts."""
+
+
+class GroupingManifest(BaseDTO):
+    """A grouping manifest. It tells Encord how to group the files in a folder into data groups."""
+
+    version: str = "1.0"
+    """The version of the manifest schema."""
+    data_groups: List[DataGroupRule] = Field(default_factory=list)
+    """The rules that create data groups."""
+
+
 class StorageFolderConfig(BaseDTOWithExtra):
     """Configuration of a storage folder.
 
@@ -504,6 +630,51 @@ class CreateDataGroupsResponse(RootModelDTO[List[UUID]]):
 
     The root value is a list of UUIDs of the created data group storage items.
     """
+
+
+class ApplyGroupingManifestJobStarted(BaseDTO):
+    """A grouping run that the server has queued."""
+
+    job_uuid: UUID
+    """UUID of the job. Use it to poll for the result."""
+
+
+class ApplyGroupingManifestResult(BaseDTO):
+    """Result of a finished grouping run that used a folder's saved manifest."""
+
+    status: Literal["done"] = "done"
+    dest_folder_uuid: Optional[UUID] = None
+    """UUID of the folder that holds the new groups. `None` if the run found no ungrouped items."""
+    groups_created: int
+    """Number of groups the run created."""
+    groups_skipped_already_exist: int
+    """Number of groups skipped because they already exist."""
+    groups_skipped_below_threshold: int
+    """Number of groups skipped because they have fewer members than the manifest's minimum group size."""
+    groups_skipped_missing_required: int
+    """Number of groups skipped because they lack a member that the manifest requires."""
+    groups_skipped_multilayer_validation: int
+    """Number of groups skipped because their layout failed multilayer validation."""
+
+
+class ApplyGroupingManifestJobPending(BaseDTO):
+    """A grouping run that has not finished."""
+
+    status: Literal["pending"] = "pending"
+
+
+class ApplyGroupingManifestJobFailed(BaseDTO):
+    """A grouping run that failed."""
+
+    status: Literal["failed"] = "failed"
+    error: str
+    """The reason the run failed."""
+
+
+class ApplyGroupingManifestJob(
+    RootModelDTO[Union[ApplyGroupingManifestResult, ApplyGroupingManifestJobPending, ApplyGroupingManifestJobFailed]]
+):
+    """The state of a grouping run, as returned by the job route."""
 
 
 class UploadSignedUrlsPayload(BaseDTO):

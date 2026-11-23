@@ -111,6 +111,21 @@ def test_get_tags_is_deprecated_and_delegates(api_get: MagicMock, project: Proje
     api_get.assert_called_once()
 
 
+@patch.object(EncordClientProject, "object_interpolation")
+def test_object_interpolation_is_deprecated_and_delegates(
+    object_interpolation_mock: MagicMock, project: Project
+) -> None:
+    key_frames = {"0": {"objects": []}}
+    objects_to_interpolate = ["object-uid"]
+    object_interpolation_mock.return_value = {"result": "interpolated"}
+
+    with pytest.warns(DeprecationWarning, match="object_interpolation is deprecated since version 0.2.1"):
+        result = project.object_interpolation(key_frames, objects_to_interpolate)
+
+    assert result == {"result": "interpolated"}
+    object_interpolation_mock.assert_called_once_with(key_frames, objects_to_interpolate)
+
+
 TAG_IDENTIFIER_KINDS = ["instance", "uuid", "uuid-str", "name"]
 
 

@@ -118,7 +118,8 @@ from encord.orm.storage import (
     ListItemsParams,
     StorageItemType,
 )
-from encord.project import Project
+from encord.project import Project, _load_project
+from encord.project_copy import ProjectCopyJob
 from encord.storage import (
     ClientMetadataPatchByUrlResult,
     ClientMetadataPatchJobs,
@@ -137,6 +138,7 @@ from encord.utilities.client_utilities import (
     Issues,
     LocalImport,
 )
+from encord.utilities.hash_utilities import convert_to_uuid
 from encord.utilities.ontology_user import OntologiesFilterParams, OntologyWithUserRole
 from encord.utilities.project_user import ProjectUserRole
 
@@ -260,16 +262,14 @@ class EncordUserClient:
         Returns:
             Project: The project. See :class:`encord.project.Project` for details.
         """
-        # Querying ontology using project querier to avoid permission error,
-        # as there might be only read-only ontology structure access in scope of the project,
-        # not full access, that is implied by get_ontology method
-        querier = Querier(self._config.config, resource_type=TYPE_PROJECT, resource_id=str(project_hash))
-        client = EncordClientProject(querier=querier, config=self._config.config, api_client=self._api_client)
-        project_orm = client.get_project_v2()
+        return _load_project(self._api_client, self._config.config, project_hash)
 
-        project_ontology = self.get_ontology(project_orm.ontology_hash)
+    def get_project_copy_job(self, job_id: Union[str, UUID]) -> ProjectCopyJob:
+        """Return a copy-job handle without fetching its status.
 
-        return Project(client, project_orm, project_ontology, self._api_client)
+        Use the same user that started the copy.
+        """
+        return ProjectCopyJob(convert_to_uuid(job_id), self._api_client, self._config.config)
 
     def get_ontology(self, ontology_hash: str) -> Ontology:
         """Get the Ontology class to access and edit an ontology.

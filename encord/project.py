@@ -19,9 +19,12 @@ from encord.collection import ProjectCollection
 from encord.common.deprecated import deprecated
 from encord.common.organisation_tags import resolve_organisation_tag_uuid
 from encord.common.utils import ensure_list, ensure_uuid_list
+from encord.configs import Config
+from encord.constants.string_constants import TYPE_PROJECT
 from encord.exceptions import WrongProjectTypeError
 from encord.filter_preset import ProjectFilterPreset
 from encord.http.bundle import Bundle
+from encord.http.querier import Querier
 from encord.http.v2.api_client import ApiClient
 from encord.http.v2.payloads import Page
 from encord.issues.issue_client import GetIssueTagsParams, IssueTag
@@ -69,14 +72,25 @@ from encord.orm.project import (
     ProjectType,
 )
 from encord.orm.project import Project as OrmProject
+from encord.project_copy import ProjectCopyDataSelection, ProjectCopyJob, _start_project_copy
 from encord.project_ontology.classification_type import ClassificationType
 from encord.project_ontology.object_type import ObjectShape
 from encord.project_ontology.ontology import Ontology as LegacyOntology
 from encord.utilities.coco.datastructure import CategoryID, FrameIndex, ImageID
 from encord.utilities.hash_utilities import convert_to_uuid
+from encord.utilities.ontology_user import OntologyWithUserRole
 from encord.utilities.project_user import ProjectUser, ProjectUserRole
 from encord.workflow import Workflow
 from encord.workflow_v3 import Workflow as WorkflowV3
+
+
+def _load_project(api_client: ApiClient, config: Config, project_id: Union[str, UUID]) -> "Project":
+    client = EncordClientProject(
+        Querier(config, resource_type=TYPE_PROJECT, resource_id=str(project_id)), config, api_client
+    )
+    project = client.get_project_v2()
+    ontology = api_client.get(f"ontologies/{project.ontology_hash}", params=None, result_type=OntologyWithUserRole)
+    return Project(client, project, Ontology._from_api_payload(ontology, api_client), api_client)
 
 
 class _CopyBranchRequest(BaseDTO):
@@ -489,6 +503,39 @@ class Project:
             group_hash = [group_hash]
         self._client.remove_groups(group_hash)
 
+    def copy_project_start(
+        self,
+        *,
+        data: ProjectCopyDataSelection,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        copy_labels: bool = False,
+        copy_collaborators: bool = False,
+    ) -> ProjectCopyJob:
+        """Start a background copy and return its job without waiting.
+
+        Asynchronous copying is not available for all projects.
+        The new project becomes accessible when the copy succeeds.
+
+        Args:
+            data: All datasets, selected datasets, or selected files. An empty dataset selection copies no data.
+            title: New project title; defaults to "Copy of ...".
+            description: New project description; defaults to the source's description.
+            copy_labels: Copy labels across all branches for the selected data.
+            copy_collaborators: Copy collaborators and their roles.
+
+        """
+        return _start_project_copy(
+            self._api_client,
+            self._client._config,
+            self._project_instance.project_hash,
+            data=data,
+            title=title,
+            description=description,
+            copy_labels=copy_labels,
+            copy_collaborators=copy_collaborators,
+        )
+
     def copy_project(
         self,
         copy_datasets: Union[bool, CopyDatasetOptions] = False,
@@ -634,12 +681,15 @@ class Project:
         self.refetch_ontology()
         return res
 
+    @deprecated(version="0.2.1")
     def object_interpolation(
         self,
         key_frames,
         objects_to_interpolate,
     ):
-        """Run object interpolation algorithm on project labels (requires an editor ontology and feature uids).
+        """DEPRECATED: Run object interpolation algorithm on project labels.
+
+        Requires an editor ontology and feature uids.
 
         Interpolation is supported for bounding box, polygon, and keypoint.
 

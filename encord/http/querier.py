@@ -21,6 +21,7 @@ from encord.exceptions import (
     ServiceUnavailableError,
 )
 from encord.http.common import (
+    HEADER_AGENT_RUN_TOKEN,
     HEADER_CLOUD_TRACE_CONTEXT,
     RequestContext,
     parse_retry_after,
@@ -297,6 +298,20 @@ def _retry_supports_backoff_jitter() -> bool:
     return "backoff_jitter" in inspect.signature(Retry.__init__).parameters
 
 
+class _EncordSession(Session):
+    """A Session that keeps the agent run token on Encord's requests when following redirects.
+
+    requests already drops ``Authorization`` when a redirect leaves the original host (or downgrades https to http),
+    but carries every other header along. The agent run token is meant for Encord, so it is dropped on the same
+    redirects.
+    """
+
+    def rebuild_auth(self, prepared_request: requests.PreparedRequest, response: requests.Response) -> None:
+        if response.request.url and self.should_strip_auth(response.request.url, prepared_request.url or ""):
+            prepared_request.headers.pop(HEADER_AGENT_RUN_TOKEN, None)
+        super().rebuild_auth(prepared_request, response)
+
+
 @contextmanager
 def create_new_session(
     max_retries: Optional[int], backoff_factor: float, connect_retries: int, backoff_jitter: float = 0.0
@@ -315,7 +330,7 @@ def create_new_session(
         **retry_extra_args,
     )
 
-    with Session() as session:
+    with _EncordSession() as session:
         session.mount("http://", HTTPAdapter(max_retries=retry_policy))
         session.mount("https://", HTTPAdapter(max_retries=retry_policy))
 

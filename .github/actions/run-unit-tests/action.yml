@@ -17,7 +17,7 @@ runs:
 
   steps:
       - name: Setup uv environment
-        uses: ./.github/actions/setup-uv-environment
+        uses: $/.github/actions/setup-uv-environment
         with:
           python-version: ${{ inputs.python-version }}
 
@@ -34,7 +34,7 @@ runs:
         shell: bash
 
       - name: Publish unit test report
-        uses: EnricoMi/publish-unit-test-result-action@v2
+        uses: EnricoMi/publish-unit-test-result-action@v2.25.0
         if: always()
         with:
           files: ${{ inputs.test-report-file }}

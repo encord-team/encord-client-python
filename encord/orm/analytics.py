@@ -6,6 +6,7 @@ from uuid import UUID
 from encord.common.utils import snake_to_camel
 from encord.orm.base_dto import BaseDTO
 from encord.orm.workflow import BaseWorkflowNode
+from encord.orm.workflow_v3 import WorkflowV3BaseStage
 from encord.utilities.project_user import ProjectUserRole
 
 
@@ -105,6 +106,7 @@ class TimeSpent(BaseDTO):
         dataset_title: Human-readable dataset title.
         workflow_task_uuid: Optional workflow task identifier.
         workflow_stage: Optional workflow stage object associated with this row.
+        workflow_v3_stage: Optional workflow v3 stage object associated with this row.
     """
 
     period_start_time: datetime
@@ -118,6 +120,7 @@ class TimeSpent(BaseDTO):
     dataset_title: str
     workflow_task_uuid: Optional[UUID] = None
     workflow_stage: Optional[BaseWorkflowNode] = None
+    workflow_v3_stage: Optional[WorkflowV3BaseStage] = None
 
 
 class TaskActionType(CamelStrEnum):

@@ -12,8 +12,10 @@ from encord.orm.project import ProjectDTO
 from encord.orm.workflow import WorkflowDTO
 from encord.project import Project
 from encord.user_client import EncordUserClient
+from encord.utilities.ontology_user import OntologyWithUserRole
 from encord.workflow.stages.agent import AgentStage
 from encord.workflow_v3 import ExternalStage, UnknownStage
+from tests.test_data.ontology_blurb import ONTOLOGY_BLURB
 
 
 def _project_from_payload(payload: Dict[str, Any]) -> Project:
@@ -37,6 +39,20 @@ def test_workflow_availability_checks_each_returned_contract_independently_witho
     assert has_workflow_v3 is include_native
     assert project._client.mock_calls == []
     assert project._api_client.mock_calls == []
+
+
+@pytest.mark.parametrize("include_native", [False, True])
+def test_legacy_copy_uses_the_legacy_endpoint_regardless_of_workflow_interface(
+    tms3_project_payload: Dict[str, Any], include_native: bool
+) -> None:
+    if not include_native:
+        tms3_project_payload["workflowV3"] = None
+    project = _project_from_payload(tms3_project_payload)
+
+    new_project_hash = project.copy_project(copy_datasets=True)
+
+    assert new_project_hash is project._client.copy_project.return_value
+    project._client.copy_project.assert_called_once()
 
 
 @pytest.mark.parametrize("engine_version", [None, "TMS1", "TMS2", "TMS3", "TMS4"])
@@ -237,7 +253,7 @@ def test_project_refresh_exposes_newly_returned_contracts_and_removes_omitted_co
 
 
 @patch.object(EncordClientProject, "get_project_v2")
-@patch.object(EncordUserClient, "get_ontology")
+@patch.object(ApiClient, "get")
 def test_user_client_get_project_constructs_tms3_graph(
     get_ontology: MagicMock,
     get_project_v2: MagicMock,
@@ -245,11 +261,14 @@ def test_user_client_get_project_constructs_tms3_graph(
     tms3_project_payload: Dict[str, Any],
 ) -> None:
     get_project_v2.return_value = ProjectDTO.from_dict(tms3_project_payload)
+    get_ontology.return_value = OntologyWithUserRole.from_dict(
+        {**ONTOLOGY_BLURB, "ontologyUuid": str(UUID(int=10001)), "userRole": None}
+    )
 
     project = user_client.get_project(UUID(int=10000))
 
     assert project.workflow_v3.get_stage(name="EXTERNAL", type_=ExternalStage).id == UUID(int=4)
-    get_ontology.assert_called_once_with(str(UUID(int=10001)))
+    get_ontology.assert_called_once_with(f"ontologies/{UUID(int=10001)}", params=None, result_type=OntologyWithUserRole)
 
 
 @patch.object(ApiClient, "get_paged_iterator")

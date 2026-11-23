@@ -89,6 +89,20 @@ class StageDTO(BaseDTO):
     name: str
 
 
+class WorkflowV3BaseStage(StageDTO):
+    """Basic information about a workflow-v3 stage.
+
+    This representation identifies the stage but does not include its settings or pathways.
+
+    Args:
+        id: Unique identifier of the stage.
+        name: Human-readable name of the stage.
+        stage_type: Type of work performed by the stage.
+    """
+
+    stage_type: StageType
+
+
 class StartStageDTO(StageDTO):
     stage_type: Literal[StageType.START]
     settings: Union[EmptySettingsDTO, UnknownSettingsDTO]

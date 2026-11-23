@@ -46,5 +46,11 @@ class RequestsSettings:
     trace_id_provider: Optional[Callable[[], str]] = None
     """Function that supplies trace id for every request issued by the library. Random if not provided."""
 
+    agent_run_token_provider: Optional[Callable[[], Optional[str]]] = None
+    """Function that supplies the agent run token for every request issued by the library, sent as the
+    ``X-Encord-Agent-Run-Token`` header. An agent sets it to the token Encord sent with the run it is handling, so the
+    changes it makes can be attributed to that run. Called for each request, so a client shared across runs sends the
+    current run's token; no header is sent when it is not set or returns None or an empty string."""
+
 
 DEFAULT_REQUESTS_SETTINGS = RequestsSettings()

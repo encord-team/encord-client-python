@@ -31,6 +31,7 @@ from encord._version import __version__ as encord_version
 from encord.common.utils import validate_user_agent_suffix
 from encord.exceptions import ResourceNotFoundError
 from encord.http.common import (
+    HEADER_AGENT_RUN_TOKEN,
     HEADER_CLOUD_TRACE_CONTEXT,
     HEADER_USER_AGENT,
 )
@@ -185,6 +186,12 @@ class Config(BaseConfig):
             return self.requests_settings.trace_id_provider()
         return f"{uuid4().hex}/1;o=1"
 
+    def _agent_run_token_headers(self) -> Dict[str, str]:
+        """The agent run token header for this request, or nothing when there is no token to send."""
+        provider = self.requests_settings.agent_run_token_provider
+        token = provider() if provider else None
+        return {HEADER_AGENT_RUN_TOKEN: token} if token else {}
+
 
 def get_env_ssh_key() -> str:
     """Get the raw SSH key from environment variables.
@@ -282,6 +289,7 @@ class SshConfig(Config):
             "Authorization": self._get_v1_ssh_authorization_header(self.public_key_hex, signature),
             HEADER_USER_AGENT: self._user_agent(),
             HEADER_CLOUD_TRACE_CONTEXT: self._tracing_id(),
+            **self._agent_run_token_headers(),
         }
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
@@ -295,6 +303,7 @@ class SshConfig(Config):
         """
         request.headers[HEADER_USER_AGENT] = self._user_agent()
         request.headers[HEADER_CLOUD_TRACE_CONTEXT] = self._tracing_id()
+        request.headers.update(self._agent_run_token_headers())
 
         return sign_request(request, self.public_key_hex, self.private_key)
 
@@ -372,6 +381,7 @@ class BearerConfig(Config):
             "Authorization": f"Bearer {self.token}",
             HEADER_USER_AGENT: self._user_agent(),
             HEADER_CLOUD_TRACE_CONTEXT: self._tracing_id(),
+            **self._agent_run_token_headers(),
         }
 
     def define_headers_v2(self, request: PreparedRequest) -> PreparedRequest:
@@ -386,6 +396,7 @@ class BearerConfig(Config):
         request.headers["Authorization"] = f"Bearer {self.token}"
         request.headers[HEADER_USER_AGENT] = self._user_agent()
         request.headers[HEADER_CLOUD_TRACE_CONTEXT] = self._tracing_id()
+        request.headers.update(self._agent_run_token_headers())
 
         return request
 

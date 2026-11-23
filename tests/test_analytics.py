@@ -1,4 +1,6 @@
+from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
+from uuid import UUID
 
 from encord import Project
 from encord.common.time_parser import parse_datetime
@@ -8,10 +10,90 @@ from encord.orm.analytics import (
     CollaboratorTimer,
     CollaboratorTimerParams,
     CollaboratorTimersGroupBy,
+    TimeSpent,
 )
+from encord.orm.workflow import WorkflowStageType
 from encord.utilities.project_user import ProjectUserRole
+from encord.workflow_v3 import StageType
 
 COLLABORATOR_TIMERS_PATH = "analytics/collaborators/timers"
+
+
+def _time_spent_payload() -> dict:
+    return {
+        "periodStartTime": "2026-11-09T10:00:00Z",
+        "periodEndTime": "2026-11-09T11:00:00Z",
+        "timeSpentSeconds": 60,
+        "userEmail": "annotator@example.com",
+        "projectUserRole": "ANNOTATOR",
+        "dataUuid": "10000000-0000-0000-0000-000000000001",
+        "dataTitle": "image.jpg",
+        "datasetUuid": "20000000-0000-0000-0000-000000000002",
+        "datasetTitle": "Dataset",
+        "workflowTaskUuid": "30000000-0000-0000-0000-000000000003",
+    }
+
+
+def test_time_spent_parses_exact_tms3_stage() -> None:
+    payload = _time_spent_payload() | {
+        "workflowStage": None,
+        "workflowV3Stage": {
+            "id": "40000000-0000-0000-0000-000000000004",
+            "name": "Pre-label",
+            "stageType": "EXTERNAL",
+        },
+    }
+
+    time_spent = TimeSpent.from_dict(payload)
+
+    assert time_spent.workflow_stage is None
+    assert time_spent.workflow_v3_stage is not None
+    assert time_spent.workflow_v3_stage.id == UUID("40000000-0000-0000-0000-000000000004")
+    assert time_spent.workflow_v3_stage.name == "Pre-label"
+    assert time_spent.workflow_v3_stage.stage_type is StageType.EXTERNAL
+
+
+def test_time_spent_keeps_legacy_and_exact_stage_for_compatible_tms3_node() -> None:
+    stage_id = "40000000-0000-0000-0000-000000000004"
+    payload = _time_spent_payload() | {
+        "workflowStage": {"uuid": stage_id, "title": "Annotate", "stageType": "ANNOTATION"},
+        "workflowV3Stage": {"id": stage_id, "name": "Annotate", "stageType": "ANNOTATION"},
+    }
+
+    time_spent = TimeSpent.from_dict(payload)
+
+    assert time_spent.workflow_stage is not None
+    assert time_spent.workflow_stage.stage_type is WorkflowStageType.ANNOTATION
+    assert time_spent.workflow_v3_stage is not None
+    assert time_spent.workflow_v3_stage.stage_type is StageType.ANNOTATION
+
+
+def test_time_spent_tolerates_a_new_tms3_stage_type() -> None:
+    payload = _time_spent_payload() | {
+        "workflowStage": None,
+        "workflowV3Stage": {
+            "id": "40000000-0000-0000-0000-000000000004",
+            "name": "Future work",
+            "stageType": "FUTURE_STAGE",
+        },
+    }
+
+    time_spent = TimeSpent.from_dict(payload)
+
+    assert time_spent.workflow_v3_stage is not None
+    assert time_spent.workflow_v3_stage.stage_type is StageType.UNKNOWN
+
+
+def test_time_spent_from_an_older_server_has_no_exact_stage() -> None:
+    stage_id = "40000000-0000-0000-0000-000000000004"
+    payload = _time_spent_payload() | {
+        "workflowStage": {"uuid": stage_id, "title": "Annotate", "stageType": "ANNOTATION"}
+    }
+
+    time_spent = TimeSpent.from_dict(payload)
+
+    assert time_spent.workflow_v3_stage is None
+    assert time_spent.period_start_time == datetime(2026, 11, 9, 10, tzinfo=timezone.utc)
 
 
 def construct_timer(
