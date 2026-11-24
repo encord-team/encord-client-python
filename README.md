@@ -12,7 +12,7 @@
 ## 💻 Features
 
 - Minimal low-level Python client that allows you to interact with Encord's API
-- Supports Python: `3.9`, `3.10`, `3.11`, `3.12`, `3.13` and `3.14`
+- Supports Python: `3.9`, `3.10`, `3.11`, `3.12`, `3.13`, `3.14` and `3.15`
 
 ## ✨ Relevant Links
 

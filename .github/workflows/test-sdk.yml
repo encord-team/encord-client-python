@@ -12,22 +12,19 @@ concurrency:
 
 jobs:
   unit-tests:
-    name: Unit Tests (Python ${{ matrix.python.major_minor }}, Pydantic ${{ matrix.pydantic.version }})
+    name: Unit Tests (Python ${{ matrix.python }})
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         python:
-          - { version: '3.9.23',  major_minor: '3.9', major_minor_test_report: '3_9' }
-          - { version: '3.10.18', major_minor: '3.10', major_minor_test_report: '3_10' }
-          - { version: '3.11.13', major_minor: '3.11', major_minor_test_report: '3_11' }
-          - { version: '3.12.11', major_minor: '3.12', major_minor_test_report: '3_12' }
-          - { version: '3.13.5', major_minor: '3.13', major_minor_test_report: '3_13' }
-          - { version: '3.14.5', major_minor: '3.14', major_minor_test_report: '3_14' }
-
-        pydantic:
-          - { version: '1.10.22', suffix: 'p1' }
-          - { version: '2.12.3', suffix: 'p2' } # Latest Pydantic v2x that supports Python 3.8
+          - '3.9'
+          - '3.10'
+          - '3.11'
+          - '3.12'
+          - '3.13'
+          - '3.14'
+          - '3.15'
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -35,9 +32,8 @@ jobs:
       - name: Run unit tests
         uses: ./.github/actions/run-unit-tests
         with:
-          python-version: ${{ matrix.python.version }}
-          pydantic-version: ${{ matrix.pydantic.version }}
-          test-report-file: unit-test-report-python${{ matrix.python.major_minor_test_report }}_${{ matrix.pydantic.suffix }}.xml
+          python-version: ${{ matrix.python }}
+          test-report-file: unit-test-report-python${{ matrix.python }}.xml
 
 
   send-slack-notification:

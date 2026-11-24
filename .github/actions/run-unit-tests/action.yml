@@ -5,9 +5,6 @@ inputs:
   python-version:
     description: 'Python version to use'
     required: true
-  pydantic-version:
-    description: 'Pydantic version to use'
-    required: true
   test-report-file:
     description: 'File name to save the test report in'
     required: true
@@ -21,15 +18,9 @@ runs:
         with:
           python-version: ${{ inputs.python-version }}
 
-      - name: Override pydantic version
-        if: ${{ inputs.pydantic-version }}
-        run: uv pip install pydantic==${{ inputs.pydantic-version }}
-        shell: bash
-
       - name: Run tests
         run: |
           source .venv/bin/activate
-          # --no-sync: otherwise uv run re-syncs to uv.lock and undoes the pydantic override above
           uv run --no-sync python -m pytest tests --verbose --junitxml=${{ inputs.test-report-file }}
         shell: bash
 
@@ -38,4 +29,4 @@ runs:
         if: always()
         with:
           files: ${{ inputs.test-report-file }}
-          check_name: Unit test report (Python ${{ inputs.python-version }}, Pydantic ${{ inputs.pydantic-version }})
+          check_name: Unit test report (Python ${{ inputs.python-version }})

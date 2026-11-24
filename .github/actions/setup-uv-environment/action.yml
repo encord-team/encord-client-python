@@ -35,7 +35,7 @@ runs:
         path: |
           ${{ env.UV_CACHE_DIR }}
           .venv
-        key: uv-${{ runner.os }}-${{ runner.arch }}-${{ inputs.python-version }}-${{ hashFiles('**/uv.lock', '**/pyproject.toml') }}
+        key: uv-${{ runner.os }}-${{ runner.arch }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/uv.lock', '**/pyproject.toml') }}
 
     - name: Create virtual environment and install dependencies on cache miss
       if: steps.cached-uv.outputs.cache-hit != 'true'
