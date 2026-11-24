@@ -16,13 +16,13 @@ runs:
   steps:
     - name: Set up python
       id: setup-python
-      uses: actions/setup-python@v6.3.0
+      uses: actions/setup-python@v7.1.0
       with:
         python-version: ${{ inputs.python-version }}
 
     - name: Install uv
       id: setup-uv
-      uses: astral-sh/setup-uv@v6.8.0
+      uses: astral-sh/setup-uv@v10.3.3
       with:
         version: ${{ inputs.uv-version }}
         enable-cache: "false"

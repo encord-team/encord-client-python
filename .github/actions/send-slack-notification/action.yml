@@ -36,7 +36,7 @@ runs:
         echo "message=$(cat newmessage.txt)" >> $GITHUB_OUTPUT
       shell: bash
 
-    - uses: slackapi/slack-github-action@v1.18.0
+    - uses: slackapi/slack-github-action@v4.0.0
       if: inputs.success-parameter == 'success' && inputs.success-channel != ''
       with:
         channel-id: ${{ inputs.success-channel }}
@@ -54,7 +54,7 @@ runs:
             ]
           }
 
-    - uses: slackapi/slack-github-action@v1.18.0
+    - uses: slackapi/slack-github-action@v4.0.0
       if: inputs.success-parameter == 'failure' && inputs.failure-channel != ''
       with:
         channel-id: ${{ inputs.failure-channel }}

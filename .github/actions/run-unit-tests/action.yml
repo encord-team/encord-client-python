@@ -25,7 +25,7 @@ runs:
         shell: bash
 
       - name: Publish unit test report
-        uses: EnricoMi/publish-unit-test-result-action@v2.25.0
+        uses: EnricoMi/publish-unit-test-result-action@v2.26.0
         if: always()
         with:
           files: ${{ inputs.test-report-file }}

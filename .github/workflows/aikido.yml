@@ -9,7 +9,7 @@ jobs:
     container:
       image: aikidosecurity/local-scanner:v1.0.52
     steps:
-      - uses: actions/checkout@v4.4.0
+      - uses: actions/checkout@v7.0.1
       - name: Run scan
         env:
           AIKIDO_API_KEY: ${{ secrets.AIKIDO_API_Key }}
